@@ -3,23 +3,24 @@
 
 #include <string>
 
-namespace canvas {
+#include "Style.h"
+
+namespace canvas {  
   class Context {
   public:
     Context() { }
     virtual ~Context() { }
     
-    void clearRect(float x, float y, float w, float h) = 0;
-    void fillRect(float x, float y, float w, float h) = 0;
-    void moveTo(float x, float y) = 0;
-    void lineTo(float x, float y) = 0;
-    void stroke() = 0;
-    void fill() = 0;
+    virtual void clearRect(float x, float y, float w, float h) = 0;
+    virtual void fillRect(float x, float y, float w, float h) = 0;
+    virtual void moveTo(float x, float y) = 0;
+    virtual void lineTo(float x, float y) = 0;
+    virtual void stroke() = 0;
+    virtual void fill() = 0;
 
     float lineWidth;
-    std::string strokeStyle;
-    std::string fillStyle;
-    std::string strokeStyle;
+    Style fillStyle;
+    Style strokeStyle;
 
   private:
   };
