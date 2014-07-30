@@ -3,14 +3,16 @@
 
 #include <string>
 
+#include "Color.h"
+
 namespace canvas {
   class Style {
   public:
     Style() { }
     Style(const std::string & s);
+    Style & operator=(const std::string & s);
     
-  private:
-    unsigned char red = 0, green = 0, blue = 0;
+    Color color;
   };
 };
 
