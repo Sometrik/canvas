@@ -7,9 +7,9 @@ namespace canvas {
   class Font {
   public:
     Font() { }
-    Font(const std::string & s);
+    Font(const std::string & s) { }
 
-    std::string family;
+    std::string family = "serif";
     float size = 10.0f;
   };
 };
