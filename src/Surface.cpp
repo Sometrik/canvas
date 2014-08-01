@@ -1,11 +1,14 @@
 #include "Surface.h"
 
+#include "../../personal/graphviewer/ui/GL.h"
+
 #include "Color.h"
 
 #include <cstring>
 #include <vector>
 #include <cmath>
 #include <cassert>
+#include <iostream>
 
 using namespace std;
 using namespace canvas;
@@ -36,7 +39,6 @@ Surface::gaussianBlur(float hradius, float vradius) {
   unsigned char * buffer = getBuffer();
   assert(buffer);
 
-  unsigned int width = getWidth(), height = getHeight();
   unsigned char * tmp = new unsigned char[width * height * 4];
   memset(tmp, 0, width * height * 4);
   vector<int> hkernel = make_kernel(hradius), vkernel = make_kernel(vradius);
@@ -89,4 +91,51 @@ Surface::gaussianBlur(float hradius, float vradius) {
 void
 Surface::colorize(const Color & color) {
   
+}
+
+static GLenum getOpenGLFilterType(Surface::FilterMode mode) {
+  switch (mode) {
+  case Surface::NEAREST: return GL_NEAREST;
+  case Surface::LINEAR: return GL_LINEAR;
+  case Surface::LINEAR_MIPMAP_LINEAR: return GL_LINEAR_MIPMAP_LINEAR;
+  }
+  return 0;
+}
+
+const TextureLink &
+Surface::updateTexture() {     
+  // SetCurrent(*glRC);
+  cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
+  if (!texture.isDefined()) {
+    unsigned int id;
+    glGenTextures(1, &id);
+    cerr << "created texture 1: " << id << endl;
+    texture.setData(new TextureData(id));
+    cerr << "created texture 2: " << id << endl;
+    cerr << "created texture 3: " << texture.getTextureId() << endl;
+  }
+  
+  // glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, texture.getTextureId());
+  
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(min_filter) );
+  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(mag_filter) );
+  glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, min_filter == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
+  
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  cerr << "step\n";
+  cerr << "texture, w = " << texture.getWidth() << ", h = " << texture.getHeight() << ", id = " << texture.getTextureId() << endl;
+
+  unsigned char * buffer = getBuffer();
+  cerr << "got buffer = " << (void*)buffer << endl;
+
+  if (buffer) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(),
+		 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+  }
+  
+  return texture;
 }
