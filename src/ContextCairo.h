@@ -9,65 +9,21 @@
 namespace canvas {
   class CairoSurface : public Surface {
   public:
-    friend class ContextCairo;
+    // friend class ContextCairo;
 
-    CairoSurface(unsigned int width, unsigned int height) {
-      cairo_format_t format = CAIRO_FORMAT_ARGB32;
-      // format = CAIRO_FORMAT_RGB24;
-      surface = cairo_image_surface_create(format, width, height);
-      assert(surface);
-      std::cerr << "created surface " << width << " " << height << " " << surface << " this = " << this << std::endl;
-    }
-    CairoSurface(unsigned int width, unsigned int height, unsigned char * data) {
-      cairo_format_t format = CAIRO_FORMAT_RGB24;
-      surface = cairo_image_surface_create_for_data(data,
-						    format,
-						    width,
-						    height,
-						    width);
-      assert(surface);
-    }
-    ~CairoSurface() {
-      cairo_surface_destroy(surface);
-    }    
+    CairoSurface(unsigned int _width, unsigned int _height);
+    CairoSurface(unsigned int width, unsigned int height, unsigned char * data);
+    ~CairoSurface();
 
-    void resize(unsigned int width, unsigned int height) {
-      if (surface) {
-	cairo_surface_destroy(surface);
-      }
-      cairo_format_t format = CAIRO_FORMAT_ARGB32;
-      // format = CAIRO_FORMAT_RGB24;
-      surface = cairo_image_surface_create(format, width, height);
-      assert(surface);
-      std::cerr << "recreated surface " << width << " " << height << " " << surface << " this = " << this << std::endl;
-    }
+    void resize(unsigned int width, unsigned int height);
 
-    unsigned char * getBuffer() {
-      assert(surface);
-      return cairo_image_surface_get_data(surface);
-    }
-
-    const unsigned char * getBuffer() const {
-      assert(surface);
-      return cairo_image_surface_get_data(surface);
-    }
-
-    unsigned int getWidth() const {
-      std::cerr << "getWidth() " << surface << std::endl;
-      assert(surface);
-      return cairo_image_surface_get_width(surface);
-    }
-    
-    unsigned int getHeight() const {
-      std::cerr << "getHeight() " << surface << std::endl;
-      assert(surface);
-      return cairo_image_surface_get_height(surface);
-    }
+    unsigned char * getBuffer();
+    const unsigned char * getBuffer() const;
 
     // cairo_image_surface_get_stride(surface);
 
-  protected:
     cairo_surface_t * surface;
+  protected:
   };
 
   class ContextCairo : public Context {
@@ -80,14 +36,16 @@ namespace canvas {
     void save();
     void restore();
 
-    Surface & getDefaultSurface() {
-      std::cerr << "trying to get default surface, this = " << this << std::endl;
+#if 0
+    CairoSurface & getDefaultSurface() {
+      std::cerr << "trying to get default surface, this = " << this << ", s = " << &default_surface << std::endl;
       return default_surface;
     }
-    const Surface & getDefaultSurface() const {
-      std::cerr << "trying to get default surface (2), this = " << this << std::endl;
+    const CairoSurface & getDefaultSurface() const {
+      std::cerr << "trying to get default surface (2), this = " << this << ", s = " << &default_surface << std::endl;
       return default_surface;
     }
+#endif
     
     void resize(unsigned int width, unsigned int height);
     
@@ -121,7 +79,9 @@ namespace canvas {
 
   protected:
     cairo_t * cr;  
+#if 0
     CairoSurface default_surface;
+#endif
   
   private:
     // PangoFontDescription * font_description;

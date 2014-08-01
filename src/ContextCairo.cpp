@@ -11,11 +11,86 @@ Mutex CairoMapCanvas::draw_mutex;
 
 using namespace std;
 
+CairoSurface::CairoSurface(unsigned int _width, unsigned int _height)
+  : Surface(_width, _height) {
+  cairo_format_t format = CAIRO_FORMAT_ARGB32;
+  // format = CAIRO_FORMAT_RGB24;
+#if 1
+  surface = cairo_image_surface_create(format, _width, _height);
+  assert(surface);
+#else
+  surface = 0;
+#endif
+  std::cerr << "created surface " << _width << " " << _height << " s = " << surface << " this = " << this << ", t = " << texture.getData() << std::endl;
+}
+  
+CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, unsigned char * data)
+  : Surface(_width, _height) {
+  assert(0);
+  cairo_format_t format = CAIRO_FORMAT_RGB24;
+  surface = cairo_image_surface_create_for_data(data,
+						format,
+						_width,
+						_height,
+						_width);
+  assert(surface);
+}
+ 
+CairoSurface::~CairoSurface() {
+  if (surface) {
+    cairo_surface_destroy(surface);
+  }
+} 
+
+void
+CairoSurface::resize(unsigned int width, unsigned int height) {
+  Surface::resize(width, height);
+  if (surface) {
+    cairo_surface_destroy(surface);
+  }
+#if 1
+  cairo_format_t format = CAIRO_FORMAT_ARGB32;
+  // format = CAIRO_FORMAT_RGB24;
+  surface = cairo_image_surface_create(format, width, height);
+  assert(surface);
+#else
+  surface = 0;
+#endif
+  std::cerr << "recreated surface " << width << " " << height << " " << surface << " this = " << this << std::endl;
+} 
+
+unsigned char *
+CairoSurface::getBuffer() {
+#if 0
+  assert(surface);
+  return cairo_image_surface_get_data(surface);
+#else
+  return 0;
+#endif
+}
+
+const unsigned char *
+CairoSurface::getBuffer() const {
+#if 0
+  assert(surface);
+  return cairo_image_surface_get_data(surface);
+#else
+  return 0;
+#endif
+}
+
 ContextCairo::ContextCairo(unsigned int width, unsigned int height)
-  : Context(width, height), default_surface(width, height)
+  : Context(width, height)
 {
+  std::shared_ptr<Surface> surface(new CairoSurface(width, height));
+  setDefaultSurface(surface);
+
+#if 0
   cr = cairo_create(default_surface.surface);
-  cerr << "created cairo context: " << cr << endl;
+#else
+  cr = 0;
+#endif
+  cerr << "created cairo context: " << cr << ", tex = " << getDefaultSurface().texture.getData() << endl;
   
   // double pxscale = preport->hPX>preport->vPX ? preport->hPX:preport->vPX;
   // cairo_text_extents_t te;
@@ -42,7 +117,9 @@ ContextCairo::ContextCairo(unsigned int width, unsigned int height)
 }
 
 ContextCairo::~ContextCairo() {
+  if (cr) {
   cairo_destroy(cr);
+}
 #if 0
   if (font_description) {
     // MutexLocker mh(pango_mutex);
@@ -56,17 +133,20 @@ ContextCairo::resize(unsigned int width, unsigned int height) {
   Context::resize(width, height);
 
   cerr << "destroying old cairo\n";
-  cairo_destroy(cr);
-  cerr << "creating new surface\n";
-  default_surface.resize(width, height);
+  if (cr) cairo_destroy(cr);
   cerr << "creating new cairo\n";
+#if 0
   cr = cairo_create(default_surface.surface);
+#else
+  cr = 0;
+#endif
   cerr << "created new cairo context " << cr << "\n";
 }
 
 void
 ContextCairo::check() const {
-  cerr << "check, this = " << this << ", cr = " << cr << endl;
+  const Surface & s = getDefaultSurface();
+  cerr << "check, this = " << this << ", cr = " << cr << ", ds = " << &s << ", tex = " << s.texture.getData() << endl;
 }
 
 void
