@@ -42,8 +42,8 @@ namespace canvas {
     
     void fillRect(double x, double y, double w, double h);
     
-    Surface & getDefaultSurface() { return *default_surface; }
-    const Surface & getDefaultSurface() const { return *default_surface; }
+    virtual Surface & getDefaultSurface() = 0;
+    virtual const Surface & getDefaultSurface() const = 0;
 
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
@@ -63,11 +63,15 @@ namespace canvas {
     Font font;
     
   protected:
+#if 0
     void setDefaultSurface(std::shared_ptr<Surface> & s) { default_surface = s; }
+#endif
 
   private:
     unsigned int width, height;
+#if 0
     std::shared_ptr<Surface> default_surface;
+#endif
 
     Context(const Context & other) { }
     Context & operator=(const Context & other) { return *this; }
