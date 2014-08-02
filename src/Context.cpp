@@ -11,20 +11,22 @@ Context::resize(unsigned int _width, unsigned int _height) {
 
 void
 Context::fillRect(double x, double y, double w, double h) {
+  beginPath();
   moveTo(x, y);
   lineTo(x + w, y);
   lineTo(x + w, y + h);
   lineTo(x, y + h);
-  lineTo(x, y);
+  closePath();
   fill();
 }
 
 void
 Context::strokeRect(double x, double y, double w, double h) {
+  beginPath();
   moveTo(x, y);
   lineTo(x + w, y);
   lineTo(x + w, y + h);
   lineTo(x, y + h);
-  lineTo(x, y);
+  closePath();
   stroke();
 }

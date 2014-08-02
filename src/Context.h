@@ -13,6 +13,14 @@ namespace canvas {
   struct Size {
     float width, height;
   };
+  enum TextBaseline {
+    TOP = 1,
+    HANGING,
+    MIDDLE,
+    ALPHABETIC,
+    IDEOGRAPHIC,
+    BOTTOM
+  };
 
   class Context {
   public:
@@ -21,8 +29,6 @@ namespace canvas {
     virtual ~Context() { }
 
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned char * data) = 0;
-
-    virtual void check() const { }
 
     virtual void resize(unsigned int _width, unsigned int _height);
     
@@ -64,11 +70,10 @@ namespace canvas {
     float shadowOffsetX = 0.0f, shadowOffsetY = 0.0f;
     float globalAlpha = 1.0f;
     Font font;
+    TextBaseline textBaseline = ALPHABETIC;
     
   protected:
-#if 0
-    void setDefaultSurface(std::shared_ptr<Surface> & s) { default_surface = s; }
-#endif
+    bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
 
   private:
     unsigned int width, height;
@@ -78,6 +83,13 @@ namespace canvas {
 
     Context(const Context & other) { }
     Context & operator=(const Context & other) { return *this; }
+  };
+
+  class ContextFactory {
+  public:
+    ContextFactory() { }
+    virtual ~ContextFactory() { }
+    virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) = 0;
   };
 };
 
