@@ -9,21 +9,23 @@
 namespace canvas {
   class CairoSurface : public Surface {
   public:
-    // friend class ContextCairo;
+    friend class ContextCairo;
 
     CairoSurface(unsigned int _width, unsigned int _height);
     CairoSurface(unsigned int _width, unsigned int _height, unsigned char * data);
     ~CairoSurface();
 
+    void flush();
     void resize(unsigned int width, unsigned int height);
 
     unsigned char * getBuffer();
     const unsigned char * getBuffer() const;
 
     // cairo_image_surface_get_stride(surface);
-
-    cairo_surface_t * surface;
+    
   protected:
+    cairo_surface_t * surface;
+    unsigned int * storage = 0;
   };
 
   class ContextCairo : public Context {
@@ -31,12 +33,15 @@ namespace canvas {
     ContextCairo(unsigned int _width = 0, unsigned int _height = 0);
     ~ContextCairo();
 
+    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned char * _data) {
+      return std::shared_ptr<Surface>(new CairoSurface(_width, _height, _data));
+    }
+
     void check() const;
 
     void save();
     void restore();
 
-#if 0
     CairoSurface & getDefaultSurface() {
       std::cerr << "trying to get default surface, this = " << this << ", s = " << &default_surface << std::endl;
       return default_surface;
@@ -45,17 +50,9 @@ namespace canvas {
       std::cerr << "trying to get default surface (2), this = " << this << ", s = " << &default_surface << std::endl;
       return default_surface;
     }
-#endif
     
     void resize(unsigned int width, unsigned int height);
     
-    void flush() {
-      // std::cerr << "flushing\n";
-      // gc->Flush();
-      // delete gc;
-      // gc = 0;      
-    }
-
     void beginPath() {
       // path.CloseSubpath();
     }
@@ -79,9 +76,7 @@ namespace canvas {
 
   protected:
     cairo_t * cr;  
-#if 0
     CairoSurface default_surface;
-#endif
   
   private:
     // PangoFontDescription * font_description;

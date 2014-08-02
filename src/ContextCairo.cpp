@@ -25,14 +25,20 @@ CairoSurface::CairoSurface(unsigned int _width, unsigned int _height)
 }
   
 CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, unsigned char * data)
-  : Surface(_width, _height) {
-  assert(0);
+  : Surface(_width, _height)
+{
   cairo_format_t format = CAIRO_FORMAT_RGB24;
-  surface = cairo_image_surface_create_for_data(data,
+  unsigned int stride = cairo_format_stride_for_width(format, _width);
+  assert(stride == 4 * _width);
+  storage = new unsigned int[_width * _height];
+  for (unsigned int i = 0; i < _width * _height; i++) {
+    storage[i] = data[3 * i + 2] + (data[3 * i + 1] << 8) + (data[3 * i + 0] << 16);
+  }
+  surface = cairo_image_surface_create_for_data((unsigned char*)storage,
 						format,
 						_width,
 						_height,
-						_width);
+						stride);
   assert(surface);
 }
  
@@ -40,7 +46,13 @@ CairoSurface::~CairoSurface() {
   if (surface) {
     cairo_surface_destroy(surface);
   }
+  delete[] storage;
 } 
+
+void
+CairoSurface::flush() {
+  cairo_surface_flush(surface);
+}
 
 void
 CairoSurface::resize(unsigned int width, unsigned int height) {
@@ -61,7 +73,7 @@ CairoSurface::resize(unsigned int width, unsigned int height) {
 
 unsigned char *
 CairoSurface::getBuffer() {
-#if 0
+#if 1
   assert(surface);
   return cairo_image_surface_get_data(surface);
 #else
@@ -71,7 +83,7 @@ CairoSurface::getBuffer() {
 
 const unsigned char *
 CairoSurface::getBuffer() const {
-#if 0
+#if 1
   assert(surface);
   return cairo_image_surface_get_data(surface);
 #else
@@ -79,13 +91,11 @@ CairoSurface::getBuffer() const {
 #endif
 }
 
-ContextCairo::ContextCairo(unsigned int width, unsigned int height)
-  : Context(width, height)
+ContextCairo::ContextCairo(unsigned int _width, unsigned int _height)
+  : Context(_width, _height),
+    default_surface(_width, _height)
 {
-  std::shared_ptr<Surface> surface(new CairoSurface(width, height));
-  setDefaultSurface(surface);
-
-#if 0
+#if 1
   cr = cairo_create(default_surface.surface);
 #else
   cr = 0;
@@ -132,7 +142,7 @@ void
 ContextCairo::resize(unsigned int width, unsigned int height) {
   if (cr) cairo_destroy(cr);
   Context::resize(width, height);
-#if 0
+#if 1
   cr = cairo_create(default_surface.surface);
 #else
   cr = 0;
@@ -223,7 +233,17 @@ void
 ContextCairo::drawImage(Surface & _img, double x, double y, double w, double h) {
   CairoSurface & img = dynamic_cast<CairoSurface&>(_img);
   cairo_save(cr);
-  cairo_scale(cr, w / img.getWidth(), h / img.getHeight());
+  // cairo_scale(cr, w / img.getWidth(), h / img.getHeight());
   cairo_set_source_surface(cr, img.surface, 0, 0);
   cairo_paint(cr);
+  cairo_restore(cr);
 }
+
+#if 0
+void
+ContextCairo::flush() {
+
+}
+#endif
+
+// cairo_surface_mark_dirty
