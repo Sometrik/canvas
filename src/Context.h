@@ -20,6 +20,8 @@ namespace canvas {
       : width(_width), height(_height) { }
     virtual ~Context() { }
 
+    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned char * data) = 0;
+
     virtual void check() const { }
 
     virtual void resize(unsigned int _width, unsigned int _height);
@@ -41,6 +43,7 @@ namespace canvas {
     virtual Size measureText(const std::string & text) = 0;
     
     void fillRect(double x, double y, double w, double h);
+    void strokeRect(double x, double y, double w, double h);
     
     virtual Surface & getDefaultSurface() = 0;
     virtual const Surface & getDefaultSurface() const = 0;
