@@ -12,7 +12,7 @@ namespace canvas {
     // friend class ContextCairo;
 
     CairoSurface(unsigned int _width, unsigned int _height);
-    CairoSurface(unsigned int width, unsigned int height, unsigned char * data);
+    CairoSurface(unsigned int _width, unsigned int _height, unsigned char * data);
     ~CairoSurface();
 
     void resize(unsigned int width, unsigned int height);
@@ -28,7 +28,7 @@ namespace canvas {
 
   class ContextCairo : public Context {
   public:
-    ContextCairo(unsigned int width = 0, unsigned int height = 0);
+    ContextCairo(unsigned int _width = 0, unsigned int _height = 0);
     ~ContextCairo();
 
     void check() const;
