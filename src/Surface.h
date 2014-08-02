@@ -5,14 +5,14 @@
 #include "Color.h"
 
 namespace canvas {
+  enum FilterMode {
+    NEAREST = 1,
+    LINEAR,
+    LINEAR_MIPMAP_LINEAR
+  };
+
   class Surface {
   public:
-    enum FilterMode {
-      NEAREST = 1,
-      LINEAR,
-      LINEAR_MIPMAP_LINEAR
-    };
-
     Surface(unsigned int _width, unsigned int _height)
       : texture(_width, _height),
       width(_width),
@@ -27,6 +27,8 @@ namespace canvas {
     }
 
     virtual void flush() { }
+    virtual void markDirty() { }
+
     virtual unsigned char * getBuffer() = 0;
     virtual const unsigned char * getBuffer() const = 0;
 
