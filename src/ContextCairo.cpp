@@ -15,13 +15,10 @@ CairoSurface::CairoSurface(unsigned int _width, unsigned int _height)
   : Surface(_width, _height) {
   cairo_format_t format = CAIRO_FORMAT_ARGB32;
   // format = CAIRO_FORMAT_RGB24;
-#if 1
   surface = cairo_image_surface_create(format, _width, _height);
   assert(surface);
-#else
-  surface = 0;
-#endif
-  std::cerr << "created surface " << _width << " " << _height << " s = " << surface << " this = " << this << ", t = " << texture.getData() << std::endl;
+  cr = cairo_create(surface);  
+  assert(cr);
 }
   
 CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, unsigned char * data)
@@ -40,9 +37,14 @@ CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, unsigned c
 						_height,
 						stride);
   assert(surface);
+  cr = cairo_create(surface);  
+  assert(cr);
 }
  
 CairoSurface::~CairoSurface() {
+  if (cr) {
+    cairo_destroy(cr);
+  }
   if (surface) {
     cairo_surface_destroy(surface);
   }
@@ -55,52 +57,61 @@ CairoSurface::flush() {
 }
 
 void
-CairoSurface::resize(unsigned int width, unsigned int height) {
-  Surface::resize(width, height);
-  if (surface) {
-    cairo_surface_destroy(surface);
-  }
-#if 1
+CairoSurface::markDirty() {
+  cairo_surface_mark_dirty(surface);
+}
+
+void
+CairoSurface::resize(unsigned int _width, unsigned int _height) {
+  Surface::resize(_width, _height);
+  if (cr) cairo_destroy(cr);
+  if (surface) cairo_surface_destroy(surface);  
   cairo_format_t format = CAIRO_FORMAT_ARGB32;
   // format = CAIRO_FORMAT_RGB24;
-  surface = cairo_image_surface_create(format, width, height);
+  surface = cairo_image_surface_create(format, _width, _height);
   assert(surface);
-#else
-  surface = 0;
-#endif
-  std::cerr << "recreated surface " << width << " " << height << " " << surface << " this = " << this << std::endl;
+  cr = cairo_create(surface);
+  assert(cr);
 } 
 
 unsigned char *
 CairoSurface::getBuffer() {
-#if 1
   assert(surface);
   return cairo_image_surface_get_data(surface);
-#else
-  return 0;
-#endif
 }
 
 const unsigned char *
 CairoSurface::getBuffer() const {
-#if 1
   assert(surface);
   return cairo_image_surface_get_data(surface);
-#else
-  return 0;
-#endif
+}
+
+void
+CairoSurface::fillText(ContextCairo & context, const std::string & text, double x, double y) {
+  cairo_set_source_rgba(cr, context.fillStyle.color.red / 255.0f, context.fillStyle.color.green / 255.0f, context.fillStyle.color.blue / 255.0f, 1.0f);
+  cairo_select_font_face(cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+  cairo_set_font_size(cr, context.font.size);
+  cairo_text_extents_t extents;
+  cairo_text_extents(cr, text.c_str(), &extents);
+
+  switch (context.textBaseline) {
+  case MIDDLE:
+    cairo_move_to(cr, x, y - (extents.height/2 + extents.y_bearing));
+    break;
+  case TOP:
+    cairo_move_to(cr, x, y + extents.height / 2);
+    break;
+  default:
+    cairo_move_to(cr, x, y);
+  };
+  
+  cairo_show_text(cr, text.c_str());
 }
 
 ContextCairo::ContextCairo(unsigned int _width, unsigned int _height)
   : Context(_width, _height),
     default_surface(_width, _height)
 {
-#if 1
-  cr = cairo_create(default_surface.surface);
-#else
-  cr = 0;
-#endif
-  cerr << "created cairo context: " << cr << ", tex = " << getDefaultSurface().texture.getData() << endl;
   
   // double pxscale = preport->hPX>preport->vPX ? preport->hPX:preport->vPX;
   // cairo_text_extents_t te;
@@ -127,9 +138,6 @@ ContextCairo::ContextCairo(unsigned int _width, unsigned int _height)
 }
 
 ContextCairo::~ContextCairo() {
-  if (cr) {
-  cairo_destroy(cr);
-}
 #if 0
   if (font_description) {
     // MutexLocker mh(pango_mutex);
@@ -140,110 +148,101 @@ ContextCairo::~ContextCairo() {
 
 void
 ContextCairo::resize(unsigned int width, unsigned int height) {
-  if (cr) cairo_destroy(cr);
   Context::resize(width, height);
-#if 1
-  cr = cairo_create(default_surface.surface);
-#else
-  cr = 0;
-#endif
-  cerr << "created new cairo context " << cr << "\n";
-}
-
-void
-ContextCairo::check() const {
-  const Surface & s = getDefaultSurface();
-  cerr << "check, this = " << this << ", cr = " << cr << ", ds = " << &s << ", tex = " << s.texture.getData() << endl;
 }
 
 void
 ContextCairo::save() {
-  cairo_save(cr);
+  cairo_save(default_surface.cr);
 }
 
 void
 ContextCairo::restore() {
-  cairo_restore(cr);
+  cairo_restore(default_surface.cr);
+}
+
+void
+ContextCairo::beginPath() {
+  cairo_new_path(default_surface.cr);
+}
+
+void
+ContextCairo::closePath() {
+  cairo_close_path(default_surface.cr);
 }
 
 void
 ContextCairo::clip() {
-  cairo_clip(cr);
-  cairo_new_path(cr); // current path is not consumed with cairo_clip
+  cairo_clip(default_surface.cr);
+  cairo_new_path(default_surface.cr); // current path is not consumed with cairo_clip
 }
 
 void
 ContextCairo::arc(double x, double y, double r, double a0, double a1, bool t) {
-  std::cerr << "drawing arc, this = " << this << ", cr = " << cr << std::endl;
+  std::cerr << "drawing arc, this = " << this << ", cr = " << default_surface.cr << std::endl;
   if (!t) {
-    cairo_arc(cr, x, y, r, a0, a1);
+    cairo_arc(default_surface.cr, x, y, r, a0, a1);
   } else {
-    cairo_arc_negative(cr, x, y, r, a0, a1);
+    cairo_arc_negative(default_surface.cr, x, y, r, a0, a1);
   }
 }
 
 void
-ContextCairo::fillText(const std::string & text, double x, double y) {
-  cairo_set_source_rgba(cr, fillStyle.color.red / 255.0f, fillStyle.color.green / 255.0f, fillStyle.color.blue / 255.0f, 1.0f);
-  cairo_select_font_face(cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-  cairo_set_font_size(cr, 12);
-  moveTo(x, y);
-  cairo_show_text(cr, text.c_str());
+ContextCairo::fillText(const std::string & text, double x, double y) {  
+  if (hasShadow()) {
+    cerr << "DRAWING SHADOW for text " << text << ", w = " << getWidth() << ", h = " << getHeight() << endl;
+    CairoSurface shadow(default_surface.getWidth(), default_surface.getHeight());
+    Style tmp = fillStyle;
+    fillStyle.color = shadowColor;
+    shadow.fillText(*this, text, x + shadowOffsetX, y + shadowOffsetY);
+    shadow.gaussianBlur(shadowBlur, shadowBlur);
+    fillStyle = tmp;
+    drawImage(shadow, 0, 0, shadow.getWidth(), shadow.getHeight());
+  }
+  default_surface.fillText(*this, text, x, y);
 }
 
 Size
 ContextCairo::measureText(const std::string & text) {
-  std::cerr << "measuring text " << text << ", cr = " << cr << std::endl;
-  cairo_select_font_face(cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-  std::cerr << "step\n";
-  cairo_set_font_size(cr, 12);
-  std::cerr << "step2\n";
+  cairo_select_font_face(default_surface.cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+  cairo_set_font_size(default_surface.cr, 12);
   cairo_text_extents_t te;
-  std::cerr << "step3\n";
-  cairo_text_extents(cr, text.c_str(), &te);
-  std::cerr << "step4\n";
+  cairo_text_extents(default_surface.cr, text.c_str(), &te);
   return { (float)te.width, (float)te.height };
 }
 
 void
 ContextCairo::moveTo(double x, double y) {
-  cairo_move_to(cr, x, y);
+  cairo_move_to(default_surface.cr, x, y);
 }
 
 void
 ContextCairo::lineTo(double x, double y) {
-  cairo_line_to(cr, x, y);    
+  cairo_line_to(default_surface.cr, x, y);    
 }
 
 void
 ContextCairo::stroke() {
-  // cairo_set_line_width(cr, thickness == 0 ? 1 : thickness);
-  // cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
-  cairo_set_source_rgba(cr, strokeStyle.color.red / 255.0f, strokeStyle.color.green / 255.0f, strokeStyle.color.blue / 255.0f, 1.0f);
-  cairo_stroke(cr);
+  cairo_set_line_width(default_surface.cr, lineWidth);
+  // cairo_set_line_join(default_surface.cr, CAIRO_LINE_JOIN_ROUND);
+  cairo_set_source_rgba(default_surface.cr, strokeStyle.color.red / 255.0f, strokeStyle.color.green / 255.0f, strokeStyle.color.blue / 255.0f, 1.0f);
+  cairo_stroke_preserve(default_surface.cr);
 }
 
 void
 ContextCairo::fill() {
-  cairo_set_source_rgba(cr, fillStyle.color.red / 255.0f, fillStyle.color.green / 255.0f, fillStyle.color.blue / 255.0f, 1.0f);
-  cairo_fill(cr);
+  cairo_set_source_rgba(default_surface.cr, fillStyle.color.red / 255.0f, fillStyle.color.green / 255.0f, fillStyle.color.blue / 255.0f, 1.0f);
+  cairo_fill_preserve(default_surface.cr);
 }
 
 void
 ContextCairo::drawImage(Surface & _img, double x, double y, double w, double h) {
   CairoSurface & img = dynamic_cast<CairoSurface&>(_img);
-  cairo_save(cr);
-  // cairo_scale(cr, w / img.getWidth(), h / img.getHeight());
-  cairo_set_source_surface(cr, img.surface, 0, 0);
-  cairo_paint(cr);
-  cairo_restore(cr);
+  cairo_save(default_surface.cr);
+  cairo_scale(default_surface.cr, w / img.getWidth(), h / img.getHeight());
+  cairo_set_source_surface(default_surface.cr, img.surface, x, y);
+  cairo_paint(default_surface.cr);
+  cairo_restore(default_surface.cr);
 }
-
-#if 0
-void
-ContextCairo::flush() {
-
-}
-#endif
 
 // cairo_surface_mark_dirty

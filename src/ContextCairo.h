@@ -7,6 +7,8 @@
 #include <cassert>
 
 namespace canvas {
+  class ContextCairo;
+
   class CairoSurface : public Surface {
   public:
     friend class ContextCairo;
@@ -16,6 +18,7 @@ namespace canvas {
     ~CairoSurface();
 
     void flush();
+    void markDirty();
     void resize(unsigned int width, unsigned int height);
 
     unsigned char * getBuffer();
@@ -24,6 +27,9 @@ namespace canvas {
     // cairo_image_surface_get_stride(surface);
     
   protected:
+    void fillText(ContextCairo & context, const std::string & text, double x, double y);
+
+    cairo_t * cr;  
     cairo_surface_t * surface;
     unsigned int * storage = 0;
   };
@@ -37,28 +43,16 @@ namespace canvas {
       return std::shared_ptr<Surface>(new CairoSurface(_width, _height, _data));
     }
 
-    void check() const;
-
     void save();
     void restore();
 
-    CairoSurface & getDefaultSurface() {
-      std::cerr << "trying to get default surface, this = " << this << ", s = " << &default_surface << std::endl;
-      return default_surface;
-    }
-    const CairoSurface & getDefaultSurface() const {
-      std::cerr << "trying to get default surface (2), this = " << this << ", s = " << &default_surface << std::endl;
-      return default_surface;
-    }
+    CairoSurface & getDefaultSurface() { return default_surface; }
+    const CairoSurface & getDefaultSurface() const { return default_surface; }
     
     void resize(unsigned int width, unsigned int height);
     
-    void beginPath() {
-      // path.CloseSubpath();
-    }
-    void closePath() {
-      // path.CloseSubpath();    
-    }
+    void beginPath();
+    void closePath();
     void clip();
     void arc(double x, double y, double r, double a0, double a1, bool t = false);
     void clearRect(double x, double y, double w, double h) { }
@@ -75,7 +69,6 @@ namespace canvas {
     void drawImage(Surface & img, double x, double y, double w, double h);
 
   protected:
-    cairo_t * cr;  
     CairoSurface default_surface;
   
   private:
@@ -85,5 +78,11 @@ namespace canvas {
     static Mutex pango_mutex;
     static Mutex draw_mutex;
 #endif
+  };
+
+  class CairoContextFactory {
+  public:
+    CairoContextFactory() { }
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) { return std::shared_ptr<Context>(new ContextCairo(width, height)); }
   };
 };
