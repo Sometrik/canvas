@@ -136,7 +136,7 @@ Surface::updateTexture() {
 
   assert(buffer);
   if (buffer) {
-#ifdef _WIN32
+#if 1
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(),
 		 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
 #else
