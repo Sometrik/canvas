@@ -36,6 +36,8 @@ static vector<int> make_kernel(float radius) {
   
 void
 Surface::gaussianBlur(float hradius, float vradius) {
+  flush();
+
   unsigned char * buffer = getBuffer();
   assert(buffer);
 
@@ -68,7 +70,7 @@ Surface::gaussianBlur(float hradius, float vradius) {
     }
   }
   memset(buffer, 0, width * height * 4);
-  for (unsigned int col = 0; col < height; col++) {
+  for (unsigned int col = 0; col < width; col++) {
     for (unsigned int row = 0; row + vsize < height; row++) {
       int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
       for (unsigned int i = 0; i < vsize; i++) {
@@ -86,6 +88,8 @@ Surface::gaussianBlur(float hradius, float vradius) {
     }
   }
   delete[] tmp;
+
+  markDirty();
 }
 
 void
@@ -93,11 +97,11 @@ Surface::colorize(const Color & color) {
   
 }
 
-static GLenum getOpenGLFilterType(Surface::FilterMode mode) {
+static GLenum getOpenGLFilterType(FilterMode mode) {
   switch (mode) {
-  case Surface::NEAREST: return GL_NEAREST;
-  case Surface::LINEAR: return GL_LINEAR;
-  case Surface::LINEAR_MIPMAP_LINEAR: return GL_LINEAR_MIPMAP_LINEAR;
+  case NEAREST: return GL_NEAREST;
+  case LINEAR: return GL_LINEAR;
+  case LINEAR_MIPMAP_LINEAR: return GL_LINEAR_MIPMAP_LINEAR;
   }
   return 0;
 }
@@ -126,24 +130,44 @@ Surface::updateTexture() {
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(min_filter) );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(mag_filter) );
   glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, min_filter == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
+
+  // glGenerateMipmap(GL_TEXTURE_2D);
   
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  cerr << "step\n";
-  cerr << "texture, w = " << texture.getWidth() << ", h = " << texture.getHeight() << ", id = " << texture.getTextureId() << endl;
 
   unsigned char * buffer = getBuffer();
   cerr << "got buffer = " << (void*)buffer << endl;
-
   assert(buffer);
+
+  unsigned char * buffer2 = new unsigned char[getWidth() * getHeight() * 4];
+  for (unsigned int i = 0; i < getWidth() * getHeight(); i++) {
+    unsigned int red = buffer[4 * i + 0];
+    unsigned int green = buffer[4 * i + 1];
+    unsigned int blue = buffer[4 * i + 2];
+    unsigned int alpha = buffer[4 * i + 3];
+    if (alpha >= 1) {
+      buffer2[4 * i + 0] = (unsigned char)(255 * red / alpha);
+      buffer2[4 * i + 1] = (unsigned char)(255 * green / alpha);
+      buffer2[4 * i + 2] = (unsigned char)(255 * blue / alpha);
+    } else {
+      buffer2[4 * i + 0] = 0;
+      buffer2[4 * i + 1] = 0;
+      buffer2[4 * i + 2] = 0;
+    }
+    buffer2[4 * i + 3] = alpha;
+  }
+
   if (buffer) {
 #if 1
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(),
-		 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+		 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer2);
 #else
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(),
-		 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+		 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer2);
 #endif
   }
+  
+  delete[] buffer2;
   
   return texture;
 }
