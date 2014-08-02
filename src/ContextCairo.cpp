@@ -130,11 +130,8 @@ ContextCairo::~ContextCairo() {
 
 void
 ContextCairo::resize(unsigned int width, unsigned int height) {
-  Context::resize(width, height);
-
-  cerr << "destroying old cairo\n";
   if (cr) cairo_destroy(cr);
-  cerr << "creating new cairo\n";
+  Context::resize(width, height);
 #if 0
   cr = cairo_create(default_surface.surface);
 #else
