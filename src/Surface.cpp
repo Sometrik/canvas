@@ -103,7 +103,9 @@ static GLenum getOpenGLFilterType(Surface::FilterMode mode) {
 }
 
 const TextureLink &
-Surface::updateTexture() {     
+Surface::updateTexture() {
+  flush();
+
   // SetCurrent(*glRC);
   cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
   if (!texture.isDefined()) {
@@ -132,9 +134,15 @@ Surface::updateTexture() {
   unsigned char * buffer = getBuffer();
   cerr << "got buffer = " << (void*)buffer << endl;
 
+  assert(buffer);
   if (buffer) {
+#ifdef _WIN32
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(),
+		 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+#else
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(),
 		 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+#endif
   }
   
   return texture;

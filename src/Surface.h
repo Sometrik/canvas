@@ -25,6 +25,8 @@ namespace canvas {
       width = _width;
       height = _height;
     }
+
+    virtual void flush() { }
     virtual unsigned char * getBuffer() = 0;
     virtual const unsigned char * getBuffer() const = 0;
 
