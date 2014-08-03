@@ -191,7 +191,7 @@ namespace canvas {
     static ULONG_PTR m_gdiplusToken;
   };
 
-  class GDIPlusContextFactory {
+  class GDIPlusContextFactory : public ContextFactory  {
   public:
     GDIPlusContextFactory() { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) { return std::shared_ptr<Context>(new ContextGDIPlus(width, height)); }
