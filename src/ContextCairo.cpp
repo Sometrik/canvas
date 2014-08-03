@@ -87,7 +87,7 @@ CairoSurface::getBuffer() const {
 }
 
 void
-CairoSurface::fillText(ContextCairo & context, const std::string & text, double x, double y) {
+CairoSurface::fillText(Context & context, const std::string & text, double x, double y) {
   cairo_set_source_rgba(cr, context.fillStyle.color.red / 255.0f, context.fillStyle.color.green / 255.0f, context.fillStyle.color.blue / 255.0f, 1.0f);
   cairo_select_font_face(cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
   cairo_set_font_size(cr, context.font.size);

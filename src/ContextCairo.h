@@ -27,7 +27,7 @@ namespace canvas {
     // cairo_image_surface_get_stride(surface);
     
   protected:
-    void fillText(ContextCairo & context, const std::string & text, double x, double y);
+    void fillText(Context & context, const std::string & text, double x, double y);
 
     cairo_t * cr;  
     cairo_surface_t * surface;
@@ -41,6 +41,9 @@ namespace canvas {
 
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned char * _data) {
       return std::shared_ptr<Surface>(new CairoSurface(_width, _height, _data));
+    }
+    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
+      return std::shared_ptr<Surface>(new CairoSurface(_width, _height));
     }
 
     void save();
@@ -79,7 +82,7 @@ namespace canvas {
 #endif
   };
 
-  class CairoContextFactory {
+  class CairoContextFactory : public ContextFactory {
   public:
     CairoContextFactory() { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) { return std::shared_ptr<Context>(new ContextCairo(width, height)); }
