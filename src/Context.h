@@ -29,6 +29,7 @@ namespace canvas {
     virtual ~Context() { }
 
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned char * data) = 0;
+    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) = 0;
 
     virtual void resize(unsigned int _width, unsigned int _height);
     
@@ -45,11 +46,11 @@ namespace canvas {
     virtual void lineTo(double x, double y) = 0;
     virtual void stroke() = 0;
     virtual void fill() = 0;
-    virtual void fillText(const std::string & text, double x, double y) = 0;
     virtual Size measureText(const std::string & text) = 0;
     
     void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
+    void fillText(const std::string & text, double x, double y);
     
     virtual Surface & getDefaultSurface() = 0;
     virtual const Surface & getDefaultSurface() const = 0;
@@ -77,9 +78,6 @@ namespace canvas {
 
   private:
     unsigned int width, height;
-#if 0
-    std::shared_ptr<Surface> default_surface;
-#endif
 
     Context(const Context & other) { }
     Context & operator=(const Context & other) { return *this; }

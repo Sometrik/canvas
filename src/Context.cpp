@@ -30,3 +30,18 @@ Context::strokeRect(double x, double y, double w, double h) {
   closePath();
   stroke();
 }
+
+void
+Context::fillText(const std::string & text, double x, double y) {  
+  if (hasShadow()) {
+    // cerr << "DRAWING SHADOW for text " << text << ", w = " << getWidth() << ", h = " << getHeight() << endl;
+    auto shadow = createSurface(getDefaultSurface().getWidth(), getDefaultSurface().getHeight());
+    Style tmp = fillStyle;
+    fillStyle.color = shadowColor;
+    shadow->fillText(*this, text, x + shadowOffsetX, y + shadowOffsetY);
+    shadow->gaussianBlur(shadowBlur, shadowBlur);
+    fillStyle = tmp;
+    drawImage(*shadow, 0, 0, shadow->getWidth(), shadow->getHeight());
+  }
+  getDefaultSurface().fillText(*this, text, x, y);
+}
