@@ -187,21 +187,6 @@ ContextCairo::arc(double x, double y, double r, double a0, double a1, bool t) {
   }
 }
 
-void
-ContextCairo::fillText(const std::string & text, double x, double y) {  
-  if (hasShadow()) {
-    cerr << "DRAWING SHADOW for text " << text << ", w = " << getWidth() << ", h = " << getHeight() << endl;
-    CairoSurface shadow(default_surface.getWidth(), default_surface.getHeight());
-    Style tmp = fillStyle;
-    fillStyle.color = shadowColor;
-    shadow.fillText(*this, text, x + shadowOffsetX, y + shadowOffsetY);
-    shadow.gaussianBlur(shadowBlur, shadowBlur);
-    fillStyle = tmp;
-    drawImage(shadow, 0, 0, shadow.getWidth(), shadow.getHeight());
-  }
-  default_surface.fillText(*this, text, x, y);
-}
-
 Size
 ContextCairo::measureText(const std::string & text) {
   cairo_select_font_face(default_surface.cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);

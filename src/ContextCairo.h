@@ -60,7 +60,6 @@ namespace canvas {
     void lineTo(double x, double y);
     void stroke();
     void fill();
-    void fillText(const std::string & text, double x, double y);
     Size measureText(const std::string & text);
 
     void drawImage(Context & other, double x, double y, double w, double h) {
