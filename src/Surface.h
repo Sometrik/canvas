@@ -11,6 +11,8 @@ namespace canvas {
     LINEAR_MIPMAP_LINEAR
   };
 
+  class Context;
+
   class Surface {
   public:
     Surface(unsigned int _width, unsigned int _height)
@@ -43,6 +45,8 @@ namespace canvas {
     void setMagFilter(FilterMode mode) { mag_filter = mode; }
     void setMinFilter(FilterMode mode) { min_filter = mode; }
 
+    virtual void fillText(Context & context, const std::string & text, double x, double y) = 0;
+  
     TextureLink texture;
 
   protected:
