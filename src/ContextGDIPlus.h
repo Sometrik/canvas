@@ -36,7 +36,7 @@ namespace canvas {
     friend class ContextGDIPlus;
 
     GDIPlusSurface(unsigned int _width, unsigned int _height) : Surface(_width, _height), 
-      bitmap(new Gdiplus::Bitmap(_width, _height)),
+      bitmap(new Gdiplus::Bitmap(_width, _height, PixelFormat32bppARGB)),
       g(new Gdiplus::Graphics(&(*bitmap)))
     {
     }
@@ -47,7 +47,7 @@ namespace canvas {
     {
     }
     ~GDIPlusSurface() {
-      delete[] output_data;
+//      delete[] output_data;
     }
     void resize(unsigned int _width, unsigned int _height) {
       Surface::resize(_width, _height);
@@ -56,13 +56,18 @@ namespace canvas {
     }
     void flush() {
       Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-      Gdiplus::BitmapData data;
-      bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppARGB, &data);
-      // glPixelStorei(GL_UNPACK_ROW_LENGTH, data.Width);
+      bitmap->LockBits(&rect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &data);
+#if 0
       delete[] output_data;
       size_t s = bitmap->GetWidth() * bitmap->GetHeight() * 4;
       output_data = new unsigned char[s];
       memcpy(output_data, data.Scan0, s);
+      bitmap->UnlockBits(&data);
+#else
+      output_data = (unsigned char*)data.Scan0;
+#endif
+    }
+    void markDirty() {
       bitmap->UnlockBits(&data);
     }
 
@@ -85,6 +90,7 @@ namespace canvas {
     std::shared_ptr<Gdiplus::Bitmap> bitmap;
     std::shared_ptr<Gdiplus::Graphics> g;
     unsigned char * output_data = 0;
+    Gdiplus::BitmapData data;     
   };
   
   class ContextGDIPlus : public Context {
