@@ -62,6 +62,11 @@ namespace canvas {
       drawImage(other.getDefaultSurface(), x, y, w, h);
     }
     virtual void drawImage(Surface & img, double x, double y, double w, double h) = 0;
+    Style & createLinearGradient(double x0, double y0, double x1, double y1) {
+      current_linear_gradient.setType(Style::LINEAR_GRADIENT);
+      current_linear_gradient.setVector(x0, y0, x1, y1);
+      return current_linear_gradient;
+    }
 
     float lineWidth = 1.0f;
     Style fillStyle;
@@ -78,6 +83,8 @@ namespace canvas {
 
   private:
     unsigned int width, height;
+    Style current_linear_gradient;
+    
 
     Context(const Context & other) { }
     Context & operator=(const Context & other) { return *this; }
