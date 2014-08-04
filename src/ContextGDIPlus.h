@@ -47,41 +47,30 @@ namespace canvas {
     {
     }
     ~GDIPlusSurface() {
-//      delete[] output_data;
     }
     void resize(unsigned int _width, unsigned int _height) {
       Surface::resize(_width, _height);
       bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_width, _height));
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
     }
-    void flush() {
-      Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-      bitmap->LockBits(&rect, Gdiplus::ImageLockModeWrite, PixelFormat32bppARGB, &data);
-#if 0
-      delete[] output_data;
-      size_t s = bitmap->GetWidth() * bitmap->GetHeight() * 4;
-      output_data = new unsigned char[s];
-      memcpy(output_data, data.Scan0, s);
-      bitmap->UnlockBits(&data);
-#else
-      output_data = (unsigned char*)data.Scan0;
-#endif
-    }
-    void markDirty() {
-      bitmap->UnlockBits(&data);
-    }
+    void flush() { }
+    void markDirty() { }
 
-    unsigned char * getBuffer() {
-      return output_data;
+    unsigned char * lockMemory(bool write_access) {
+      flush();
+      Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+      bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), PixelFormat32bppARGB, &data);
+      return (unsigned char*)data.Scan0;
     }
-    const unsigned char * getBuffer() const {
-      return output_data;
+      
+    void releaseMemory() {
+      bitmap->UnlockBits(&data);
+      markDirty();
     }
 
     void fillText(Context & context, const std::string & text, double x, double y) {
       std::wstring text2 = convert_to_wstring(text);
       Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), context.font.size);
-      // LinearGradientBrush brush(Rect(0,0,100,100), Color::Red, Color::Yellow, LinearGradientModeHorizontal);
       Gdiplus::SolidBrush brush(Gdiplus::Color(context.fillStyle.color.red, context.fillStyle.color.green, context.fillStyle.color.blue));
       g->DrawString(text2.data(), text2.size(), &font, Gdiplus::PointF(x, y), &brush);
     }
@@ -89,7 +78,6 @@ namespace canvas {
   protected:
     std::shared_ptr<Gdiplus::Bitmap> bitmap;
     std::shared_ptr<Gdiplus::Graphics> g;
-    unsigned char * output_data = 0;
     Gdiplus::BitmapData data;     
   };
   
@@ -165,8 +153,13 @@ namespace canvas {
       default_surface.g->DrawPath(&pen, &current_path);
     }
     void fill() {
-      Gdiplus::SolidBrush brush(Gdiplus::Color(fillStyle.color.red, fillStyle.color.green, fillStyle.color.blue ));
-      default_surface.g->FillPath(&brush, &current_path);
+      if (fillStyle.getType() == Style::LINEAR_GRADIENT) {
+	Gdiplus::LinearGradientBrush brush(Rect(0,0,100,100), Color::Red, Color::Yellow, LinearGradientModeHorizontal);
+	default_surface.g->FillPath(&brush, &current_path);
+      } else {
+	Gdiplus::SolidBrush brush(Gdiplus::Color(fillStyle.color.red, fillStyle.color.green, fillStyle.color.blue ));
+	default_surface.g->FillPath(&brush, &current_path);
+      }
     }
     Size measureText(const std::string & text) {
       std::wstring text2 = convert_to_wstring(text);
