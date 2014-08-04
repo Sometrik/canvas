@@ -1,6 +1,6 @@
 #include "Surface.h"
 
-#include "../../personal/graphviewer/ui/GL.h"
+#include "OpenGLTexture.h"
 
 #include "Color.h"
 
@@ -36,9 +36,7 @@ static vector<int> make_kernel(float radius) {
   
 void
 Surface::gaussianBlur(float hradius, float vradius) {
-  flush();
-
-  unsigned char * buffer = getBuffer();
+  unsigned char * buffer = lockMemory(true);
   assert(buffer);
 
   unsigned char * tmp = new unsigned char[width * height * 4];
@@ -89,21 +87,12 @@ Surface::gaussianBlur(float hradius, float vradius) {
   }
   delete[] tmp;
 
-  markDirty();
+  releaseMemory();
 }
 
 void
 Surface::colorize(const Color & color) {
   
-}
-
-static GLenum getOpenGLFilterType(FilterMode mode) {
-  switch (mode) {
-  case NEAREST: return GL_NEAREST;
-  case LINEAR: return GL_LINEAR;
-  case LINEAR_MIPMAP_LINEAR: return GL_LINEAR_MIPMAP_LINEAR;
-  }
-  return 0;
 }
 
 const TextureLink &
@@ -113,32 +102,13 @@ Surface::updateTexture() {
   // SetCurrent(*glRC);
   cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
   if (!texture.isDefined()) {
-    unsigned int id;
-    glGenTextures(1, &id);
-    cerr << "created texture 1: " << id << endl;
-    texture.setData(new TextureData(id));
-    cerr << "created texture 2: " << id << endl;
-    cerr << "created texture 3: " << texture.getTextureId() << endl;
+    texture = OpenGLTexture::createTexture(getWidth(), getHeight());
   }
-  
-  // glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, texture.getTextureId());
-  
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(min_filter) );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(mag_filter) );
-  glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, min_filter == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
 
-  // glGenerateMipmap(GL_TEXTURE_2D);
-  
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-  unsigned char * buffer = getBuffer();
+  unsigned char * buffer = lockMemory();
   cerr << "got buffer = " << (void*)buffer << endl;
   assert(buffer);
-
+  
   unsigned char * buffer2 = new unsigned char[getWidth() * getHeight() * 4];
   for (unsigned int i = 0; i < getWidth() * getHeight(); i++) {
     unsigned int red = buffer[4 * i + 0];
@@ -157,17 +127,11 @@ Surface::updateTexture() {
     buffer2[4 * i + 3] = alpha;
   }
 
-  if (buffer) {
-#if 1
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(),
-		 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer2);
-#else
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(),
-		 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer2);
-#endif
-  }
+  texture.updateData(buffer2);
   
   delete[] buffer2;
+
+  releaseMemory();
   
   return texture;
 }
