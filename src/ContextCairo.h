@@ -19,10 +19,19 @@ namespace canvas {
 
     void flush();
     void markDirty();
-    void resize(unsigned int width, unsigned int height);
+    unsigned char * lockMemory(bool write_access) {
+      flush();
+      locked_for_write = write_access;
+      return cairo_image_surface_get_data(surface);
+    }
+    void releaseMemory() {
+      if (locked_for_write) {
+	locked_for_write = false;
+	markDirty();
+      }
+    }
 
-    unsigned char * getBuffer();
-    const unsigned char * getBuffer() const;
+    void resize(unsigned int width, unsigned int height);
 
     // cairo_image_surface_get_stride(surface);
     
@@ -32,6 +41,7 @@ namespace canvas {
     cairo_t * cr;  
     cairo_surface_t * surface;
     unsigned int * storage = 0;
+    bool locked_for_write = false;
   };
 
   class ContextCairo : public Context {

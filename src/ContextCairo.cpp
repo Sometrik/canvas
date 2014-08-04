@@ -74,17 +74,13 @@ CairoSurface::resize(unsigned int _width, unsigned int _height) {
   assert(cr);
 } 
 
+#if 0
 unsigned char *
 CairoSurface::getBuffer() {
   assert(surface);
   return cairo_image_surface_get_data(surface);
 }
-
-const unsigned char *
-CairoSurface::getBuffer() const {
-  assert(surface);
-  return cairo_image_surface_get_data(surface);
-}
+#endif
 
 void
 CairoSurface::fillText(Context & context, const std::string & text, double x, double y) {
@@ -147,8 +143,8 @@ ContextCairo::~ContextCairo() {
 }
 
 void
-ContextCairo::resize(unsigned int width, unsigned int height) {
-  Context::resize(width, height);
+ContextCairo::resize(unsigned int _width, unsigned int _height) {
+  Context::resize(_width, _height);
 }
 
 void
@@ -216,7 +212,16 @@ ContextCairo::stroke() {
 
 void
 ContextCairo::fill() {
-  cairo_set_source_rgba(default_surface.cr, fillStyle.color.red / 255.0f, fillStyle.color.green / 255.0f, fillStyle.color.blue / 255.0f, 1.0f);
+  if (fillStyle.getType() == Style::LINEAR_GRADIENT) {
+    cairo_pattern_t * pat = cairo_pattern_create_linear(fillStyle.x0, fillStyle.y0, fillStyle.x1, fillStyle.y1);
+    for (map<float, Color>::const_iterator it = fillStyle.getColors().begin(); it != fillStyle.getColors().end(); it++) {
+      cairo_pattern_add_color_stop_rgba(pat, it->first, it->second.red / 255.0f, it->second.green / 255.0f, it->second.blue / 255.0f, 1);
+    }
+    cairo_set_source (default_surface.cr, pat);
+    cairo_pattern_destroy (pat);
+  } else {
+    cairo_set_source_rgba(default_surface.cr, fillStyle.color.red / 255.0f, fillStyle.color.green / 255.0f, fillStyle.color.blue / 255.0f, 1.0f);
+  }
   cairo_fill_preserve(default_surface.cr);
 }
 
