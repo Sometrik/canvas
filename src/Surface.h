@@ -1,16 +1,11 @@
 #ifndef _SURFACE_H_
 #define _SURFACE_H_
 
-#include "../../personal/graphviewer/TextureLink.h"
+#include "TextureLink.h"
 #include "Color.h"
+#include "FilterMode.h"
 
 namespace canvas {
-  enum FilterMode {
-    NEAREST = 1,
-    LINEAR,
-    LINEAR_MIPMAP_LINEAR
-  };
-
   class Context;
 
   class Surface {
@@ -32,9 +27,13 @@ namespace canvas {
 
     virtual void flush() { }
     virtual void markDirty() { }
+    virtual unsigned char * lockMemory(bool write_access = false) = 0;
+    virtual void releaseMemory() = 0;
 
+#if 0
     virtual unsigned char * getBuffer() = 0;
     virtual const unsigned char * getBuffer() const = 0;
+#endif
 
     void gaussianBlur(float hradius, float vradius);
     void colorize(const Color & color);
