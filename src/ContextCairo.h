@@ -14,7 +14,7 @@ namespace canvas {
     friend class ContextCairo;
 
     CairoSurface(unsigned int _width, unsigned int _height);
-    CairoSurface(unsigned int _width, unsigned int _height, unsigned char * data);
+    CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data);
     ~CairoSurface();
 
     void flush();
@@ -49,7 +49,7 @@ namespace canvas {
     ContextCairo(unsigned int _width = 0, unsigned int _height = 0);
     ~ContextCairo();
 
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned char * _data) {
+    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) {
       return std::shared_ptr<Surface>(new CairoSurface(_width, _height, _data));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {

@@ -21,7 +21,7 @@ CairoSurface::CairoSurface(unsigned int _width, unsigned int _height)
   assert(cr);
 }
   
-CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, unsigned char * data)
+CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data)
   : Surface(_width, _height)
 {
   cairo_format_t format = CAIRO_FORMAT_RGB24;
