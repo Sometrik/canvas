@@ -8,6 +8,7 @@
 #include "Style.h"
 #include "Font.h"
 #include "Surface.h"
+#include "Image.h"
 
 namespace canvas {  
   struct Size {
@@ -28,8 +29,12 @@ namespace canvas {
       : width(_width), height(_height) { }
     virtual ~Context() { }
 
-    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned char * data) = 0;
+    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * data) = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) = 0;
+
+    std::shared_ptr<Surface> createSurface(const Image & image) {
+      return createSurface(image.getWidth(), image.getHeight(), image.getData());
+    }
 
     virtual void resize(unsigned int _width, unsigned int _height);
     
@@ -62,11 +67,19 @@ namespace canvas {
       drawImage(other.getDefaultSurface(), x, y, w, h);
     }
     virtual void drawImage(Surface & img, double x, double y, double w, double h) = 0;
+    
+    void drawImage(Image & img, double x, double y, double w, double h) {
+      if (img.getData()) {
+	auto surface = createSurface(img);
+	drawImage(*surface, x, y, w, h);
+      }
+    }
+
     Style & createLinearGradient(double x0, double y0, double x1, double y1) {
       current_linear_gradient.setType(Style::LINEAR_GRADIENT);
       current_linear_gradient.setVector(x0, y0, x1, y1);
       return current_linear_gradient;
-    }
+    }    
 
     float lineWidth = 1.0f;
     Style fillStyle;
