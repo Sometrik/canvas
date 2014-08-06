@@ -99,16 +99,15 @@ const TextureLink &
 Surface::updateTexture() {
   flush();
 
-  // SetCurrent(*glRC);
-  cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
+  // cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
   if (!texture.isDefined()) {
-    texture = OpenGLTexture::createTexture(getWidth(), getHeight());
+    texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
   }
 
   unsigned char * buffer = lockMemory();
-  cerr << "got buffer = " << (void*)buffer << endl;
   assert(buffer);
   
+  // remove premultiplied alpha
   unsigned char * buffer2 = new unsigned char[getWidth() * getHeight() * 4];
   for (unsigned int i = 0; i < getWidth() * getHeight(); i++) {
     unsigned int red = buffer[4 * i + 0];
