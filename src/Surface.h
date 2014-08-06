@@ -61,6 +61,10 @@ namespace canvas {
     FilterMode mag_filter = LINEAR;
     FilterMode min_filter = LINEAR;
   };
+
+  class NullSurface : public Surface {
+
+  };
 };
 
 #endif
