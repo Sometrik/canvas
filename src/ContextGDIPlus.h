@@ -35,14 +35,28 @@ namespace canvas {
   public:
     friend class ContextGDIPlus;
 
+    // PixelFormat32bppARGB
     GDIPlusSurface(unsigned int _width, unsigned int _height) : Surface(_width, _height), 
-      bitmap(new Gdiplus::Bitmap(_width, _height, PixelFormat32bppARGB)),
+      bitmap(new Gdiplus::Bitmap(_width, _height, PixelFormat32bppPARGB)),
+      g(new Gdiplus::Graphics(&(*bitmap)))
+    {
+#if 0
+      g->SetCompositingMode( CompositingModeSourceCopy );
+      g->SetCompositingQuality( CompositingQualityHighSpeed );
+      g->SetPixelOffsetMode( PixelOffsetModeNone );
+      g->SetSmoothingMode( SmoothingModeNone );
+      g->SetInterpolationMode( InterpolationModeDefault );
+#endif
+    }
+    // Gdiplus::PixelFormat32bppARGB
+    GDIPlusSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) : Surface(_width, _height),
+      bitmap(new Gdiplus::Bitmap(_width, _height, _width * 3, PixelFormat24bppRGB, _data)),
       g(new Gdiplus::Graphics(&(*bitmap)))
     {
     }
     // Gdiplus::PixelFormat32bppARGB
-    GDIPlusSurface(unsigned int _width, unsigned int _height, unsigned char * _data) : Surface(_width, _height),
-      bitmap(new Gdiplus::Bitmap(_width, _height, _width * 3, PixelFormat24bppRGB, _data)),
+  GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight()),
+      bitmap(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 3, PixelFormat24bppRGB, image.getData())),
       g(new Gdiplus::Graphics(&(*bitmap)))
     {
     }
@@ -101,7 +115,7 @@ namespace canvas {
       }
     }
 
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned char * data) {
+    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * data) {
       return std::shared_ptr<Surface>(new GDIPlusSurface(_width, _height, data));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
@@ -154,7 +168,12 @@ namespace canvas {
     }
     void fill() {
       if (fillStyle.getType() == Style::LINEAR_GRADIENT) {
-	Gdiplus::LinearGradientBrush brush(Rect(0,0,100,100), Color::Red, Color::Yellow, LinearGradientModeHorizontal);
+	const std::map<float, Color> & colors = fillStyle.getColors();
+	if (!colors.empty()) {
+	  std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
+	  it1--;
+	  const Color & c0 = *it0, c1 = *it1;
+	  Gdiplus::LinearGradientBrush brush(Gdiplus::PointF(fillStyle.x0, fillStyle.y0), Gdiplus::PointF(fillStyle.x1, fillStyle.y1), Gdiplus::Color(c0.red, c0.green, c0.blue), Gdiplus::Color(c1.red, c1.green, c1.blue), LinearGradientModeHorizontal);
 	default_surface.g->FillPath(&brush, &current_path);
       } else {
 	Gdiplus::SolidBrush brush(Gdiplus::Color(fillStyle.color.red, fillStyle.color.green, fillStyle.color.blue ));
