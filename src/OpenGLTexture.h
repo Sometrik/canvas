@@ -12,8 +12,8 @@ namespace canvas {
   class OpenGLTexture : public Texture {
   public:
     
-  OpenGLTexture(unsigned int _width, unsigned int _height, unsigned int _texture_id)
-    : Texture(_width, _height),
+  OpenGLTexture(unsigned int _width, unsigned int _height, unsigned int _texture_id, FilterMode _min_filter, FilterMode _mag_filter)
+    : Texture(_width, _height, _min_filter, _mag_filter),
       texture_id(_texture_id)
       {
 	if (texture_id) total_textures++;
@@ -32,7 +32,7 @@ namespace canvas {
     static size_t getNumTextures() { return total_textures; }
     static const std::vector<unsigned int> & getFreedTextures() { return freed_textures; }
     static void releaseTextures();
-    static TextureLink createTexture(unsigned int width, unsigned int height);
+    static TextureLink createTexture(unsigned int width, unsigned int height, FilterMode min_filter, FilterMode mag_filter);
 
   private:
     unsigned int texture_id;
