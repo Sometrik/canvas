@@ -11,6 +11,11 @@
 #include "Image.h"
 
 namespace canvas {  
+  class Point {
+  public:
+  Point(double _x, double _y) : x(_x), y(_y) { }
+    double x, y;
+  };
   struct Size {
     float width, height;
   };
@@ -56,6 +61,7 @@ namespace canvas {
     void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
     void fillText(const std::string & text, double x, double y);
+    void arcTo(double x1, double y1, double x2, double y2, double radius);
     
     virtual Surface & getDefaultSurface() = 0;
     virtual const Surface & getDefaultSurface() const = 0;
@@ -92,13 +98,13 @@ namespace canvas {
     TextBaseline textBaseline = ALPHABETIC;
     
   protected:
+    virtual Point getCurrentPoint() = 0;
     bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
 
   private:
     unsigned int width, height;
     Style current_linear_gradient;
     
-
     Context(const Context & other) { }
     Context & operator=(const Context & other) { return *this; }
   };
