@@ -151,7 +151,7 @@ namespace canvas {
       current_path.Reset();
     }
     void arc(double x, double y, double r, double a0, double a1, bool t = false) {
-      current_path.AddArc(Gdiplus::REAL(x), Gdiplus::REAL(y), Gdiplus::REAL(2 * r), Gdiplus::REAL(2 * r), Gdiplus::REAL(a0), Gdiplus::REAL(a1 - a0));
+      current_path.AddArc(Gddiplus::REAL(x - r), Gdiplus::REAL(y - r), Gdiplus::REAL(2 * r), Gdiplus::REAL(2 * r), Gdiplus::REAL(a0), Gdiplus::REAL(a1 - a0));
     }
     void clearRect(double x, double y, double w, double h) { }
     void moveTo(double x, double y) {
