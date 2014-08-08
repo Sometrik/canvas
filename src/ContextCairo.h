@@ -81,6 +81,8 @@ namespace canvas {
     void drawImage(Surface & img, double x, double y, double w, double h);
 
   protected:
+    Point getCurrentPoint();
+
     CairoSurface default_surface;
   
   private:

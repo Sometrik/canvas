@@ -1,6 +1,7 @@
 #include "ContextCairo.h"
 
 #include <cassert>
+#include <cmath>
 
 using namespace canvas;
 
@@ -24,6 +25,7 @@ CairoSurface::CairoSurface(unsigned int _width, unsigned int _height)
 CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data)
   : Surface(_width, _height)
 {
+  cerr << "creating image surface\n";
   cairo_format_t format = CAIRO_FORMAT_RGB24;
   unsigned int stride = cairo_format_stride_for_width(format, _width);
   assert(stride == 4 * _width);
@@ -39,6 +41,7 @@ CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, const unsi
   assert(surface);
   cr = cairo_create(surface);  
   assert(cr);
+  cerr << "done\n";
 }
  
 CairoSurface::~CairoSurface() {
@@ -174,12 +177,48 @@ ContextCairo::clip() {
 }
 
 void
-ContextCairo::arc(double x, double y, double r, double a0, double a1, bool t) {
-  std::cerr << "drawing arc, this = " << this << ", cr = " << default_surface.cr << std::endl;
-  if (!t) {
-    cairo_arc(default_surface.cr, x, y, r, a0, a1);
+ContextCairo::arc(double x, double y, double r, double sa, double ea, bool anticlockwise) {
+  double span = 0;
+
+  if ((!anticlockwise && (ea - sa >= 2 * M_PI)) || (anticlockwise && (sa - ea >= 2 * M_PI))) {
+    // If the anticlockwise argument is false and endAngle-startAngle is equal to or greater than 2*PI, or, if the
+    // anticlockwise argument is true and startAngle-endAngle is equal to or greater than 2*PI, then the arc is the whole
+    // circumference of this circle.
+    span = 2 * M_PI;
   } else {
-    cairo_arc_negative(default_surface.cr, x, y, r, a0, a1);
+    if (!anticlockwise && (ea < sa)) {
+      span += 2 * M_PI;
+    } else if (anticlockwise && (sa < ea)) {
+      span -= 2 * M_PI;
+    }
+ 
+#if 0
+    // this is also due to switched coordinate system
+    // we would end up with a 0 span instead of 360
+    if (!(qFuzzyCompare(span + (ea - sa) + 1, 1.0) && qFuzzyCompare(qAbs(span), 360.0))) {
+      // mod 360
+      span += (ea - sa) - (static_cast<int>((ea - sa) / 360)) * 360;
+    }
+#else
+    span += ea - sa;
+#endif
+  }
+ 
+#if 0
+  // If the path is empty, move to where the arc will start to avoid painting a line from (0,0)
+  // NOTE: QPainterPath::isEmpty() won't work here since it ignores a lone MoveToElement
+  if (!m_path.elementCount())
+    m_path.arcMoveTo(xs, ys, width, height, sa);
+  else if (!radius) {
+    m_path.lineTo(xc, yc);
+    return;
+  }
+#endif
+
+  if (!anticlockwise) {
+    cairo_arc(default_surface.cr, x, y, r, sa, sa + span);
+  } else {
+    cairo_arc_negative(default_surface.cr, x, y, r, sa, sa + span);
   }
 }
 
@@ -235,4 +274,9 @@ ContextCairo::drawImage(Surface & _img, double x, double y, double w, double h) 
   cairo_restore(default_surface.cr);
 }
 
-// cairo_surface_mark_dirty
+Point
+ContextCairo::getCurrentPoint() {
+  double x0, y0;
+  cairo_get_current_point(default_surface.cr, &x0, &y0);
+  return Point(x0, y0);
+}
