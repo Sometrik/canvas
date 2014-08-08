@@ -3,10 +3,11 @@
 
 #include "Texture.h"
 
+namespace canvas {
 class TextureLink {
  public:
   TextureLink() : width(0), height(0), data(0) { }
-  TextureLink(unsigned int _width, unsigned int _height, canvas::Texture * _data = 0) : width(_width), height(_height), data(_data) {
+  TextureLink(unsigned int _width, unsigned int _height, Texture * _data = 0) : width(_width), height(_height), data(_data) {
     if (data) data->incRefcnt();
   }
  TextureLink(const TextureLink & other)
@@ -54,11 +55,12 @@ class TextureLink {
     data = 0;
   }
 
-  const canvas::Texture * getData() const { return data; }
+  const Texture * getData() const { return data; }
 
  private:
   unsigned int width, height;
-  canvas::Texture * data;
+  Texture * data;
 };
+}
 
 #endif
