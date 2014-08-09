@@ -88,7 +88,9 @@ CairoSurface::getBuffer() {
 void
 CairoSurface::fillText(Context & context, const std::string & text, double x, double y) {
   cairo_set_source_rgba(cr, context.fillStyle.color.red / 255.0f, context.fillStyle.color.green / 255.0f, context.fillStyle.color.blue / 255.0f, 1.0f);
-  cairo_select_font_face(cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+  cairo_select_font_face(cr, context.font.family.c_str(),
+			 context.font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (context.font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
+			 context.font.weight == Font::NORMAL || context.font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
   cairo_set_font_size(cr, context.font.size);
   cairo_text_extents_t extents;
   cairo_text_extents(cr, text.c_str(), &extents);
@@ -98,7 +100,7 @@ CairoSurface::fillText(Context & context, const std::string & text, double x, do
     cairo_move_to(cr, x, y - (extents.height/2 + extents.y_bearing));
     break;
   case TOP:
-    cairo_move_to(cr, x, y + extents.height / 2);
+    cairo_move_to(cr, x, y + extents.height);
     break;
   default:
     cairo_move_to(cr, x, y);
@@ -224,8 +226,10 @@ ContextCairo::arc(double x, double y, double r, double sa, double ea, bool antic
 
 Size
 ContextCairo::measureText(const std::string & text) {
-  cairo_select_font_face(default_surface.cr, "sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
-  cairo_set_font_size(default_surface.cr, 12);
+  cairo_select_font_face(default_surface.cr, font.family.c_str(),
+			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
+			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
+  cairo_set_font_size(default_surface.cr, font.size);
   cairo_text_extents_t te;
   cairo_text_extents(default_surface.cr, text.c_str(), &te);
   return { (float)te.width, (float)te.height };

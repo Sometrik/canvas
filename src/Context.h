@@ -74,7 +74,7 @@ namespace canvas {
     }
     virtual void drawImage(Surface & img, double x, double y, double w, double h) = 0;
     
-    void drawImage(Image & img, double x, double y, double w, double h) {
+    void drawImage(const Image & img, double x, double y, double w, double h) {
       if (img.getData()) {
 	auto surface = createSurface(img);
 	drawImage(*surface, x, y, w, h);
