@@ -6,9 +6,9 @@
 #include <vector>
 #include <cstddef>
 
-class TextureLink;
-
 namespace canvas {
+  class TextureLink;
+
   class OpenGLTexture : public Texture {
   public:
     
