@@ -86,6 +86,14 @@ namespace canvas {
       std::wstring text2 = convert_to_wstring(text);
       Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), context.font.size);
       Gdiplus::SolidBrush brush(Gdiplus::Color(context.fillStyle.color.red, context.fillStyle.color.green, context.fillStyle.color.blue));
+
+#if 0
+      switch (context.textBaseline) {
+      case TOP: break;
+      case HANGING: break;
+      }
+#endif
+
       g->DrawString(text2.data(), text2.size(), &font, Gdiplus::PointF(x, y), &brush);
     }
 
