@@ -2,6 +2,7 @@
 #define _CANVAS_TEXTBASELINE_H_
 
 #include <cstring>
+#include <cassert>
 
 namespace canvas {
   class TextBaseline {
