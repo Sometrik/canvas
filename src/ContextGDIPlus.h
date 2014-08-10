@@ -89,7 +89,14 @@ namespace canvas {
 
     void fillText(Context & context, const std::string & text, double x, double y) {
       std::wstring text2 = convert_to_wstring(text);
-      Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), context.font.size);
+      int style = 0;
+      if (context.font.weight == Font::BOLD || context.font.weight == Font::BOLDER) {
+	style |= Gdiplus::FontStyleBold;
+      }
+      if (context.font.slant == Font::ITALIC) {
+	style |= Gdiplus::FontStyleItalic;
+      }
+      Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), context.font.size, style Gdiplus::UnitPixel);
       Gdiplus::SolidBrush brush(Gdiplus::Color(context.fillStyle.color.red, context.fillStyle.color.green, context.fillStyle.color.blue));
 
       Gdiplus::RectF rect(x, y, 0.0f, 0.0f);
@@ -193,7 +200,14 @@ namespace canvas {
     void fill();
     Size measureText(const std::string & text) {
       std::wstring text2 = convert_to_wstring(text);
-      Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), font.size);
+      int style = 0;
+      if (context.font.weight == Font::BOLD || context.font.weight == Font::BOLDER) {
+	style |= Gdiplus::FontStyleBold;
+      }
+      if (context.font.slant == Font::ITALIC) {
+	style |= Gdiplus::FontStyleItalic;
+      }
+      Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), font.size, style, Gdiplus::UnitPixel);
       Gdiplus::RectF layoutRect(0, 0, 512, 512), boundingBox;
       default_surface.g->MeasureString(text2.data(), text2.size(), &font, layoutRect, &boundingBox);
       Gdiplus::SizeF size;
