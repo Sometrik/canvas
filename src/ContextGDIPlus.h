@@ -92,12 +92,18 @@ namespace canvas {
       Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), context.font.size);
       Gdiplus::SolidBrush brush(Gdiplus::Color(context.fillStyle.color.red, context.fillStyle.color.green, context.fillStyle.color.blue));
 
-#if 0
+      Gdiplus::RectF rect(x, y, 0.0f, 0.0f);
+#if 1
+      Gdiplus::StringFormat f;
+      f.SetAlignment(Gdiplus::StringAlignmentCenter;
+      f.SetLineAlignment( = Gdiplus::StringAlignmentCenter;
+#endif
+
       switch (context.textBaseline) {
       case TOP: break;
       case HANGING: break;
+      case MIDDLE: break;
       }
-#endif
 
       g->DrawString(text2.data(), text2.size(), &font, Gdiplus::PointF(x, y), &brush);
     }
@@ -156,15 +162,20 @@ namespace canvas {
       current_path.Reset();  
     }
     void closePath() {
+      current_path.CloseFigure();
     }
     void clip() {
-#if 1
+#if 0
       default_surface.g->SetClip(&current_path, Gdiplus::CombineModeReplace);
+#else
+      Gdiplus::Region region(&current_path);
+      default_surface.g->SetClip(&region);
 #endif
       current_path.Reset();
     }
     void arc(double x, double y, double r, double a0, double a1, bool t = false) {
-      current_path.AddArc(Gdiplus::REAL(x - r), Gdiplus::REAL(y - r), Gdiplus::REAL(2 * r), Gdiplus::REAL(2 * r), Gdiplus::REAL(a0), Gdiplus::REAL(a1 - a0));
+      Gdiplus::RectF rect(Gdiplus::REAL(x - r), Gdiplus::REAL(y - r), Gdiplus::REAL(2 * r), Gdiplus::REAL(2 * r));
+      current_path.AddArc(rect, Gdiplus::REAL(a0) * 180 / M_PI, Gdiplus::REAL(a1 - a0) * 180 / M_PI);
     }
     void clearRect(double x, double y, double w, double h) { }
     void moveTo(double x, double y) {
@@ -199,7 +210,7 @@ namespace canvas {
     }
     
   protected:
-    Point getCurrentPoint() { return Point(current_position.x, current_position.y); }
+    Point getCurrentPoint() { return Point(current_position.X, current_position.Y); }
 
     GDIPlusSurface default_surface;
     Gdiplus::GraphicsPath current_path;
