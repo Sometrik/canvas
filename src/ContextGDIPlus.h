@@ -14,6 +14,7 @@ namespace Gdiplus
 
 #include <iostream>
 #include <cassert>
+#include <vector>
 
 #include "utf8.h"
 
@@ -49,16 +50,20 @@ namespace canvas {
 #endif
     }
     // Gdiplus::PixelFormat32bppARGB
-    GDIPlusSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) : Surface(_width, _height),
-      bitmap(new Gdiplus::Bitmap(_width, _height, _width * 3, PixelFormat24bppRGB, _data)),
-      g(new Gdiplus::Graphics(&(*bitmap)))
+    GDIPlusSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) : Surface(_width, _height)
     {
+      BYTE * tmp = new BYTE[3 * _width * _height]; // FIXME Free?
+      memcpy(tmp, _data, 3 * _width * _height);
+      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_width, _height, _width * 3, PixelFormat24bppRGB, tmp));
+      g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
     }
     // Gdiplus::PixelFormat32bppARGB
-  GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight()),
-      bitmap(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 3, PixelFormat24bppRGB, image.getData())),
-      g(new Gdiplus::Graphics(&(*bitmap)))
+  GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight())
     {
+      BYTE * tmp = new BYTE[3 * image.getWidth() * image.getHeight()]; // FIXME Free?
+      memcpy(tmp, image.getData(), 3 * image.getWidth() * image.getHeight());
+      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 3, PixelFormat24bppRGB, tmp));
+      g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
     }
     ~GDIPlusSurface() {
     }
@@ -159,7 +164,7 @@ namespace canvas {
       current_path.Reset();
     }
     void arc(double x, double y, double r, double a0, double a1, bool t = false) {
-      current_path.AddArc(Gddiplus::REAL(x - r), Gdiplus::REAL(y - r), Gdiplus::REAL(2 * r), Gdiplus::REAL(2 * r), Gdiplus::REAL(a0), Gdiplus::REAL(a1 - a0));
+      current_path.AddArc(Gdiplus::REAL(x - r), Gdiplus::REAL(y - r), Gdiplus::REAL(2 * r), Gdiplus::REAL(2 * r), Gdiplus::REAL(a0), Gdiplus::REAL(a1 - a0));
     }
     void clearRect(double x, double y, double w, double h) { }
     void moveTo(double x, double y) {
@@ -174,20 +179,7 @@ namespace canvas {
       Gdiplus::Pen pen(Gdiplus::Color(strokeStyle.color.red, strokeStyle.color.green, strokeStyle.color.blue ));
       default_surface.g->DrawPath(&pen, &current_path);
     }
-    void fill() {
-      if (fillStyle.getType() == Style::LINEAR_GRADIENT) {
-	const std::map<float, Color> & colors = fillStyle.getColors();
-	if (!colors.empty()) {
-	  std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
-	  it1--;
-	  const Color & c0 = *it0, c1 = *it1;
-	  Gdiplus::LinearGradientBrush brush(Gdiplus::PointF(fillStyle.x0, fillStyle.y0), Gdiplus::PointF(fillStyle.x1, fillStyle.y1), Gdiplus::Color(c0.red, c0.green, c0.blue), Gdiplus::Color(c1.red, c1.green, c1.blue), LinearGradientModeHorizontal);
-	default_surface.g->FillPath(&brush, &current_path);
-      } else {
-	Gdiplus::SolidBrush brush(Gdiplus::Color(fillStyle.color.red, fillStyle.color.green, fillStyle.color.blue ));
-	default_surface.g->FillPath(&brush, &current_path);
-      }
-    }
+    void fill();
     Size measureText(const std::string & text) {
       std::wstring text2 = convert_to_wstring(text);
       Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), font.size);
@@ -207,6 +199,8 @@ namespace canvas {
     }
     
   protected:
+    Point getCurrentPoint() { return Point(current_position.x, current_position.y); }
+
     GDIPlusSurface default_surface;
     Gdiplus::GraphicsPath current_path;
     Gdiplus::PointF current_position;
