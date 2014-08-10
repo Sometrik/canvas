@@ -73,7 +73,8 @@ namespace canvas {
       
     }
   ContextQuartz2D(unsigned int _width, unsigned int _height)
-    : Context(_width, _height)
+    : Context(_width, _height),
+      default_context(_width, _height)
       {
       }
     ~ContextQuartz2D() {
