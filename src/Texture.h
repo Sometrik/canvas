@@ -6,7 +6,7 @@
 namespace canvas {
   class Texture {
   public:
-    friend class TextureLink;
+    friend class TextureRef;
 
   Texture(unsigned int _width, unsigned int _height, FilterMode _min_filter, FilterMode _mag_filter) 
     : width(_width), height(_height), min_filter(_min_filter), mag_filter(_mag_filter) { }

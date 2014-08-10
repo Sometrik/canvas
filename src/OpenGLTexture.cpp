@@ -1,6 +1,6 @@
 #include "OpenGLTexture.h"
 
-#include "TextureLink.h"
+#include "TextureRef.h"
 #include "../../personal/graphviewer/ui/GL.h"
 
 #include <cassert>
@@ -52,15 +52,15 @@ OpenGLTexture::releaseTextures() {
   freed_textures.clear();
 }
 
-TextureLink
+TextureRef
 OpenGLTexture::createTexture(unsigned int width, unsigned int height, FilterMode min_filter, FilterMode mag_filter) {
   if (freed_textures.empty()) {
     unsigned int id;
     glGenTextures(1, &id);
-    return TextureLink(width, height, new OpenGLTexture(width, height, id, min_filter, mag_filter));
+    return TextureRef(width, height, new OpenGLTexture(width, height, id, min_filter, mag_filter));
   } else {
     unsigned int id = freed_textures.back();
     freed_textures.pop_back();
-    return TextureLink(width, height, new OpenGLTexture(width, height, id, min_filter, mag_filter));
+    return TextureRef(width, height, new OpenGLTexture(width, height, id, min_filter, mag_filter));
   }
 }

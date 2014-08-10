@@ -7,7 +7,7 @@
 #include <cstddef>
 
 namespace canvas {
-  class TextureLink;
+  class TextureRef;
 
   class OpenGLTexture : public Texture {
   public:
@@ -32,7 +32,7 @@ namespace canvas {
     static size_t getNumTextures() { return total_textures; }
     static const std::vector<unsigned int> & getFreedTextures() { return freed_textures; }
     static void releaseTextures();
-    static TextureLink createTexture(unsigned int width, unsigned int height, FilterMode min_filter, FilterMode mag_filter);
+    static TextureRef createTexture(unsigned int width, unsigned int height, FilterMode min_filter, FilterMode mag_filter);
 
   private:
     unsigned int texture_id;

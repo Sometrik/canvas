@@ -1,20 +1,20 @@
-#ifndef _TEXTURELINK_H_
-#define _TEXTURELINK_H_
+#ifndef _TEXTUREREF_H_
+#define _TEXTUREREF_H_
 
 #include "Texture.h"
 
 namespace canvas {
-  class TextureLink {
+  class TextureRef {
   public:
-  TextureLink() : width(0), height(0), data(0) { }
-  TextureLink(unsigned int _width, unsigned int _height, Texture * _data = 0) : width(_width), height(_height), data(_data) {
+  TextureRef() : width(0), height(0), data(0) { }
+  TextureRef(unsigned int _width, unsigned int _height, Texture * _data = 0) : width(_width), height(_height), data(_data) {
       if (data) data->incRefcnt();
     }
-  TextureLink(const TextureLink & other)
+  TextureRef(const TextureRef & other)
     : width(other.width), height(other.height), data(other.data) {
       if (data) data->incRefcnt();
     }
-    TextureLink & operator=(const TextureLink & other) {
+    TextureRef & operator=(const TextureRef & other) {
       if (this != &other) {
 	setData(other.data);
 	width = other.width;
@@ -22,7 +22,7 @@ namespace canvas {
       }
       return *this;
     }
-    ~TextureLink() {
+    ~TextureRef() {
       clear();
     }
   

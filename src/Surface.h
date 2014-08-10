@@ -1,7 +1,7 @@
 #ifndef _SURFACE_H_
 #define _SURFACE_H_
 
-#include "TextureLink.h"
+#include "TextureRef.h"
 #include "Color.h"
 #include "FilterMode.h"
 
@@ -38,7 +38,7 @@ namespace canvas {
     void gaussianBlur(float hradius, float vradius);
     void colorize(const Color & color);
 
-    const TextureLink & updateTexture();
+    const TextureRef & updateTexture();
 
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
@@ -46,7 +46,7 @@ namespace canvas {
     void setMagFilter(FilterMode mode) { mag_filter = mode; }
     void setMinFilter(FilterMode mode) { min_filter = mode; }
   
-    TextureLink texture;
+    TextureRef texture;
 
   protected:
     virtual void fillText(Context & context, const std::string & text, double x, double y) = 0;

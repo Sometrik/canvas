@@ -95,7 +95,7 @@ Surface::colorize(const Color & color) {
   
 }
 
-const TextureLink &
+const TextureRef &
 Surface::updateTexture() {
   flush();
 
