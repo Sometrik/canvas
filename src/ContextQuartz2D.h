@@ -3,10 +3,13 @@
 
 #include "Context.h"
 
+#include <cassert>
+
 namespace canvas {
   class Quartz2DSurface : public Surface {
   public:
-    Quartz2DSurface(unsigned int _width, unsigned int _height) {
+  Quartz2DSurface(unsigned int _width, unsigned int _height) :
+    Surface(_width, _height) {
       colorspace = CGColorSpaceCreateDeviceRGB();
 
       unsigned int bitmapBytesPerRow = _width * 4;
@@ -21,9 +24,14 @@ namespace canvas {
 				 colorspace,
 				 kCGImageAlphaPremultipliedLast);      
     }
+
+  Quartz2DSurface(unsigned int _width, unsigned int _height, CGContextRef & _gc) :
+    Surface(_width, _height), gc(_gc) {
+      colorspace = CGColorSpaceCreateDeviceRGB();
+    }
     
     Quartz2DSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) {
-      
+      assert(0);
     }
     
     ~Quartz2DSurface() {
@@ -59,8 +67,13 @@ namespace canvas {
   class ContextQuartz2D : public Context {
   public:
     // get context with UIGraphicsGetCurrentContext();
-    ContextQuartz2D(unsigned int _width, unsigned int _height)
-      : Context(_width, _height)
+  ContextQuartz2D(unsigned int _width, unsigned int _height, CGContextRef & _gc) 
+    : Context(_width, _height),
+      default_context(_width, _height, _gc) {
+      
+    }
+  ContextQuartz2D(unsigned int _width, unsigned int _height)
+    : Context(_width, _height)
       {
       }
     ~ContextQuartz2D() {
