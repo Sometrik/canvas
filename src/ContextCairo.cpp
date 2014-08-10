@@ -95,17 +95,20 @@ CairoSurface::fillText(Context & context, const std::string & text, double x, do
   cairo_text_extents_t extents;
   cairo_text_extents(cr, text.c_str(), &extents);
 
-  switch (context.textBaseline) {
-  case MIDDLE:
-    cairo_move_to(cr, x, y - (extents.height/2 + extents.y_bearing));
-    break;
-  case TOP:
-    cairo_move_to(cr, x, y + extents.height);
-    break;
-  default:
-    cairo_move_to(cr, x, y);
-  };
+  switch (context.textBaseline.getType()) {
+  case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
+  case TextBaseline::TOP: y += extents.height; break;
+  default: break;
+  }
+
+  switch (context.textAlign) {
+  case LEFT: break;
+  case CENTER: x -= extents.width / 2; break;
+  case RIGHT: x -= extents.width; break;
+  default: break;
+  }
   
+  cairo_move_to(cr, x, y);
   cairo_show_text(cr, text.c_str());
 }
 
@@ -223,7 +226,7 @@ ContextCairo::arc(double x, double y, double r, double sa, double ea, bool antic
   }
 }
 
-Size
+TextMetrics
 ContextCairo::measureText(const std::string & text) {
   cairo_select_font_face(default_surface.cr, font.family.c_str(),
 			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),

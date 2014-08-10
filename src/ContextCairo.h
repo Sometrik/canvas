@@ -73,7 +73,7 @@ namespace canvas {
     void lineTo(double x, double y);
     void stroke();
     void fill();
-    Size measureText(const std::string & text);
+    TextMetrics measureText(const std::string & text);
 
     void drawImage(Context & other, double x, double y, double w, double h) {
       Context::drawImage(other, x, y, w, h);
