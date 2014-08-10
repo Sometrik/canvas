@@ -9,6 +9,7 @@
 #include "Font.h"
 #include "Surface.h"
 #include "Image.h"
+#include "TextBaseline.h"
 
 namespace canvas {  
   class Point {
@@ -16,16 +17,15 @@ namespace canvas {
   Point(double _x, double _y) : x(_x), y(_y) { }
     double x, y;
   };
-  struct Size {
+  struct TextMetrics {
     float width, height;
   };
-  enum TextBaseline {
-    TOP = 1,
-    HANGING,
-    MIDDLE,
-    ALPHABETIC,
-    IDEOGRAPHIC,
-    BOTTOM
+  enum TextAlign {
+    START = 1,
+    END,
+    LEFT,
+    CENTER,
+    RIGHT
   };
 
   class Context {
@@ -56,7 +56,7 @@ namespace canvas {
     virtual void lineTo(double x, double y) = 0;
     virtual void stroke() = 0;
     virtual void fill() = 0;
-    virtual Size measureText(const std::string & text) = 0;
+    virtual TextMetrics measureText(const std::string & text) = 0;
     
     void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
@@ -95,7 +95,8 @@ namespace canvas {
     float shadowOffsetX = 0.0f, shadowOffsetY = 0.0f;
     float globalAlpha = 1.0f;
     Font font;
-    TextBaseline textBaseline = ALPHABETIC;
+    TextBaseline textBaseline;
+    TextAlign textAlign = LEFT;
     
   protected:
     virtual Point getCurrentPoint() = 0;
