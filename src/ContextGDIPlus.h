@@ -113,10 +113,10 @@ namespace canvas {
       Gdiplus::StringFormat f;
       // f.SetAlignment(Gdiplus::StringAlignmentCenter);
 
-      switch (context.textBaseline) {
-      case TOP: break;
-      case HANGING: break;
-      case MIDDLE: f.SetLineAlignment(Gdiplus::StringAlignmentCenter); break;
+      switch (context.textBaseline.getType()) {
+      case TextBaseline::TOP: break;
+      case TextBaseline::HANGING: break;
+      case TextBaseline::MIDDLE: f.SetLineAlignment(Gdiplus::StringAlignmentCenter); break;
       }
 
       g->DrawString(text2.data(), text2.size(), &font, rect, &f, &brush);
@@ -202,7 +202,7 @@ namespace canvas {
       default_surface.g->DrawPath(&pen, &current_path);
     }
     void fill();
-    Size measureText(const std::string & text) {
+    TextMetrics measureText(const std::string & text) {
       std::wstring text2 = convert_to_wstring(text);
       int style = 0;
       if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {
