@@ -15,6 +15,7 @@ Context::resize(unsigned int _width, unsigned int _height) {
 
 void
 Context::fillRect(double x, double y, double w, double h) {
+  save();
   beginPath();
   moveTo(x, y);
   lineTo(x + w, y);
@@ -22,6 +23,8 @@ Context::fillRect(double x, double y, double w, double h) {
   lineTo(x, y + h);
   closePath();
   fill();
+  beginPath(); // tmp fix
+  restore();
 }
 
 void
