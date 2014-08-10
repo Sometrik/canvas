@@ -175,7 +175,6 @@ ContextCairo::closePath() {
 void
 ContextCairo::clip() {
   cairo_clip(default_surface.cr);
-  cairo_new_path(default_surface.cr); // current path is not consumed with cairo_clip
 }
 
 void
