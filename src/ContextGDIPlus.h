@@ -45,25 +45,35 @@ namespace canvas {
       g->SetCompositingMode( CompositingModeSourceCopy );
       g->SetCompositingQuality( CompositingQualityHighSpeed );
       g->SetPixelOffsetMode( PixelOffsetModeNone );
-      g->SetSmoothingMode( SmoothingModeNone );
       g->SetInterpolationMode( InterpolationModeDefault );
 #endif
+      g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
     }
     // Gdiplus::PixelFormat32bppARGB
     GDIPlusSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) : Surface(_width, _height)
     {
       BYTE * tmp = new BYTE[3 * _width * _height]; // FIXME Free?
-      memcpy(tmp, _data, 3 * _width * _height);
+      for (unsigned int i = 0; i < _width * _height; i++) {
+	tmp[3 * i + 0] = _data[3 * i + 2];
+	tmp[3 * i + 1] = _data[3 * i + 1];
+	tmp[3 * i + 2] = _data[3 * i + 0];
+      }
       bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_width, _height, _width * 3, PixelFormat24bppRGB, tmp));
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+      g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
     }
     // Gdiplus::PixelFormat32bppARGB
   GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight())
     {
       BYTE * tmp = new BYTE[3 * image.getWidth() * image.getHeight()]; // FIXME Free?
-      memcpy(tmp, image.getData(), 3 * image.getWidth() * image.getHeight());
+      for (unsigned int i = 0; i < image.getWidth() * image.getHeight(); i++) {
+	tmp[3 * i + 0] = image.getData()[3 * i + 2];
+	tmp[3 * i + 1] = image.getData()[3 * i + 1];
+	tmp[3 * i + 2] = image.getData()[3 * i + 0];
+      }
       bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 3, PixelFormat24bppRGB, tmp));
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+      g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
     }
     ~GDIPlusSurface() {
     }
@@ -96,23 +106,20 @@ namespace canvas {
       if (context.font.slant == Font::ITALIC) {
 	style |= Gdiplus::FontStyleItalic;
       }
-      Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), context.font.size, style Gdiplus::UnitPixel);
+      Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), context.font.size, style, Gdiplus::UnitPixel);
       Gdiplus::SolidBrush brush(Gdiplus::Color(context.fillStyle.color.red, context.fillStyle.color.green, context.fillStyle.color.blue));
 
       Gdiplus::RectF rect(x, y, 0.0f, 0.0f);
-#if 1
       Gdiplus::StringFormat f;
-      f.SetAlignment(Gdiplus::StringAlignmentCenter;
-      f.SetLineAlignment( = Gdiplus::StringAlignmentCenter;
-#endif
+      // f.SetAlignment(Gdiplus::StringAlignmentCenter);
 
       switch (context.textBaseline) {
       case TOP: break;
       case HANGING: break;
-      case MIDDLE: break;
+      case MIDDLE: f.SetLineAlignment(Gdiplus::StringAlignmentCenter); break;
       }
 
-      g->DrawString(text2.data(), text2.size(), &font, Gdiplus::PointF(x, y), &brush);
+      g->DrawString(text2.data(), text2.size(), &font, rect, &f, &brush);
     }
 
   protected:
@@ -180,10 +187,7 @@ namespace canvas {
 #endif
       current_path.Reset();
     }
-    void arc(double x, double y, double r, double a0, double a1, bool t = false) {
-      Gdiplus::RectF rect(Gdiplus::REAL(x - r), Gdiplus::REAL(y - r), Gdiplus::REAL(2 * r), Gdiplus::REAL(2 * r));
-      current_path.AddArc(rect, Gdiplus::REAL(a0) * 180 / M_PI, Gdiplus::REAL(a1 - a0) * 180 / M_PI);
-    }
+    void arc(double x, double y, double r, double a0, double a1, bool t = false);
     void clearRect(double x, double y, double w, double h) { }
     void moveTo(double x, double y) {
       current_position = Gdiplus::PointF(x, y);
@@ -201,10 +205,10 @@ namespace canvas {
     Size measureText(const std::string & text) {
       std::wstring text2 = convert_to_wstring(text);
       int style = 0;
-      if (context.font.weight == Font::BOLD || context.font.weight == Font::BOLDER) {
+      if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {
 	style |= Gdiplus::FontStyleBold;
       }
-      if (context.font.slant == Font::ITALIC) {
+      if (font.slant == Font::ITALIC) {
 	style |= Gdiplus::FontStyleItalic;
       }
       Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), font.size, style, Gdiplus::UnitPixel);
