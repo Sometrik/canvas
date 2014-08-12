@@ -62,12 +62,7 @@ ContextGDIPlus::arc(double x, double y, double r, double sa, double ea, bool ant
 #endif
 
   Gdiplus::RectF rect(Gdiplus::REAL(x - r), Gdiplus::REAL(y - r), Gdiplus::REAL(2 * r), Gdiplus::REAL(2 * r));
-  if (!anticlockwise) {
-    current_path.AddArc(rect, Gdiplus::REAL(sa) * 180 / M_PI, Gdiplus::REAL(span) * 180 / M_PI);
-  } else {
-    current_path.AddArc(rect, Gdiplus::REAL(ea) * 180 / M_PI, Gdiplus::REAL(span) * 180 / M_PI);
- 
-  }
+  current_path.AddArc(rect, Gdiplus::REAL(sa * 180 / M_PI), Gdiplus::REAL(span * 180 / M_PI));
 }
 
 
