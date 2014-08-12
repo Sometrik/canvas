@@ -29,12 +29,7 @@ namespace canvas {
     virtual void markDirty() { }
     virtual unsigned char * lockMemory(bool write_access = false) = 0;
     virtual void releaseMemory() = 0;
-
-#if 0
-    virtual unsigned char * getBuffer() = 0;
-    virtual const unsigned char * getBuffer() const = 0;
-#endif
-
+    
     void gaussianBlur(float hradius, float vradius);
     void colorize(const Color & color);
 
@@ -46,10 +41,11 @@ namespace canvas {
     void setMagFilter(FilterMode mode) { mag_filter = mode; }
     void setMinFilter(FilterMode mode) { min_filter = mode; }
   
-    TextureRef texture;
-
   protected:
     virtual void fillText(Context & context, const std::string & text, double x, double y) = 0;
+    virtual void drawImage(Surface & _img, double x, double y, double w, double h) = 0;
+
+    TextureRef texture;
 
   private:
     Surface(const Surface & other) { }
