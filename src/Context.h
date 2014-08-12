@@ -69,18 +69,19 @@ namespace canvas {
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
 
-    virtual void drawImage(Context & other, double x, double y, double w, double h) {
+    void drawImage(Context & other, double x, double y, double w, double h) {
       drawImage(other.getDefaultSurface(), x, y, w, h);
     }
-    virtual void drawImage(Surface & img, double x, double y, double w, double h) = 0;
-    
     void drawImage(const Image & img, double x, double y, double w, double h) {
       if (img.getData()) {
 	auto surface = createSurface(img);
 	drawImage(*surface, x, y, w, h);
       }
     }
-
+    void drawImage(Surface & img, double x, double y, double w, double h) {
+      getDefaultSurface().drawImage(img, x, y, w, h);
+    }
+        
     Style & createLinearGradient(double x0, double y0, double x1, double y1) {
       current_linear_gradient.setType(Style::LINEAR_GRADIENT);
       current_linear_gradient.setVector(x0, y0, x1, y1);
