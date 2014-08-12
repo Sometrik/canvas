@@ -122,6 +122,11 @@ namespace canvas {
       g->DrawString(text2.data(), text2.size(), &font, rect, &f, &brush);
     }
 
+    void drawImage(Surface & _img, double x, double y, double w, double h) {
+      GDIPlusSurface & img = dynamic_cast<GDIPlusSurface&>(_img);
+      g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y));
+    }
+
   protected:
     std::shared_ptr<Gdiplus::Bitmap> bitmap;
     std::shared_ptr<Gdiplus::Graphics> g;
@@ -217,14 +222,6 @@ namespace canvas {
       Gdiplus::SizeF size;
       boundingBox.GetSize(&size);
       return {(double)size.Width, (double)size.Height};
-    }
-
-    void drawImage(Context & other, double x, double y, double w, double h) {
-      Context::drawImage(other, x, y, w, h);
-    }
-    void drawImage(Surface & _img, double x, double y, double w, double h) {
-      GDIPlusSurface & img = dynamic_cast<GDIPlusSurface&>(_img);
-      default_surface.g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y));
     }
     
   protected:
