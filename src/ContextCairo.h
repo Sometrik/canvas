@@ -30,13 +30,11 @@ namespace canvas {
 	markDirty();
       }
     }
-
     void resize(unsigned int width, unsigned int height);
-
-    // cairo_image_surface_get_stride(surface);
     
   protected:
     void fillText(Context & context, const std::string & text, double x, double y);
+    void drawImage(Surface & _img, double x, double y, double w, double h);
 
     cairo_t * cr;  
     cairo_surface_t * surface;
@@ -74,11 +72,6 @@ namespace canvas {
     void stroke();
     void fill();
     TextMetrics measureText(const std::string & text);
-
-    void drawImage(Context & other, double x, double y, double w, double h) {
-      Context::drawImage(other, x, y, w, h);
-    }
-    void drawImage(Surface & img, double x, double y, double w, double h);
 
   protected:
     Point getCurrentPoint();

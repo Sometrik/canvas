@@ -25,7 +25,6 @@ CairoSurface::CairoSurface(unsigned int _width, unsigned int _height)
 CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data)
   : Surface(_width, _height)
 {
-  cerr << "creating image surface\n";
   cairo_format_t format = CAIRO_FORMAT_RGB24;
   unsigned int stride = cairo_format_stride_for_width(format, _width);
   assert(stride == 4 * _width);
@@ -41,7 +40,6 @@ CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, const unsi
   assert(surface);
   cr = cairo_create(surface);  
   assert(cr);
-  cerr << "done\n";
 }
  
 CairoSurface::~CairoSurface() {
@@ -110,6 +108,16 @@ CairoSurface::fillText(Context & context, const std::string & text, double x, do
   
   cairo_move_to(cr, x, y);
   cairo_show_text(cr, text.c_str());
+}
+
+void
+CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h) {
+  CairoSurface & img = dynamic_cast<CairoSurface&>(_img);
+  cairo_save(cr);
+  cairo_scale(cr, w / img.getWidth(), h / img.getHeight());
+  cairo_set_source_surface(cr, img.surface, x, y);
+  cairo_paint(cr);
+  cairo_restore(cr);
 }
 
 ContextCairo::ContextCairo(unsigned int _width, unsigned int _height)
@@ -268,16 +276,6 @@ ContextCairo::fill() {
     cairo_set_source_rgba(default_surface.cr, fillStyle.color.red / 255.0f, fillStyle.color.green / 255.0f, fillStyle.color.blue / 255.0f, 1.0f);
   }
   cairo_fill_preserve(default_surface.cr);
-}
-
-void
-ContextCairo::drawImage(Surface & _img, double x, double y, double w, double h) {
-  CairoSurface & img = dynamic_cast<CairoSurface&>(_img);
-  cairo_save(default_surface.cr);
-  cairo_scale(default_surface.cr, w / img.getWidth(), h / img.getHeight());
-  cairo_set_source_surface(default_surface.cr, img.surface, x, y);
-  cairo_paint(default_surface.cr);
-  cairo_restore(default_surface.cr);
 }
 
 Point
