@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <glm/glm.hpp>
 
 using namespace std;
 using namespace canvas;
@@ -57,6 +58,33 @@ Context::fillText(const std::string & text, double x, double y) {
 // Original implementation influenced by WebKit.
 void
 Context::arcTo(double x1, double y1, double x2, double y2, double radius) {
+#if 0
+  Point _p0 = getCurrentPoint();
+  glm::dvec2 current(_p0.x, _p0.y);
+  glm::dvec2 p1(x1, y1), p2(x2, y2);
+
+  glm::dvec2 v1 = glm::normalize(current - p1);
+  glm::dvec2 v2 = glm::normalize(p2 - p1);
+  
+  double alpha = atan2(v1.y, v1.x) - atan2(v2.y, v2.x);
+  if (alpha < 0) alpha += 2*M_PI;
+  // TODO obtuse angles
+  
+  double dist = radius / sin(alpha / 2) * cos(alpha / 2);
+  // calculate tangential points
+  glm::dvec2 t1 = dist * v1 + p1;
+
+  double a0 = atan2(v1.y, v1.x) - M_PI / 2;
+  glm::dvec2 nv1(cos(a0), sin(a0));
+  glm::dvec2 c = t1 + radius * nv1;
+
+  double a1 = atan2(v1.y, v1.x) + M_PI / 2;
+  double a2 = atan2(v2.y, v2.x) - M_PI / 2;
+
+  lineTo(t1.x, t1.y);
+  arc(c.x, c.y, radius, a1, a2, a1 > a2);
+  lineTo(p2.x, p2.y);
+#else
   Point p0 = getCurrentPoint();
   Point p1(x1, y1);
   Point p2(x2, y2);
@@ -122,6 +150,9 @@ Context::arcTo(double x1, double y1, double x2, double y2, double radius) {
   if ((sa > ea) && ((sa - ea) < M_PI)) anticlockwise = true;
   if ((sa < ea) && ((ea - sa) > M_PI)) anticlockwise = true;
 
+  cerr << "ARC " << int(t_p1p0.x) << " " << int(t_p1p0.y) << " " << int(p.x) << " " << int(p.y) << " " << radius << " " << int(sa * 180.0 / M_PI) << " " << int(ea * 180.0 / M_PI) << " " << (anticlockwise ? "acw" : "cw") << endl;
+
   lineTo(t_p1p0.x, t_p1p0.y);
   arc(p.x, p.y, radius, sa, ea, anticlockwise); // && M_PI * 2 != radius);  
+#endif
 }
