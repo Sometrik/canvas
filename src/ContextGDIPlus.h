@@ -203,7 +203,7 @@ namespace canvas {
       current_position = point;
     }
     void stroke() {
-      Gdiplus::Pen pen(Gdiplus::Color(strokeStyle.color.red, strokeStyle.color.green, strokeStyle.color.blue ));
+      Gdiplus::Pen pen(Gdiplus::Color(strokeStyle.color.red, strokeStyle.color.green, strokeStyle.color.blue ), lineWidth);
       default_surface.g->DrawPath(&pen, &current_path);
     }
     void fill();
@@ -240,6 +240,6 @@ namespace canvas {
   class GDIPlusContextFactory : public ContextFactory  {
   public:
     GDIPlusContextFactory() { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) { return std::shared_ptr<Context>(new ContextGDIPlus(width, height)); }
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const { return std::shared_ptr<Context>(new ContextGDIPlus(width, height)); }
   };
 };
