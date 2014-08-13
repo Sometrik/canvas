@@ -14,7 +14,10 @@ ContextGDIPlus::fill() {
       std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
       it1--;
       const Color & c0 = it0->second, c1 = it1->second;
-      Gdiplus::LinearGradientBrush brush(Gdiplus::RectF(fillStyle.x0, fillStyle.y0, fillStyle.x1 - fillStyle.x0, fillStyle.y1 - fillStyle.y0), Gdiplus::Color(c0.red, c0.green, c0.blue), Gdiplus::Color(c1.red, c1.green, c1.blue), Gdiplus::LinearGradientModeHorizontal);
+      Gdiplus::LinearGradientBrush brush(Gdiplus::PointF(fillStyle.x0, fillStyle.y0),
+					 Gdiplus::PointF(fillStyle.x1, fillStyle.y1),
+					 Gdiplus::Color(c0.red, c0.green, c0.blue)
+					 Gdiplus::Color(c1.red, c1.green, c1.blue));
       default_surface.g->FillPath(&brush, &current_path);
     }
   } else {
