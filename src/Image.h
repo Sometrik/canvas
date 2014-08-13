@@ -2,6 +2,7 @@
 #define _IMAGE_H_
 
 #include <cstring>
+#include <cassert>
 
 namespace canvas {
   class Image {
@@ -13,9 +14,20 @@ namespace canvas {
     Image(unsigned int _width, unsigned int _height, const unsigned char * _data)
       : width(_width), height(_height)
     {
+      assert(_data);
       data = new unsigned char[width * height * 3];
       memcpy(data, _data, width * height * 3);
     }
+    Image(const Image & other)
+      : width(other.getWidth()), height(other.getHeight())
+      {
+	if (other.getData()) {
+	  data = new unsigned char[width * height * 3];
+	  memcpy(data, other.getData(), width * height * 3);	
+	} else {
+	  data = 0;
+	}
+      }
     ~Image() {
       delete[] data;
     }
@@ -25,8 +37,12 @@ namespace canvas {
 	delete[] data;
 	width = other.width;
 	height = other.height;
-	data = new unsigned char[width * height * 3];
-	memcpy(data, other.data, width * height * 3);
+	if (other.data) {
+	  data = new unsigned char[width * height * 3];
+	  memcpy(data, other.data, width * height * 3);
+	} else {
+	  data = 0;
+	}
       }
       return *this;
     }
@@ -36,9 +52,6 @@ namespace canvas {
     const unsigned char * getData() const { return data; }
 
   private:
-    Image(const Image & other) {      
-    }
-
     unsigned int width, height;
     unsigned char * data;
   };
