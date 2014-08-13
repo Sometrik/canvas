@@ -26,7 +26,7 @@ ContextGDIPlus::fill() {
 void
 ContextGDIPlus::arc(double x, double y, double r, double sa, double ea, bool anticlockwise) {
   double span = 0;
-  if ((!anticlockwise && (ea - sa >= 2 * M_PI)) || (anticlockwise && (sa - ea >= 2 * M_PI))) {
+  if (0 && ((!anticlockwise && (ea - sa >= 2 * M_PI)) || (anticlockwise && (sa - ea >= 2 * M_PI)))) {
     // If the anticlockwise argument is false and endAngle-startAngle is equal to or greater than 2*PI, or, if the
     // anticlockwise argument is true and startAngle-endAngle is equal to or greater than 2*PI, then the arc is the whole
     // circumference of this circle.
@@ -61,14 +61,17 @@ ContextGDIPlus::arc(double x, double y, double r, double sa, double ea, bool ant
   }
 #endif
 
+#if 0
   if (anticlockwise) {
     span = -M_PI / 2.0;
   } else {
     span = M_PI / 2.0;
   }
+#endif
 
   Gdiplus::RectF rect(Gdiplus::REAL(x - r), Gdiplus::REAL(y - r), Gdiplus::REAL(2 * r), Gdiplus::REAL(2 * r));
   current_path.AddArc(rect, Gdiplus::REAL(sa * 180 / M_PI), Gdiplus::REAL(span * 180 / M_PI));
+  current_path.GetLastPoint(&current_position);
 }
 
 

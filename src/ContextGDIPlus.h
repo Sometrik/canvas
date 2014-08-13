@@ -81,6 +81,7 @@ namespace canvas {
       Surface::resize(_width, _height);
       bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_width, _height));
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+      g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
     }
     void flush() { }
     void markDirty() { }
@@ -109,7 +110,7 @@ namespace canvas {
       Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), context.font.size, style, Gdiplus::UnitPixel);
       Gdiplus::SolidBrush brush(Gdiplus::Color(context.fillStyle.color.red, context.fillStyle.color.green, context.fillStyle.color.blue));
 
-      Gdiplus::RectF rect(x, y, 0.0f, 0.0f);
+      Gdiplus::RectF rect(Gdiplus::REAL(x), Gdiplus::REAL(y), 0.0f, 0.0f);
       Gdiplus::StringFormat f;
       // f.SetAlignment(Gdiplus::StringAlignmentCenter);
 
@@ -124,7 +125,7 @@ namespace canvas {
 
     void drawImage(Surface & _img, double x, double y, double w, double h) {
       GDIPlusSurface & img = dynamic_cast<GDIPlusSurface&>(_img);
-      g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y));
+      g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y), Gdiplus::REAL(w), Gdiplus::REAL(h));
     }
 
   protected:
@@ -139,6 +140,7 @@ namespace canvas {
       : Context(_width, _height),
 	default_surface(_width, _height)
     {
+      current_path.StartFigure();
     }
     ~ContextGDIPlus() {
       
@@ -178,24 +180,22 @@ namespace canvas {
     void flush() {
     }
     void beginPath() {
-      current_path.Reset();  
+      current_path.Reset();
+      current_path.StartFigure();
     }
     void closePath() {
       current_path.CloseFigure();
     }
     void clip() {
-#if 0
-      default_surface.g->SetClip(&current_path, Gdiplus::CombineModeReplace);
-#else
       Gdiplus::Region region(&current_path);
       default_surface.g->SetClip(&region);
-#endif
       current_path.Reset();
+      current_path.StartFigure();
     }
     void arc(double x, double y, double r, double a0, double a1, bool t = false);
     void clearRect(double x, double y, double w, double h) { }
     void moveTo(double x, double y) {
-      current_position = Gdiplus::PointF(x, y);
+      current_position = Gdiplus::PointF(Gdiplus::REAL(x), Gdiplus::REAL(y));
     }
     void lineTo(double x, double y) {
       Gdiplus::PointF point(x, y);
@@ -221,6 +221,7 @@ namespace canvas {
       default_surface.g->MeasureString(text2.data(), text2.size(), &font, layoutRect, &boundingBox);
       Gdiplus::SizeF size;
       boundingBox.GetSize(&size);
+
       return {(double)size.Width, (double)size.Height};
     }
     
