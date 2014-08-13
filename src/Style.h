@@ -15,7 +15,9 @@ namespace canvas {
     };
     Style() { }
     Style(const std::string & s);
+    Style(const Color & _color);
     Style & operator=(const std::string & s);
+    Style & operator=(const Color & _color);
 
     StyleType getType() const { return type; }
     void setType(StyleType _type) { type = _type; }
