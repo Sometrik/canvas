@@ -152,7 +152,7 @@ Context::arcTo(double x1, double y1, double x2, double y2, double radius) {
 
   cerr << "ARC " << int(t_p1p0.x) << " " << int(t_p1p0.y) << " " << int(p.x) << " " << int(p.y) << " " << radius << " " << int(sa * 180.0 / M_PI) << " " << int(ea * 180.0 / M_PI) << " " << (anticlockwise ? "acw" : "cw") << endl;
 
-  // lineTo(t_p1p0.x, t_p1p0.y);
+  lineTo(t_p1p0.x, t_p1p0.y);
   arc(p.x, p.y, radius, sa, ea, anticlockwise); // && M_PI * 2 != radius);  
 #endif
 }
