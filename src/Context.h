@@ -115,7 +115,7 @@ namespace canvas {
   public:
     ContextFactory() { }
     virtual ~ContextFactory() { }
-    virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) = 0;
+    virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const = 0;
   };
 };
 
