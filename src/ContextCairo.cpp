@@ -113,9 +113,10 @@ CairoSurface::fillText(Context & context, const std::string & text, double x, do
 void
 CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h) {
   CairoSurface & img = dynamic_cast<CairoSurface&>(_img);
+  double sx = w / img.getWidth(), sy = h / img.getHeight();
   cairo_save(cr);
-  cairo_scale(cr, w / img.getWidth(), h / img.getHeight());
-  cairo_set_source_surface(cr, img.surface, x, y);
+  cairo_scale(cr, sx, sy);
+  cairo_set_source_surface(cr, img.surface, x / sx, y / sy);
   cairo_paint(cr);
   cairo_restore(cr);
 }
