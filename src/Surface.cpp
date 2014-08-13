@@ -17,8 +17,8 @@ static vector<int> make_kernel(float radius) {
   int r = (int)ceil(radius);
   int rows = 2 * r + 1;
   float sigma = radius / 3;
-  float sigma22 = 2 * sigma * sigma;
-  float sigmaPi2 = 2 * M_PI * sigma;
+  float sigma22 = 2.0f * sigma * sigma;
+  float sigmaPi2 = 2.0f * float(M_PI) * sigma;
   float sqrtSigmaPi2 = sqrt(sigmaPi2);
   // float radius2 = radius*radius;
   vector<int> kernel;
