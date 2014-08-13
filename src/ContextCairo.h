@@ -90,6 +90,6 @@ namespace canvas {
   class CairoContextFactory : public ContextFactory {
   public:
     CairoContextFactory() { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) { return std::shared_ptr<Context>(new ContextCairo(width, height)); }
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const { return std::shared_ptr<Context>(new ContextCairo(width, height)); }
   };
 };
