@@ -104,9 +104,18 @@ namespace canvas {
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
       return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height));
     }
-    
-    void save() {
 
+    void beginPath() {
+      CGContextBeginPath(default_surface.gc);
+    }
+    void closePath() {
+      CGContextClosePath(default_surface.gc);
+    }
+    void clip() {
+      CGContextClip(default_surface.gc);
+    }    
+    void save() {
+      
     }
     void restore() {
 
@@ -119,7 +128,6 @@ namespace canvas {
     }
         
     Surface & getDefaultSurface() { return default_surface; }
-
     const Surface & getDefaultSurface() const { return default_surface; }
 
     void moveTo(double x0, double y0) {
@@ -127,19 +135,7 @@ namespace canvas {
     }
     void lineTo(double x0, double y0) {
       CGContextAddLineToPoint(default_surface.gc, x0, y0);
-    }
-
-    void beginPath() {
-      CGContextBeginPath(default_surface.gc);
-    }
-   
-    void clip() {
-      CGContextClip(default_surface.gc);
-    }
-    
-    void closePath() {
-       CGContextClosePath(default_surface.gc);
-    }
+    }    
     void stroke() {
       // CGContextSetLineWidth(context, fillStyle.);
 #if 0
@@ -167,7 +163,7 @@ namespace canvas {
       CGColorRelease(color);
     }
 
-    canvas::TextMetrics measureText(const std::string & text) {
+    TextMetrics measureText(const std::string & text) {
       CGPoint startpt = CGContextGetTextPosition(default_surface.gc);
       CGContextSetTextDrawingMode(default_surface.gc, kCGTextInvisible); 
       CGContextShowText (default_surface.gc, s.c_str(), s.size());
@@ -176,6 +172,11 @@ namespace canvas {
       canvas::TextMetrics rvalue;
       rvalue.width =  endpt.x - startpt.x;
       return rvalue;
+    }
+
+  protected:
+    Point getCurrentPoint() {
+      return Point(0, 0); // FIXME!
     }
 
   private:
