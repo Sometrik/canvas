@@ -2,7 +2,10 @@
 
 #include <cmath>
 #include <iostream>
+
+#ifdef OPENGL
 #include <glm/glm.hpp>
+#endif
 
 using namespace std;
 using namespace canvas;

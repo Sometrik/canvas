@@ -100,9 +100,11 @@ Surface::updateTexture() {
   flush();
 
   // cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
+#ifdef OPENGL
   if (!texture.isDefined()) {
     texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
   }
+#endif
 
   unsigned char * buffer = lockMemory();
   assert(buffer);
