@@ -67,7 +67,7 @@ namespace canvas {
 #endif
     }
     void drawImage(Surface & _img, double x, double y, double w, double h) {
-      Quartz2DSurface & img = dynamic_cast<Quartz2DSurface>(_img);
+      Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
 #if 0
       CGRect myBoundingBox = CGRectMake (100, 100, 100, 100);
       CGImageRef myImage = CGBitmapContextCreateImage(surface.gc);
@@ -120,23 +120,7 @@ namespace canvas {
 
         
     Surface & getDefaultSurface() { return default_surface; }
-    const Surface & getDefaultSurface() const { return default_surface; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      const Surface & getDefaultSurface() const { return default_surface; }
 
 
     void moveTo(double x0, double y0) {
