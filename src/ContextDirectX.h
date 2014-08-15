@@ -13,11 +13,12 @@
 namespace canvas {
 	class ContextDirectX : public Context {
 	public:
-		ContextDirectX()  { 
+		ContextDirectX(ID2D1DeviceContext *_devicecontext)  {
 			CreateDeviceDependentResources();
-			context = m_deviceResources->GetD2DDeviceContext();
+			devicecontext = _devicecontext;
 		}
-		virtual ~ContextDirectX() {
+		
+		~ContextDirectX() {
 
 		}
 
@@ -40,7 +41,6 @@ namespace canvas {
 		void Render();
 
 		// Cached pointer to device resources.
-		std::shared_ptr<DX::DeviceResources> m_deviceResources;
 
 		// Resources related to text rendering.
 		std::wstring                                    m_text;
@@ -49,6 +49,7 @@ namespace canvas {
 		Microsoft::WRL::ComPtr<ID2D1DrawingStateBlock>  m_stateBlock;
 		Microsoft::WRL::ComPtr<IDWriteTextLayout>       m_textLayout;
 		Microsoft::WRL::ComPtr<IDWriteTextFormat>		m_textFormat;
-		ID2D1DeviceContext* context;
+
+		ID2D1DeviceContext* devicecontext;
 	};
 };
