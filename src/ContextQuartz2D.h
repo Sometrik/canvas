@@ -59,6 +59,9 @@ namespace canvas {
       
       CGContextShowTextAtPoint(gc, (int)x, (int)y, text.c_str(), text.size());
     }
+    void drawImage(Surface & _img, double x, double y, double w, double h) {
+      
+    }
 
     CGContextRef gc;
     CGColorSpaceRef colorspace;
