@@ -160,11 +160,6 @@ ContextCairo::~ContextCairo() {
 }
 
 void
-ContextCairo::resize(unsigned int _width, unsigned int _height) {
-  Context::resize(_width, _height);
-}
-
-void
 ContextCairo::save() {
   cairo_save(default_surface.cr);
 }

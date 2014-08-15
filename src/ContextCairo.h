@@ -59,9 +59,7 @@ namespace canvas {
 
     CairoSurface & getDefaultSurface() { return default_surface; }
     const CairoSurface & getDefaultSurface() const { return default_surface; }
-    
-    void resize(unsigned int width, unsigned int height);
-    
+        
     void beginPath();
     void closePath();
     void clip();
