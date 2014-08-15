@@ -51,7 +51,9 @@ namespace canvas {
     void releaseMemory() {
       
     }
-
+    CGContextRef gc;
+    CGColorSpaceRef colorspace;
+      
   protected:
     void fillText(Context & context, const std::string & text, double x, double y) {
 #if 0
@@ -76,8 +78,8 @@ namespace canvas {
 #endif
     }
 
-    CGContextRef gc;
-    CGColorSpaceRef colorspace;
+
+
   };
 
   class ContextQuartz2D : public Context {
@@ -99,7 +101,7 @@ namespace canvas {
 #endif
 
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * data) {
-      return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height, data));
+        return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height)); //, data));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
       return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height));
@@ -138,12 +140,12 @@ namespace canvas {
     }    
     void stroke() {
       // CGContextSetLineWidth(context, fillStyle.);
-#if 0
+
       CGFloat components[] = { strokeStyle.color.red / 255.0f,
 			       strokeStyle.color.green / 255.0f,
 			       strokeStyle.color.blue / 255.0f,
 			       1.0 };
-#endif
+
       CGColorRef color = CGColorCreate(default_surface.colorspace, components);
       CGContextSetStrokeColorWithColor(default_surface.gc, color);
       CGContextStrokePath(default_surface.gc);
@@ -151,12 +153,12 @@ namespace canvas {
     }
 
     void fill() {
-#if 0
+
       CGFloat components[] = { strokeStyle.color.red / 255.0f,
 			       strokeStyle.color.green / 255.0f,
 			       strokeStyle.color.blue / 255.0f,
 			       1.0 };
-#endif
+
       CGColorRef color = CGColorCreate(default_surface.colorspace, components);
       CGContextSetFillColorWithColor(default_surface.gc, color);
       CGContextFillPath(default_surface.gc);
@@ -166,7 +168,7 @@ namespace canvas {
     TextMetrics measureText(const std::string & text) {
       CGPoint startpt = CGContextGetTextPosition(default_surface.gc);
       CGContextSetTextDrawingMode(default_surface.gc, kCGTextInvisible); 
-      CGContextShowText (default_surface.gc, s.c_str(), s.size());
+      CGContextShowText (default_surface.gc, text.c_str(), text.size());
       CGPoint endpt = CGContextGetTextPosition(default_surface.gc);
       CGContextSetTextDrawingMode(default_surface.gc, kCGTextFill);
       canvas::TextMetrics rvalue;
