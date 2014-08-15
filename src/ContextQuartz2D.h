@@ -41,7 +41,7 @@ namespace canvas {
       CGContextRelease(gc);
     }
 
-    unsigned char * lockMemory() {
+    unsigned char * lockMemory(bool write_access = false) {
         return nullptr;
 /*
       return CGBitmapContextGetData(gc);
@@ -117,27 +117,9 @@ namespace canvas {
     void clearRect(double x, double y, double w, double h) {
 
     }
-
         
     Surface & getDefaultSurface() { return default_surface; }
     const Surface & getDefaultSurface() const { return default_surface; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     void moveTo(double x0, double y0) {
       CGContextMoveToPoint(default_surface.gc, x0, y0);
@@ -194,7 +176,8 @@ namespace canvas {
       rvalue.width =  endpt.x - startpt.x;
       return rvalue;
     }
-    private:
+
+  private:
     Quartz2DSurface default_surface;
   };
 };
