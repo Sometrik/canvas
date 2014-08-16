@@ -28,10 +28,12 @@ namespace canvas {
 				 colorspace,
 				 kCGImageAlphaPremultipliedLast);      
     }
-
-  Quartz2DSurface(unsigned int _width, unsigned int _height, CGContextRef & _gc) :
-    Surface(_width, _height), gc(_gc) {
+  
+  Quartz2DSurface(unsigned int _width, unsigned int _height, CGContextRef  _gc, bool _is_screen) :
+    Surface(_width, _height){
       colorspace = CGColorSpaceCreateDeviceRGB();
+       gc = _gc;
+       is_screen = _is_screen;
     }
 #if 0
     Quartz2DSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) {
@@ -42,7 +44,8 @@ namespace canvas {
       
     ~Quartz2DSurface() {
       CGColorSpaceRelease(colorspace);
-      CGContextRelease(gc);
+      // Do not release screen, iOS will do that
+      if(!is_screen)CGContextRelease(gc);
     }
 
     unsigned char * lockMemory(bool write_access = false) {
@@ -82,16 +85,17 @@ namespace canvas {
 #endif
     }
 
-
+  private:
+      bool is_screen;
 
   };
 
   class ContextQuartz2D : public Context {
   public:
     // get context with UIGraphicsGetCurrentContext();
-  ContextQuartz2D(unsigned int _width, unsigned int _height, CGContextRef & _gc) 
+  ContextQuartz2D(unsigned int _width, unsigned int _height, CGContextRef _gc, bool is_screen)
     : Context(_width, _height),
-      default_surface(_width, _height, _gc)  {
+      default_surface(_width, _height, _gc, is_screen)  {
           setgc(_gc);
     }
   ContextQuartz2D(unsigned int _width, unsigned int _height)
@@ -112,7 +116,7 @@ namespace canvas {
     }
    
     void fillRect(double x, double y, double w, double h) {
-        CGContextSetRGBFillColor(default_surface.gc, 1.0, 1.0, 1.0, 0.5); // green color, half transparent
+        CGContextSetRGBFillColor(default_surface.gc, 0.0, 1.0, 0.0, 0.5); // green color, half transparent
         CGContextFillRect(default_surface.gc, CGRectMake(x, y, w, h));
     }
     
