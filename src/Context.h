@@ -58,7 +58,8 @@ namespace canvas {
     virtual void fill() = 0;
     virtual TextMetrics measureText(const std::string & text) = 0;
     
-    void fillRect(double x, double y, double w, double h);
+    // AL: I made this virtual for debugging
+    virtual void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
     void fillText(const std::string & text, double x, double y);
     void arcTo(double x1, double y1, double x2, double y2, double radius);

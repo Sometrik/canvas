@@ -38,6 +38,7 @@ namespace canvas {
       assert(0);
     }
 #endif
+
       
     ~Quartz2DSurface() {
       CGColorSpaceRelease(colorspace);
@@ -91,7 +92,7 @@ namespace canvas {
   ContextQuartz2D(unsigned int _width, unsigned int _height, CGContextRef & _gc) 
     : Context(_width, _height),
       default_surface(_width, _height, _gc)  {
-      
+          setgc(_gc);
     }
   ContextQuartz2D(unsigned int _width, unsigned int _height)
     : Context(_width, _height),
@@ -109,7 +110,12 @@ namespace canvas {
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
       return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height));
     }
-
+   
+    void fillRect(double x, double y, double w, double h) {
+        CGContextSetRGBFillColor(default_surface.gc, 1.0, 1.0, 1.0, 0.5); // green color, half transparent
+        CGContextFillRect(default_surface.gc, CGRectMake(x, y, w, h));
+    }
+    
     void beginPath() {
       CGContextBeginPath(default_surface.gc);
     }
@@ -154,7 +160,10 @@ namespace canvas {
       CGContextStrokePath(default_surface.gc);
       CGColorRelease(color);
     }
-
+      
+    void setgc(CGContextRef _gc){
+          default_surface.gc = _gc;
+    }
     void fill() {
 
       CGFloat components[] = { strokeStyle.color.red / 255.0f,
