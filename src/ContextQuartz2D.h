@@ -116,7 +116,10 @@ namespace canvas {
     }
    
     void fillRect(double x, double y, double w, double h) {
-        CGContextSetRGBFillColor(default_surface.gc, 0.0, 1.0, 0.0, 0.5); // green color, half transparent
+        CGContextSetRGBFillColor(default_surface.gc, strokeStyle.color.red / 255.0f,
+                                 strokeStyle.color.green / 255.0f,
+                                 strokeStyle.color.blue / 255.0f,
+                                 1.0); 
         CGContextFillRect(default_surface.gc, CGRectMake(x, y, w, h));
     }
     
