@@ -9,6 +9,9 @@
 namespace canvas {
   class Quartz2DSurface : public Surface {
   public:
+  
+  
+      
   Quartz2DSurface(unsigned int _width, unsigned int _height) :
     Surface(_width, _height) {
       colorspace = CGColorSpaceCreateDeviceRGB();
