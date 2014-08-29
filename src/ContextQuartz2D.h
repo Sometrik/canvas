@@ -73,6 +73,32 @@ namespace canvas {
       CGContextSetTextDrawingMode(gc, kCGTextFill); 
       
       CGContextShowTextAtPoint(gc, (int)x, (int)y, text.c_str(), text.size());
+#else
+      // Prepare font
+      CTFontRef font = CTFontCreateWithName(CFSTR("Times"), 20, NULL);
+
+      CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
+
+      // Create an attributed string
+      CFStringRef keys[] = { kCTFontAttributeName };
+      CFTypeRef values[] = { font };
+      CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+      CFAttributedStringRef attrString = CFAttributedStringCreate(NULL, text2, attr);
+      CFRelease(attr);
+
+      // Draw the string
+      CTLineRef line = CTLineCreateWithAttributedString(attrString);
+      CGContextSetTextMatrix(context, CGAffineTransformIdentity);  // Use this one when using standard view coordinates
+      // CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0)); //Use this one if the view's coordinates are flipped
+      
+      CGContextSetTextPosition(context, x, y);
+      CTLineDraw(line, context);
+
+      // Clean up
+      CFRelease(line);
+      CFRelease(attrString);
+      CFRelease(font);
+      // CFRelease(text2); // Tarviiko tehdä?
 #endif
     }
     void drawImage(Surface & _img, double x, double y, double w, double h) {
