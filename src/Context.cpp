@@ -46,13 +46,13 @@ void
 Context::fillText(const std::string & text, double x, double y) {  
   if (hasShadow()) {
     // cerr << "DRAWING SHADOW for text " << text << ", w = " << getWidth() << ", h = " << getHeight() << endl;
-    auto shadow = createSurface(getDefaultSurface().getWidth(), getDefaultSurface().getHeight());
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * shadowBlur, getDefaultSurface().getHeight() + 2 * shadowBlur);
     Style tmp = fillStyle;
     fillStyle.color = shadowColor;
-    shadow->fillText(*this, text, x + shadowOffsetX, y + shadowOffsetY);
+    shadow->fillText(*this, text, x + shadowOffsetX + shadowBlur, y + shadowOffsetY + shadowBlur);
     shadow->gaussianBlur(shadowBlur, shadowBlur);
     fillStyle = tmp;
-    drawImage(*shadow, 0, 0, shadow->getWidth(), shadow->getHeight());
+    drawImage(*shadow, -shadowBlur, -shadowBlur, shadow->getWidth(), shadow->getHeight());
   }
   getDefaultSurface().fillText(*this, text, x, y);
 }
