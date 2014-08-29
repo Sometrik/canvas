@@ -45,7 +45,7 @@ namespace canvas {
     ~Quartz2DSurface() {
       CGColorSpaceRelease(colorspace);
       // Do not release screen, iOS will do that
-      if(!is_screen)CGContextRelease(gc);
+      if (!is_screen) CGContextRelease(gc);
     }
 
     unsigned char * lockMemory(bool write_access = false) {
@@ -98,7 +98,7 @@ namespace canvas {
       CFRelease(line);
       CFRelease(attrString);
       CFRelease(font);
-      // CFRelease(text2); // Tarviiko tehdä?
+      CFRelease(text2);
 #endif
     }
     void drawImage(Surface & _img, double x, double y, double w, double h) {
@@ -211,6 +211,7 @@ namespace canvas {
     }
 
     TextMetrics measureText(const std::string & text) {
+#if 0
       CGPoint startpt = CGContextGetTextPosition(default_surface.gc);
       CGContextSetTextDrawingMode(default_surface.gc, kCGTextInvisible); 
       CGContextShowText (default_surface.gc, text.c_str(), text.size());
@@ -219,6 +220,9 @@ namespace canvas {
       canvas::TextMetrics rvalue;
       rvalue.width =  endpt.x - startpt.x;
       return rvalue;
+#else
+      return TextMetrix(0, 0);
+#endif
     }
 
   protected:
