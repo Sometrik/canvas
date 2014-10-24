@@ -36,6 +36,7 @@ namespace canvas {
 
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * data) = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) = 0;
+    virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
 
     std::shared_ptr<Surface> createSurface(const Image & image) {
       return createSurface(image.getWidth(), image.getHeight(), image.getData());
@@ -117,6 +118,7 @@ namespace canvas {
     ContextFactory() { }
     virtual ~ContextFactory() { }
     virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const = 0;
+    virtual std::shared_ptr<Surface> createSurface(const std::string & filename) const = 0;
   };
 };
 
