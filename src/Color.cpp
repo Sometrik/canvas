@@ -19,8 +19,10 @@ Color::Color(const std::string & s) {
   setValue(s);
 }
 
-Color & operator=(const std::string & s) {
+Color &
+Color::operator=(const std::string & s) {
   setValue(s);
+  return *this;
 }
 
 void
