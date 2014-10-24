@@ -15,6 +15,16 @@ static int get_xdigit(char c) {
 }
 
 Color::Color(const std::string & s) {
+  red = green = blue = 0;
+  setValue(s);
+}
+
+Color & operator=(const std::string & s) {
+  setValue(s);
+}
+
+void
+Color::setValue(const std::string & s) {
   if (s == "black") {
     red = green = blue = 0;
   } else if (s == "white") {
