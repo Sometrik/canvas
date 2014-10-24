@@ -41,6 +41,16 @@ CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, const unsi
   cr = cairo_create(surface);  
   assert(cr);
 }
+
+CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0)
+{
+  surface = cairo_image_surface_create_from_png(filename.c_str());
+  assert(surface);
+  Surface::resize(cairo_image_surface_get_width(surface),
+		  cairo_image_surface_get_height(surface));
+  cr = cairo_create(surface);
+  assert(cr);
+}
  
 CairoSurface::~CairoSurface() {
   if (cr) {
@@ -85,11 +95,12 @@ CairoSurface::getBuffer() {
 
 void
 CairoSurface::fillText(Context & context, const std::string & text, double x, double y) {
+  const Font & font = context.font;
   cairo_set_source_rgba(cr, context.fillStyle.color.red / 255.0f, context.fillStyle.color.green / 255.0f, context.fillStyle.color.blue / 255.0f, 1.0f);
-  cairo_select_font_face(cr, context.font.family.c_str(),
-			 context.font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (context.font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
-			 context.font.weight == Font::NORMAL || context.font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
-  cairo_set_font_size(cr, context.font.size);
+  cairo_select_font_face(cr, font.family.c_str(),
+			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
+			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
+  cairo_set_font_size(cr, font.size);
   cairo_text_extents_t extents;
   cairo_text_extents(cr, text.c_str(), &extents);
 

@@ -15,6 +15,7 @@ namespace canvas {
 
     CairoSurface(unsigned int _width, unsigned int _height);
     CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data);
+    CairoSurface(const std::string & filename);
     ~CairoSurface();
 
     void flush();
@@ -53,6 +54,9 @@ namespace canvas {
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
       return std::shared_ptr<Surface>(new CairoSurface(_width, _height));
     }
+    std::shared_ptr<Surface> createSurface(const std::string & filename) {
+      return std::shared_ptr<Surface>(new CairoSurface(filename));
+    }
 
     void save();
     void restore();
@@ -89,5 +93,6 @@ namespace canvas {
   public:
     CairoContextFactory() { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const { return std::shared_ptr<Context>(new ContextCairo(width, height)); }
+    std::shared_ptr<Surface> createSurface(const std::string & filename) const { return std::shared_ptr<Surface>(new CairoSurface(filename)); }
   };
 };
