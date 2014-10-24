@@ -49,6 +49,14 @@ namespace canvas {
 #endif
       g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
     }
+    GDIPlusSurface(const std::string & filename) : Surface(0, 0)
+     {
+      std::wstring tmp = convert_to_wstring(filename);
+      bitmap = std::shared_ptr<Gdiplus::Bitmap>(Gdiplus::Bitmap::FromFile(tmp.data()));
+      Surface::resize(bitmap->GetWidth(), bitmap->GetHeight());
+      g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+      g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
+    }
     // Gdiplus::PixelFormat32bppARGB
     GDIPlusSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) : Surface(_width, _height)
     {
@@ -112,12 +120,17 @@ namespace canvas {
 
       Gdiplus::RectF rect(Gdiplus::REAL(x), Gdiplus::REAL(y), 0.0f, 0.0f);
       Gdiplus::StringFormat f;
-      // f.SetAlignment(Gdiplus::StringAlignmentCenter);
 
       switch (context.textBaseline.getType()) {
       case TextBaseline::TOP: break;
       case TextBaseline::HANGING: break;
       case TextBaseline::MIDDLE: f.SetLineAlignment(Gdiplus::StringAlignmentCenter); break;
+      }
+
+      switch (context.textAlign) {
+      case TextAlign::CENTER: f.SetAlignment(Gdiplus::StringAlignmentCenter); break;
+      case TextAlign::END: case TextAlign::RIGHT: f.SetAlignment(Gdiplus::StringAlignmentFar); break;
+      case TextAlign::START: case TextAlign::LEFT: f.SetAlignment(Gdiplus::StringAlignmentNear); break;
       }
 
       g->DrawString(text2.data(), text2.size(), &font, rect, &f, &brush);
@@ -142,6 +155,7 @@ namespace canvas {
     {
       current_path.StartFigure();
     }
+
     ~ContextGDIPlus() {
       
     }
@@ -160,6 +174,9 @@ namespace canvas {
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
       return std::shared_ptr<Surface>(new GDIPlusSurface(_width, _height));
+    }
+    std::shared_ptr<Surface> createSurface(const std::string & filename) {
+      return std::shared_ptr<Surface>(new GDIPlusSurface(filename));
     }
 
     void save() {
@@ -242,5 +259,6 @@ namespace canvas {
   public:
     GDIPlusContextFactory() { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const { return std::shared_ptr<Context>(new ContextGDIPlus(width, height)); }
+    std::shared_ptr<Surface> createSurface(const std::string & filename) const { return std::shared_ptr<Surface>(new GDIPlusSurface(filename)); }
   };
 };
