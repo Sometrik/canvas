@@ -117,17 +117,18 @@ CairoSurface::fillText(Context & context, const std::string & text, double x, do
   default: break;
   }
   
-  cairo_move_to(cr, x, y);
+  cairo_move_to(cr, x + 0.5, y + 0.5);
   cairo_show_text(cr, text.c_str());
 }
 
 void
 CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h) {
+  cerr << "trying to draw image " << &_img << endl;
   CairoSurface & img = dynamic_cast<CairoSurface&>(_img);
   double sx = w / img.getWidth(), sy = h / img.getHeight();
   cairo_save(cr);
   cairo_scale(cr, sx, sy);
-  cairo_set_source_surface(cr, img.surface, x / sx, y / sy);
+  cairo_set_source_surface(cr, img.surface, (x / sx) + 0.5, y / sy + 0.5);
   cairo_paint(cr);
   cairo_restore(cr);
 }
@@ -235,9 +236,9 @@ ContextCairo::arc(double x, double y, double r, double sa, double ea, bool antic
 #endif
 
   if (!anticlockwise) {
-    cairo_arc(default_surface.cr, x, y, r, sa, sa + span);
+    cairo_arc(default_surface.cr, x + 0.5, y + 0.5, r, sa, sa + span);
   } else {
-    cairo_arc_negative(default_surface.cr, x, y, r, sa, sa + span);
+    cairo_arc_negative(default_surface.cr, x + 0.5, y + 0.5, r, sa, sa + span);
   }
 }
 
@@ -254,12 +255,12 @@ ContextCairo::measureText(const std::string & text) {
 
 void
 ContextCairo::moveTo(double x, double y) {
-  cairo_move_to(default_surface.cr, x, y);
+  cairo_move_to(default_surface.cr, x + 0.5, y + 0.5);
 }
 
 void
 ContextCairo::lineTo(double x, double y) {
-  cairo_line_to(default_surface.cr, x, y);    
+  cairo_line_to(default_surface.cr, x + 0.5, y + 0.5);    
 }
 
 void
@@ -289,5 +290,5 @@ Point
 ContextCairo::getCurrentPoint() {
   double x0, y0;
   cairo_get_current_point(default_surface.cr, &x0, &y0);
-  return Point(x0, y0);
+  return Point(x0 - 0.5, y0 - 0.5);
 }
