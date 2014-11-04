@@ -5,18 +5,12 @@
 #include <memory>
 
 #include "Color.h"
-#include "Style.h"
 #include "Font.h"
 #include "Surface.h"
 #include "Image.h"
 #include "TextBaseline.h"
 
 namespace canvas {  
-  class Point {
-  public:
-  Point(double _x, double _y) : x(_x), y(_y) { }
-    double x, y;
-  };
   struct TextMetrics {
     float width, height;
   };
@@ -44,26 +38,28 @@ namespace canvas {
 
     virtual void resize(unsigned int _width, unsigned int _height);
     
-    virtual void beginPath() = 0;
-    virtual void closePath() = 0;
-    virtual void clip() = 0;
     virtual void save() = 0;
     virtual void restore() = 0;
-
-    virtual void arc(double x, double y, double r, double a0, double a1, bool t = false) = 0;    
     virtual void clearRect(double x, double y, double w, double h) = 0;
 
-    virtual void moveTo(double x, double y) = 0;
-    virtual void lineTo(double x, double y) = 0;
-    virtual void stroke() = 0;
-    virtual void fill() = 0;
+    void beginPath() { current_path.clear(); }
+    void closePath() { }
+
+    void arc(double x, double y, double r, double a0, double a1, bool t = false) { current_path.arc(x, y, r, a0, a1, t); }
+    void moveTo(double x, double y) { current_path.moveTo(x, y); }
+    void lineTo(double x, double y) { current_path.lineTo(x, y); }
+    void arcTo(double x1, double y1, double x2, double y2, double radius) { current_path.arcTo(x1, y1, x2, y2, radius); }
+
+    void clip() { getDefaultSurface().clip(current_path); current_path.clear(); }
+    void stroke() { getDefaultSurface().stroke(current_path, strokeStyle, lineWidth); }
+    void fill();
+
     virtual TextMetrics measureText(const std::string & text) = 0;
     
     // AL: I made this virtual for debugging
     virtual void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
     void fillText(const std::string & text, double x, double y);
-    void arcTo(double x1, double y1, double x2, double y2, double radius);
     
     virtual Surface & getDefaultSurface() = 0;
     virtual const Surface & getDefaultSurface() const = 0;
@@ -104,6 +100,8 @@ namespace canvas {
   protected:
     virtual Point getCurrentPoint() = 0;
     bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
+
+    Path current_path;
 
   private:
     unsigned int width, height;
