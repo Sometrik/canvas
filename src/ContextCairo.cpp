@@ -85,6 +85,54 @@ CairoSurface::resize(unsigned int _width, unsigned int _height) {
   assert(cr);
 } 
 
+void
+CairoSurface::sendPath(const Path & path) {
+  for (auto pc : path.getData()) {
+    switch (pc.type) {
+    case PathComponent::MOVE_TO: cairo_move_to(cr, pc.x0 + 0.5, pc.y0 + 0.5); break;
+    case PathComponent::LINE_TO: cairo_line_to(cr, pc.x0 + 0.5, pc.y0 + 0.5); break;
+    case PathComponent::ARC:
+      if (!pc.anticlockwise) {
+	cairo_arc(cr, pc.x0 + 0.5, pc.y0 + 0.5, pc.radius, pc.sa, pc.ea);
+      } else {
+	cairo_arc_negative(cr, pc.x0 + 0.5, pc.y0 + 0.5, pc.radius, pc.sa, pc.ea);
+      }
+      break;
+    }
+  }
+}
+
+void
+CairoSurface::clip(const Path & path) {
+  sendPath(path);
+  cairo_clip(cr);
+}
+
+void
+CairoSurface::stroke(const Path & path, const Style & style, double lineWidth) {
+  sendPath(path);
+  cairo_set_line_width(cr, lineWidth);
+  // cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
+  cairo_set_source_rgba(cr, style.color.red / 255.0f, style.color.green / 255.0f, style.color.blue / 255.0f, 1.0f);
+  cairo_stroke(cr);  
+}
+
+void
+CairoSurface::fill(const Path & path, const Style & style) {
+  sendPath(path);
+  if (style.getType() == Style::LINEAR_GRADIENT) {
+    cairo_pattern_t * pat = cairo_pattern_create_linear(style.x0, style.y0, style.x1, style.y1);
+    for (map<float, Color>::const_iterator it = style.getColors().begin(); it != style.getColors().end(); it++) {
+      cairo_pattern_add_color_stop_rgba(pat, it->first, it->second.red / 255.0f, it->second.green / 255.0f, it->second.blue / 255.0f, 1);
+    }
+    cairo_set_source(cr, pat);
+    cairo_pattern_destroy(pat);
+  } else {
+    cairo_set_source_rgba(cr, style.color.red / 255.0f, style.color.green / 255.0f, style.color.blue / 255.0f, 1.0f);
+  }
+  cairo_fill(cr);
+}
+
 #if 0
 unsigned char *
 CairoSurface::getBuffer() {
@@ -123,12 +171,11 @@ CairoSurface::fillText(Context & context, const std::string & text, double x, do
 
 void
 CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h) {
-  cerr << "trying to draw image " << &_img << endl;
   CairoSurface & img = dynamic_cast<CairoSurface&>(_img);
   double sx = w / img.getWidth(), sy = h / img.getHeight();
   cairo_save(cr);
   cairo_scale(cr, sx, sy);
-  cairo_set_source_surface(cr, img.surface, (x / sx) + 0.5, y / sy + 0.5);
+  cairo_set_source_surface(cr, img.surface, (x / sx) + 0.5, (y / sy) + 0.5);
   cairo_paint(cr);
   cairo_restore(cr);
 }
@@ -181,67 +228,6 @@ ContextCairo::restore() {
   cairo_restore(default_surface.cr);
 }
 
-void
-ContextCairo::beginPath() {
-  cairo_new_path(default_surface.cr);
-}
-
-void
-ContextCairo::closePath() {
-  cairo_close_path(default_surface.cr);
-}
-
-void
-ContextCairo::clip() {
-  cairo_clip(default_surface.cr);
-}
-
-void
-ContextCairo::arc(double x, double y, double r, double sa, double ea, bool anticlockwise) {
-  double span = 0;
-
-  if ((!anticlockwise && (ea - sa >= 2 * M_PI)) || (anticlockwise && (sa - ea >= 2 * M_PI))) {
-    // If the anticlockwise argument is false and endAngle-startAngle is equal to or greater than 2*PI, or, if the
-    // anticlockwise argument is true and startAngle-endAngle is equal to or greater than 2*PI, then the arc is the whole
-    // circumference of this circle.
-    span = 2 * M_PI;
-  } else {
-    if (!anticlockwise && (ea < sa)) {
-      span += 2 * M_PI;
-    } else if (anticlockwise && (sa < ea)) {
-      span -= 2 * M_PI;
-    }
- 
-#if 0
-    // this is also due to switched coordinate system
-    // we would end up with a 0 span instead of 360
-    if (!(qFuzzyCompare(span + (ea - sa) + 1, 1.0) && qFuzzyCompare(qAbs(span), 360.0))) {
-      // mod 360
-      span += (ea - sa) - (static_cast<int>((ea - sa) / 360)) * 360;
-    }
-#else
-    span += ea - sa;
-#endif
-  }
- 
-#if 0
-  // If the path is empty, move to where the arc will start to avoid painting a line from (0,0)
-  // NOTE: QPainterPath::isEmpty() won't work here since it ignores a lone MoveToElement
-  if (!m_path.elementCount())
-    m_path.arcMoveTo(xs, ys, width, height, sa);
-  else if (!radius) {
-    m_path.lineTo(xc, yc);
-    return;
-  }
-#endif
-
-  if (!anticlockwise) {
-    cairo_arc(default_surface.cr, x + 0.5, y + 0.5, r, sa, sa + span);
-  } else {
-    cairo_arc_negative(default_surface.cr, x + 0.5, y + 0.5, r, sa, sa + span);
-  }
-}
-
 TextMetrics
 ContextCairo::measureText(const std::string & text) {
   cairo_select_font_face(default_surface.cr, font.family.c_str(),
@@ -253,42 +239,3 @@ ContextCairo::measureText(const std::string & text) {
   return { (float)te.width, (float)te.height };
 }
 
-void
-ContextCairo::moveTo(double x, double y) {
-  cairo_move_to(default_surface.cr, x + 0.5, y + 0.5);
-}
-
-void
-ContextCairo::lineTo(double x, double y) {
-  cairo_line_to(default_surface.cr, x + 0.5, y + 0.5);    
-}
-
-void
-ContextCairo::stroke() {
-  cairo_set_line_width(default_surface.cr, lineWidth);
-  // cairo_set_line_join(default_surface.cr, CAIRO_LINE_JOIN_ROUND);
-  cairo_set_source_rgba(default_surface.cr, strokeStyle.color.red / 255.0f, strokeStyle.color.green / 255.0f, strokeStyle.color.blue / 255.0f, 1.0f);
-  cairo_stroke_preserve(default_surface.cr);
-}
-
-void
-ContextCairo::fill() {
-  if (fillStyle.getType() == Style::LINEAR_GRADIENT) {
-    cairo_pattern_t * pat = cairo_pattern_create_linear(fillStyle.x0, fillStyle.y0, fillStyle.x1, fillStyle.y1);
-    for (map<float, Color>::const_iterator it = fillStyle.getColors().begin(); it != fillStyle.getColors().end(); it++) {
-      cairo_pattern_add_color_stop_rgba(pat, it->first, it->second.red / 255.0f, it->second.green / 255.0f, it->second.blue / 255.0f, 1);
-    }
-    cairo_set_source (default_surface.cr, pat);
-    cairo_pattern_destroy (pat);
-  } else {
-    cairo_set_source_rgba(default_surface.cr, fillStyle.color.red / 255.0f, fillStyle.color.green / 255.0f, fillStyle.color.blue / 255.0f, 1.0f);
-  }
-  cairo_fill_preserve(default_surface.cr);
-}
-
-Point
-ContextCairo::getCurrentPoint() {
-  double x0, y0;
-  cairo_get_current_point(default_surface.cr, &x0, &y0);
-  return Point(x0 - 0.5, y0 - 0.5);
-}

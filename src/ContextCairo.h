@@ -32,8 +32,13 @@ namespace canvas {
       }
     }
     void resize(unsigned int width, unsigned int height);
+
+    void clip(const Path & path);
+    void stroke(const Path & path, const Style & style, double lineWidth);
+    void fill(const Path & path, const Style & style);
     
   protected:
+    void sendPath(const Path & path);
     void fillText(Context & context, const std::string & text, double x, double y);
     void drawImage(Surface & _img, double x, double y, double w, double h);
 
@@ -64,19 +69,12 @@ namespace canvas {
     CairoSurface & getDefaultSurface() { return default_surface; }
     const CairoSurface & getDefaultSurface() const { return default_surface; }
         
-    void beginPath();
-    void closePath();
-    void clip();
-    void arc(double x, double y, double r, double a0, double a1, bool t = false);
     void clearRect(double x, double y, double w, double h) { }
-    void moveTo(double x, double y);
-    void lineTo(double x, double y);
-    void stroke();
-    void fill();
+
     TextMetrics measureText(const std::string & text);
 
   protected:
-    Point getCurrentPoint();
+    Point getCurrentPoint() { return current_path.getCurrentPoint(); }
 
     CairoSurface default_surface;
   
