@@ -4,6 +4,8 @@
 #include "TextureRef.h"
 #include "Color.h"
 #include "FilterMode.h"
+#include "Path.h"
+#include "Style.h"
 
 namespace canvas {
   class Context;
@@ -29,6 +31,10 @@ namespace canvas {
     virtual void markDirty() { }
     virtual unsigned char * lockMemory(bool write_access = false) = 0;
     virtual void releaseMemory() = 0;
+
+    virtual void clip(const Path & path) = 0;
+    virtual void stroke(const Path & path, const Style & style, double lineWidth) = 0;
+    virtual void fill(const Path & path, const Style & style) = 0;
     
     void gaussianBlur(float hradius, float vradius);
     void colorize(const Color & color);
