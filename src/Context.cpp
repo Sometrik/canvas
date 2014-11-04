@@ -57,6 +57,7 @@ Context::fillText(const std::string & text, double x, double y) {
   getDefaultSurface().fillText(*this, text, x, y);
 }
 
+#if 0
 // Implementation by node-canvas (Node canvas is a Cairo backed Canvas implementation for NodeJS)
 // Original implementation influenced by WebKit.
 void
@@ -158,4 +159,22 @@ Context::arcTo(double x1, double y1, double x2, double y2, double radius) {
   lineTo(t_p1p0.x, t_p1p0.y);
   arc(p.x, p.y, radius, sa, ea, anticlockwise); // && M_PI * 2 != radius);  
 #endif
+}
+#endif
+
+void
+Context::fill() {
+  if (hasShadow()) {
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * shadowBlur, getDefaultSurface().getHeight() + 2 * shadowBlur);
+    Style tmp_style = fillStyle;
+    tmp_style.color = shadowColor;
+    Path tmp_path = current_path;
+    tmp_path.offset(shadowOffsetX + shadowBlur, shadowOffsetY + shadowBlur);
+    
+    shadow->fill(tmp_path, tmp_style);
+    shadow->gaussianBlur(shadowBlur, shadowBlur);
+    
+    drawImage(*shadow, -shadowBlur, -shadowBlur, shadow->getWidth(), shadow->getHeight());
+  }
+  getDefaultSurface().fill(current_path, fillStyle);
 }
