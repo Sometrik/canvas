@@ -6,15 +6,18 @@
 namespace canvas {
   class Color {
   public:
-    Color() { }
-    Color(const std::string & s);
-    Color(unsigned char _red, unsigned char _green, unsigned char _blue)
-      : red(_red), green(_green), blue(_blue) { }
+  Color() : red(0.0f), green(0.0f), blue(0.0f), alpha(1.0f) { }
+    Color(const std::string & s)
+      : red(0.0f), green(0.0f), blue(0.0f), alpha(1.0f) {
+      setValue(s);
+    }
+  Color(float _red, float _green, float _blue, float _alpha)
+    : red(_red), green(_green), blue(_blue), alpha(_alpha) { }
     
     Color & operator=(const std::string & s);
     
-    unsigned char red = 0, green = 0, blue = 0;
-
+    float red, green, blue, alpha;
+    
   private:
     void setValue(const std::string & s);
   };
