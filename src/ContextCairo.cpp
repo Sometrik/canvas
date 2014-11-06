@@ -113,7 +113,7 @@ CairoSurface::stroke(const Path & path, const Style & style, double lineWidth) {
   sendPath(path);
   cairo_set_line_width(cr, lineWidth);
   // cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
-  cairo_set_source_rgba(cr, style.color.red / 255.0f, style.color.green / 255.0f, style.color.blue / 255.0f, 1.0f);
+  cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha);
   cairo_stroke(cr);  
 }
 
@@ -123,14 +123,16 @@ CairoSurface::fill(const Path & path, const Style & style) {
   if (style.getType() == Style::LINEAR_GRADIENT) {
     cairo_pattern_t * pat = cairo_pattern_create_linear(style.x0, style.y0, style.x1, style.y1);
     for (map<float, Color>::const_iterator it = style.getColors().begin(); it != style.getColors().end(); it++) {
-      cairo_pattern_add_color_stop_rgba(pat, it->first, it->second.red / 255.0f, it->second.green / 255.0f, it->second.blue / 255.0f, 1);
+      cairo_pattern_add_color_stop_rgba(pat, it->first, it->second.red, it->second.green, it->second.blue, it->second.alpha);
     }
     cairo_set_source(cr, pat);
+    cairo_fill(cr);
     cairo_pattern_destroy(pat);
+    cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
   } else {
-    cairo_set_source_rgba(cr, style.color.red / 255.0f, style.color.green / 255.0f, style.color.blue / 255.0f, 1.0f);
+    cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha);
+    cairo_fill(cr);
   }
-  cairo_fill(cr);
 }
 
 #if 0
@@ -142,23 +144,28 @@ CairoSurface::getBuffer() {
 #endif
 
 void
-CairoSurface::fillText(Context & context, const std::string & text, double x, double y) {
-  const Font & font = context.font;
-  cairo_set_source_rgba(cr, context.fillStyle.color.red / 255.0f, context.fillStyle.color.green / 255.0f, context.fillStyle.color.blue / 255.0f, 1.0f);
+CairoSurface::prepareTextStyle(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign) {
+  cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha);
   cairo_select_font_face(cr, font.family.c_str(),
 			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
 			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
   cairo_set_font_size(cr, font.size);
+}
+
+void
+CairoSurface::fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
+  prepareTextStyle(font, style, textBaseline, textAlign);
+
   cairo_text_extents_t extents;
   cairo_text_extents(cr, text.c_str(), &extents);
-
-  switch (context.textBaseline.getType()) {
+  
+  switch (textBaseline.getType()) {
   case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
   case TextBaseline::TOP: y += extents.height; break;
   default: break;
   }
 
-  switch (context.textAlign) {
+  switch (textAlign) {
   case LEFT: break;
   case CENTER: x -= extents.width / 2; break;
   case RIGHT: x -= extents.width; break;
@@ -170,6 +177,30 @@ CairoSurface::fillText(Context & context, const std::string & text, double x, do
 }
 
 void
+CairoSurface::strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
+  prepareTextStyle(font, style, textBaseline, textAlign);
+
+  cairo_text_extents_t extents;
+  cairo_text_extents(cr, text.c_str(), &extents);
+  
+  switch (textBaseline.getType()) {
+  case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
+  case TextBaseline::TOP: y += extents.height; break;
+  default: break;
+  }
+
+  switch (textAlign) {
+  case LEFT: break;
+  case CENTER: x -= extents.width / 2; break;
+  case RIGHT: x -= extents.width; break;
+  default: break;
+  }
+  
+  cairo_move_to(cr, x + 0.5, y + 0.5);
+  assert(0);
+}  
+
+void
 CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h) {
   CairoSurface & img = dynamic_cast<CairoSurface&>(_img);
   double sx = w / img.getWidth(), sy = h / img.getHeight();
@@ -177,8 +208,20 @@ CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h) 
   cairo_scale(cr, sx, sy);
   cairo_set_source_surface(cr, img.surface, (x / sx) + 0.5, (y / sy) + 0.5);
   cairo_paint(cr);
+  cairo_set_source_rgb(cr, 0.0f, 0.0f, 0.0f); // is this needed?
   cairo_restore(cr);
 }
+
+void
+CairoSurface::save() {  
+  cairo_save(cr);
+}
+
+void
+CairoSurface::restore() {
+  cairo_restore(cr);
+}
+
 
 ContextCairo::ContextCairo(unsigned int _width, unsigned int _height)
   : Context(_width, _height),
@@ -216,16 +259,6 @@ ContextCairo::~ContextCairo() {
     pango_font_description_free(font_description);
   }
 #endif
-}
-
-void
-ContextCairo::save() {
-  cairo_save(default_surface.cr);
-}
-
-void
-ContextCairo::restore() {
-  cairo_restore(default_surface.cr);
 }
 
 TextMetrics

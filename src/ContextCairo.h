@@ -33,14 +33,18 @@ namespace canvas {
     }
     void resize(unsigned int width, unsigned int height);
 
+    void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y);
+    void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y);
+    void drawImage(Surface & _img, double x, double y, double w, double h);
     void clip(const Path & path);
     void stroke(const Path & path, const Style & style, double lineWidth);
     void fill(const Path & path, const Style & style);
+    void save();
+    void restore();
     
   protected:
+    void prepareTextStyle(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign);
     void sendPath(const Path & path);
-    void fillText(Context & context, const std::string & text, double x, double y);
-    void drawImage(Surface & _img, double x, double y, double w, double h);
 
     cairo_t * cr;  
     cairo_surface_t * surface;
@@ -63,9 +67,6 @@ namespace canvas {
       return std::shared_ptr<Surface>(new CairoSurface(filename));
     }
 
-    void save();
-    void restore();
-
     CairoSurface & getDefaultSurface() { return default_surface; }
     const CairoSurface & getDefaultSurface() const { return default_surface; }
         
@@ -74,8 +75,6 @@ namespace canvas {
     TextMetrics measureText(const std::string & text);
 
   protected:
-    Point getCurrentPoint() { return current_path.getCurrentPoint(); }
-
     CairoSurface default_surface;
   
   private:
