@@ -136,15 +136,34 @@ namespace canvas {
       g->DrawString(text2.data(), text2.size(), &font, rect, &f, &brush);
     }
 
+    void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
+      
+    }  
+
     void drawImage(Surface & _img, double x, double y, double w, double h) {
       GDIPlusSurface & img = dynamic_cast<GDIPlusSurface&>(_img);
       g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y), Gdiplus::REAL(w), Gdiplus::REAL(h));
+    }
+
+    void clip(const Path & path);
+    void stroke(const Path & path, const Style & style, double lineWidth);
+    void fill(const Path & path, const Style & style);
+    void save() {
+      save_stack.push_back(default_surface.g->Save());
+    }
+    void restore() {
+      assert(!save_stack.empty());
+      if (!save_stack.empty()) {
+	default_surface.g->Restore(save_stack.back());
+	save_stack.pop_back();
+      }
     }
 
   protected:
     std::shared_ptr<Gdiplus::Bitmap> bitmap;
     std::shared_ptr<Gdiplus::Graphics> g;
     Gdiplus::BitmapData data;     
+    std::vector<Gdiplus::GraphicsState> save_stack;
   };
   
   class ContextGDIPlus : public Context {
@@ -153,7 +172,7 @@ namespace canvas {
       : Context(_width, _height),
 	default_surface(_width, _height)
     {
-      current_path.StartFigure();
+    
     }
 
     ~ContextGDIPlus() {
@@ -179,15 +198,6 @@ namespace canvas {
       return std::shared_ptr<Surface>(new GDIPlusSurface(filename));
     }
 
-    void save() {
-      save_stack.push_back(default_surface.g->Save());
-    }
-    void restore() {
-      assert(!save_stack.empty());
-      default_surface.g->Restore(save_stack.back());
-      save_stack.pop_back();
-    }
-
     GDIPlusSurface & getDefaultSurface() { return default_surface; }
     const GDIPlusSurface & getDefaultSurface() const { return default_surface; }
     
@@ -196,34 +206,7 @@ namespace canvas {
     }
     void flush() {
     }
-    void beginPath() {
-      current_path.Reset();
-      current_path.StartFigure();
-    }
-    void closePath() {
-      current_path.CloseFigure();
-    }
-    void clip() {
-      Gdiplus::Region region(&current_path);
-      default_surface.g->SetClip(&region);
-      current_path.Reset();
-      current_path.StartFigure();
-    }
-    void arc(double x, double y, double r, double a0, double a1, bool t = false);
     void clearRect(double x, double y, double w, double h) { }
-    void moveTo(double x, double y) {
-      current_position = Gdiplus::PointF(Gdiplus::REAL(x), Gdiplus::REAL(y));
-    }
-    void lineTo(double x, double y) {
-      Gdiplus::PointF point(x, y);
-      current_path.AddLine(current_position, point);
-      current_position = point;
-    }
-    void stroke() {
-      Gdiplus::Pen pen(Gdiplus::Color(strokeStyle.color.red, strokeStyle.color.green, strokeStyle.color.blue ), lineWidth);
-      default_surface.g->DrawPath(&pen, &current_path);
-    }
-    void fill();
     TextMetrics measureText(const std::string & text) {
       std::wstring text2 = convert_to_wstring(text);
       int style = 0;
@@ -243,12 +226,9 @@ namespace canvas {
     }
     
   protected:
-    Point getCurrentPoint() { return Point(current_position.X, current_position.Y); }
+    // Point getCurrentPoint() { return Point(current_position.X, current_position.Y); }
 
     GDIPlusSurface default_surface;
-    Gdiplus::GraphicsPath current_path;
-    Gdiplus::PointF current_position;
-    std::vector<Gdiplus::GraphicsState> save_stack;
 
   private:   
     static bool is_initialized;
