@@ -50,6 +50,7 @@ namespace canvas {
 
     virtual TextMetrics measureText(const std::string & text) = 0;
     
+    void rect(double x, double y, double w, double h);
     void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
     void fillText(const std::string & text, double x, double y);
@@ -77,6 +78,11 @@ namespace canvas {
       current_linear_gradient.setVector(x0, y0, x1, y1);
       return current_linear_gradient;
     }    
+
+#if 0
+    Style & createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1) {
+     }
+#endif
 
     float lineWidth = 1.0f;
     Style fillStyle;

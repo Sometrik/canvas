@@ -18,27 +18,28 @@ Context::resize(unsigned int _width, unsigned int _height) {
 }
 
 void
-Context::fillRect(double x, double y, double w, double h) {
-  save();
-  beginPath();
+Context::rect(double x, double y, double w, double h) {
   moveTo(x, y);
   lineTo(x + w, y);
   lineTo(x + w, y + h);
-  lineTo(x, y + h);
+  lineTo(x, y + h); 
   closePath();
+}
+
+void
+Context::fillRect(double x, double y, double w, double h) {
+  save();
+  beginPath();
+  rect(x, y, w, h);  
   fill();
   beginPath(); // tmp fix
   restore();
-}
+} 
 
 void
 Context::strokeRect(double x, double y, double w, double h) {
   beginPath();
-  moveTo(x, y);
-  lineTo(x + w, y);
-  lineTo(x + w, y + h);
-  lineTo(x, y + h);
-  closePath();
+  rect(x, y, w, h);  
   stroke();
 }
 
