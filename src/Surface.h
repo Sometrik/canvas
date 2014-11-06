@@ -6,6 +6,9 @@
 #include "FilterMode.h"
 #include "Path.h"
 #include "Style.h"
+#include "Font.h"
+#include "TextBaseline.h"
+#include "TextAlign.h"
 
 namespace canvas {
   class Context;
@@ -36,9 +39,9 @@ namespace canvas {
     virtual void stroke(const Path & path, const Style & style, double lineWidth) = 0;
     virtual void fill(const Path & path, const Style & style) = 0;
     
+    void colorFill(const Color & color);
     void gaussianBlur(float hradius, float vradius);
-    void colorize(const Color & color);
-
+    
     const TextureRef & updateTexture();
 
     unsigned int getWidth() const { return width; }
@@ -47,10 +50,13 @@ namespace canvas {
     void setMagFilter(FilterMode mode) { mag_filter = mode; }
     void setMinFilter(FilterMode mode) { min_filter = mode; }
   
-  protected:
-    virtual void fillText(Context & context, const std::string & text, double x, double y) = 0;
+    virtual void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) = 0;
+    virtual void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) = 0;
     virtual void drawImage(Surface & _img, double x, double y, double w, double h) = 0;
-
+    virtual void save() = 0;
+    virtual void restore() = 0;
+    
+  protected:
     TextureRef texture;
 
   private:
@@ -65,7 +71,10 @@ namespace canvas {
   };
 
   class NullSurface : public Surface {
-
+  public:
+    void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) { }
+    void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) { }
+    void drawImage(Surface & _img, double x, double y, double w, double h) { }
   };
 };
 

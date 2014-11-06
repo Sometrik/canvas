@@ -36,63 +36,99 @@ static vector<int> make_kernel(float radius) {
   
 void
 Surface::gaussianBlur(float hradius, float vradius) {
+  if (!(hradius > 0 || vradius > 0)) {
+    return;
+  }
+
   unsigned char * buffer = lockMemory(true);
   assert(buffer);
 
   unsigned char * tmp = new unsigned char[width * height * 4];
-  memset(tmp, 0, width * height * 4);
-  vector<int> hkernel = make_kernel(hradius), vkernel = make_kernel(vradius);
-  unsigned short hsize = hkernel.size(), vsize = vkernel.size();
-  int htotal = 0, vtotal = 0;
-  for (vector<int>::iterator it = hkernel.begin(); it != hkernel.end(); it++) {
-    htotal += *it;
-  }
-  for (vector<int>::iterator it = vkernel.begin(); it != vkernel.end(); it++) {
-    vtotal += *it;
-  }
-  for (unsigned int row = 0; row < height; row++) {
-    for (unsigned int col = 0; col + hsize < width; col++) {
-      int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-      for (unsigned int i = 0; i < hsize; i++) {
-	unsigned char * ptr = buffer + (row * width + col + i) * 4;
-	c0 += *ptr++ * hkernel[i];
-	c1 += *ptr++ * hkernel[i];
-	c2 += *ptr++ * hkernel[i];
-	c3 += *ptr++ * hkernel[i];
-      }
-      unsigned char * ptr = tmp + (row * width + col + hsize / 2) * 4;
-      *ptr++ = (unsigned char)(c0 / htotal);
-      *ptr++ = (unsigned char)(c1 / htotal);
-      *ptr++ = (unsigned char)(c2 / htotal);
-      *ptr++ = (unsigned char)(c3 / htotal);
+  if (hradius > 0.0f) {
+    vector<int> hkernel = make_kernel(hradius);
+    unsigned short hsize = hkernel.size();
+    int htotal = 0;
+    for (vector<int>::iterator it = hkernel.begin(); it != hkernel.end(); it++) {
+      htotal += *it;
     }
-  }
-  memset(buffer, 0, width * height * 4);
-  for (unsigned int col = 0; col < width; col++) {
-    for (unsigned int row = 0; row + vsize < height; row++) {
-      int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-      for (unsigned int i = 0; i < vsize; i++) {
-	unsigned char * ptr = tmp + ((row + i) * width + col) * 4;
-	c0 += *ptr++ * vkernel[i];
-	c1 += *ptr++ * vkernel[i];
-	c2 += *ptr++ * vkernel[i];
-	c3 += *ptr++ * vkernel[i];
+    memset(tmp, 0, width * height * 4);
+    for (unsigned int row = 0; row < height; row++) {
+      for (unsigned int col = 0; col + hsize < width; col++) {
+	int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
+	for (unsigned int i = 0; i < hsize; i++) {
+	  unsigned char * ptr = buffer + (row * width + col + i) * 4;
+	  c0 += *ptr++ * hkernel[i];
+	  c1 += *ptr++ * hkernel[i];
+	  c2 += *ptr++ * hkernel[i];
+	  c3 += *ptr++ * hkernel[i];
+	}
+	unsigned char * ptr = tmp + (row * width + col + hsize / 2) * 4;
+	*ptr++ = (unsigned char)(c0 / htotal);
+	*ptr++ = (unsigned char)(c1 / htotal);
+	*ptr++ = (unsigned char)(c2 / htotal);
+	*ptr++ = (unsigned char)(c3 / htotal);
       }
-      unsigned char * ptr = buffer + ((row + vsize / 2) * width + col) * 4;
-      *ptr++ = (unsigned char)(c0 / vtotal);
-      *ptr++ = (unsigned char)(c1 / vtotal);
-      *ptr++ = (unsigned char)(c2 / vtotal);
-      *ptr++ = (unsigned char)(c3 / vtotal);
     }
+  } else {
+    memcpy(tmp, buffer, width * height * 4);    
+  }
+  if (vradius > 0) {
+    vector<int> vkernel = make_kernel(vradius);
+    unsigned short vsize = vkernel.size();
+    int vtotal = 0;
+    for (vector<int>::iterator it = vkernel.begin(); it != vkernel.end(); it++) {
+      vtotal += *it;
+    }
+    memset(buffer, 0, width * height * 4);
+    for (unsigned int col = 0; col < width; col++) {
+      for (unsigned int row = 0; row + vsize < height; row++) {
+	int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
+	for (unsigned int i = 0; i < vsize; i++) {
+	  unsigned char * ptr = tmp + ((row + i) * width + col) * 4;
+	  c0 += *ptr++ * vkernel[i];
+	  c1 += *ptr++ * vkernel[i];
+	  c2 += *ptr++ * vkernel[i];
+	  c3 += *ptr++ * vkernel[i];
+	}
+	unsigned char * ptr = buffer + ((row + vsize / 2) * width + col) * 4;
+	*ptr++ = (unsigned char)(c0 / vtotal);
+	*ptr++ = (unsigned char)(c1 / vtotal);
+	*ptr++ = (unsigned char)(c2 / vtotal);
+	*ptr++ = (unsigned char)(c3 / vtotal);
+      }
+    }
+  } else {
+    memcpy(buffer, tmp, width * height * 4);    
   }
   delete[] tmp;
 
   releaseMemory();
 }
 
+static inline unsigned char toByte(float f) {
+  int a = int(f * 255);
+  if (a < 0) a = 0;
+  else if (a > 255) a = 255;
+  return (unsigned char)a;
+}
+
 void
-Surface::colorize(const Color & color) {
-  
+Surface::colorFill(const Color & color) {
+  unsigned char * buffer = lockMemory(true);
+  assert(buffer);
+  unsigned char red = toByte(color.red * color.alpha);
+  unsigned char green = toByte(color.green * color.alpha);
+  unsigned char blue = toByte(color.blue * color.alpha);
+  unsigned char alpha = toByte(color.alpha);
+  for (unsigned int i = 0; i < width * height; i++) {
+    unsigned char * ptr = buffer + (i * 4);
+    unsigned int dest_alpha = ptr[3];
+    *ptr++ = (unsigned char)((dest_alpha * red) / 255);
+    *ptr++ = (unsigned char)((dest_alpha * green) / 255);
+    *ptr++ = (unsigned char)((dest_alpha * blue) / 255);
+    *ptr++ = (unsigned char)((dest_alpha * alpha) / 255);
+  }
+  releaseMemory();
 }
 
 const TextureRef &
