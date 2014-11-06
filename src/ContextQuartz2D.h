@@ -1,5 +1,5 @@
-#ifndef _CONTEXTQUARTZ2D_H_
-#define _CONTEXTQUARTZ2D_H_
+#ifndef _CANVAS_CONTEXTQUARTZ2D_H_
+#define _CANVAS_CONTEXTQUARTZ2D_H_
 
 #include "Context.h"
 
@@ -9,9 +9,8 @@
 namespace canvas {
   class Quartz2DSurface : public Surface {
   public:
-  
-  
-      
+    friend class ContextQuartz2D;
+        
   Quartz2DSurface(unsigned int _width, unsigned int _height) :
     Surface(_width, _height) {
       colorspace = CGColorSpaceCreateDeviceRGB();
@@ -58,8 +57,9 @@ namespace canvas {
     void releaseMemory() {
       
     }
-    CGContextRef gc;
-    CGColorSpaceRef colorspace;
+
+    void stroke(const Path & path, const Style & style, double lineWidth);
+    void fill(const Path & path, const Style & style);
       
   protected:
     void fillText(Context & context, const std::string & text, double x, double y) {
@@ -110,10 +110,24 @@ namespace canvas {
       CGImageRelease(myImage);
 #endif
     }
+    void clip(const Path & path) {
+      sendPath(path);
+      CGContextClip(gc);
+    }
+    void save() {
+      
+    }
+    void restore() {
+
+    }
+
+  protected:
+    void sendPath(const Path & path);
 
   private:
-      bool is_screen;
-
+    CGContextRef gc;
+    CGColorSpaceRef colorspace;
+    bool is_screen;
   };
 
   class ContextQuartz2D : public Context {
@@ -129,85 +143,21 @@ namespace canvas {
       default_surface(_width, _height)
       {
       }
-#if 0
-    ~ContextQuartz2D() {
-    }
-#endif
 
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * data) {
-        return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height)); //, data));
+      return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height)); //, data));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
       return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height));
     }
-   
-    void fillRect(double x, double y, double w, double h) {
-        CGContextSetRGBFillColor(default_surface.gc, strokeStyle.color.red / 255.0f,
-                                 strokeStyle.color.green / 255.0f,
-                                 strokeStyle.color.blue / 255.0f,
-                                 1.0); 
-        CGContextFillRect(default_surface.gc, CGRectMake(x, y, w, h));
-    }
     
-    void beginPath() {
-      CGContextBeginPath(default_surface.gc);
-    }
-    void closePath() {
-      CGContextClosePath(default_surface.gc);
-    }
-    void clip() {
-      CGContextClip(default_surface.gc);
-    }    
-    void save() {
-      
-    }
-    void restore() {
-
-    }
-    void arc(double x, double y, double r, double a0, double a1, bool t = false) {
-
-    }
-    void clearRect(double x, double y, double w, double h) {
-
-    }
+    void clearRect(double x, double y, double w, double h) { }
         
     Surface & getDefaultSurface() { return default_surface; }
     const Surface & getDefaultSurface() const { return default_surface; }
-
-    void moveTo(double x0, double y0) {
-      CGContextMoveToPoint(default_surface.gc, x0, y0);
-    }
-    void lineTo(double x0, double y0) {
-      CGContextAddLineToPoint(default_surface.gc, x0, y0);
-    }    
-    void stroke() {
-      // CGContextSetLineWidth(context, fillStyle.);
-
-      CGFloat components[] = { strokeStyle.color.red / 255.0f,
-			       strokeStyle.color.green / 255.0f,
-			       strokeStyle.color.blue / 255.0f,
-			       1.0 };
-
-      CGColorRef color = CGColorCreate(default_surface.colorspace, components);
-      CGContextSetStrokeColorWithColor(default_surface.gc, color);
-      CGContextStrokePath(default_surface.gc);
-      CGColorRelease(color);
-    }
       
     void setgc(CGContextRef _gc){
-          default_surface.gc = _gc;
-    }
-    void fill() {
-
-      CGFloat components[] = { strokeStyle.color.red / 255.0f,
-			       strokeStyle.color.green / 255.0f,
-			       strokeStyle.color.blue / 255.0f,
-			       1.0 };
-
-      CGColorRef color = CGColorCreate(default_surface.colorspace, components);
-      CGContextSetFillColorWithColor(default_surface.gc, color);
-      CGContextFillPath(default_surface.gc);
-      CGColorRelease(color);
+      default_surface.gc = _gc;
     }
 
     TextMetrics measureText(const std::string & text) {
@@ -221,13 +171,8 @@ namespace canvas {
       rvalue.width =  endpt.x - startpt.x;
       return rvalue;
 #else
-      return TextMetrix(0, 0);
+      return TextMetrics(0, 0);
 #endif
-    }
-
-  protected:
-    Point getCurrentPoint() {
-      return Point(0, 0); // FIXME!
     }
 
   private:
