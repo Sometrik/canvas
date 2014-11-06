@@ -36,6 +36,7 @@ namespace canvas {
     }
     void arc(double x, double y, double radius, double sa, double ea, bool anticlockwise) {
       data.push_back(PathComponent(PathComponent::ARC, x, y, radius, sa, ea, anticlockwise));
+      // set current point
     }
     void arcTo(double x1, double y1, double x2, double y2, double radius);
 
