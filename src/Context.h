@@ -5,23 +5,13 @@
 #include <memory>
 
 #include "Color.h"
-#include "Font.h"
 #include "Surface.h"
 #include "Image.h"
-#include "TextBaseline.h"
 
 namespace canvas {  
   struct TextMetrics {
     float width, height;
   };
-  enum TextAlign {
-    START = 1,
-    END,
-    LEFT,
-    CENTER,
-    RIGHT
-  };
-
   class Context {
   public:
     Context(unsigned int _width, unsigned int _height)
@@ -38,8 +28,6 @@ namespace canvas {
 
     virtual void resize(unsigned int _width, unsigned int _height);
     
-    virtual void save() = 0;
-    virtual void restore() = 0;
     virtual void clearRect(double x, double y, double w, double h) = 0;
 
     void beginPath() { current_path.clear(); }
@@ -50,16 +38,22 @@ namespace canvas {
     void lineTo(double x, double y) { current_path.lineTo(x, y); }
     void arcTo(double x1, double y1, double x2, double y2, double radius) { current_path.arcTo(x1, y1, x2, y2, radius); }
 
-    void clip() { getDefaultSurface().clip(current_path); current_path.clear(); }
-    void stroke() { getDefaultSurface().stroke(current_path, strokeStyle, lineWidth); }
+    void clip() {
+      getDefaultSurface().clip(current_path);
+      current_path.clear();
+    }
+    void stroke();
     void fill();
+
+    void save() { getDefaultSurface().save(); }
+    void restore() { getDefaultSurface().restore(); }
 
     virtual TextMetrics measureText(const std::string & text) = 0;
     
-    // AL: I made this virtual for debugging
-    virtual void fillRect(double x, double y, double w, double h);
+    void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
     void fillText(const std::string & text, double x, double y);
+    void strokeText(const std::string & text, double x, double y);
     
     virtual Surface & getDefaultSurface() = 0;
     virtual const Surface & getDefaultSurface() const = 0;
@@ -76,9 +70,7 @@ namespace canvas {
 	drawImage(*surface, x, y, w, h);
       }
     }
-    void drawImage(Surface & img, double x, double y, double w, double h) {
-      getDefaultSurface().drawImage(img, x, y, w, h);
-    }
+    void drawImage(Surface & img, double x, double y, double w, double h);
         
     Style & createLinearGradient(double x0, double y0, double x1, double y1) {
       current_linear_gradient.setType(Style::LINEAR_GRADIENT);
@@ -89,7 +81,7 @@ namespace canvas {
     float lineWidth = 1.0f;
     Style fillStyle;
     Style strokeStyle;
-    float shadowBlur = 0.0f;
+    float shadowBlur = 0.0f, shadowBlurX = 0.0f, shadowBlurY = 0.0f;   
     Color shadowColor;
     float shadowOffsetX = 0.0f, shadowOffsetY = 0.0f;
     float globalAlpha = 1.0f;
@@ -98,8 +90,7 @@ namespace canvas {
     TextAlign textAlign = LEFT;
     
   protected:
-    virtual Point getCurrentPoint() = 0;
-    bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
+    bool hasShadow() const { return shadowBlur > 0 || shadowBlurX > 0 || shadowBlurY > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
 
     Path current_path;
 

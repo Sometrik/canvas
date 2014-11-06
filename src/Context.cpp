@@ -45,136 +45,78 @@ Context::strokeRect(double x, double y, double w, double h) {
 void
 Context::fillText(const std::string & text, double x, double y) {  
   if (hasShadow()) {
-    // cerr << "DRAWING SHADOW for text " << text << ", w = " << getWidth() << ", h = " << getHeight() << endl;
-    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * shadowBlur, getDefaultSurface().getHeight() + 2 * shadowBlur);
-    Style tmp = fillStyle;
-    fillStyle.color = shadowColor;
-    shadow->fillText(*this, text, x + shadowOffsetX + shadowBlur, y + shadowOffsetY + shadowBlur);
-    shadow->gaussianBlur(shadowBlur, shadowBlur);
-    fillStyle = tmp;
-    drawImage(*shadow, -shadowBlur, -shadowBlur, shadow->getWidth(), shadow->getHeight());
+    float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * bx, getDefaultSurface().getHeight() + 2 * by);
+    Style tmp_style = fillStyle;
+    tmp_style.color = shadowColor;
+    shadow->fillText(font, tmp_style, textBaseline, textAlign, text, x + shadowOffsetX + bx, y + shadowOffsetY + by);
+    shadow->gaussianBlur(bx, by);
+    getDefaultSurface().drawImage(*shadow, -bx, -by, shadow->getWidth(), shadow->getHeight());
   }
-  getDefaultSurface().fillText(*this, text, x, y);
+  getDefaultSurface().fillText(font, fillStyle, textBaseline, textAlign, text, x, y);
 }
 
-#if 0
-// Implementation by node-canvas (Node canvas is a Cairo backed Canvas implementation for NodeJS)
-// Original implementation influenced by WebKit.
 void
-Context::arcTo(double x1, double y1, double x2, double y2, double radius) {
-#if 0
-  Point _p0 = getCurrentPoint();
-  glm::dvec2 current(_p0.x, _p0.y);
-  glm::dvec2 p1(x1, y1), p2(x2, y2);
-
-  glm::dvec2 v1 = glm::normalize(current - p1);
-  glm::dvec2 v2 = glm::normalize(p2 - p1);
-  
-  double alpha = atan2(v1.y, v1.x) - atan2(v2.y, v2.x);
-  if (alpha < 0) alpha += 2*M_PI;
-  // TODO obtuse angles
-  
-  double dist = radius / sin(alpha / 2) * cos(alpha / 2);
-  // calculate tangential points
-  glm::dvec2 t1 = dist * v1 + p1;
-
-  double a0 = atan2(v1.y, v1.x) - M_PI / 2;
-  glm::dvec2 nv1(cos(a0), sin(a0));
-  glm::dvec2 c = t1 + radius * nv1;
-
-  double a1 = atan2(v1.y, v1.x) + M_PI / 2;
-  double a2 = atan2(v2.y, v2.x) - M_PI / 2;
-
-  lineTo(t1.x, t1.y);
-  arc(c.x, c.y, radius, a1, a2, a1 > a2);
-  lineTo(p2.x, p2.y);
-#else
-  Point p0 = getCurrentPoint();
-  Point p1(x1, y1);
-  Point p2(x2, y2);
-  
-  if ((p1.x == p0.x && p1.y == p0.y) || (p1.x == p2.x && p1.y == p2.y) || radius == 0.f) {
-    lineTo(p1.x, p1.y);
-    // p2?
-    return;
+Context::strokeText(const std::string & text, double x, double y) {  
+  if (hasShadow()) {
+    float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * bx, getDefaultSurface().getHeight() + 2 * by);
+    Style tmp_style = strokeStyle;
+    tmp_style.color = shadowColor;
+    shadow->strokeText(font, tmp_style, textBaseline, textAlign, text, x + shadowOffsetX + bx, y + shadowOffsetY + by);
+    shadow->gaussianBlur(bx, by);
+    getDefaultSurface().drawImage(*shadow, -bx, -by, shadow->getWidth(), shadow->getHeight());
   }
-
-  Point p1p0((p0.x - p1.x), (p0.y - p1.y));
-  Point p1p2((p2.x - p1.x), (p2.y - p1.y));
-  float p1p0_length = sqrt(p1p0.x * p1p0.x + p1p0.y * p1p0.y);
-  float p1p2_length = sqrt(p1p2.x * p1p2.x + p1p2.y * p1p2.y);
-
-  double cos_phi = (p1p0.x * p1p2.x + p1p0.y * p1p2.y) / (p1p0_length * p1p2_length);
-  // all points on a line logic
-  if (-1 == cos_phi) {
-    lineTo(p1.x, p1.y);
-    // p2?
-    return;
-  }
-
-  if (1 == cos_phi) {
-    // add infinite far away point
-    unsigned int max_length = 65535;
-    double factor_max = max_length / p1p0_length;
-    Point ep((p0.x + factor_max * p1p0.x), (p0.y + factor_max * p1p0.y));
-    lineTo(ep.x, ep.y);
-    return;
-  }
-
-  double tangent = radius / tan(acos(cos_phi) / 2);
-  double factor_p1p0 = tangent / p1p0_length;
-  Point t_p1p0((p1.x + factor_p1p0 * p1p0.x), (p1.y + factor_p1p0 * p1p0.y));
-
-  Point orth_p1p0(p1p0.y, -p1p0.x);
-  double orth_p1p0_length = sqrt(orth_p1p0.x * orth_p1p0.x + orth_p1p0.y * orth_p1p0.y);
-  double factor_ra = radius / orth_p1p0_length;
-
-  double cos_alpha = (orth_p1p0.x * p1p2.x + orth_p1p0.y * p1p2.y) / (orth_p1p0_length * p1p2_length);
-  if (cos_alpha < 0.f) {
-    orth_p1p0 = Point(-orth_p1p0.x, -orth_p1p0.y);
-  }
-
-  Point p((t_p1p0.x + factor_ra * orth_p1p0.x), (t_p1p0.y + factor_ra * orth_p1p0.y));
-
-  orth_p1p0 = Point(-orth_p1p0.x, -orth_p1p0.y);
-  double sa = acos(orth_p1p0.x / orth_p1p0_length);
-  if (orth_p1p0.y < 0.f) {
-    sa = 2 * M_PI - sa;
-  }
-
-  bool anticlockwise = false;
-
-  double factor_p1p2 = tangent / p1p2_length;
-  Point t_p1p2((p1.x + factor_p1p2 * p1p2.x), (p1.y + factor_p1p2 * p1p2.y));
-  Point orth_p1p2((t_p1p2.x - p.x),(t_p1p2.y - p.y));
-  double orth_p1p2_length = sqrt(orth_p1p2.x * orth_p1p2.x + orth_p1p2.y * orth_p1p2.y);
-  double ea = acos(orth_p1p2.x / orth_p1p2_length);
-
-  if (orth_p1p2.y < 0) ea = 2 * M_PI - ea;
-  if ((sa > ea) && ((sa - ea) < M_PI)) anticlockwise = true;
-  if ((sa < ea) && ((ea - sa) > M_PI)) anticlockwise = true;
-
-  // cerr << "ARC " << int(t_p1p0.x) << " " << int(t_p1p0.y) << " " << int(p.x) << " " << int(p.y) << " " << radius << " " << int(sa * 180.0 / M_PI) << " " << int(ea * 180.0 / M_PI) << " " << (anticlockwise ? "acw" : "cw") << endl;
-
-  lineTo(t_p1p0.x, t_p1p0.y);
-  arc(p.x, p.y, radius, sa, ea, anticlockwise); // && M_PI * 2 != radius);  
-#endif
+  getDefaultSurface().strokeText(font, strokeStyle, textBaseline, textAlign, text, x, y);
 }
-#endif
 
 void
 Context::fill() {
   if (hasShadow()) {
-    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * shadowBlur, getDefaultSurface().getHeight() + 2 * shadowBlur);
+    float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * bx, getDefaultSurface().getHeight() + 2 * by);
     Style tmp_style = fillStyle;
     tmp_style.color = shadowColor;
     Path tmp_path = current_path;
-    tmp_path.offset(shadowOffsetX + shadowBlur, shadowOffsetY + shadowBlur);
+    tmp_path.offset(shadowOffsetX + bx, shadowOffsetY + by);
     
     shadow->fill(tmp_path, tmp_style);
-    shadow->gaussianBlur(shadowBlur, shadowBlur);
+    shadow->gaussianBlur(bx, by);
     
-    drawImage(*shadow, -shadowBlur, -shadowBlur, shadow->getWidth(), shadow->getHeight());
+    getDefaultSurface().drawImage(*shadow, -bx, -by, shadow->getWidth(), shadow->getHeight());
   }
   getDefaultSurface().fill(current_path, fillStyle);
+}
+
+void
+Context::stroke() {
+  if (hasShadow()) {
+    float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * bx, getDefaultSurface().getHeight() + 2 * by);
+    Style tmp_style = strokeStyle;
+    tmp_style.color = shadowColor;
+    Path tmp_path = current_path;
+    tmp_path.offset(shadowOffsetX + bx, shadowOffsetY + by);
+    
+    shadow->stroke(tmp_path, tmp_style, lineWidth);
+    shadow->gaussianBlur(bx, by);
+    
+    getDefaultSurface().drawImage(*shadow, -bx, -by, shadow->getWidth(), shadow->getHeight());    
+  }
+  getDefaultSurface().stroke(current_path, strokeStyle, lineWidth);
+}
+
+void
+Context::drawImage(Surface & img, double x, double y, double w, double h) {
+  if (hasShadow()) {
+    float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * bx, getDefaultSurface().getHeight() + 2 * by);
+    
+    shadow->drawImage(img, x + shadowOffsetX + bx, y + shadowOffsetY + by, w, h);
+    shadow->colorFill(shadowColor);
+    shadow->gaussianBlur(bx, by);
+    
+    getDefaultSurface().drawImage(*shadow, -bx, -by, shadow->getWidth(), shadow->getHeight());    
+  }
+  getDefaultSurface().drawImage(img, x, y, w, h);
 }
