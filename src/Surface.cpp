@@ -145,6 +145,7 @@ Surface::updateTexture() {
   unsigned char * buffer = lockMemory();
   assert(buffer);
   
+#if 0
   // remove premultiplied alpha
   unsigned char * buffer2 = new unsigned char[getWidth() * getHeight() * 4];
   for (unsigned int i = 0; i < getWidth() * getHeight(); i++) {
@@ -165,9 +166,11 @@ Surface::updateTexture() {
   }
 
   texture.updateData(buffer2);
-  
   delete[] buffer2;
-
+#else
+  texture.updateData(buffer);
+#endif
+  
   releaseMemory();
   
   return texture;
