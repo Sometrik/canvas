@@ -36,7 +36,6 @@ namespace canvas {
   public:
     friend class ContextGDIPlus;
 
-    // PixelFormat32bppARGB
     GDIPlusSurface(unsigned int _width, unsigned int _height) : Surface(_width, _height), 
       bitmap(new Gdiplus::Bitmap(_width, _height, PixelFormat32bppPARGB)),
       g(new Gdiplus::Graphics(&(*bitmap)))

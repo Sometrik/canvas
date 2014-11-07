@@ -23,6 +23,9 @@ static Gdiplus::GraphicsPath toGDIPath(const Path & path) {
 	current_pos = point;
       }
       break;
+    case PathComponent::CLOSE:
+      output.CloseFigure();
+      break;
     case PathComponent::ARC:
       {
 	Gdiplus::RectF rect(Gdiplus::REAL(pc.x - pc.radius), Gdiplus::REAL(pc.y - pc.radius), Gdiplus::REAL(2 * pc.radius), Gdiplus::REAL(2 * pc.radius));
