@@ -91,6 +91,7 @@ CairoSurface::sendPath(const Path & path) {
     switch (pc.type) {
     case PathComponent::MOVE_TO: cairo_move_to(cr, pc.x0 + 0.5, pc.y0 + 0.5); break;
     case PathComponent::LINE_TO: cairo_line_to(cr, pc.x0 + 0.5, pc.y0 + 0.5); break;
+    case PathComponent::CLOSE: cairo_close_path(cr); break;
     case PathComponent::ARC:
       if (!pc.anticlockwise) {
 	cairo_arc(cr, pc.x0 + 0.5, pc.y0 + 0.5, pc.radius, pc.sa, pc.ea);
@@ -156,19 +157,23 @@ void
 CairoSurface::fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
   prepareTextStyle(font, style, textBaseline, textAlign);
 
-  cairo_text_extents_t extents;
-  cairo_text_extents(cr, text.c_str(), &extents);
+  cairo_font_extents_t font_extents;
+  cairo_font_extents(cr, &font_extents);
+  
+  cairo_text_extents_t text_extents;
+  cairo_text_extents(cr, text.c_str(), &text_extents);
   
   switch (textBaseline.getType()) {
-  case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
-  case TextBaseline::TOP: y += extents.height; break;
+    // case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
+  case TextBaseline::MIDDLE: y += -font_extents.descent + (font_extents.ascent + font_extents.descent) / 2.0; break;
+  case TextBaseline::TOP: y += font_extents.ascent; break;
   default: break;
   }
 
   switch (textAlign) {
   case LEFT: break;
-  case CENTER: x -= extents.width / 2; break;
-  case RIGHT: x -= extents.width; break;
+  case CENTER: x -= text_extents.width / 2; break;
+  case RIGHT: x -= text_extents.width; break;
   default: break;
   }
   
@@ -197,7 +202,8 @@ CairoSurface::strokeText(const Font & font, const Style & style, TextBaseline te
   }
   
   cairo_move_to(cr, x + 0.5, y + 0.5);
-  assert(0);
+  cairo_text_path(cr, text.c_str());
+  cairo_stroke(cr);
 }  
 
 void
