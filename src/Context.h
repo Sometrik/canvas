@@ -31,7 +31,7 @@ namespace canvas {
     virtual void clearRect(double x, double y, double w, double h) = 0;
 
     void beginPath() { current_path.clear(); }
-    void closePath() { }
+    void closePath() { current_path.close(); }
 
     void arc(double x, double y, double r, double a0, double a1, bool t = false) { current_path.arc(x, y, r, a0, a1, t); }
     void moveTo(double x, double y) { current_path.moveTo(x, y); }
