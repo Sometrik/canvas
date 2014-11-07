@@ -12,8 +12,9 @@ namespace canvas {
 
   class PathComponent {
   public:
-    enum Type { MOVE_TO = 1, LINE_TO, ARC };
+    enum Type { MOVE_TO = 1, LINE_TO, ARC, CLOSE };
 
+  PathComponent(Type _type) : type(_type), x0(0), y0(0), radius(0), sa(0), ea(0), anticlockwise(false) { }
   PathComponent(Type _type, double _x0, double _y0) : type(_type), x0(_x0), y0(_y0), radius(0), sa(0), ea(0), anticlockwise(false) { }
   PathComponent(Type _type, double _x0, double _y0, double _radius, double _sa, double _ea, bool _anticlockwise) : type(_type), x0(_x0), y0(_y0), radius(_radius), sa(_sa), ea(_ea), anticlockwise(_anticlockwise) { }
       
@@ -33,6 +34,10 @@ namespace canvas {
     void lineTo(double x, double y) {
       data.push_back(PathComponent(PathComponent::LINE_TO, x, y));
       current_point = Point(x, y);
+    }
+    void close() {
+      data.push_back(PathComponent(PathComponent::CLOSE));
+      // set current point
     }
     void arc(double x, double y, double radius, double sa, double ea, bool anticlockwise) {
       data.push_back(PathComponent(PathComponent::ARC, x, y, radius, sa, ea, anticlockwise));
