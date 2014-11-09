@@ -84,6 +84,9 @@ namespace canvas {
     }
     ~GDIPlusSurface() {
     }
+    GDIPlusSurface * copy() {
+      return 0;
+    }
     void resize(unsigned int _width, unsigned int _height) {
       Surface::resize(_width, _height);
       bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_width, _height));
@@ -105,36 +108,8 @@ namespace canvas {
       markDirty();
     }
 
-    void fillText(Context & context, const std::string & text, double x, double y) {
-      std::wstring text2 = convert_to_wstring(text);
-      int style = 0;
-      if (context.font.weight == Font::BOLD || context.font.weight == Font::BOLDER) {
-	style |= Gdiplus::FontStyleBold;
-      }
-      if (context.font.slant == Font::ITALIC) {
-	style |= Gdiplus::FontStyleItalic;
-      }
-      Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), context.font.size, style, Gdiplus::UnitPixel);
-      Gdiplus::SolidBrush brush(Gdiplus::Color(context.fillStyle.color.red, context.fillStyle.color.green, context.fillStyle.color.blue));
-
-      Gdiplus::RectF rect(Gdiplus::REAL(x), Gdiplus::REAL(y), 0.0f, 0.0f);
-      Gdiplus::StringFormat f;
-
-      switch (context.textBaseline.getType()) {
-      case TextBaseline::TOP: break;
-      case TextBaseline::HANGING: break;
-      case TextBaseline::MIDDLE: f.SetLineAlignment(Gdiplus::StringAlignmentCenter); break;
-      }
-
-      switch (context.textAlign) {
-      case TextAlign::CENTER: f.SetAlignment(Gdiplus::StringAlignmentCenter); break;
-      case TextAlign::END: case TextAlign::RIGHT: f.SetAlignment(Gdiplus::StringAlignmentFar); break;
-      case TextAlign::START: case TextAlign::LEFT: f.SetAlignment(Gdiplus::StringAlignmentNear); break;
-      }
-
-      g->DrawString(text2.data(), text2.size(), &font, rect, &f, &brush);
-    }
-
+    void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y);
+    
     void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
       
     }  
@@ -144,12 +119,12 @@ namespace canvas {
     void stroke(const Path & path, const Style & style, double lineWidth);
     void fill(const Path & path, const Style & style);
     void save() {
-      save_stack.push_back(default_surface.g->Save());
+      save_stack.push_back(g->Save());
     }
     void restore() {
       assert(!save_stack.empty());
       if (!save_stack.empty()) {
-	default_surface.g->Restore(save_stack.back());
+	g->Restore(save_stack.back());
 	save_stack.pop_back();
       }
     }
@@ -217,7 +192,7 @@ namespace canvas {
       Gdiplus::SizeF size;
       boundingBox.GetSize(&size);
 
-      return {(double)size.Width, (double)size.Height};
+      return { (float)size.Width, (float)size.Height };
     }
     
   protected:
