@@ -22,15 +22,21 @@ CairoSurface::CairoSurface(unsigned int _width, unsigned int _height)
   assert(cr);
 }
   
-CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data)
+CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data, bool has_alpha)
   : Surface(_width, _height)
 {
-  cairo_format_t format = CAIRO_FORMAT_RGB24;
+  cairo_format_t format = has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
   unsigned int stride = cairo_format_stride_for_width(format, _width);
   assert(stride == 4 * _width);
   storage = new unsigned int[_width * _height];
-  for (unsigned int i = 0; i < _width * _height; i++) {
-    storage[i] = data[3 * i + 2] + (data[3 * i + 1] << 8) + (data[3 * i + 0] << 16);
+  if (has_alpha) {
+    for (unsigned int i = 0; i < _width * _height; i++) {
+      storage[i] = (data[4 * i + 0] << 24) + (data[4 * i + 1] << 16) + (data[4 * i + 2] << 8) + data[4 * i + 3];
+    }
+  } else {
+    for (unsigned int i = 0; i < _width * _height; i++) {
+      storage[i] = data[3 * i + 2] + (data[3 * i + 1] << 8) + (data[3 * i + 0] << 16);
+    }
   }
   surface = cairo_image_surface_create_for_data((unsigned char*)storage,
 						format,
@@ -207,13 +213,17 @@ CairoSurface::strokeText(const Font & font, const Style & style, TextBaseline te
 }  
 
 void
-CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h) {
+CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha) {
   CairoSurface & img = dynamic_cast<CairoSurface&>(_img);
   double sx = w / img.getWidth(), sy = h / img.getHeight();
   cairo_save(cr);
   cairo_scale(cr, sx, sy);
   cairo_set_source_surface(cr, img.surface, (x / sx) + 0.5, (y / sy) + 0.5);
-  cairo_paint(cr);
+  if (alpha < 1.0f) {
+    cairo_paint_with_alpha(cr, alpha);
+  } else {
+    cairo_paint(cr);
+  }
   cairo_set_source_rgb(cr, 0.0f, 0.0f, 0.0f); // is this needed?
   cairo_restore(cr);
 }

@@ -14,10 +14,17 @@ namespace canvas {
     friend class ContextCairo;
 
     CairoSurface(unsigned int _width, unsigned int _height);
-    CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data);
+    CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data, bool has_alpha = false);
     CairoSurface(const std::string & filename);
     ~CairoSurface();
 
+    CairoSurface * copy() {
+      unsigned char * buffer = lockMemory(false);
+      CairoSurface * other = new CairoSurface(getWidth(), getHeight(), buffer, true);
+      releaseMemory();
+      return other;
+    }
+    
     void flush();
     void markDirty();
     unsigned char * lockMemory(bool write_access) {
@@ -35,7 +42,7 @@ namespace canvas {
 
     void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y);
     void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y);
-    void drawImage(Surface & _img, double x, double y, double w, double h);
+    void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f);
     void clip(const Path & path);
     void stroke(const Path & path, const Style & style, double lineWidth);
     void fill(const Path & path, const Style & style);
