@@ -116,17 +116,35 @@ void
 Surface::colorFill(const Color & color) {
   unsigned char * buffer = lockMemory(true);
   assert(buffer);
-  unsigned char red = toByte(color.red * color.alpha);
-  unsigned char green = toByte(color.green * color.alpha);
-  unsigned char blue = toByte(color.blue * color.alpha);
-  unsigned char alpha = toByte(color.alpha);
+  unsigned int red = toByte(color.red * color.alpha);
+  unsigned int green = toByte(color.green * color.alpha);
+  unsigned int blue = toByte(color.blue * color.alpha);
+  unsigned int alpha = toByte(color.alpha);
   for (unsigned int i = 0; i < width * height; i++) {
     unsigned char * ptr = buffer + (i * 4);
     unsigned int dest_alpha = ptr[3];
-    *ptr++ = (unsigned char)((dest_alpha * red) / 255);
-    *ptr++ = (unsigned char)((dest_alpha * green) / 255);
-    *ptr++ = (unsigned char)((dest_alpha * blue) / 255);
-    *ptr++ = (unsigned char)((dest_alpha * alpha) / 255);
+    *ptr++ = (unsigned char)(dest_alpha * red / 255);
+    *ptr++ = (unsigned char)(dest_alpha * green / 255);
+    *ptr++ = (unsigned char)(dest_alpha * blue / 255);
+    *ptr++ = (unsigned char)(dest_alpha * alpha / 255);
+  }
+  releaseMemory();
+}
+
+void
+Surface::multiply(const Color & color) {
+  unsigned char * buffer = lockMemory(true);
+  assert(buffer);
+  unsigned int red = toByte(color.red);
+  unsigned int green = toByte(color.green);
+  unsigned int blue = toByte(color.blue);
+  unsigned int alpha = toByte(color.alpha);
+  for (unsigned int i = 0; i < width * height; i++) {
+    unsigned char * ptr = buffer + (i * 4);
+    *ptr++ = (unsigned char)(*ptr * red / 255);
+    *ptr++ = (unsigned char)(*ptr * green / 255);
+    *ptr++ = (unsigned char)(*ptr * blue / 255);
+    *ptr++ = (unsigned char)(*ptr * alpha / 255);
   }
   releaseMemory();
 }

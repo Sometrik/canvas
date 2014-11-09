@@ -32,6 +32,8 @@ namespace canvas {
 
     virtual void flush() { }
     virtual void markDirty() { }
+
+    virtual Surface * copy() = 0;
     virtual unsigned char * lockMemory(bool write_access = false) = 0;
     virtual void releaseMemory() = 0;
 
@@ -41,6 +43,7 @@ namespace canvas {
     
     void colorFill(const Color & color);
     void gaussianBlur(float hradius, float vradius);
+    void multiply(const Color & color);
     
     const TextureRef & updateTexture();
 
@@ -52,7 +55,7 @@ namespace canvas {
   
     virtual void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) = 0;
     virtual void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) = 0;
-    virtual void drawImage(Surface & _img, double x, double y, double w, double h) = 0;
+    virtual void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f) = 0;
     virtual void save() = 0;
     virtual void restore() = 0;
     
