@@ -88,6 +88,34 @@ GDIPlusSurface::clip(const Path & input_path) {
   default_surface.g->SetClip(&region);
 }
 
+void
+GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha) {
+  GDIPlusSurface & img = dynamic_cast<GDIPlusSurface&>(_img);
+  if (alpha < 1.0f) {
+    ImageAttributes  imageAttributes;
+    ColorMatrix colorMatrix = {
+      1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+      0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+      0.0f, 0.0f, 0.0f, alpha, 0.0f,
+      0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+   
+    imageAttributes.SetColorMatrix( &colorMatrix, 
+				    ColorMatrixFlagsDefault,
+				    ColorAdjustTypeBitmap);
+    graphics.DrawImage( &(*(img.bitmap)),
+			Gdiplus::Rect(x, y, w, h),  // destination rectangle 
+			0, 0,        // upper-left corner of source rectangle 
+			width,       // width of source rectangle
+			height,      // height of source rectangle
+			Gdiplus::UnitPixel,
+			&imageAttributes);
+  } else {
+    g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y), Gdiplus::REAL(w), Gdiplus::REAL(h));
+  }
+}
+
+
 #if 0
 void
 ContextGDIPlus::arc(double x, double y, double r, double sa, double ea, bool anticlockwise) {

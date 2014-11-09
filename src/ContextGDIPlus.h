@@ -139,11 +139,7 @@ namespace canvas {
       
     }  
 
-    void drawImage(Surface & _img, double x, double y, double w, double h) {
-      GDIPlusSurface & img = dynamic_cast<GDIPlusSurface&>(_img);
-      g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y), Gdiplus::REAL(w), Gdiplus::REAL(h));
-    }
-
+    void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f);
     void clip(const Path & path);
     void stroke(const Path & path, const Style & style, double lineWidth);
     void fill(const Path & path, const Style & style);
