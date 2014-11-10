@@ -4,6 +4,12 @@
 
 using namespace canvas;
 
+void
+Path::arc(double x, double y, double radius, double sa, double ea, bool anticlockwise) {
+  data.push_back(PathComponent(PathComponent::ARC, x, y, radius, sa, ea, anticlockwise));
+  current_point = Point(x + radius * cos(ea), y + radius * sin(ea));
+}
+
 // Implementation by node-canvas (Node canvas is a Cairo backed Canvas implementation for NodeJS)
 // Original implementation influenced by WebKit.
 void
@@ -77,5 +83,5 @@ Path::arcTo(double x1, double y1, double x2, double y2, double radius) {
 
   lineTo(t_p1p0.x, t_p1p0.y);
   arc(p.x, p.y, radius, sa, ea, anticlockwise); // && M_PI * 2 != radius);
-  current_point = p2;
+  // current_point = p2;
 }
