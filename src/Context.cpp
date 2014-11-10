@@ -47,7 +47,7 @@ void
 Context::fillText(const std::string & text, double x, double y) {  
   if (hasShadow()) {
     float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
-    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * bx, getDefaultSurface().getHeight() + 2 * by);
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * int(ceil(bx)), getDefaultSurface().getHeight() + 2 * int(ceil(by)));
     Style shadow_style = shadowColor;
     shadow->fillText(font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bx, y + shadowOffsetY + by);
     shadow->gaussianBlur(bx, by);
@@ -60,7 +60,7 @@ void
 Context::strokeText(const std::string & text, double x, double y) {  
   if (hasShadow()) {
     float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
-    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * bx, getDefaultSurface().getHeight() + 2 * by);
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * int(ceil(bx)), getDefaultSurface().getHeight() + 2 * int(ceil(by)));
     Style shadow_style = shadowColor;
     shadow->strokeText(font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bx, y + shadowOffsetY + by);
     shadow->gaussianBlur(bx, by);
@@ -73,7 +73,7 @@ void
 Context::fill() {
   if (hasShadow()) {
     float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
-    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * bx, getDefaultSurface().getHeight() + 2 * by);
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * int(ceil(bx)), getDefaultSurface().getHeight() + 2 * int(ceil(by)));
     Style shadow_style = shadowColor;
     Path tmp_path = current_path;
     tmp_path.offset(shadowOffsetX + bx, shadowOffsetY + by);
@@ -90,7 +90,7 @@ void
 Context::stroke() {
   if (hasShadow()) {
     float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
-    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * bx, getDefaultSurface().getHeight() + 2 * by);
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * int(ceil(bx)), getDefaultSurface().getHeight() + 2 * int(ceil(by)));
     Style shadow_style = shadowColor;
     Path tmp_path = current_path;
     tmp_path.offset(shadowOffsetX + bx, shadowOffsetY + by);
@@ -107,7 +107,7 @@ void
 Context::drawImage(Surface & img, double x, double y, double w, double h) {
   if (hasShadow()) {
     float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
-    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * bx, getDefaultSurface().getHeight() + 2 * by);
+    auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * int(ceil(bx)), getDefaultSurface().getHeight() + 2 * int(ceil(by)));
     
     shadow->drawImage(img, x + shadowOffsetX + bx, y + shadowOffsetY + by, w, h, globalAlpha);
     shadow->colorFill(shadowColor);
