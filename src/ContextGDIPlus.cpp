@@ -120,7 +120,7 @@ void
 GDIPlusSurface::stroke(const Path & input_path, const Style & style, double lineWidth) {
   Gdiplus::GraphicsPath path;
   toGDIPath(input_path, path);
-  Gdiplus::Pen pen(toGDIColor(style.color));
+  Gdiplus::Pen pen(toGDIColor(style.color), lineWidth);
   g->DrawPath(&pen, &path);
 }
 
