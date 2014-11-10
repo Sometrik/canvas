@@ -42,10 +42,10 @@ namespace canvas {
     {
 #if 0
       g->SetCompositingMode( CompositingModeSourceCopy );
-      g->SetCompositingQuality( CompositingQualityHighSpeed );
       g->SetPixelOffsetMode( PixelOffsetModeNone );
-      g->SetInterpolationMode( InterpolationModeDefault );
 #endif
+      g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
+      g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
       g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
     }
     GDIPlusSurface(const std::string & filename) : Surface(0, 0)
@@ -54,6 +54,8 @@ namespace canvas {
       bitmap = std::shared_ptr<Gdiplus::Bitmap>(Gdiplus::Bitmap::FromFile(tmp.data()));
       Surface::resize(bitmap->GetWidth(), bitmap->GetHeight());
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+      g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
+      g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
       g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
     }
     // Gdiplus::PixelFormat32bppARGB
@@ -67,6 +69,8 @@ namespace canvas {
       }
       bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_width, _height, _width * 3, PixelFormat24bppRGB, tmp));
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+      g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
+      g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
       g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
     }
     // Gdiplus::PixelFormat32bppARGB
@@ -80,6 +84,8 @@ namespace canvas {
       }
       bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 3, PixelFormat24bppRGB, tmp));
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+      g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
+      g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
       g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
     }
     ~GDIPlusSurface() {
@@ -91,6 +97,8 @@ namespace canvas {
       Surface::resize(_width, _height);
       bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_width, _height));
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+      g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
+      g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
       g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
     }
     void flush() { }
