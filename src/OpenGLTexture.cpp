@@ -1,7 +1,22 @@
 #include "OpenGLTexture.h"
 
 #include "TextureRef.h"
-#include "../../personal/graphviewer/ui/GL.h"
+
+#define GL_GLEXT_PROTOTYPES
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#ifdef __WXMAC__
+#include "OpenGL/gl.h"
+#else
+#include <GL/gl.h>
+#endif
+
+#ifdef _WIN32
+#include "glext.h"
+#else
+#include <GL/glext.h>
+#endif
 
 #include <cassert>
 
