@@ -141,10 +141,10 @@ Surface::multiply(const Color & color) {
   unsigned int alpha = toByte(color.alpha);
   for (unsigned int i = 0; i < width * height; i++) {
     unsigned char * ptr = buffer + (i * 4);
-    *ptr++ = (unsigned char)(*ptr * red / 255);
-    *ptr++ = (unsigned char)(*ptr * green / 255);
-    *ptr++ = (unsigned char)(*ptr * blue / 255);
-    *ptr++ = (unsigned char)(*ptr * alpha / 255);
+    ptr[0] = (unsigned char)(ptr[0] * red / 255);
+    ptr[1] = (unsigned char)(ptr[1] * green / 255);
+    ptr[2] = (unsigned char)(ptr[2] * blue / 255);
+    ptr[3] = (unsigned char)(ptr[3] * alpha / 255);
   }
   releaseMemory();
 }
