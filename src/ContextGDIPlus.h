@@ -96,6 +96,9 @@ namespace canvas {
       g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
       g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
       g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
+#if 0
+      g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAlias );
+#endif
     }
     void flush() { }
     void markDirty() { }
