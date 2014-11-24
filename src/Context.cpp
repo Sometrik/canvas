@@ -28,12 +28,9 @@ Context::rect(double x, double y, double w, double h) {
 
 void
 Context::fillRect(double x, double y, double w, double h) {
-  save();
   beginPath();
   rect(x, y, w, h);  
   fill();
-  beginPath(); // tmp fix
-  restore();
 } 
 
 void
