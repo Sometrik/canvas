@@ -16,22 +16,9 @@ namespace Gdiplus
 #include <cassert>
 #include <vector>
 
-#include "utf8.h"
-
 #pragma comment (lib, "gdiplus.lib")
 
 namespace canvas {
-  inline std::wstring convert_to_wstring(const std::string & input) {
-    const char * str = input.c_str();
-    const char * str_i = str;
-    const char * end = str + input.size();
-    std::wstring output;
-    while (str_i < end) {
-      output += (wchar_t)utf8::next(str_i, end);
-    }
-    return output;
-  }
-
   class GDIPlusSurface : public Surface {
   public:
     friend class ContextGDIPlus;
@@ -42,14 +29,7 @@ namespace canvas {
     {
       initialize();
     }
-    GDIPlusSurface(const std::string & filename) : Surface(0, 0)
-     {
-      std::wstring tmp = convert_to_wstring(filename);
-      bitmap = std::shared_ptr<Gdiplus::Bitmap>(Gdiplus::Bitmap::FromFile(tmp.data()));
-      Surface::resize(bitmap->GetWidth(), bitmap->GetHeight());
-      g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
-      initialize();
-    }
+    GDIPlusSurface(const std::string & filename);
     // Gdiplus::PixelFormat32bppARGB
     GDIPlusSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) : Surface(_width, _height)
     {
@@ -175,29 +155,9 @@ namespace canvas {
     GDIPlusSurface & getDefaultSurface() { return default_surface; }
     const GDIPlusSurface & getDefaultSurface() const { return default_surface; }
     
-    void resize(unsigned int _width, unsigned int _height) {
-      Context::resize(_width, _height);
-    }
-    void flush() {
-    }
+    void flush() { }
     void clearRect(double x, double y, double w, double h) { }
-    TextMetrics measureText(const std::string & text) {
-      std::wstring text2 = convert_to_wstring(text);
-      int style = 0;
-      if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {
-	style |= Gdiplus::FontStyleBold;
-      }
-      if (font.slant == Font::ITALIC) {
-	style |= Gdiplus::FontStyleItalic;
-      }
-      Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), font.size, style, Gdiplus::UnitPixel);
-      Gdiplus::RectF layoutRect(0, 0, 512, 512), boundingBox;
-      default_surface.g->MeasureString(text2.data(), text2.size(), &font, layoutRect, &boundingBox);
-      Gdiplus::SizeF size;
-      boundingBox.GetSize(&size);
-
-      return { (float)size.Width, (float)size.Height };
-    }
+    TextMetrics measureText(const std::string & text);
     
   protected:
     // Point getCurrentPoint() { return Point(current_position.X, current_position.Y); }

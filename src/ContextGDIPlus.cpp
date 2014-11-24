@@ -1,10 +1,23 @@
 #include "ContextGDIPlus.h"
 
+#include "utf8.h"
+
 bool canvas::ContextGDIPlus::is_initialized = false;
 ULONG_PTR canvas::ContextGDIPlus::m_gdiplusToken;
 
 using namespace std;
 using namespace canvas;
+
+static std::wstring convert_to_wstring(const std::string & input) {
+  const char * str = input.c_str();
+  const char * str_i = str;
+  const char * end = str + input.size();
+  std::wstring output;
+  while (str_i < end) {
+    output += (wchar_t)utf8::next(str_i, end);
+  }
+  return output;
+}
 
 static void toGDIPath(const Path & path, Gdiplus::GraphicsPath & output) {
   output.StartFigure();
@@ -90,7 +103,19 @@ static Gdiplus::Color toGDIColor(const Color & input) {
   else if (blue > 255) blue = 255;
   if (alpha < 0) alpha = 0;
   else if (alpha > 255) alpha = 255;
+#if 1
+  return Gdiplus::Color.FromArgb(alpha, red, green, blue);
+#else
   return Gdiplus::Color(alpha, red, green, blue);
+#endif
+}
+
+GDIPlusSurface::GDIPlusSurface(const std::string & filename) : Surface(0, 0) {
+  std::wstring tmp = convert_to_wstring(filename);
+  bitmap = std::shared_ptr<Gdiplus::Bitmap>(Gdiplus::Bitmap::FromFile(tmp.data()));
+  Surface::resize(bitmap->GetWidth(), bitmap->GetHeight());
+  g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+  initialize();
 }
 
 void
@@ -193,57 +218,21 @@ GDIPlusSurface::fillText(const Font & font, const Style & style, TextBaseline te
   g->DrawString(text2.data(), text2.size(), &gdifont, rect, &f, &brush);
 }
 
-#if 0
-void
-ContextGDIPlus::arc(double x, double y, double r, double sa, double ea, bool anticlockwise) {
-  double span = 0;
-  if (0 && ((!anticlockwise && (ea - sa >= 2 * M_PI)) || (anticlockwise && (sa - ea >= 2 * M_PI)))) {
-    // If the anticlockwise argument is false and endAngle-startAngle is equal to or greater than 2*PI, or, if the
-    // anticlockwise argument is true and startAngle-endAngle is equal to or greater than 2*PI, then the arc is the whole
-    // circumference of this circle.
-    span = 2 * M_PI;
-  } else {
-    if (!anticlockwise && (ea < sa)) {
-      span += 2 * M_PI;
-    } else if (anticlockwise && (sa < ea)) {
-      span -= 2 * M_PI;
-    }
- 
-#if 0
-    // this is also due to switched coordinate system
-    // we would end up with a 0 span instead of 360
-    if (!(qFuzzyCompare(span + (ea - sa) + 1, 1.0) && qFuzzyCompare(qAbs(span), 360.0))) {
-      // mod 360
-      span += (ea - sa) - (static_cast<int>((ea - sa) / 360)) * 360;
-    }
-#else
-    span += ea - sa;
-#endif
+TextMetrics
+ContextGDIPlus::measureText(const std::string & text) {
+  std::wstring text2 = convert_to_wstring(text);
+  int style = 0;
+  if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {
+    style |= Gdiplus::FontStyleBold;
   }
- 
-#if 0
-  // If the path is empty, move to where the arc will start to avoid painting a line from (0,0)
-  // NOTE: QPainterPath::isEmpty() won't work here since it ignores a lone MoveToElement
-  if (!m_path.elementCount())
-    m_path.arcMoveTo(xs, ys, width, height, sa);
-  else if (!radius) {
-    m_path.lineTo(xc, yc);
-    return;
+  if (font.slant == Font::ITALIC) {
+    style |= Gdiplus::FontStyleItalic;
   }
-#endif
-
-#if 0
-  if (anticlockwise) {
-    span = -M_PI / 2.0;
-  } else {
-    span = M_PI / 2.0;
-  }
-#endif
-
-  Gdiplus::RectF rect(Gdiplus::REAL(x - r), Gdiplus::REAL(y - r), Gdiplus::REAL(2 * r), Gdiplus::REAL(2 * r));
-  current_path.AddArc(rect, Gdiplus::REAL(sa * 180 / M_PI), Gdiplus::REAL(span * 180 / M_PI));
-  current_path.GetLastPoint(&current_position);
+  Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), font.size, style, Gdiplus::UnitPixel);
+  Gdiplus::RectF layoutRect(0, 0, 512, 512), boundingBox;
+  default_surface.g->MeasureString(text2.data(), text2.size(), &font, layoutRect, &boundingBox);
+  Gdiplus::SizeF size;
+  boundingBox.GetSize(&size);
+  
+  return { (float)size.Width, (float)size.Height };
 }
-#endif
-
-
