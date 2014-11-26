@@ -103,8 +103,8 @@ static Gdiplus::Color toGDIColor(const Color & input) {
   else if (blue > 255) blue = 255;
   if (alpha < 0) alpha = 0;
   else if (alpha > 255) alpha = 255;
-#if 1
-  return Gdiplus::Color.FromArgb(alpha, red, green, blue);
+#if 0
+  return Gdiplus::Color::FromArgb(alpha, red, green, blue);
 #else
   return Gdiplus::Color(alpha, red, green, blue);
 #endif
