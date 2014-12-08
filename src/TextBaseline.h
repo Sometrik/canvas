@@ -36,7 +36,7 @@ namespace canvas {
 	type = TOP;
       }
     };
-  private:
+
     TextBaselineType type;
   };
 };
