@@ -18,13 +18,9 @@ namespace canvas {
       : width(_width), height(_height) { }
     virtual ~Context() { }
 
-    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * data) = 0;
+    virtual std::shared_ptr<Surface> createSurface(const Image & image) = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
-
-    std::shared_ptr<Surface> createSurface(const Image & image) {
-      return createSurface(image.getWidth(), image.getHeight(), image.getData());
-    }
 
     virtual void resize(unsigned int _width, unsigned int _height);
     
@@ -93,7 +89,7 @@ namespace canvas {
     float globalAlpha = 1.0f;
     Font font;
     TextBaseline textBaseline;
-    TextAlign textAlign = LEFT;
+    TextAlign textAlign;
     
   protected:
     bool hasShadow() const { return shadowBlur > 0 || shadowBlurX > 0 || shadowBlurY > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
@@ -114,6 +110,7 @@ namespace canvas {
     virtual ~ContextFactory() { }
     virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) const = 0;
+    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const = 0;
   };
 };
 
