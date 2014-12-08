@@ -4,52 +4,49 @@
 #include <cmath>
 
 using namespace canvas;
-
-#if 0
-Mutex CairoMapCanvas::pango_mutex;
-Mutex CairoMapCanvas::draw_mutex;
-#endif
-
 using namespace std;
 
-CairoSurface::CairoSurface(unsigned int _width, unsigned int _height)
+CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, bool has_alpha)
   : Surface(_width, _height) {
-  cairo_format_t format = CAIRO_FORMAT_ARGB32;
-  // format = CAIRO_FORMAT_RGB24;
+  cairo_format_t format = has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
   surface = cairo_image_surface_create(format, _width, _height);
   assert(surface);
   cr = cairo_create(surface);  
   assert(cr);
 }
-  
-CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data, bool has_alpha)
-  : Surface(_width, _height)
+ 
+CairoSurface::CairoSurface(const Image & image)
+  : Surface(image.getWidth(), image.getHeight())
 {
-  cairo_format_t format = has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
-  unsigned int stride = cairo_format_stride_for_width(format, _width);
-  assert(stride == 4 * _width);
-  storage = new unsigned int[_width * _height];
-  if (has_alpha) {
-    for (unsigned int i = 0; i < _width * _height; i++) {
+  cairo_format_t format = image.hasAlpha() ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
+  unsigned int stride = cairo_format_stride_for_width(format, getWidth());
+  assert(stride == 4 * getWidth());
+  storage = new unsigned int[getWidth() * getHeight()];
+  const unsigned char * data = image.getData();
+  if (image.hasAlpha()) {
+    for (unsigned int i = 0; i < getWidth() * getHeight(); i++) {
+#if 0
       storage[i] = (data[4 * i + 0] << 24) + (data[4 * i + 1] << 16) + (data[4 * i + 2] << 8) + data[4 * i + 3];
+#else
+      storage[i] = (data[4 * i + 0]) + (data[4 * i + 1] << 8) + (data[4 * i + 2] << 16) + (data[4 * i + 3] << 24);
+#endif
     }
   } else {
-    for (unsigned int i = 0; i < _width * _height; i++) {
+    for (unsigned int i = 0; i < getWidth() * getHeight(); i++) {
       storage[i] = data[3 * i + 2] + (data[3 * i + 1] << 8) + (data[3 * i + 0] << 16);
     }
   }
   surface = cairo_image_surface_create_for_data((unsigned char*)storage,
 						format,
-						_width,
-						_height,
+						getWidth(),
+						getHeight(),
 						stride);
   assert(surface);
   cr = cairo_create(surface);  
   assert(cr);
 }
 
-CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0)
-{
+CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0) {
   surface = cairo_image_surface_create_from_png(filename.c_str());
   assert(surface);
   Surface::resize(cairo_image_surface_get_width(surface),
@@ -176,10 +173,10 @@ CairoSurface::fillText(const Font & font, const Style & style, TextBaseline text
   default: break;
   }
 
-  switch (textAlign) {
-  case LEFT: break;
-  case CENTER: x -= text_extents.width / 2; break;
-  case RIGHT: x -= text_extents.width; break;
+  switch (textAlign.getType()) {
+  case TextAlign::LEFT: break;
+  case TextAlign::CENTER: x -= text_extents.width / 2; break;
+  case TextAlign::RIGHT: x -= text_extents.width; break;
   default: break;
   }
   
@@ -200,10 +197,10 @@ CairoSurface::strokeText(const Font & font, const Style & style, TextBaseline te
   default: break;
   }
 
-  switch (textAlign) {
-  case LEFT: break;
-  case CENTER: x -= extents.width / 2; break;
-  case RIGHT: x -= extents.width; break;
+  switch (textAlign.getType()) {
+  case TextAlign::LEFT: break;
+  case TextAlign::CENTER: x -= extents.width / 2; break;
+  case TextAlign::RIGHT: x -= extents.width; break;
   default: break;
   }
   

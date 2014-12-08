@@ -1,10 +1,6 @@
 #include "Context.h"
 
 #include <cairo/cairo.h>
-// #include <pango/pangocairo.h>
-
-#include <iostream>
-#include <cassert>
 
 namespace canvas {
   class ContextCairo;
@@ -13,16 +9,16 @@ namespace canvas {
   public:
     friend class ContextCairo;
 
-    CairoSurface(unsigned int _width, unsigned int _height);
-    CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data, bool has_alpha = false);
+    CairoSurface(unsigned int _width, unsigned int _height, bool has_alpha = true);
+    // CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data, bool has_alpha = false);
+    CairoSurface(const Image & image);
     CairoSurface(const std::string & filename);
+    CairoSurface(const CairoSurface & other) = delete;
     ~CairoSurface();
 
     CairoSurface * copy() {
-      unsigned char * buffer = lockMemory(false);
-      CairoSurface * other = new CairoSurface(getWidth(), getHeight(), buffer, true);
-      releaseMemory();
-      return other;
+      auto img = createImage();
+      return new CairoSurface(*img);
     }
     
     void flush();
@@ -64,8 +60,13 @@ namespace canvas {
     ContextCairo(unsigned int _width = 0, unsigned int _height = 0);
     ~ContextCairo();
 
+#if 0
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) {
       return std::shared_ptr<Surface>(new CairoSurface(_width, _height, _data));
+    }
+#endif
+    std::shared_ptr<Surface> createSurface(const Image & image) {
+      return std::shared_ptr<Surface>(new CairoSurface(image));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
       return std::shared_ptr<Surface>(new CairoSurface(_width, _height));
@@ -83,14 +84,6 @@ namespace canvas {
 
   protected:
     CairoSurface default_surface;
-  
-  private:
-    // PangoFontDescription * font_description;
-    
-#if 0
-    static Mutex pango_mutex;
-    static Mutex draw_mutex;
-#endif
   };
 
   class CairoContextFactory : public ContextFactory {
@@ -98,5 +91,6 @@ namespace canvas {
     CairoContextFactory() { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const { return std::shared_ptr<Context>(new ContextCairo(width, height)); }
     std::shared_ptr<Surface> createSurface(const std::string & filename) const { return std::shared_ptr<Surface>(new CairoSurface(filename)); }
+    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const { return std::shared_ptr<Surface>(new CairoSurface(width, height, false)); }
   };
 };
