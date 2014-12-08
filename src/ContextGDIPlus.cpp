@@ -209,7 +209,7 @@ GDIPlusSurface::fillText(const Font & font, const Style & style, TextBaseline te
   case TextBaseline::MIDDLE: f.SetLineAlignment(Gdiplus::StringAlignmentCenter); break;
   }
 
-  switch (textAlign) {
+  switch (textAlign.getType()) {
   case TextAlign::CENTER: f.SetAlignment(Gdiplus::StringAlignmentCenter); break;
   case TextAlign::END: case TextAlign::RIGHT: f.SetAlignment(Gdiplus::StringAlignmentFar); break;
   case TextAlign::START: case TextAlign::LEFT: f.SetAlignment(Gdiplus::StringAlignmentNear); break;
