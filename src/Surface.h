@@ -10,8 +10,11 @@
 #include "TextBaseline.h"
 #include "TextAlign.h"
 
+#include <memory>
+
 namespace canvas {
   class Context;
+  class Image;
 
   class Surface {
   public:
@@ -46,6 +49,7 @@ namespace canvas {
     void multiply(const Color & color);
     
     const TextureRef & updateTexture();
+    std::shared_ptr<Image> createImage();
 
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }

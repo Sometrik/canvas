@@ -3,6 +3,7 @@
 #include "OpenGLTexture.h"
 
 #include "Color.h"
+#include "Image.h"
 
 #include <cstring>
 #include <vector>
@@ -154,6 +155,7 @@ Surface::updateTexture() {
   flush();
 
   // cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
+  bool premultiplied_alpha = true;
 #ifdef OPENGL
   if (!texture.isDefined()) {
     texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
@@ -162,34 +164,45 @@ Surface::updateTexture() {
 
   unsigned char * buffer = lockMemory();
   assert(buffer);
-  
-#if 0
-  // remove premultiplied alpha
-  unsigned char * buffer2 = new unsigned char[getWidth() * getHeight() * 4];
-  for (unsigned int i = 0; i < getWidth() * getHeight(); i++) {
-    unsigned int red = buffer[4 * i + 0];
-    unsigned int green = buffer[4 * i + 1];
-    unsigned int blue = buffer[4 * i + 2];
-    unsigned int alpha = buffer[4 * i + 3];
-    if (alpha >= 1) {
-      buffer2[4 * i + 0] = (unsigned char)(255 * red / alpha);
-      buffer2[4 * i + 1] = (unsigned char)(255 * green / alpha);
-      buffer2[4 * i + 2] = (unsigned char)(255 * blue / alpha);
-    } else {
-      buffer2[4 * i + 0] = 0;
-      buffer2[4 * i + 1] = 0;
-      buffer2[4 * i + 2] = 0;
-    }
-    buffer2[4 * i + 3] = alpha;
-  }
 
-  texture.updateData(buffer2);
-  delete[] buffer2;
-#else
-  texture.updateData(buffer);
-#endif
+  if (premultiplied_alpha) {
+    texture.updateData(buffer);
+  } else { // remove premultiplied alpha
+    unsigned char * buffer2 = new unsigned char[getWidth() * getHeight() * 4];
+    for (unsigned int i = 0; i < getWidth() * getHeight(); i++) {
+      unsigned int red = buffer[4 * i + 0];
+      unsigned int green = buffer[4 * i + 1];
+      unsigned int blue = buffer[4 * i + 2];
+      unsigned int alpha = buffer[4 * i + 3];
+      if (alpha >= 1) {
+	buffer2[4 * i + 0] = (unsigned char)(255 * red / alpha);
+	buffer2[4 * i + 1] = (unsigned char)(255 * green / alpha);
+	buffer2[4 * i + 2] = (unsigned char)(255 * blue / alpha);
+      } else {
+	buffer2[4 * i + 0] = 0;
+	buffer2[4 * i + 1] = 0;
+	buffer2[4 * i + 2] = 0;
+      }
+      buffer2[4 * i + 3] = alpha;
+    }
+    texture.updateData(buffer2);
+    delete[] buffer2;
+  }
   
   releaseMemory();
   
   return texture;
 }
+
+std::shared_ptr<Image>
+Surface::createImage() {
+  flush();
+
+  unsigned char * buffer = lockMemory();
+  assert(buffer);
+  shared_ptr<Image> image(new Image(getWidth(), getHeight(), buffer, true));
+  releaseMemory();
+  
+  return image;
+}
+
