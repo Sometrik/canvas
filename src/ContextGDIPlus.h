@@ -30,7 +30,7 @@ namespace canvas {
       initialize();
     }
     GDIPlusSurface(const std::string & filename);
-    // Gdiplus::PixelFormat32bppARGB
+#if 0
     GDIPlusSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) : Surface(_width, _height)
     {
       BYTE * tmp = new BYTE[3 * _width * _height]; // FIXME Free?
@@ -43,16 +43,25 @@ namespace canvas {
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
       initialize();
     }
-    // Gdiplus::PixelFormat32bppARGB
+#endif
   GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight())
     {
-      BYTE * tmp = new BYTE[3 * image.getWidth() * image.getHeight()]; // FIXME Free?
-      for (unsigned int i = 0; i < image.getWidth() * image.getHeight(); i++) {
-	tmp[3 * i + 0] = image.getData()[3 * i + 2];
-	tmp[3 * i + 1] = image.getData()[3 * i + 1];
-	tmp[3 * i + 2] = image.getData()[3 * i + 0];
+      BYTE * tmp = new BYTE[(image.hasAlpha() ? 4 : 3) * image.getWidth() * image.getHeight()]; // FIXME Free?
+      if (image.hasAlpha()) {
+	for (unsigned int i = 0; i < image.getWidth() * image.getHeight(); i++) {
+	  tmp[4 * i + 0] = image.getData()[4 * i + 0];
+	  tmp[4 * i + 1] = image.getData()[4 * i + 1];
+	  tmp[4 * i + 2] = image.getData()[4 * i + 2];
+	  tmp[4 * i + 3] = image.getData()[4 * i + 3];
+	}
+      } else {
+	for (unsigned int i = 0; i < image.getWidth() * image.getHeight(); i++) {
+	  tmp[3 * i + 0] = image.getData()[3 * i + 2];
+	  tmp[3 * i + 1] = image.getData()[3 * i + 1];
+	  tmp[3 * i + 2] = image.getData()[3 * i + 0];
+	}
       }
-      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 3, PixelFormat24bppRGB, tmp));
+      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * (image.hasAlpha() ? 4 : 3), image.hasAlpha() ? PixelFormat32bppPARGB : PixelFormat24bppRGB, tmp));
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
       initialize();
     }
@@ -145,8 +154,8 @@ namespace canvas {
       }
     }
 
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * data) {
-      return std::shared_ptr<Surface>(new GDIPlusSurface(_width, _height, data));
+    std::shared_ptr<Surface> createSurface(const Image & image) {
+      return std::shared_ptr<Surface>(new GDIPlusSurface(image));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
       return std::shared_ptr<Surface>(new GDIPlusSurface(_width, _height));
@@ -177,5 +186,6 @@ namespace canvas {
     GDIPlusContextFactory() { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const { return std::shared_ptr<Context>(new ContextGDIPlus(width, height)); }
     std::shared_ptr<Surface> createSurface(const std::string & filename) const { return std::shared_ptr<Surface>(new GDIPlusSurface(filename)); }
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const { return std::shared_ptr<Surface>(new GDIPlusSurface(width, height)); }
   };
 };
