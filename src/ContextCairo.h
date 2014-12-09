@@ -49,6 +49,7 @@ namespace canvas {
     void prepareTextStyle(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign);
     void sendPath(const Path & path);
 
+  private:
     cairo_t * cr;  
     cairo_surface_t * surface;
     unsigned int * storage = 0;
