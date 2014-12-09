@@ -12,6 +12,13 @@ namespace canvas {
   struct TextMetrics {
     float width, height;
   };
+  class SavedContext {
+  public:
+    friend class Context;
+  private:
+    float globalAlpha;
+    Path current_path;
+  };
   class Context {
   public:
     Context(unsigned int _width, unsigned int _height)
@@ -41,8 +48,8 @@ namespace canvas {
     void stroke();
     void fill();
 
-    void save() { getDefaultSurface().save(); }
-    void restore() { getDefaultSurface().restore(); }
+    void save();
+    void restore();
 
     virtual TextMetrics measureText(const std::string & text) = 0;
     
@@ -97,11 +104,12 @@ namespace canvas {
     Path current_path;
 
   private:
-    unsigned int width, height;
-    Style current_linear_gradient;
-    
     Context(const Context & other) { }
     Context & operator=(const Context & other) { return *this; }
+
+    unsigned int width, height;
+    Style current_linear_gradient;
+    std::vector<SavedContext> restore_stack;
   };
 
   class ContextFactory {

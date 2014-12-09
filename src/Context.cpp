@@ -114,3 +114,22 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
   }
   getDefaultSurface().drawImage(img, x, y, w, h, globalAlpha);  
 }
+
+void
+Context::save() {
+  restore_stack.push_back(SavedContext());
+  auto & data = restore_stack.back();
+  data.globalAlpha = globalAlpha;
+  data.current_path = current_path;
+  getDefaultSurface().save();
+}
+
+void
+Context::restore() {
+  if (!restore_stack.empty()) {
+    auto & data = restore_stack.back();
+    globalAlpha = data.globalAlpha;
+    current_path = data.current_path;
+  }
+  getDefaultSurface().restore();
+}
