@@ -10,8 +10,8 @@ On Windows rendering is done using GDI+, and Cairo is used on Linux. Work on Qua
 Example
 =======
 
-auto context = new ContextCairo(width, height);
-context->moveTo(10, 10);
-context->lineTo(20, 20);
-context->strokeStyle = "#ff0000";
-context->stroke();
+    auto context = new ContextCairo(width, height);
+    context->moveTo(10, 10);
+    context->lineTo(20, 20);
+    context->strokeStyle = "#ff0000";
+    context->stroke();
