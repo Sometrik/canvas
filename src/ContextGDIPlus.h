@@ -95,7 +95,7 @@ namespace canvas {
     unsigned char * lockMemory(bool write_access) {
       flush();
       Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-      bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), PixelFormat32bppARGB, &data);
+      bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), PixelFormat32bppPARGB, &data);
       return (unsigned char*)data.Scan0;
     }
       
@@ -125,7 +125,7 @@ namespace canvas {
       }
     }
 
-  protected:
+  private:
     std::shared_ptr<Gdiplus::Bitmap> bitmap;
     std::shared_ptr<Gdiplus::Graphics> g;
     Gdiplus::BitmapData data;     
