@@ -1,4 +1,4 @@
-#include "PerlinNoise.h"
+#include "PerlinSurface.h"
 
 using namespace std;
 using namespace canvas;
@@ -85,7 +85,7 @@ static inline float lerp(float t, float a, float b) {
 
 #endif
 
-PerlinNoise::PerlinNoise(unsigned int _width, unsigned int _height, int _octaves, float _alpha, float _beta)
+PerlinSurface::PerlinSurface(unsigned int _width, unsigned int _height, int _octaves, float _alpha, float _beta)
   : Surface(_width, _height), octaves(_octaves), alpha(_alpha), beta(_beta) 
 {  
   
@@ -127,7 +127,7 @@ PerlinNoise::PerlinNoise(unsigned int _width, unsigned int _height, int _octaves
 }
 
 float
-PerlinNoise::evaluatePerlin(float x, float y, float z) {
+PerlinSurface::evaluatePerlin(float x, float y, float z) {
 #ifdef USE_FIXEDPOINT
   int b = 1 << FIXEDBITS;
   int bm = b - 1;
@@ -211,7 +211,7 @@ PerlinNoise::evaluatePerlin(float x, float y, float z) {
 }
 
 float
-PerlinNoise::evaluate(float x, float y, float z) {
+PerlinSurface::evaluate(float x, float y, float z) {
   float scale = 1;
   float v = 0;
   for (int o = 0; o < octaves; o++) {

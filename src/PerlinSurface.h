@@ -1,15 +1,15 @@
-#ifndef _PERLINNOISE_H_
-#define _PERLINNOISE_H_
+#ifndef _PERLINSURFACE_H_
+#define _PERLINSURFACE_H_
 
 #include "Surface.h"
 
 // #define USE_FIXEDPOINT
 
 namespace canvas {
-  class PerlinNoise : public Surface {
+  class PerlinSurface : public Surface {
   public:
-    PerlinNoise(unsigned int width, unsigned int height, int octaves = 1, float alpha = 2, float beta = 2);
-    ~PerlinNoise() {
+    PerlinSurface(unsigned int width, unsigned int height, int octaves = 1, float alpha = 2, float beta = 2);
+    ~PerlinSurface() {
       delete[] buffer;
     }
 
@@ -54,4 +54,4 @@ namespace canvas {
   };
 };
 
-#endif /* _PERLINNOISE_H_ */
+#endif /* _PERLINSURFACE_H_ */
