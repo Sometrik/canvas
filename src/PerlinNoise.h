@@ -13,10 +13,11 @@ namespace canvas {
       delete[] buffer;
     }
 
-    unsigned char * lockMemory(bool write_access = false) {
+    unsigned char * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
+      unsigned int w = required_width ? required_width : getWidth();
+      unsigned int h = required_height ? required_height : getHeight();
       delete[] buffer;
-      unsigned int w = getWidth(), h = getHeight();
-      buffer = new unsigned char[w * h * 3];
+      buffer = new unsigned char[w * h * 4];
       unsigned int offset = 0;
       for (unsigned int y = 0; y < h; y++) {
 	for (unsigned int x = 0; x < w; x++) {
@@ -25,6 +26,7 @@ namespace canvas {
 	  buffer[offset++] = v;
 	  buffer[offset++] = v;
 	  buffer[offset++] = v;
+	  buffer[offset++] = 255;
 	}
       }
       return buffer;
