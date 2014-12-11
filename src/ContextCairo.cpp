@@ -210,8 +210,7 @@ CairoSurface::strokeText(const Font & font, const Style & style, TextBaseline te
 }  
 
 void
-CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha) {
-  CairoSurface & img = dynamic_cast<CairoSurface&>(_img);
+CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float alpha) {
   double sx = w / img.getWidth(), sy = h / img.getHeight();
   cairo_save(cr);
   cairo_scale(cr, sx, sy);
@@ -223,6 +222,18 @@ CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, 
   }
   cairo_set_source_rgb(cr, 0.0f, 0.0f, 0.0f); // is this needed?
   cairo_restore(cr);
+}
+
+void
+CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha) {
+  CairoSurface * cs = dynamic_cast<CairoSurface*>(&_img);
+  if (cs) {
+    drawNativeSurface(*cs, x, y, w, h, alpha);    
+  } else {
+    auto img = _img.createImage(w, h);
+    CairoSurface cs(*img);
+    drawNativeSurface(cs, x, y, w, h, alpha);
+  }
 }
 
 void
@@ -239,8 +250,7 @@ CairoSurface::restore() {
 ContextCairo::ContextCairo(unsigned int _width, unsigned int _height)
   : Context(_width, _height),
     default_surface(_width, _height)
-{
-  
+{ 
   // double pxscale = preport->hPX>preport->vPX ? preport->hPX:preport->vPX;
   // cairo_text_extents_t te;
 
@@ -254,25 +264,9 @@ ContextCairo::ContextCairo(unsigned int _width, unsigned int _height)
 
   // cairo_set_line_width(*ppcr, 0.001*preport->linewidth);  // frame
   // preport->legendlinewidth = 0.003/powf((preport->hPX*preport->vPX)/1E4, 0.3)
-
-#if 0
-  // MutexLocker mh(pango_mutex);
-  font_description = pango_font_description_new();
-  pango_font_description_set_family(font_description, "sans-serif");
-  // pango_font_description_set_weight(font_description, PANGO_WEIGHT_BOLD);
-  pango_font_description_set_absolute_size(font_description, 11 * PANGO_SCALE);
-  // mh.release();
-#endif
 }
 
-ContextCairo::~ContextCairo() {
-#if 0
-  if (font_description) {
-    // MutexLocker mh(pango_mutex);
-    pango_font_description_free(font_description);
-  }
-#endif
-}
+ContextCairo::~ContextCairo() { }
 
 TextMetrics
 ContextCairo::measureText(const std::string & text) {

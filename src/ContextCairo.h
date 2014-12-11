@@ -23,7 +23,7 @@ namespace canvas {
     
     void flush();
     void markDirty();
-    unsigned char * lockMemory(bool write_access) {
+    unsigned char * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
       flush();
       locked_for_write = write_access;
       return cairo_image_surface_get_data(surface);
@@ -46,6 +46,8 @@ namespace canvas {
     void restore();
     
   protected:
+    void drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float alpha);
+
     void prepareTextStyle(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign);
     void sendPath(const Path & path);
 
