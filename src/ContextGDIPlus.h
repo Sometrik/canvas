@@ -125,6 +125,9 @@ namespace canvas {
       }
     }
 
+  protected:
+    void drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha);
+
   private:
     std::shared_ptr<Gdiplus::Bitmap> bitmap;
     std::shared_ptr<Gdiplus::Graphics> g;
@@ -171,7 +174,6 @@ namespace canvas {
     TextMetrics measureText(const std::string & text);
     
   protected:
-    void drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha);
 
   private:   
     GDIPlusSurface default_surface;

@@ -193,7 +193,7 @@ GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h
     drawNativeSurface(*img, x, y, w, h, alpha);
   } else {
     auto img = _img.createImage(w, h);
-    CairoSurface cs(*img);
+    GDIPlusSurface cs(*img);
     drawNativeSurface(cs, x, y, w, h, alpha);
   }
 }
