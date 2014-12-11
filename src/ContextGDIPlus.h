@@ -92,7 +92,7 @@ namespace canvas {
     void flush() { }
     void markDirty() { }
 
-    unsigned char * lockMemory(bool write_access) {
+    unsigned char * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
       flush();
       Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
       bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), PixelFormat32bppPARGB, &data);
@@ -167,16 +167,14 @@ namespace canvas {
     GDIPlusSurface & getDefaultSurface() { return default_surface; }
     const GDIPlusSurface & getDefaultSurface() const { return default_surface; }
     
-    void flush() { }
     void clearRect(double x, double y, double w, double h) { }
     TextMetrics measureText(const std::string & text);
     
   protected:
-    // Point getCurrentPoint() { return Point(current_position.X, current_position.Y); }
-
-    GDIPlusSurface default_surface;
+    void drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha);
 
   private:   
+    GDIPlusSurface default_surface;
     static bool is_initialized;
     static ULONG_PTR m_gdiplusToken;
   };

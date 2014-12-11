@@ -159,8 +159,7 @@ GDIPlusSurface::clip(const Path & input_path) {
 }
 
 void
-GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha) {
-  GDIPlusSurface & img = dynamic_cast<GDIPlusSurface&>(_img);
+GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha) {
   if (alpha < 1.0f && 0) {
 #if 0
     ImageAttributes  imageAttributes;
@@ -188,6 +187,18 @@ GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h
 }
 
 void
+GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha) {
+  GDIPlusSurface * img = dynamic_cast<GDIPlusSurface*>(&_img);
+  if (img) {
+    drawNativeSurface(*img, x, y, w, h, alpha);
+  } else {
+    auto img = _img.createImage(w, h);
+    CairoSurface cs(*img);
+    drawNativeSurface(cs, x, y, w, h, alpha);
+  }
+}
+
+void
 GDIPlusSurface::fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
   std::wstring text2 = convert_to_wstring(text);
   int style_bits = 0;
@@ -207,6 +218,7 @@ GDIPlusSurface::fillText(const Font & font, const Style & style, TextBaseline te
   case TextBaseline::TOP: break;
   case TextBaseline::HANGING: break;
   case TextBaseline::MIDDLE: f.SetLineAlignment(Gdiplus::StringAlignmentCenter); break;
+  case TextBaseline::BOTTOM: f.SetLineAlignment(Gdiplus::StringAlignmentFar);
   }
 
   switch (textAlign.getType()) {
