@@ -195,12 +195,12 @@ Surface::updateTexture() {
 }
 
 std::shared_ptr<Image>
-Surface::createImage() {
+Surface::createImage(unsigned int required_width, unsigned int required_height) {
   flush();
 
-  unsigned char * buffer = lockMemory();
+  unsigned char * buffer = lockMemory(false, required_width, required_height);
   assert(buffer);
-  shared_ptr<Image> image(new Image(getWidth(), getHeight(), buffer, true));
+  shared_ptr<Image> image(new Image(required_width ? required_width : getWidth(), required_height ? required_height : getHeight(), buffer, true));
   releaseMemory();
   
   return image;

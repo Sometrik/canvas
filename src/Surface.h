@@ -37,7 +37,7 @@ namespace canvas {
     virtual void markDirty() { }
 
     virtual Surface * copy() = 0;
-    virtual unsigned char * lockMemory(bool write_access = false) = 0;
+    virtual unsigned char * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) = 0;
     virtual void releaseMemory() = 0;
 
     virtual void clip(const Path & path) = 0;
@@ -49,7 +49,7 @@ namespace canvas {
     void multiply(const Color & color);
     
     const TextureRef & updateTexture();
-    std::shared_ptr<Image> createImage();
+    std::shared_ptr<Image> createImage(unsigned int required_width = 0, unsigned int required_height = 0);
 
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
