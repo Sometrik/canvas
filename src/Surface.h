@@ -48,7 +48,9 @@ namespace canvas {
     void gaussianBlur(float hradius, float vradius);
     void multiply(const Color & color);
     
+    const TextureRef & getTexture() const { return texture; }
     const TextureRef & updateTexture();
+
     std::shared_ptr<Image> createImage(unsigned int required_width = 0, unsigned int required_height = 0);
 
     unsigned int getWidth() const { return width; }
