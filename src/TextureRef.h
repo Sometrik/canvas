@@ -46,6 +46,9 @@ namespace canvas {
     void updateData(unsigned char * buffer) {
       if (data) data->updateData(buffer);
     }
+    void updateData(unsigned char * buffer, unsigned int x0, unsigned int y0, unsigned int subwidth, unsigned int subheight) {
+      if (data) data->updateData(buffer, x0, y0, subwidth, subheight);
+    }
   
     void clear() {
       if (data && data->decRefcnt() == 0) {
