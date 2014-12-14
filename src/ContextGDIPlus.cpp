@@ -181,6 +181,8 @@ GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, doub
 			Gdiplus::UnitPixel,
 			&imageAttributes);
 #endif
+  } else if (img.getWidth() == (unsigned int)w && img.getHeight() == (unsigned int)h) {
+    g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y));
   } else {
     g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y), Gdiplus::REAL(w), Gdiplus::REAL(h));
   }
