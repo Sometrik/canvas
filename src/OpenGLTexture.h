@@ -28,7 +28,8 @@ namespace canvas {
     unsigned int getTextureId() const { return texture_id; }
 
     void updateData(unsigned char * buffer);
-  
+    void updateData(unsigned char * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height);
+
     static size_t getNumTextures() { return total_textures; }
     static const std::vector<unsigned int> & getFreedTextures() { return freed_textures; }
     static void releaseTextures();
@@ -36,6 +37,7 @@ namespace canvas {
 
   private:
     unsigned int texture_id;
+    bool is_initialized = false;
 
     static size_t total_textures;
     static std::vector<unsigned int> freed_textures;

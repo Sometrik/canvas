@@ -42,18 +42,43 @@ OpenGLTexture::updateData(unsigned char * buffer) {
   // glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, texture_id);
   
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()) );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
-  glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, getMinFilter() == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
+  if (!is_initialized) {
+    is_initialized = true;
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()) );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, getMinFilter() == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
+  }
 
   // glGenerateMipmap(GL_TEXTURE_2D);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(),
 	       0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+}
+
+void
+OpenGLTexture::updateData(unsigned char * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
+  assert(buffer);
+  
+  // glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
+  
+  if (!is_initialized) {
+    is_initialized = true;
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()) );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
+    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, getMinFilter() == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
+  }
+
+  // glGenerateMipmap(GL_TEXTURE_2D);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 }
 
 void
