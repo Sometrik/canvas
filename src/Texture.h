@@ -13,8 +13,8 @@ namespace canvas {
     virtual ~Texture() { }
 
     virtual void updateData(unsigned char * buffer) = 0;
+    virtual void updateData(unsigned char * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) = 0;
     virtual unsigned int getTextureId() const { return 0; }
-    virtual bool hasPremultipliedAlpha() const { return true; }
 
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
