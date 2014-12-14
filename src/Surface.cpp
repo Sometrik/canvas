@@ -155,7 +155,6 @@ Surface::updateTexture() {
   flush();
 
   // cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
-  bool premultiplied_alpha = true;
 #ifdef OPENGL
   if (!texture.isDefined()) {
     texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
@@ -164,20 +163,17 @@ Surface::updateTexture() {
 
   unsigned char * buffer = lockMemory();
   assert(buffer);
-
   texture.updateData(buffer);
-  
   releaseMemory();
   
   return texture;
 }
 
 const TextureRef &
-Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int width, unsigned int height) {
+Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int subwidth, unsigned int subheight) {
   flush();
 
   // cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
-  bool premultiplied_alpha = true;
 #ifdef OPENGL
   if (!texture.isDefined()) {
     texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
@@ -187,10 +183,10 @@ Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int width, uns
   unsigned char * buffer = lockMemory();
   assert(buffer);
 
-  unsigned char * buffer2 = new unsigned char[width * height * 4];
+  unsigned char * buffer2 = new unsigned char[subwidth * subheight * 4];
   unsigned int offset2 = 0;
-  for (unsigned int y = y0; y < y0 + height; y++) {
-    for (unsigned int x = x0; x < x0 + width; x++) {
+  for (unsigned int y = y0; y < y0 + subheight; y++) {
+    for (unsigned int x = x0; x < x0 + subwidth; x++) {
       unsigned int offset = 4 * (y * width + x);
       buffer2[offset2++] = buffer[offset++];
       buffer2[offset2++] = buffer[offset++];
@@ -199,7 +195,7 @@ Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int width, uns
     }
   }
   
-  texture.updateData(buffer2, x0, y0, width, height);
+  texture.updateData(buffer2, x0, y0, subwidth, subheight);
   
   releaseMemory();
   delete[] buffer2;
