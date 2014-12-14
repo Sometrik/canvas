@@ -165,31 +165,44 @@ Surface::updateTexture() {
   unsigned char * buffer = lockMemory();
   assert(buffer);
 
-  if (premultiplied_alpha) {
-    texture.updateData(buffer);
-  } else { // remove premultiplied alpha
-    unsigned char * buffer2 = new unsigned char[getWidth() * getHeight() * 4];
-    for (unsigned int i = 0; i < getWidth() * getHeight(); i++) {
-      unsigned int red = buffer[4 * i + 0];
-      unsigned int green = buffer[4 * i + 1];
-      unsigned int blue = buffer[4 * i + 2];
-      unsigned int alpha = buffer[4 * i + 3];
-      if (alpha >= 1) {
-	buffer2[4 * i + 0] = (unsigned char)(255 * red / alpha);
-	buffer2[4 * i + 1] = (unsigned char)(255 * green / alpha);
-	buffer2[4 * i + 2] = (unsigned char)(255 * blue / alpha);
-      } else {
-	buffer2[4 * i + 0] = 0;
-	buffer2[4 * i + 1] = 0;
-	buffer2[4 * i + 2] = 0;
-      }
-      buffer2[4 * i + 3] = alpha;
-    }
-    texture.updateData(buffer2);
-    delete[] buffer2;
-  }
+  texture.updateData(buffer);
   
   releaseMemory();
+  
+  return texture;
+}
+
+const TextureRef &
+Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int width, unsigned int height) {
+  flush();
+
+  // cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
+  bool premultiplied_alpha = true;
+#ifdef OPENGL
+  if (!texture.isDefined()) {
+    texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
+  }
+#endif
+
+  unsigned char * buffer = lockMemory();
+  assert(buffer);
+
+  unsigned char * buffer2 = new unsigned char[width * height * 4];
+  unsigned int offset2 = 0;
+  for (unsigned int y = y0; y < y0 + height; y++) {
+    for (unsigned int x = x0; x < x0 + width; x++) {
+      unsigned int offset = 4 * (y * width + x);
+      buffer2[offset2++] = buffer[offset++];
+      buffer2[offset2++] = buffer[offset++];
+      buffer2[offset2++] = buffer[offset++];
+      buffer2[offset2++] = buffer[offset++];
+    }
+  }
+  
+  texture.updateData(buffer2, x0, y0, width, height);
+  
+  releaseMemory();
+  delete[] buffer2;
   
   return texture;
 }
