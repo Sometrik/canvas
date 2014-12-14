@@ -74,11 +74,13 @@ OpenGLTexture::updateData(unsigned char * buffer, unsigned int x, unsigned int y
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()) );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, getMinFilter() == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(),
+		 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);
   }
 
   // glGenerateMipmap(GL_TEXTURE_2D);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
 }
 
 void
