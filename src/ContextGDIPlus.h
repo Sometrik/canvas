@@ -79,14 +79,24 @@ namespace canvas {
     void flush() { }
     void markDirty() { }
 
-    unsigned char * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
+    void * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
       flush();
       Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
       bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), PixelFormat32bppPARGB, &data);
-      return (unsigned char*)data.Scan0;
+      return data.Scan0;
     }
+
+#if 0
+    void * lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height) {
+      flush();
+      Gdiplus::Rect rect(x0, y0, required_width, required_height);
+      bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppPARGB, &data);
+      return data.Scan0;
+    }
+#endif
       
     void releaseMemory() {
+      Surface::releaseMemory();
       bitmap->UnlockBits(&data);
       markDirty();
     }

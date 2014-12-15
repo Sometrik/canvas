@@ -23,12 +23,13 @@ namespace canvas {
     
     void flush();
     void markDirty();
-    unsigned char * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
+    void * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
       flush();
       locked_for_write = write_access;
       return cairo_image_surface_get_data(surface);
     }
     void releaseMemory() {
+      Surface::releaseMemory();
       if (locked_for_write) {
 	locked_for_write = false;
 	markDirty();
