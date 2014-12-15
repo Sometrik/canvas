@@ -13,7 +13,7 @@ namespace canvas {
       delete[] buffer;
     }
 
-    unsigned char * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
+    void * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
       unsigned int w = required_width ? required_width : getWidth();
       unsigned int h = required_height ? required_height : getHeight();
       delete[] buffer;
