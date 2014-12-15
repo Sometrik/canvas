@@ -43,10 +43,10 @@ namespace canvas {
       }
     }
   
-    void updateData(unsigned char * buffer) {
+    void updateData(void * buffer) {
       if (data) data->updateData(buffer);
     }
-    void updateData(unsigned char * buffer, unsigned int x0, unsigned int y0, unsigned int subwidth, unsigned int subheight) {
+    void updateData(void * buffer, unsigned int x0, unsigned int y0, unsigned int subwidth, unsigned int subheight) {
       if (data) data->updateData(buffer, x0, y0, subwidth, subheight);
     }
   
