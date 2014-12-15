@@ -41,7 +41,7 @@ Surface::gaussianBlur(float hradius, float vradius) {
     return;
   }
 
-  unsigned char * buffer = lockMemory(true);
+  unsigned char * buffer = (unsigned char *)lockMemory(true);
   assert(buffer);
 
   unsigned char * tmp = new unsigned char[width * height * 4];
@@ -115,7 +115,7 @@ static inline unsigned char toByte(float f) {
 
 void
 Surface::colorFill(const Color & color) {
-  unsigned char * buffer = lockMemory(true);
+  unsigned char * buffer = (unsigned char *)lockMemory(true);
   assert(buffer);
   unsigned int red = toByte(color.red * color.alpha);
   unsigned int green = toByte(color.green * color.alpha);
@@ -134,7 +134,7 @@ Surface::colorFill(const Color & color) {
 
 void
 Surface::multiply(const Color & color) {
-  unsigned char * buffer = lockMemory(true);
+  unsigned char * buffer = (unsigned char *)lockMemory(true);
   assert(buffer);
   unsigned int red = toByte(color.red);
   unsigned int green = toByte(color.green);
@@ -152,16 +152,13 @@ Surface::multiply(const Color & color) {
 
 const TextureRef &
 Surface::updateTexture() {
-  flush();
-
-  // cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
 #ifdef OPENGL
   if (!texture.isDefined()) {
     texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
   }
 #endif
 
-  unsigned char * buffer = lockMemory();
+  void * buffer = lockMemory();
   assert(buffer);
   texture.updateData(buffer);
   releaseMemory();
@@ -171,47 +168,45 @@ Surface::updateTexture() {
 
 const TextureRef &
 Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int subwidth, unsigned int subheight) {
-  flush();
-
-  // cerr << "updating texture, this = " << this << ", tex = " << texture.getData() << "\n";
 #ifdef OPENGL
   if (!texture.isDefined()) {
     texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
   }
 #endif
 
-  unsigned char * buffer = lockMemory();
-  assert(buffer);
-
-  unsigned char * buffer2 = new unsigned char[subwidth * subheight * 4];
-  unsigned int offset2 = 0;
-  for (unsigned int y = y0; y < y0 + subheight; y++) {
-    for (unsigned int x = x0; x < x0 + subwidth; x++) {
-      unsigned int offset = 4 * (y * width + x);
-      buffer2[offset2++] = buffer[offset++];
-      buffer2[offset2++] = buffer[offset++];
-      buffer2[offset2++] = buffer[offset++];
-      buffer2[offset2++] = buffer[offset++];
-    }
-  }
-  
-  texture.updateData(buffer2, x0, y0, subwidth, subheight);
+  void * buffer = lockMemoryPartial(x0, y0, subwidth, subheight);
+  texture.updateData(buffer, x0, y0, subwidth, subheight);
   
   releaseMemory();
-  delete[] buffer2;
   
   return texture;
 }
 
 std::shared_ptr<Image>
 Surface::createImage(unsigned int required_width, unsigned int required_height) {
-  flush();
-
-  unsigned char * buffer = lockMemory(false, required_width, required_height);
+  unsigned char * buffer = (unsigned char *)lockMemory(false, required_width, required_height);
   assert(buffer);
   shared_ptr<Image> image(new Image(required_width ? required_width : getWidth(), required_height ? required_height : getHeight(), buffer, true));
   releaseMemory();
   
   return image;
+}
+
+void *
+Surface::lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height) {
+  unsigned int * buffer = (unsigned int *)lockMemory();
+  assert(buffer);
+
+  delete[] scaled_buffer;
+  scaled_buffer = new unsigned int[required_width * required_height];
+
+  unsigned int offset = 0;
+  for (unsigned int y = y0; y < y0 + required_height; y++) {
+    for (unsigned int x = x0; x < x0 + required_width; x++) {
+      scaled_buffer[offset++] = buffer[y * width + x];
+    }
+  }
+
+  return scaled_buffer;
 }
 

@@ -24,7 +24,10 @@ namespace canvas {
       : texture(_width, _height),
       width(_width),
       height(_height) { }
-    virtual ~Surface() { }
+
+    virtual ~Surface() {
+      delete[] scaled_buffer;
+    }
 
     virtual void resize(unsigned int _width, unsigned int _height) {
       texture.setWidth(_width);
@@ -37,8 +40,12 @@ namespace canvas {
     virtual void markDirty() { }
 
     virtual Surface * copy() = 0;
-    virtual unsigned char * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) = 0;
-    virtual void releaseMemory() = 0;
+    virtual void * lockMemory(bool write_access = false, unsigned int scaled_width = 0, unsigned int scaled_height = 0) = 0;
+    virtual void * lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height);
+    virtual void releaseMemory() {
+      delete[] scaled_buffer;
+      scaled_buffer = 0;
+    }
 
     virtual void clip(const Path & path) = 0;
     virtual void stroke(const Path & path, const Style & style, double lineWidth) = 0;
@@ -78,6 +85,7 @@ namespace canvas {
     unsigned int width, height;
     FilterMode mag_filter = LINEAR;
     FilterMode min_filter = LINEAR;
+    unsigned int * scaled_buffer = 0;
   };
 
   class NullSurface : public Surface {
