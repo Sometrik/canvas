@@ -12,12 +12,8 @@ namespace canvas {
   class OpenGLTexture : public Texture {
   public:
     
-  OpenGLTexture(unsigned int _width, unsigned int _height, unsigned int _texture_id, FilterMode _min_filter, FilterMode _mag_filter)
-    : Texture(_width, _height, _min_filter, _mag_filter),
-      texture_id(_texture_id)
-      {
-	if (texture_id) total_textures++;
-      }
+  OpenGLTexture(unsigned int _width, unsigned int _height, FilterMode _min_filter, FilterMode _mag_filter)
+    : Texture(_width, _height, _min_filter, _mag_filter) { }
     ~OpenGLTexture() {
       if (texture_id) {
 	freed_textures.push_back(texture_id);
@@ -26,7 +22,7 @@ namespace canvas {
     }
 
     unsigned int getTextureId() const { return texture_id; }
-
+    
     void updateData(void * buffer);
     void updateData(void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height);
 
@@ -36,7 +32,7 @@ namespace canvas {
     static TextureRef createTexture(unsigned int width, unsigned int height, FilterMode min_filter, FilterMode mag_filter);
 
   private:
-    unsigned int texture_id;
+    unsigned int texture_id = 0;
     unsigned int loaded_width = 0, loaded_height = 0;
 
     static size_t total_textures;

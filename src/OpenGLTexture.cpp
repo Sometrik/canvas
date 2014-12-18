@@ -39,13 +39,25 @@ void
 OpenGLTexture::updateData(void * buffer) {
   assert(buffer);
 
+  if (!texture_id) {
+    loaded_width = loaded_height = 0;
+    if (!freed_textures.empty()) {
+      texture_id = freed_textures.back();
+      freed_textures.pop_back();
+    } else {
+      glGenTextures(1, &texture_id);
+    }
+    if (texture_id) total_textures++;    
+  }
+  assert(texture_id);
+
   // glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, texture_id);
 
   // glGenerateMipmap(GL_TEXTURE_2D);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   
-  if (loaded_width != getWidth() || loaded_height != getHeight()) {
+  if (loaded_width != getWidth() || loaded_height != getHeight() || 1) {
     loaded_width = getWidth();
     loaded_height = getHeight();
 
@@ -64,6 +76,18 @@ OpenGLTexture::updateData(void * buffer) {
 void
 OpenGLTexture::updateData(void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
   assert(buffer);
+
+  if (!texture_id) {
+    loaded_width = loaded_height = 0;
+    if (!freed_textures.empty()) {
+      texture_id = freed_textures.back();
+      freed_textures.pop_back();
+    } else {
+      glGenTextures(1, &texture_id);
+    }
+    if (texture_id) total_textures++;    
+  }
+  assert(texture_id);
   
   glBindTexture(GL_TEXTURE_2D, texture_id);
 
@@ -99,13 +123,5 @@ OpenGLTexture::releaseTextures() {
 
 TextureRef
 OpenGLTexture::createTexture(unsigned int width, unsigned int height, FilterMode min_filter, FilterMode mag_filter) {
-  if (freed_textures.empty()) {
-    unsigned int id;
-    glGenTextures(1, &id);
-    return TextureRef(width, height, new OpenGLTexture(width, height, id, min_filter, mag_filter));
-  } else {
-    unsigned int id = freed_textures.back();
-    freed_textures.pop_back();
-    return TextureRef(width, height, new OpenGLTexture(width, height, id, min_filter, mag_filter));
-  }
+  return TextureRef(width, height, new OpenGLTexture(width, height, min_filter, mag_filter));  
 }
