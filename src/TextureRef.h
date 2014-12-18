@@ -51,9 +51,7 @@ namespace canvas {
     }
   
     void clear() {
-      if (data && data->decRefcnt() == 0) {
-	delete data;
-      }
+      if (data && data->decRefcnt() <= 0) delete data;
       width = height = 0;
       data = 0;
     }
