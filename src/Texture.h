@@ -21,14 +21,15 @@ namespace canvas {
     FilterMode getMinFilter() const { return min_filter; }
     FilterMode getMagFilter() const { return mag_filter; }
 
+  protected:
     void incRefcnt() { ++refcnt; }
-    unsigned int decRefcnt() { return --refcnt; }
+    int decRefcnt();
 
   private:
     Texture(const Texture & other);
     Texture & operator=(const Texture & other);
 
-    unsigned int refcnt = 0;
+    int refcnt = 0;
     unsigned int width, height;
     FilterMode min_filter;
     FilterMode mag_filter;
