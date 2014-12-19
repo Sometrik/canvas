@@ -57,7 +57,7 @@ OpenGLTexture::updateData(void * buffer) {
   // glGenerateMipmap(GL_TEXTURE_2D);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   
-  if (loaded_width != getWidth() || loaded_height != getHeight() || 1) {
+  if (loaded_width != getWidth() || loaded_height != getHeight()) {
     loaded_width = getWidth();
     loaded_height = getHeight();
 
