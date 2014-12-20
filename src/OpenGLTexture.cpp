@@ -3,6 +3,7 @@
 #include "TextureRef.h"
 
 #define GL_GLEXT_PROTOTYPES
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -94,7 +95,7 @@ OpenGLTexture::updateData(void * buffer, unsigned int x, unsigned int y, unsigne
   // glGenerateMipmap(GL_TEXTURE_2D);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   
-  if (loaded_width != getWidth() || loaded_height != getHeight()) {
+  if (loaded_width != getWidth() || loaded_height != getHeight() || 1) {
     loaded_width = getWidth();
     loaded_height = getHeight();
 
