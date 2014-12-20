@@ -32,27 +32,30 @@ namespace canvas {
     GDIPlusSurface(const std::string & filename);
     GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight())
     {
-      BYTE * tmp = new BYTE[(image.hasAlpha() ? 4 : 3) * image.getWidth() * image.getHeight()]; // FIXME Free?
+      // stride must be a multiple of four
+      storage = new BYTE[4 * image.getWidth() * image.getHeight()];
       if (image.hasAlpha()) {
 	for (unsigned int i = 0; i < image.getWidth() * image.getHeight(); i++) {
-	  tmp[4 * i + 0] = image.getData()[4 * i + 0];
-	  tmp[4 * i + 1] = image.getData()[4 * i + 1];
-	  tmp[4 * i + 2] = image.getData()[4 * i + 2];
-	  tmp[4 * i + 3] = image.getData()[4 * i + 3];
+	  storage[4 * i + 0] = image.getData()[4 * i + 0];
+	  storage[4 * i + 1] = image.getData()[4 * i + 1];
+	  storage[4 * i + 2] = image.getData()[4 * i + 2];
+	  storage[4 * i + 3] = image.getData()[4 * i + 3];
 	}
       } else {
 	for (unsigned int i = 0; i < image.getWidth() * image.getHeight(); i++) {
-	  tmp[3 * i + 0] = image.getData()[3 * i + 2];
-	  tmp[3 * i + 1] = image.getData()[3 * i + 1];
-	  tmp[3 * i + 2] = image.getData()[3 * i + 0];
+	  storage[4 * i + 0] = image.getData()[3 * i + 2];
+	  storage[4 * i + 1] = image.getData()[3 * i + 1];
+	  storage[4 * i + 2] = image.getData()[3 * i + 0];
+	  storage[4 * i + 3] = 255;
 	}
       }
-      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * (image.hasAlpha() ? 4 : 3), image.hasAlpha() ? PixelFormat32bppPARGB : PixelFormat24bppRGB, tmp));
-      delete[] tmp;
+      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 4, image.hasAlpha() ? PixelFormat32bppRGB : PixelFormat32bppPARGB, storage));
+      // can the storage be freed here?
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
       initialize();
     }
     ~GDIPlusSurface() {
+      delete[] storage;
     }
     GDIPlusSurface * copy() {
       return 0;
@@ -130,6 +133,7 @@ namespace canvas {
     std::shared_ptr<Gdiplus::Graphics> g;
     Gdiplus::BitmapData data;     
     std::vector<Gdiplus::GraphicsState> save_stack;
+    BYTE * storage = 0;
   };
   
   class ContextGDIPlus : public Context {
