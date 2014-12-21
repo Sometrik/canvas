@@ -72,6 +72,8 @@ OpenGLTexture::updateData(void * buffer) {
   } else {
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, getWidth(), getHeight(), GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
   }
+
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void
@@ -95,7 +97,7 @@ OpenGLTexture::updateData(void * buffer, unsigned int x, unsigned int y, unsigne
   // glGenerateMipmap(GL_TEXTURE_2D);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   
-  if (loaded_width != getWidth() || loaded_height != getHeight() || 1) {
+  if (loaded_width != getWidth() || loaded_height != getHeight()) {
     loaded_width = getWidth();
     loaded_height = getHeight();
 
@@ -109,6 +111,8 @@ OpenGLTexture::updateData(void * buffer, unsigned int x, unsigned int y, unsigne
   }
 
   glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void
