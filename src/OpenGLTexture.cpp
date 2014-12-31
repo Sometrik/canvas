@@ -37,7 +37,7 @@ static GLenum getOpenGLFilterType(FilterMode mode) {
 }
 
 void
-OpenGLTexture::updateData(void * buffer) {
+OpenGLTexture::updateData(const void * buffer) {
   assert(buffer);
 
   if (!texture_id) {
@@ -77,7 +77,7 @@ OpenGLTexture::updateData(void * buffer) {
 }
 
 void
-OpenGLTexture::updateData(void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
+OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
   assert(buffer);
 
   if (!texture_id) {

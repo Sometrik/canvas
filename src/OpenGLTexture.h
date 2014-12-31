@@ -23,8 +23,8 @@ namespace canvas {
 
     unsigned int getTextureId() const { return texture_id; }
     
-    void updateData(void * buffer);
-    void updateData(void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height);
+    void updateData(const void * buffer);
+    void updateData(const void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height);
 
     static size_t getNumTextures() { return total_textures; }
     static const std::vector<unsigned int> & getFreedTextures() { return freed_textures; }

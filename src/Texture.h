@@ -12,8 +12,8 @@ namespace canvas {
     : width(_width), height(_height), min_filter(_min_filter), mag_filter(_mag_filter) { }
     virtual ~Texture() { }
 
-    virtual void updateData(void * buffer) = 0;
-    virtual void updateData(void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) = 0;
+    virtual void updateData(const void * buffer) = 0;
+    virtual void updateData(const void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) = 0;
     virtual unsigned int getTextureId() const { return 0; }
 
     unsigned int getWidth() const { return width; }
