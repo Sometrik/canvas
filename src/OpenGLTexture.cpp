@@ -2,6 +2,10 @@
 
 #include "TextureRef.h"
 
+#ifdef WIN32
+#include <GL/glew.h>
+#endif
+
 #define GL_GLEXT_PROTOTYPES
 
 #ifdef _WIN32
@@ -52,7 +56,8 @@ OpenGLTexture::updateData(const void * buffer) {
   }
   assert(texture_id);
 
-  // glEnable(GL_TEXTURE_2D);
+  glPushAttrib(GL_ENABLE_BIT);
+  glEnable(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, texture_id);
 
   // glGenerateMipmap(GL_TEXTURE_2D);
@@ -67,11 +72,14 @@ OpenGLTexture::updateData(const void * buffer) {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()) );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, getMinFilter() == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
+    // glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, getMinFilter() == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
   } else {
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, getWidth(), getHeight(), GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
   }
+
+  glGenerateMipmap(GL_TEXTURE_2D);
+  glPopAttrib();
 
   glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -106,11 +114,12 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()) );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
-    glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, getMinFilter() == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
+    // glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, getMinFilter() == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);
   }
 
   glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+  glGenerateMipmap(GL_TEXTURE_2D);
 
   glBindTexture(GL_TEXTURE_2D, 0);
 }
