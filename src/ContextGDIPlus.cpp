@@ -159,7 +159,13 @@ GDIPlusSurface::clip(const Path & input_path) {
 }
 
 void
-GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha) {
+GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha, bool imageSmoothingEnabled) {
+  if (imageSmoothingEnabled) {
+    // g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
+    g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBilinear );
+  } else {
+    g->SetInterpolationMode( Gdiplus::InterpolationModeNearestNeighbor );
+  }
   if (alpha < 1.0f && 0) {
 #if 0
     ImageAttributes  imageAttributes;
@@ -189,14 +195,14 @@ GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, doub
 }
 
 void
-GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha) {
+GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled) {
   GDIPlusSurface * img = dynamic_cast<GDIPlusSurface*>(&_img);
   if (img) {
-    drawNativeSurface(*img, x, y, w, h, alpha);
+    drawNativeSurface(*img, x, y, w, h, alpha, imageSmoothingEnabled);
   } else {
     auto img = _img.createImage(w, h);
     GDIPlusSurface cs(*img);
-    drawNativeSurface(cs, x, y, w, h, alpha);
+    drawNativeSurface(cs, x, y, w, h, alpha, imageSmoothingEnabled);
   }
 }
 

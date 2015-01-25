@@ -72,7 +72,6 @@ namespace canvas {
       g->SetPixelOffsetMode( PixelOffsetModeNone );
 #endif
       g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
-      g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
       g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
       g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
 #if 0
@@ -110,7 +109,7 @@ namespace canvas {
       
     }  
 
-    void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f);
+    void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void clip(const Path & path);
     void stroke(const Path & path, const Style & style, double lineWidth);
     void fill(const Path & path, const Style & style);
@@ -126,7 +125,7 @@ namespace canvas {
     }
 
   protected:
-    void drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha);
+    void drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha, bool imageSmoothingEnabled);
 
   private:
     std::shared_ptr<Gdiplus::Bitmap> bitmap;

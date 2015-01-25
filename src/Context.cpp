@@ -106,13 +106,13 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
     float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
     auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * int(ceil(bx)), getDefaultSurface().getHeight() + 2 * int(ceil(by)));
     
-    shadow->drawImage(img, x + shadowOffsetX + bx, y + shadowOffsetY + by, w, h, globalAlpha);
+    shadow->drawImage(img, x + shadowOffsetX + bx, y + shadowOffsetY + by, w, h, globalAlpha, imageSmoothingEnabled);
     shadow->colorFill(shadowColor);
     shadow->gaussianBlur(bx, by);
     
     getDefaultSurface().drawImage(*shadow, -bx, -by, shadow->getWidth(), shadow->getHeight());    
   }
-  getDefaultSurface().drawImage(img, x, y, w, h, globalAlpha);  
+  getDefaultSurface().drawImage(img, x, y, w, h, globalAlpha, imageSmoothingEnabled);  
 }
 
 void

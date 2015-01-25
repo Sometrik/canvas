@@ -210,11 +210,12 @@ CairoSurface::strokeText(const Font & font, const Style & style, TextBaseline te
 }  
 
 void
-CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float alpha) {
+CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled) {
   double sx = w / img.getWidth(), sy = h / img.getHeight();
   cairo_save(cr);
   cairo_scale(cr, sx, sy);
   cairo_set_source_surface(cr, img.surface, (x / sx) + 0.5, (y / sy) + 0.5);
+  cairo_pattern_set_filter (cairo_get_source (cr), imageSmoothingEnabled ? CAIRO_FILTER_BILINEAR : CAIRO_FILTER_NEAREST);
   if (alpha < 1.0f) {
     cairo_paint_with_alpha(cr, alpha);
   } else {
@@ -225,14 +226,14 @@ CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w
 }
 
 void
-CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha) {
+CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled) {
   CairoSurface * cs = dynamic_cast<CairoSurface*>(&_img);
   if (cs) {
-    drawNativeSurface(*cs, x, y, w, h, alpha);    
+    drawNativeSurface(*cs, x, y, w, h, alpha, imageSmoothingEnabled);    
   } else {
     auto img = _img.createImage(w, h);
     CairoSurface cs(*img);
-    drawNativeSurface(cs, x, y, w, h, alpha);
+    drawNativeSurface(cs, x, y, w, h, alpha, imageSmoothingEnabled);
   }
 }
 

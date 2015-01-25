@@ -97,6 +97,7 @@ namespace canvas {
     Font font;
     TextBaseline textBaseline;
     TextAlign textAlign;
+    bool imageSmoothingEnabled = true;
     
   protected:
     bool hasShadow() const { return shadowBlur > 0 || shadowBlurX > 0 || shadowBlurY > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
