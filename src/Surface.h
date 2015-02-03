@@ -52,7 +52,7 @@ namespace canvas {
     virtual void fill(const Path & path, const Style & style) = 0;
     
     void colorFill(const Color & color);
-    void gaussianBlur(float hradius, float vradius);
+    void gaussianBlur(float hradius, float vradius, float alpha = 1.0f);
     void multiply(const Color & color);
     
     const TextureRef & getTexture() const { return texture; }

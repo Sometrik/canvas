@@ -29,14 +29,15 @@ static vector<int> make_kernel(float radius) {
   float first_value = exp(-row*row/sigma22) / sqrtSigmaPi2;
   kernel.push_back(1);
   
-  for (row++; row <= r; row++) {
+  for (unsigned int i = 1; i < rows; i++, row++) {
+    // for (row++; row <= r; row++) {
     kernel.push_back(int(exp(-row * row / sigma22) / sqrtSigmaPi2 / first_value));
   }
   return kernel;
 }
   
 void
-Surface::gaussianBlur(float hradius, float vradius) {
+Surface::gaussianBlur(float hradius, float vradius, float alpha) {
   if (!(hradius > 0 || vradius > 0)) {
     return;
   }
@@ -52,6 +53,7 @@ Surface::gaussianBlur(float hradius, float vradius) {
     for (vector<int>::iterator it = hkernel.begin(); it != hkernel.end(); it++) {
       htotal += *it;
     }
+    htotal = int(htotal / alpha);
     memset(tmp, 0, width * height * 4);
     for (unsigned int row = 0; row < height; row++) {
       for (unsigned int col = 0; col + hsize < width; col++) {
@@ -80,6 +82,8 @@ Surface::gaussianBlur(float hradius, float vradius) {
     for (vector<int>::iterator it = vkernel.begin(); it != vkernel.end(); it++) {
       vtotal += *it;
     }
+    vtotal = int(vtotal / alpha);
+
     memset(buffer, 0, width * height * 4);
     for (unsigned int col = 0; col < width; col++) {
       for (unsigned int row = 0; row + vsize < height; row++) {

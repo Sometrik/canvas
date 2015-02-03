@@ -46,8 +46,10 @@ Context::fillText(const std::string & text, double x, double y) {
     float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
     auto shadow = createSurface(getDefaultSurface().getWidth() + 2 * int(ceil(bx)), getDefaultSurface().getHeight() + 2 * int(ceil(by)));
     Style shadow_style = shadowColor;
+    float shadow_alpha = shadowColor.alpha;
+    shadow_style.color.alpha = 1.0f;
     shadow->fillText(font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bx, y + shadowOffsetY + by);
-    shadow->gaussianBlur(bx, by);
+    shadow->gaussianBlur(bx, by, shadow_alpha);
     getDefaultSurface().drawImage(*shadow, -bx, -by, shadow->getWidth(), shadow->getHeight());
   }
   getDefaultSurface().fillText(font, fillStyle, textBaseline, textAlign, text, x, y);
