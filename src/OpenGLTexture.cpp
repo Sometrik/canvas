@@ -42,84 +42,40 @@ static GLenum getOpenGLFilterType(FilterMode mode) {
 
 void
 OpenGLTexture::updateData(const void * buffer) {
-  assert(buffer);
-
-  if (!texture_id) {
-    loaded_width = loaded_height = 0;
-    if (!freed_textures.empty()) {
-      texture_id = freed_textures.back();
-      freed_textures.pop_back();
-    } else {
-      glGenTextures(1, &texture_id);
-    }
-    if (texture_id) total_textures++;    
-  }
-  assert(texture_id);
-
-  glPushAttrib(GL_ENABLE_BIT);
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D, texture_id);
-
-  // glGenerateMipmap(GL_TEXTURE_2D);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  
-  if (loaded_width != getWidth() || loaded_height != getHeight()) {
-    loaded_width = getWidth();
-    loaded_height = getHeight();
-
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()) );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
-    // glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, getMinFilter() == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
-  } else {
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, getWidth(), getHeight(), GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
-  }
-
-  glGenerateMipmap(GL_TEXTURE_2D);
-  glPopAttrib();
-
-  glBindTexture(GL_TEXTURE_2D, 0);
+  updateData(buffer, 0, 0, getWidth(), getHeight());
 }
 
 void
 OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
   assert(buffer);
 
+  bool initialize = false;
   if (!texture_id) {
-    loaded_width = loaded_height = 0;
-    if (!freed_textures.empty()) {
-      texture_id = freed_textures.back();
-      freed_textures.pop_back();
-    } else {
-      glGenTextures(1, &texture_id);
-    }
-    if (texture_id) total_textures++;    
+    initialize = true;
+    glGenTextures(1, &texture_id);
+    if (texture_id >= 1) total_textures++;    
   }
-  assert(texture_id);
+  assert(texture_id >= 1);
   
   glBindTexture(GL_TEXTURE_2D, texture_id);
 
   // glGenerateMipmap(GL_TEXTURE_2D);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   
-  if (loaded_width != getWidth() || loaded_height != getHeight()) {
-    loaded_width = getWidth();
-    loaded_height = getHeight();
+  if (initialize) {
+    glTexStorage2D(GL_TEXTURE_2D, getMipmapLevels(), GL_RGBA8, getWidth(), getHeight());
 
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()) );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
-    // glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, getMinFilter() == LINEAR_MIPMAP_LINEAR ? GL_TRUE : GL_FALSE);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);
   }
 
   glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
-  glGenerateMipmap(GL_TEXTURE_2D);
+  if (getMinFilter() == LINEAR_MIPMAP_LINEAR) {
+    glGenerateMipmap(GL_TEXTURE_2D);
+  }
 
   glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -136,6 +92,6 @@ OpenGLTexture::releaseTextures() {
 }
 
 TextureRef
-OpenGLTexture::createTexture(unsigned int width, unsigned int height, FilterMode min_filter, FilterMode mag_filter) {
-  return TextureRef(width, height, new OpenGLTexture(width, height, min_filter, mag_filter));  
+OpenGLTexture::createTexture(unsigned int width, unsigned int height, FilterMode min_filter, FilterMode mag_filter, unsigned int mipmap_levels) {
+  return TextureRef(width, height, new OpenGLTexture(width, height, min_filter, mag_filter, mipmap_levels));  
 }

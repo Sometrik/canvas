@@ -8,8 +8,8 @@ namespace canvas {
   public:
     friend class TextureRef;
 
-  Texture(unsigned int _width, unsigned int _height, FilterMode _min_filter, FilterMode _mag_filter) 
-    : width(_width), height(_height), min_filter(_min_filter), mag_filter(_mag_filter) { }
+  Texture(unsigned int _width, unsigned int _height, FilterMode _min_filter, FilterMode _mag_filter, unsigned int _mipmap_levels) 
+    : width(_width), height(_height), mipmap_levels(_mipmap_levels), min_filter(_min_filter), mag_filter(_mag_filter) { }
     virtual ~Texture() { }
 
     virtual void updateData(const void * buffer) = 0;
@@ -18,6 +18,7 @@ namespace canvas {
 
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
+    unsigned int getMipmapLevels() const { return mipmap_levels; }
     FilterMode getMinFilter() const { return min_filter; }
     FilterMode getMagFilter() const { return mag_filter; }
 
@@ -30,7 +31,7 @@ namespace canvas {
     Texture & operator=(const Texture & other);
 
     int refcnt = 0;
-    unsigned int width, height;
+    unsigned int width, height, mipmap_levels;
     FilterMode min_filter;
     FilterMode mag_filter;
   };
