@@ -48,6 +48,7 @@ namespace canvas {
       return *this;
     }
 
+    bool isValid() const { return width != 0 && height != 0; }
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
     bool hasAlpha() const { return has_alpha; }
