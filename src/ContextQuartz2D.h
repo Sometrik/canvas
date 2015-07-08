@@ -178,6 +178,15 @@ namespace canvas {
   private:
     Quartz2DSurface default_surface;
   };
+
+  class Quartz2DContextFactory : public ContextFactory {
+  public:
+    Quartz2DContextFactory() { }
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const { return std::shared_ptr<Context>(new ContextQuartz2D(width, height)); }
+    std::shared_ptr<Surface> createSurface(const std::string & filename) const { return std::shared_ptr<Surface>(new Quartz2DSurface(filename)); }
+    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const { return std::shared_ptr<Surface>(new Quartz2DSurface(width, height, false)); }
+  };
+
 };
 
 #endif
