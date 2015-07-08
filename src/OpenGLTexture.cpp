@@ -10,6 +10,7 @@
 
 #ifdef __APPLE__
 #include <OpenGLES/ES3/gl.h>
+#include <OpenGLES/ES3/glext.h>
 #else
 // #include <GLES3/gl3.h>
 // #include <EGL/egl.h>
@@ -18,6 +19,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+
 #ifdef __WXMAC__
 #include "OpenGL/gl.h"
 #else
