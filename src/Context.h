@@ -7,11 +7,9 @@
 #include "Color.h"
 #include "Surface.h"
 #include "Image.h"
+#include "TextMetrics.h"
 
 namespace canvas {  
-  struct TextMetrics {
-    float width, height;
-  };
   class SavedContext {
   public:
     friend class Context;
