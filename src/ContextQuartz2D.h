@@ -63,7 +63,7 @@ namespace canvas {
       
   protected:
     void fillText(Context & context, const std::string & text, double x, double y) {
-#if 0
+#if 1
       CGContextSelectFont(gc, "Arial", context.font.size, kCGEncodingMacRoman);
       CGContextSetTextDrawingMode(gc, kCGTextFill);
       CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,

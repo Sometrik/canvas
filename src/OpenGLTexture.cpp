@@ -8,6 +8,13 @@
 
 #define GL_GLEXT_PROTOTYPES
 
+#ifdef __APPLE__
+#include <OpenGLES/ES3/gl.h>
+#else
+// #include <GLES3/gl3.h>
+// #include <EGL/egl.h>
+// #include <EGL/eglext.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -21,6 +28,8 @@
 #include "glext.h"
 #else
 #include <GL/glext.h>
+#endif
+
 #endif
 
 #include <cassert>
