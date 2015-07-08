@@ -11,11 +11,11 @@ namespace canvas {
   public:
     friend class ContextQuartz2D;
         
-  Quartz2DSurface(unsigned int _width, unsigned int _height) :
+  Quartz2DSurface(unsigned int _width, unsigned int _height, bool has_alpha = true) :
     Surface(_width, _height) {
       colorspace = CGColorSpaceCreateDeviceRGB();
 
-      unsigned int bitmapBytesPerRow = _width * 4;
+        unsigned int bitmapBytesPerRow = _width * (has_alpha ? 4 : 3);
       unsigned int bitmapByteCount = bitmapBytesPerRow * _height;
       unsigned char * bitmapData = new unsigned char[bitmapByteCount];
       
@@ -25,7 +25,7 @@ namespace canvas {
 				 8,
 				 bitmapBytesPerRow,
 				 colorspace,
-				 kCGImageAlphaPremultipliedLast);      
+                                 has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNone);
     }
   
   Quartz2DSurface(unsigned int _width, unsigned int _height, CGContextRef  _gc, bool _is_screen) :
@@ -34,12 +34,30 @@ namespace canvas {
        gc = _gc;
        is_screen = _is_screen;
     }
-#if 0
-    Quartz2DSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) {
-      assert(0);
+    Quartz2DSurface(const Image & image) : Surface(image.getWidth(), image.getHeight()) {
+        colorspace = CGColorSpaceCreateDeviceRGB();
+        
+        unsigned int bitmapBytesPerRow = getWidth() * 4;
+        unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
+        unsigned char * bitmapData = new unsigned char[bitmapByteCount];
+        memcpy(bitmapData, image.getData(), bitmapByteCount);
+        
+        gc = CGBitmapContextCreate(bitmapData,
+                                   getWidth(),
+                                   getHeight(),
+                                   8,
+                                   bitmapBytesPerRow,
+                                   colorspace,
+                                   kCGImageAlphaPremultipliedLast);
     }
+      Quartz2DSurface(const std::string & filename) : Surface(0, 0) {
+          assert(0);
+#if 0
+          auto img = CGImageSourceCreateWithURL(filename.c_str());
+          auto src = CGImageSourceCreateImageAtIndex();
+          CGImageRelease(img);
 #endif
-
+      }
       
     ~Quartz2DSurface() {
       CGColorSpaceRelease(colorspace);
@@ -47,11 +65,8 @@ namespace canvas {
       if (!is_screen) CGContextRelease(gc);
     }
 
-    unsigned char * lockMemory(bool write_access = false) {
-        return nullptr;
-/*
-      return CGBitmapContextGetData(gc);
-*/
+    void * lockMemory(bool write_access = false, unsigned int scaled_width = 0, unsigned int scaled_height = 0) {
+        return CGBitmapContextGetData(gc);
     }
     
     void releaseMemory() {
@@ -61,17 +76,23 @@ namespace canvas {
     void stroke(const Path & path, const Style & style, double lineWidth);
     void fill(const Path & path, const Style & style);
       
-  protected:
-    void fillText(Context & context, const std::string & text, double x, double y) {
+      Quartz2DSurface * copy() {
+          auto img = createImage();
+          return new Quartz2DSurface(*img);
+      }
+      
+      void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
+      }
+      
+      void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
 #if 1
-      CGContextSelectFont(gc, "Arial", context.font.size, kCGEncodingMacRoman);
+      CGContextSelectFont(gc, "Arial", font.size, kCGEncodingMacRoman);
       CGContextSetTextDrawingMode(gc, kCGTextFill);
       CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
 						       0.0, -1.0,
 						       0.0,  0.0 );
       CGContextSetTextMatrix(gc, xform);
-      CGContextSetTextDrawingMode(gc, kCGTextFill); 
-      
+      CGContextSetTextDrawingMode(gc, kCGTextFill);
       CGContextShowTextAtPoint(gc, (int)x, (int)y, text.c_str(), text.size());
 #else
       // Prepare font
@@ -101,7 +122,7 @@ namespace canvas {
       CFRelease(text2);
 #endif
     }
-    void drawImage(Surface & _img, double x, double y, double w, double h) {
+    void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
 #if 0
       CGRect myBoundingBox = CGRectMake (100, 100, 100, 100);
@@ -144,13 +165,15 @@ namespace canvas {
       {
       }
 
-    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * data) {
-      return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height)); //, data));
+    std::shared_ptr<Surface> createSurface(const Image & image) {
+        return std::shared_ptr<Surface>(new Quartz2DSurface(image));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
       return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height));
     }
-    
+      std::shared_ptr<Surface> createSurface(const std::string & filename) {
+          return std::shared_ptr<Surface>(new Quartz2DSurface(filename));
+      }
     void clearRect(double x, double y, double w, double h) { }
         
     Surface & getDefaultSurface() { return default_surface; }
@@ -182,9 +205,18 @@ namespace canvas {
   class Quartz2DContextFactory : public ContextFactory {
   public:
     Quartz2DContextFactory() { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const { return std::shared_ptr<Context>(new ContextQuartz2D(width, height)); }
-    std::shared_ptr<Surface> createSurface(const std::string & filename) const { return std::shared_ptr<Surface>(new Quartz2DSurface(filename)); }
-    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const { return std::shared_ptr<Surface>(new Quartz2DSurface(width, height, false)); }
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const {
+        std::shared_ptr<Context> ptr(new ContextQuartz2D(width, height));
+        return ptr;
+    }
+    std::shared_ptr<Surface> createSurface(const std::string & filename) const {
+        std::shared_ptr<Surface> ptr(new Quartz2DSurface(filename));
+        return ptr;
+    }
+    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const {
+        std::shared_ptr<Surface> ptr(new Quartz2DSurface(width, height, false));
+        return ptr;
+    }
   };
 
 };

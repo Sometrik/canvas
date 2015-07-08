@@ -1,5 +1,7 @@
 #include "ContextQuartz2D.h"
 
+using namespace canvas;
+
 void
 Quartz2DSurface::sendPath(const Path & path) {
   CGContextBeginPath(gc);
@@ -10,6 +12,8 @@ Quartz2DSurface::sendPath(const Path & path) {
     case PathComponent::ARC:
       assert(0);
       break;
+    case PathComponent::CLOSE:
+      break;
     }
   }
 }
@@ -18,10 +22,10 @@ void
 Quartz2DSurface::fill(const Path & path, const Style & style) {
   sendPath(path);
 #if 1
-  CGContextSetRGBFillColor(gc, strokeStyle.color.red,
-			   strokeStyle.color.green,
-			   strokeStyle.color.blue,
-			   strokeStyle.color.alpha); 
+  CGContextSetRGBFillColor(gc, style.color.red,
+			   style.color.green,
+			   style.color.blue,
+			   style.color.alpha);
   CGContextFillPath(gc);
 #else
   CGFloat components[] = { style.color.red,
@@ -32,7 +36,7 @@ Quartz2DSurface::fill(const Path & path, const Style & style) {
   CGContextSetFillColorWithColor(gc, color);
   CGContextFillPath(gc);
   CGColorRelease(color);
-#else
+#endif
 }
 
 void
