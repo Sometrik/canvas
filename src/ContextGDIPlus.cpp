@@ -254,5 +254,5 @@ ContextGDIPlus::measureText(const std::string & text) {
   Gdiplus::SizeF size;
   boundingBox.GetSize(&size);
   
-  return { (float)size.Width, (float)size.Height };
+  return TextMetrics((float)size.Width, (float)size.Height);
 }

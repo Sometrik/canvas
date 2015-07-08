@@ -277,6 +277,6 @@ ContextCairo::measureText(const std::string & text) {
   cairo_set_font_size(default_surface.cr, font.size);
   cairo_text_extents_t te;
   cairo_text_extents(default_surface.cr, text.c_str(), &te);
-  return { (float)te.width, (float)te.height };
+  return TextMetrics((float)te.width, (float)te.height);
 }
 
