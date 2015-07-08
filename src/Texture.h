@@ -21,6 +21,7 @@ namespace canvas {
     unsigned int getMipmapLevels() const { return mipmap_levels; }
     FilterMode getMinFilter() const { return min_filter; }
     FilterMode getMagFilter() const { return mag_filter; }
+    bool isDefined() const { return getTextureId() != 0; }
 
   protected:
     void incRefcnt() { ++refcnt; }
