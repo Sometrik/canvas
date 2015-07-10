@@ -15,9 +15,10 @@ namespace canvas {
     Surface(_width, _height) {
       colorspace = CGColorSpaceCreateDeviceRGB();
 
-        unsigned int bitmapBytesPerRow = _width * (has_alpha ? 4 : 3);
+      unsigned int bitmapBytesPerRow = _width * (has_alpha ? 4 : 3);
       unsigned int bitmapByteCount = bitmapBytesPerRow * _height;
-      unsigned char * bitmapData = new unsigned char[bitmapByteCount];
+      bitmapData = new unsigned char[bitmapByteCount];
+      memset(bitmapData, 0, bitmapByteCount);
       
       gc = CGBitmapContextCreate(bitmapData,
 				 _width,
@@ -29,17 +30,20 @@ namespace canvas {
     }
   
   Quartz2DSurface(unsigned int _width, unsigned int _height, CGContextRef  _gc, bool _is_screen) :
-    Surface(_width, _height){
+    Surface(_width, _height),
+      bitmapData(0)
+	{
       colorspace = CGColorSpaceCreateDeviceRGB();
        gc = _gc;
        is_screen = _is_screen;
     }
     Quartz2DSurface(const Image & image) : Surface(image.getWidth(), image.getHeight()) {
         colorspace = CGColorSpaceCreateDeviceRGB();
-        
-        unsigned int bitmapBytesPerRow = getWidth() * 4;
+
+	bool has_alpha = image.hasAlpha();
+	unsigned int bitmapBytesPerRow = getWidth() * (has_alpha ? 4 : 3);
         unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
-        unsigned char * bitmapData = new unsigned char[bitmapByteCount];
+        bitmapData = new unsigned char[bitmapByteCount];
         memcpy(bitmapData, image.getData(), bitmapByteCount);
         
         gc = CGBitmapContextCreate(bitmapData,
@@ -48,24 +52,49 @@ namespace canvas {
                                    8,
                                    bitmapBytesPerRow,
                                    colorspace,
-                                   kCGImageAlphaPremultipliedLast);
+				   has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNone);
     }
-      Quartz2DSurface(const std::string & filename) : Surface(0, 0) {
-          assert(0);
-#if 0
-          auto img = CGImageSourceCreateWithURL(filename.c_str());
-          auto src = CGImageSourceCreateImageAtIndex();
-          CGImageRelease(img);
-#endif
+    
+  Quartz2DSurface(const std::string & filename) : Surface(0, 0) {
+      CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
+      CGImageRef img;
+      if (filename.size() >= 4 && filename.compare(0, filename.size() - 4, ".png") == 0) {
+	img = CGImageCreateWithPNGDataProvider(provider, 0, false, CGColorRenderingIntent intent );
+      } else if (filename.size() >= 4 && filename.compare(0, filename.size() - 4, ".jpg") == 0) {
+	img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
       }
+      CGDataProviderRelease(provider);
+      resize(CGImageGetWidth(img), CGImageGetHeight(img));
+
+      colorspace = CGColorSpaceCreateDeviceRGB();
+
+      bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
+      unsigned int bitmapBytesPerRow = getWidth() * (has_alpha ? 4 : 3);
+      unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
+      bitmapData = new unsigned char[bitmapByteCount];
+      memset(bitmapData, 0, bitmapByteCount);
+      
+      gc = CGBitmapContextCreate(bitmapData,
+				 getWidth(),
+				 getHeight(),
+				 8,
+				 bitmapBytesPerRow,
+				 colorspace,
+                                 has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNone);
+
+      CGContextDrawImage(gc, CGRectMake(0, 0, getWidth(), getHeight()), img);
+      CGImageRelease(img);      
+    }
       
     ~Quartz2DSurface() {
       CGColorSpaceRelease(colorspace);
       // Do not release screen, iOS will do that
       if (!is_screen) CGContextRelease(gc);
+      delete[] bitmapData;
     }
 
     void * lockMemory(bool write_access = false, unsigned int scaled_width = 0, unsigned int scaled_height = 0) {
+      // this should not be done for other contexts
         return CGBitmapContextGetData(gc);
     }
     
@@ -124,12 +153,9 @@ namespace canvas {
     }
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
-#if 0
-      CGRect myBoundingBox = CGRectMake (100, 100, 100, 100);
       CGImageRef myImage = CGBitmapContextCreateImage(surface.gc);
-      CGContextDrawImage(gc, myBoundingBox, myImage);
+      CGContextDrawImage(gc, CGRectMake(x, y, w, h), myImage);
       CGImageRelease(myImage);
-#endif
     }
     void clip(const Path & path) {
       sendPath(path);
