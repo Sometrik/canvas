@@ -59,7 +59,7 @@ namespace canvas {
       CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
       CGImageRef img;
       if (filename.size() >= 4 && filename.compare(0, filename.size() - 4, ".png") == 0) {
-	img = CGImageCreateWithPNGDataProvider(provider, 0, false, CGColorRenderingIntent intent );
+	img = CGImageCreateWithPNGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
       } else if (filename.size() >= 4 && filename.compare(0, filename.size() - 4, ".jpg") == 0) {
 	img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
       }
@@ -153,7 +153,7 @@ namespace canvas {
     }
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
-      CGImageRef myImage = CGBitmapContextCreateImage(surface.gc);
+      CGImageRef myImage = CGBitmapContextCreateImage(img.gc);
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), myImage);
       CGImageRelease(myImage);
     }
@@ -175,6 +175,7 @@ namespace canvas {
     CGContextRef gc;
     CGColorSpaceRef colorspace;
     bool is_screen;
+      unsigned char * bitmapData;
   };
 
   class ContextQuartz2D : public Context {
