@@ -15,7 +15,7 @@ namespace canvas {
     Surface(_width, _height) {
       colorspace = CGColorSpaceCreateDeviceRGB();
 
-      unsigned int bitmapBytesPerRow = _width * (has_alpha ? 4 : 3);
+      unsigned int bitmapBytesPerRow = _width * 4; // (has_alpha ? 4 : 3);
       unsigned int bitmapByteCount = bitmapBytesPerRow * _height;
       bitmapData = new unsigned char[bitmapByteCount];
       memset(bitmapData, 0, bitmapByteCount);
@@ -26,7 +26,8 @@ namespace canvas {
 				 8,
 				 bitmapBytesPerRow,
 				 colorspace,
-                                 has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNone);
+                                 has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast); // kCGImageAlphaNone);
+      assert(gc);
     }
   
   Quartz2DSurface(unsigned int _width, unsigned int _height, CGContextRef  _gc, bool _is_screen) :
@@ -53,38 +54,10 @@ namespace canvas {
                                    bitmapBytesPerRow,
                                    colorspace,
 				   has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNone);
+      assert(gc);
     }
     
-  Quartz2DSurface(const std::string & filename) : Surface(0, 0) {
-      CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
-      CGImageRef img;
-      if (filename.size() >= 4 && filename.compare(0, filename.size() - 4, ".png") == 0) {
-	img = CGImageCreateWithPNGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-      } else if (filename.size() >= 4 && filename.compare(0, filename.size() - 4, ".jpg") == 0) {
-	img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-      }
-      CGDataProviderRelease(provider);
-      resize(CGImageGetWidth(img), CGImageGetHeight(img));
-
-      colorspace = CGColorSpaceCreateDeviceRGB();
-
-      bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
-      unsigned int bitmapBytesPerRow = getWidth() * (has_alpha ? 4 : 3);
-      unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
-      bitmapData = new unsigned char[bitmapByteCount];
-      memset(bitmapData, 0, bitmapByteCount);
-      
-      gc = CGBitmapContextCreate(bitmapData,
-				 getWidth(),
-				 getHeight(),
-				 8,
-				 bitmapBytesPerRow,
-				 colorspace,
-                                 has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNone);
-
-      CGContextDrawImage(gc, CGRectMake(0, 0, getWidth(), getHeight()), img);
-      CGImageRelease(img);      
-    }
+    Quartz2DSurface(const std::string & filename);
       
     ~Quartz2DSurface() {
       CGColorSpaceRelease(colorspace);
@@ -152,7 +125,9 @@ namespace canvas {
 #endif
     }
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
+      assert(gc);
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
+      assert(img.gc);
       CGImageRef myImage = CGBitmapContextCreateImage(img.gc);
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), myImage);
       CGImageRelease(myImage);
