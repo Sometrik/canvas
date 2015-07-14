@@ -156,11 +156,9 @@ Surface::multiply(const Color & color) {
 
 const TextureRef &
 Surface::updateTexture() {
-#ifdef OPENGL
   if (!texture.isDefined()) {
     texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
   }
-#endif
 
   void * buffer = lockMemory();
   assert(buffer);
@@ -172,11 +170,9 @@ Surface::updateTexture() {
 
 const TextureRef &
 Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int subwidth, unsigned int subheight) {
-#ifdef OPENGL
   if (!texture.isDefined()) {
     texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
   }
-#endif
 
   void * buffer = lockMemoryPartial(x0, y0, subwidth, subheight);
   texture.updateData(buffer, x0, y0, subwidth, subheight);
