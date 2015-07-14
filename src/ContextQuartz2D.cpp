@@ -63,10 +63,8 @@ Quartz2DSurface::sendPath(const Path & path) {
     switch (pc.type) {
     case PathComponent::MOVE_TO: CGContextMoveToPoint(gc, pc.x0, pc.y0); break;
     case PathComponent::LINE_TO: CGContextAddLineToPoint(gc, pc.x0, pc.y0); break;
-    case PathComponent::ARC:
-      break;
-    case PathComponent::CLOSE:
-      break;
+    case PathComponent::ARC: CGContextAddArc(gc, pc.x0, pc.y0, pc.radius, pc.sa, pc.ea, !pc.anticlockwise); break;
+    case PathComponent::CLOSE: CGContextClosePath(gc); break;
     }
   }
 }
@@ -74,35 +72,20 @@ Quartz2DSurface::sendPath(const Path & path) {
 void
 Quartz2DSurface::fill(const Path & path, const Style & style) {
   sendPath(path);
-#if 1
   CGContextSetRGBFillColor(gc, style.color.red,
 			   style.color.green,
 			   style.color.blue,
 			   style.color.alpha);
   CGContextFillPath(gc);
-#else
-  CGFloat components[] = { style.color.red,
-			   style.color.green,
-			   style.color.blue,
-			   style.color.alpha };
-  CGColorRef color = CGColorCreate(colorspace, components);
-  CGContextSetFillColorWithColor(gc, color);
-  CGContextFillPath(gc);
-  CGColorRelease(color);
-#endif
 }
 
 void
 Quartz2DSurface::stroke(const Path & path, const Style & style, double lineWidth) {
-  // CGContextSetLineWidth(context, fillStyle.);
-  
-  CGFloat components[] = { style.color.red,
+  sendPath(path);
+  CGContextSetRGBStrokeColor(gc, style.color.red,
 			   style.color.green,
 			   style.color.blue,
-			   style.color.alpha };
-  
-  CGColorRef color = CGColorCreate(colorspace, components);
-  CGContextSetStrokeColorWithColor(gc, color);
-  CGContextStrokePath(gc);
-  CGColorRelease(color);
+			   style.color.alpha);
+  // CGContextSetLineWidth(context, fillStyle.);
+  CGContextStrokePath(gc);  
 }

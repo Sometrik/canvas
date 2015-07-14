@@ -26,8 +26,10 @@ namespace canvas {
 				 8,
 				 bitmapBytesPerRow,
 				 colorspace,
-                                 has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast); // kCGImageAlphaNone);
+                                 (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast) | kCGBitmapByteOrder32Big); // kCGImageAlphaNone);
       assert(gc);
+      CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
+      CGContextSetShouldAntialias(gc, true);
     }
   
   Quartz2DSurface(unsigned int _width, unsigned int _height, CGContextRef  _gc, bool _is_screen) :
@@ -42,7 +44,7 @@ namespace canvas {
         colorspace = CGColorSpaceCreateDeviceRGB();
 
 	bool has_alpha = image.hasAlpha();
-	unsigned int bitmapBytesPerRow = getWidth() * (has_alpha ? 4 : 3);
+	unsigned int bitmapBytesPerRow = getWidth() * 4;
         unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
         bitmapData = new unsigned char[bitmapByteCount];
         memcpy(bitmapData, image.getData(), bitmapByteCount);
@@ -53,8 +55,8 @@ namespace canvas {
                                    8,
                                    bitmapBytesPerRow,
                                    colorspace,
-				   has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNone);
-      assert(gc);
+				   (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast) | kCGBitmapByteOrder32Big);
+	assert(gc);
     }
     
     Quartz2DSurface(const std::string & filename);
@@ -68,7 +70,9 @@ namespace canvas {
 
     void * lockMemory(bool write_access = false, unsigned int scaled_width = 0, unsigned int scaled_height = 0) {
       // this should not be done for other contexts
-        return CGBitmapContextGetData(gc);
+      void * ptr = CGBitmapContextGetData(gc);
+      assert(ptr == bitmapData);
+      return ptr;
     }
     
     void releaseMemory() {
