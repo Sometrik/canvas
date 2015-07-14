@@ -63,7 +63,7 @@ Quartz2DSurface::sendPath(const Path & path) {
     switch (pc.type) {
     case PathComponent::MOVE_TO: CGContextMoveToPoint(gc, pc.x0, pc.y0); break;
     case PathComponent::LINE_TO: CGContextAddLineToPoint(gc, pc.x0, pc.y0); break;
-    case PathComponent::ARC: CGContextAddArc(gc, pc.x0, pc.y0, pc.radius, pc.sa, pc.ea, !pc.anticlockwise); break;
+    case PathComponent::ARC: CGContextAddArc(gc, pc.x0, pc.y0, pc.radius, pc.sa, pc.ea, pc.anticlockwise); break;
     case PathComponent::CLOSE: CGContextClosePath(gc); break;
     }
   }
