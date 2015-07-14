@@ -74,16 +74,16 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   
   if (initialize) {
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
     glTexStorage2D(GL_TEXTURE_2D, getMipmapLevels(), GL_RGBA8, getWidth(), getHeight());
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()) );
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, 0);
   }
 
-  glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer); // GL_BGRA_EXT
   if (getMinFilter() == LINEAR_MIPMAP_LINEAR) {
     glGenerateMipmap(GL_TEXTURE_2D);
   }
