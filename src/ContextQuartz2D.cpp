@@ -36,7 +36,7 @@ Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0) {
                                bitmapBytesPerRow,
                                colorspace,
                                has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
-    assert(gc);
+    initialize();
     CGContextDrawImage(gc, CGRectMake(0, 0, getWidth(), getHeight()), img);
     CGImageRelease(img);
   } else {
@@ -52,7 +52,8 @@ Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0) {
                                8,
                                bitmapBytesPerRow,
                                colorspace,
-                               kCGImageAlphaPremultipliedLast);
+                               kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+    initialize();
   }
 }
 

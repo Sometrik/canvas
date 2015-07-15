@@ -27,9 +27,7 @@ namespace canvas {
 				 bitmapBytesPerRow,
 				 colorspace,
                                  (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast) | kCGBitmapByteOrder32Big); // kCGImageAlphaNone);
-      assert(gc);
-      CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
-      CGContextSetShouldAntialias(gc, true);
+      initialize();
     }
   
   Quartz2DSurface(unsigned int _width, unsigned int _height, CGContextRef  _gc, bool _is_screen) :
@@ -56,10 +54,18 @@ namespace canvas {
                                    bitmapBytesPerRow,
                                    colorspace,
 				   (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast) | kCGBitmapByteOrder32Big);
-	assert(gc);
+	initialize();
     }
     
     Quartz2DSurface(const std::string & filename);
+
+    void initialize() {
+      assert(gc);
+      CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
+      CGContextSetShouldAntialias(gc, true);
+      CGContextTranslateCTM(gc, 0, getHeight());
+      CGContextScaleCTM(gc, 1.0, -1.0);
+    }
       
     ~Quartz2DSurface() {
       CGColorSpaceRelease(colorspace);
@@ -88,18 +94,26 @@ namespace canvas {
       }
       
       void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
+	CGContextSelectFont(gc, "Arial", font.size, kCGEncodingMacRoman);
+	// CGContextSetTextDrawingMode(gc, kCGTextStroke);
+	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
+							 0.0, -1.0,
+							 0.0,  0.0 );
+	CGContextSetTextMatrix(gc, xform);
+	CGContextSetTextDrawingMode(gc, kCGTextStroke);
+	CGContextShowTextAtPoint(gc, (int)x, (int)y, text.c_str(), text.size());
       }
       
       void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
 #if 1
-      CGContextSelectFont(gc, "Arial", font.size, kCGEncodingMacRoman);
-      CGContextSetTextDrawingMode(gc, kCGTextFill);
-      CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
-						       0.0, -1.0,
-						       0.0,  0.0 );
-      CGContextSetTextMatrix(gc, xform);
-      CGContextSetTextDrawingMode(gc, kCGTextFill);
-      CGContextShowTextAtPoint(gc, (int)x, (int)y, text.c_str(), text.size());
+	CGContextSelectFont(gc, "Arial", font.size, kCGEncodingMacRoman);
+	// CGContextSetTextDrawingMode(gc, kCGTextFill);
+	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
+							 0.0, -1.0,
+							 0.0,  0.0 );
+	CGContextSetTextMatrix(gc, xform);
+	CGContextSetTextDrawingMode(gc, kCGTextFill);
+	CGContextShowTextAtPoint(gc, (int)x, (int)y, text.c_str(), text.size());
 #else
       // Prepare font
       CTFontRef font = CTFontCreateWithName(CFSTR("Times"), 20, NULL);
@@ -190,19 +204,14 @@ namespace canvas {
     }
 
     TextMetrics measureText(const std::string & text) {
-#if 0
-      CGPoint startpt = CGContextGetTextPosition(default_surface.gc);
-      CGContextSetTextDrawingMode(default_surface.gc, kCGTextInvisible); 
-      CGContextShowText (default_surface.gc, text.c_str(), text.size());
-      CGPoint endpt = CGContextGetTextPosition(default_surface.gc);
-      CGContextSetTextDrawingMode(default_surface.gc, kCGTextFill);
-      canvas::TextMetrics rvalue;
-      rvalue.width =  endpt.x - startpt.x;
-      return rvalue;
-#else
-      return TextMetrics(0, 0);
-#endif
-    }
+      CGContextSelectFont(default_surface.gc, "Arial", font.size, kCGEncodingMacRoman);
+      CGContextSetTextDrawingMode(context, kCGTextInvisible);
+      CGPoint initPos = CGContextGetTextPosition(context);
+      CGContextShowTextAtPoint(context, initPos.x, initPos.y, text.c_str(), text.size());
+      // CGContextShowText (default_surface.gc, text.c_str(), text.size());
+      CGPoint finalPos = CGContextGetTextPosition(context);
+      return TextMetrics(finalPos.x - initPos.x, font.size);
+    }        
 
   private:
     Quartz2DSurface default_surface;
