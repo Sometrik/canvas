@@ -95,6 +95,6 @@ namespace canvas {
     CairoContextFactory() { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const { return std::shared_ptr<Context>(new ContextCairo(width, height)); }
     std::shared_ptr<Surface> createSurface(const std::string & filename) const { return std::shared_ptr<Surface>(new CairoSurface(filename)); }
-    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const { return std::shared_ptr<Surface>(new CairoSurface(width, height, false)); }
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const { return std::shared_ptr<Surface>(new CairoSurface(width, height, false)); }
   };
 };

@@ -58,6 +58,7 @@ namespace canvas {
     }
     
     Quartz2DSurface(const std::string & filename);
+    Quartz2DSurface(const unsigned char * buffer, size_t size);
 
     void initialize() {
       assert(gc);
@@ -221,16 +222,20 @@ namespace canvas {
   public:
     Quartz2DContextFactory() { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const {
-        std::shared_ptr<Context> ptr(new ContextQuartz2D(width, height));
-        return ptr;
+      std::shared_ptr<Context> ptr(new ContextQuartz2D(width, height));
+      return ptr;
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) const {
-        std::shared_ptr<Surface> ptr(new Quartz2DSurface(filename));
-        return ptr;
+      std::shared_ptr<Surface> ptr(new Quartz2DSurface(filename));
+      return ptr;
     }
-    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const {
-        std::shared_ptr<Surface> ptr(new Quartz2DSurface(width, height, false));
-        return ptr;
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const {
+      std::shared_ptr<Surface> ptr(new Quartz2DSurface(width, height, false));
+      return ptr;
+    }
+    std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) const {
+      std::shared_ptr<Surface> ptr(new Quartz2DSurface(const unsigned char * buffer, size_t sizee));
+      return ptr;
     }
   };
 
