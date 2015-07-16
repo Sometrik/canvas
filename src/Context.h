@@ -110,7 +110,19 @@ namespace canvas {
     Style current_linear_gradient;
     std::vector<SavedContext> restore_stack;
   };
-
+  
+  class FilenameConverter {
+  public:
+    FilenameConverter() { }
+    virtual ~FilenameConverter() { }
+    virtual bool convert(const std::string & input, std::string & output) = 0;
+  };
+  
+  class NullConverter {
+  public:
+    bool convert(const std::string & input, std::string & output) { output = input; return true; }
+  };
+  
   class ContextFactory {
   public:
     ContextFactory() { }

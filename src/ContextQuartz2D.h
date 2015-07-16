@@ -26,7 +26,7 @@ namespace canvas {
 				 8,
 				 bitmapBytesPerRow,
 				 colorspace,
-                                 (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast) | kCGBitmapByteOrder32Big); // kCGImageAlphaNone);
+                                 (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // kCGImageAlphaNone);  | kCGBitmapByteOrder32Big
       initialize();
     }
   
@@ -53,7 +53,7 @@ namespace canvas {
                                    8,
                                    bitmapBytesPerRow,
                                    colorspace,
-				   (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast) | kCGBitmapByteOrder32Big);
+                                   (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); //  | kCGBitmapByteOrder32Big);
 	initialize();
     }
     
@@ -220,23 +220,30 @@ namespace canvas {
 
   class Quartz2DContextFactory : public ContextFactory {
   public:
-    Quartz2DContextFactory() { }
+    Quartz2DContextFactory(std::shared_ptr<FilenameConverter> & _converter) : converter(_converter) { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const {
       std::shared_ptr<Context> ptr(new ContextQuartz2D(width, height));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) const {
-      std::shared_ptr<Surface> ptr(new Quartz2DSurface(filename));
-      return ptr;
+      std::string filename2;
+      if (converter->convert(filename, filename2)) {
+        std::shared_ptr<Surface> ptr(new Quartz2DSurface(filename2));
+        return ptr;
+      } else {
+        return createSurface(16, 16);
+      }
     }
     std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const {
       std::shared_ptr<Surface> ptr(new Quartz2DSurface(width, height, false));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) const {
-      std::shared_ptr<Surface> ptr(new Quartz2DSurface(const unsigned char * buffer, size_t sizee));
+      std::shared_ptr<Surface> ptr(new Quartz2DSurface(buffer, size));
       return ptr;
     }
+  private:
+    std::shared_ptr<FilenameConverter> converter;
   };
 
 };

@@ -35,7 +35,7 @@ Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0) {
                                8,
                                bitmapBytesPerRow,
                                colorspace,
-                               (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast) | kCGBitmapByteOrder32Big);
+                               (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
     initialize();
     CGContextDrawImage(gc, CGRectMake(0, 0, getWidth(), getHeight()), img);
     CGImageRelease(img);
@@ -52,7 +52,7 @@ Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0) {
                                8,
                                bitmapBytesPerRow,
                                colorspace,
-                               kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+                               kCGImageAlphaPremultipliedLast); // | kCGBitmapByteOrder32Big);
     initialize();
   }
 }
@@ -86,7 +86,7 @@ Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Su
                                8,
                                bitmapBytesPerRow,
                                colorspace,
-                               (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast) | kCGBitmapByteOrder32Big);
+                               (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
     initialize();
     CGContextDrawImage(gc, CGRectMake(0, 0, getWidth(), getHeight()), img);
     CGImageRelease(img);
@@ -103,7 +103,7 @@ Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Su
                                8,
                                bitmapBytesPerRow,
                                colorspace,
-                               kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+                               kCGImageAlphaPremultipliedLast); // | kCGBitmapByteOrder32Big);
     initialize();
   }
 }
