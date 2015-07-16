@@ -118,6 +118,7 @@ namespace canvas {
     virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) const = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const = 0;
+    virtual std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) const = 0;
   };
 };
 
