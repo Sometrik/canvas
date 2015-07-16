@@ -205,11 +205,11 @@ namespace canvas {
 
     TextMetrics measureText(const std::string & text) {
       CGContextSelectFont(default_surface.gc, "Arial", font.size, kCGEncodingMacRoman);
-      CGContextSetTextDrawingMode(context, kCGTextInvisible);
-      CGPoint initPos = CGContextGetTextPosition(context);
-      CGContextShowTextAtPoint(context, initPos.x, initPos.y, text.c_str(), text.size());
+      CGContextSetTextDrawingMode(default_surface.gc, kCGTextInvisible);
+      CGPoint initPos = CGContextGetTextPosition(default_surface.gc);
+      CGContextShowTextAtPoint(default_surface.gc, initPos.x, initPos.y, text.c_str(), text.size());
       // CGContextShowText (default_surface.gc, text.c_str(), text.size());
-      CGPoint finalPos = CGContextGetTextPosition(context);
+      CGPoint finalPos = CGContextGetTextPosition(default_surface.gc);
       return TextMetrics(finalPos.x - initPos.x, font.size);
     }        
 
