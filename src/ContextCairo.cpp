@@ -54,7 +54,34 @@ CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0) {
   cr = cairo_create(surface);
   assert(cr);
 }
- 
+
+struct read_buffer_s {
+  size_t offset, size;
+  const unsigned char * data;
+};
+
+static cairo_status_t read_buffer(void *closure, unsigned char *data, unsigned int length)
+{
+  read_buffer_s * buf = (read_buffer_s*)closure;
+
+  if (buf->offset + length > buf->size) {
+    return CAIRO_STATUS_READ_ERROR;
+  }
+  memcpy(data, buf->data + buf->offset, length);
+  buf->offset += length;
+  return CAIRO_STATUS_SUCCESS;
+}
+
+CairoSurface::CairoSurface(const unsigned char * buffer, size_t size) : Surface(0, 0) {
+  read_buffer_s buf = { 0, size, buffer };
+  surface = cairo_image_surface_create_from_png_stream(read_buffer, &buf);
+  assert(surface);
+  Surface::resize(cairo_image_surface_get_width(surface),
+		  cairo_image_surface_get_height(surface));
+  cr = cairo_create(surface);
+  assert(cr);
+}
+
 CairoSurface::~CairoSurface() {
   if (cr) {
     cairo_destroy(cr);
