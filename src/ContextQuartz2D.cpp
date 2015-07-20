@@ -123,12 +123,49 @@ Quartz2DSurface::sendPath(const Path & path) {
 
 void
 Quartz2DSurface::fill(const Path & path, const Style & style) {
-  sendPath(path);
-  CGContextSetRGBFillColor(gc, style.color.red,
-			   style.color.green,
-			   style.color.blue,
-			   style.color.alpha);
-  CGContextFillPath(gc);
+  if (style.getType() == Style::LINEAR_GRADIENT) {
+    const std::map<float, Color> & colors = style.getColors();
+    if (!colors.empty()) {
+      std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
+      it1--;
+      const Color & c0 = it0->second, c1 = it1->second;
+      
+      CGGradientRef myGradient;
+      size_t num_locations = 2;
+      CGFloat locations[2] = { 0.0, 1.0 };
+      CGFloat components[8] = {
+        c0.red, c0.green, c0.blue, c0.alpha,
+        c1.red, c1.green, c1.blue, c1.alpha
+      };
+      
+      myGradient = CGGradientCreateWithColorComponents(colorspace, components, locations, num_locations);
+      
+      //       Gdiplus::LinearGradientBrush brush(Gdiplus::PointF(Gdiplus::REAL(style.x0), Gdiplus::REAL(style.y0)),
+      // 					 Gdiplus::PointF(Gdiplus::REAL(style.x1), Gdiplus::REAL(style.y1)),
+      // 					 toGDIColor(c0),
+      // 					 toGDIColor(c1));
+      
+      save();
+      clip(path);
+      
+      CGPoint myStartPoint, myEndPoint;
+      myStartPoint.x = style.x0;
+      myStartPoint.y = style.y0;
+      myEndPoint.x = style.x1;
+      myEndPoint.y = style.y1;
+      CGContextDrawLinearGradient(gc, myGradient, myStartPoint, myEndPoint, 0);
+      restore();
+      
+      CGGradientRelease(myGradient);
+    }
+  } else {
+    sendPath(path);
+    CGContextSetRGBFillColor(gc, style.color.red,
+			     style.color.green,
+			     style.color.blue,
+			     style.color.alpha);
+    CGContextFillPath(gc);
+  }
 }
 
 void
