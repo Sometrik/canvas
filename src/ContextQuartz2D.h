@@ -95,6 +95,10 @@ namespace canvas {
       }
       
       void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
+        CGContextSetRGBStrokeColor(gc, style.color.red,
+                                 style.color.green,
+                                 style.color.blue,
+                                 style.color.alpha);
 	CGContextSelectFont(gc, "Arial", font.size, kCGEncodingMacRoman);
 	// CGContextSetTextDrawingMode(gc, kCGTextStroke);
 	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
@@ -107,6 +111,10 @@ namespace canvas {
       
       void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
 #if 1
+        CGContextSetRGBFillColor(gc, style.color.red,
+                                 style.color.green,
+                                 style.color.blue,
+                                 style.color.alpha);
 	CGContextSelectFont(gc, "Arial", font.size, kCGEncodingMacRoman);
 	// CGContextSetTextDrawingMode(gc, kCGTextFill);
 	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
@@ -155,12 +163,8 @@ namespace canvas {
       sendPath(path);
       CGContextClip(gc);
     }
-    void save() {
-      
-    }
-    void restore() {
-
-    }
+    void save() { CGContextSaveGState(gc); }
+    void restore() { CGContextRestoreGState(gc); }
 
   protected:
     void sendPath(const Path & path);
@@ -175,13 +179,13 @@ namespace canvas {
   class ContextQuartz2D : public Context {
   public:
     // get context with UIGraphicsGetCurrentContext();
-  ContextQuartz2D(unsigned int _width, unsigned int _height, CGContextRef _gc, bool is_screen)
-    : Context(_width, _height),
+  ContextQuartz2D(unsigned int _width, unsigned int _height, CGContextRef _gc, bool is_screen, float _display_scale)
+    : Context(_width, _height, _display_scale),
       default_surface(_width, _height, _gc, is_screen)  {
           setgc(_gc);
     }
-  ContextQuartz2D(unsigned int _width, unsigned int _height)
-    : Context(_width, _height),
+  ContextQuartz2D(unsigned int _width, unsigned int _height, float _display_scale)
+    : Context(_width, _height, _display_scale),
       default_surface(_width, _height)
       {
       }
@@ -200,9 +204,7 @@ namespace canvas {
     Surface & getDefaultSurface() { return default_surface; }
     const Surface & getDefaultSurface() const { return default_surface; }
       
-    void setgc(CGContextRef _gc){
-      default_surface.gc = _gc;
-    }
+    void setgc(CGContextRef _gc) { default_surface.gc = _gc; }
 
     TextMetrics measureText(const std::string & text) {
       CGContextSelectFont(default_surface.gc, "Arial", font.size, kCGEncodingMacRoman);
@@ -220,9 +222,9 @@ namespace canvas {
 
   class Quartz2DContextFactory : public ContextFactory {
   public:
-    Quartz2DContextFactory(std::shared_ptr<FilenameConverter> & _converter) : converter(_converter) { }
+    Quartz2DContextFactory(float _display_scale, std::shared_ptr<FilenameConverter> & _converter) : ContextFactory(_display_scale), converter(_converter) { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const {
-      std::shared_ptr<Context> ptr(new ContextQuartz2D(width, height));
+      std::shared_ptr<Context> ptr(new ContextQuartz2D(width, height, getDisplayScale()));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) const {
@@ -244,6 +246,7 @@ namespace canvas {
     }
   private:
     std::shared_ptr<FilenameConverter> converter;
+
   };
 
 };
