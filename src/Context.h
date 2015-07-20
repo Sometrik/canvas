@@ -19,8 +19,8 @@ namespace canvas {
   };
   class Context {
   public:
-    Context(unsigned int _width, unsigned int _height)
-      : width(_width), height(_height) { }
+    Context(unsigned int _width, unsigned int _height, float _display_scale = 1.0f)
+      : width(_width), height(_height), display_scale(_display_scale) { }
     virtual ~Context() { }
 
     virtual std::shared_ptr<Surface> createSurface(const Image & image) = 0;
@@ -99,7 +99,8 @@ namespace canvas {
     
   protected:
     bool hasShadow() const { return shadowBlur > 0 || shadowBlurX > 0 || shadowBlurY > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
-
+    float getDisplayScale() const { return display_scale; }
+    
     Path current_path;
 
   private:
@@ -109,6 +110,7 @@ namespace canvas {
     unsigned int width, height;
     Style current_linear_gradient;
     std::vector<SavedContext> restore_stack;
+    float display_scale;
   };
   
   class FilenameConverter {
@@ -125,12 +127,17 @@ namespace canvas {
   
   class ContextFactory {
   public:
-    ContextFactory() { }
+    ContextFactory(float _display_scale = 1.0f) : display_scale(_display_scale) { }
     virtual ~ContextFactory() { }
     virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) const = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const = 0;
     virtual std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) const = 0;
+    
+    float getDisplayScale() const { return display_scale; }
+    
+  private:
+    float display_scale;
   };
 };
 
