@@ -93,6 +93,23 @@ namespace canvas {
           auto img = createImage();
           return new Quartz2DSurface(*img);
       }
+
+    void resize(unsigned int _width, unsigned int _height) {
+      Surface::resize(_width, _height);
+
+      CGContextRelease(gc);
+      delete[] bitmapData;
+
+      bool has_alpha = true;
+      unsigned int bitmapBytesPerRow = _width * 4;
+      unsigned int bitmapByteCount = bitmapBytesPerRow * _height;
+      bitmapData = new unsigned char[bitmapByteCount];
+      memset(bitmapData, 0, bitmapByteCount);
+      
+      gc = CGBitmapContextCreate(bitmapData, _width, _height, 8, bitmapBytesPerRow, colorspace,
+                                 (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast));
+      initialize();
+    }
       
       void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
         CGContextSetRGBStrokeColor(gc, style.color.red,
