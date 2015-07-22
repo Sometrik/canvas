@@ -21,7 +21,7 @@ Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0) {
   CGDataProviderRelease(provider);
   colorspace = CGColorSpaceCreateDeviceRGB();
   if (img) {
-    resize(CGImageGetWidth(img), CGImageGetHeight(img));
+    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img));
   
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
     unsigned int bitmapBytesPerRow = getWidth() * 4; // (has_alpha ? 4 : 3);
