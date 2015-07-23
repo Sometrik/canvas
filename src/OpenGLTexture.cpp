@@ -82,7 +82,11 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
     glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
   }
 
+#ifdef __APPLE__
   glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+#else
+  glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+#endif
   if (getMinFilter() == LINEAR_MIPMAP_LINEAR) {
     glGenerateMipmap(GL_TEXTURE_2D);
   }
