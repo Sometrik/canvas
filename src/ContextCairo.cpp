@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 
 using namespace canvas;
 using namespace std;
@@ -72,12 +73,17 @@ static cairo_status_t read_buffer(void *closure, unsigned char *data, unsigned i
   return CAIRO_STATUS_SUCCESS;
 }
 
-CairoSurface::CairoSurface(const unsigned char * buffer, size_t size) : Surface(0, 0) {
+CairoSurface::CairoSurface(const unsigned char * buffer, size_t size) : Surface(16, 16) {
   read_buffer_s buf = { 0, size, buffer };
-  surface = cairo_image_surface_create_from_png_stream(read_buffer, &buf);
+  if (isPNG(buffer, size)) {
+    surface = cairo_image_surface_create_from_png_stream(read_buffer, &buf);
+    Surface::resize(cairo_image_surface_get_width(surface),
+		    cairo_image_surface_get_height(surface));
+  } else {
+    cerr << "failed to load image from memory\n";
+    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, getWidth(), getHeight());
+  }
   assert(surface);
-  Surface::resize(cairo_image_surface_get_width(surface),
-		  cairo_image_surface_get_height(surface));
   cr = cairo_create(surface);
   assert(cr);
 }
