@@ -66,13 +66,12 @@ Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Su
     img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
   } else {
     cerr << "could not open" << endl;
-    assert(0);
     img = 0;
   }
   CGDataProviderRelease(provider);
   colorspace = CGColorSpaceCreateDeviceRGB();
   if (img) {
-    resize(CGImageGetWidth(img), CGImageGetHeight(img));
+    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img));
   
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
     unsigned int bitmapBytesPerRow = getWidth() * 4; // (has_alpha ? 4 : 3);
@@ -91,7 +90,7 @@ Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Su
     CGContextDrawImage(gc, CGRectMake(0, 0, getWidth(), getHeight()), img);
     CGImageRelease(img);
   } else {
-    resize(16, 16);
+    Surface::resize(16, 16);
     unsigned int bitmapBytesPerRow = getWidth() * 4;
     unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
     bitmapData = new unsigned char[bitmapByteCount];
