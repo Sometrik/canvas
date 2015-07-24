@@ -60,9 +60,9 @@ Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0) {
 Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Surface(0, 0) {
   CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
   CGImageRef img;
-  if (buffer[0] == 0x89 || buffer[1] == 0x50 || buffer[2] == 0x4e || buffer[3] == 0x47) {
+  if (isPNG(buffer, size)) {
     img = CGImageCreateWithPNGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-  } else if (buffer[0] == 0xff || buffer[1] == 0xd8 || buffer[2] == 0xff) {
+  } else if (isJPEG(buffer, size)) {
     img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
   } else {
     cerr << "could not open" << endl;
