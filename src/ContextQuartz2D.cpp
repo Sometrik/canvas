@@ -129,7 +129,6 @@ Quartz2DSurface::fill(const Path & path, const Style & style) {
       it1--;
       const Color & c0 = it0->second, c1 = it1->second;
       
-      CGGradientRef myGradient;
       size_t num_locations = 2;
       CGFloat locations[2] = { 0.0, 1.0 };
       CGFloat components[8] = {
@@ -137,12 +136,7 @@ Quartz2DSurface::fill(const Path & path, const Style & style) {
         c1.red, c1.green, c1.blue, c1.alpha
       };
       
-      myGradient = CGGradientCreateWithColorComponents(colorspace, components, locations, num_locations);
-      
-      //       Gdiplus::LinearGradientBrush brush(Gdiplus::PointF(Gdiplus::REAL(style.x0), Gdiplus::REAL(style.y0)),
-      // 					 Gdiplus::PointF(Gdiplus::REAL(style.x1), Gdiplus::REAL(style.y1)),
-      // 					 toGDIColor(c0),
-      // 					 toGDIColor(c1));
+      CGGradientRef myGradient = CGGradientCreateWithColorComponents(colorspace, components, locations, num_locations);
       
       save();
       clip(path);
