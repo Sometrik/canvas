@@ -77,9 +77,13 @@ namespace canvas {
 
     void * lockMemory(bool write_access = false, unsigned int scaled_width = 0, unsigned int scaled_height = 0) {
       // this should not be done for other contexts
+#if 0
       void * ptr = CGBitmapContextGetData(gc);
       assert(ptr == bitmapData);
       return ptr;
+#else
+      return bitmapData;
+#endif
     }
     
     void releaseMemory() {
@@ -111,12 +115,12 @@ namespace canvas {
       initialize();
     }
       
-      void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
+      void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float display_scale) {
         CGContextSetRGBStrokeColor(gc, style.color.red,
                                  style.color.green,
                                  style.color.blue,
                                  style.color.alpha);
-	CGContextSelectFont(gc, "Arial", font.size, kCGEncodingMacRoman);
+	CGContextSelectFont(gc, "Arial", font.size * display_scale, kCGEncodingMacRoman);
 	// CGContextSetTextDrawingMode(gc, kCGTextStroke);
 	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
 							 0.0, -1.0,
@@ -126,13 +130,13 @@ namespace canvas {
 	CGContextShowTextAtPoint(gc, (int)x, (int)y, text.c_str(), text.size());
       }
       
-      void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
+      void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float display_scale) {
 #if 1
         CGContextSetRGBFillColor(gc, style.color.red,
                                  style.color.green,
                                  style.color.blue,
                                  style.color.alpha);
-	CGContextSelectFont(gc, "Arial", font.size, kCGEncodingMacRoman);
+	CGContextSelectFont(gc, "Arial", font.size * display_scale, kCGEncodingMacRoman);
 	// CGContextSetTextDrawingMode(gc, kCGTextFill);
 	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
 							 0.0, -1.0,
@@ -224,13 +228,13 @@ namespace canvas {
     void setgc(CGContextRef _gc) { default_surface.gc = _gc; }
 
     TextMetrics measureText(const std::string & text) {
-      CGContextSelectFont(default_surface.gc, "Arial", font.size, kCGEncodingMacRoman);
+      CGContextSelectFont(default_surface.gc, "Arial", font.size * getDisplayScale(), kCGEncodingMacRoman);
       CGContextSetTextDrawingMode(default_surface.gc, kCGTextInvisible);
       CGPoint initPos = CGContextGetTextPosition(default_surface.gc);
       CGContextShowTextAtPoint(default_surface.gc, initPos.x, initPos.y, text.c_str(), text.size());
       // CGContextShowText (default_surface.gc, text.c_str(), text.size());
       CGPoint finalPos = CGContextGetTextPosition(default_surface.gc);
-      return TextMetrics(finalPos.x - initPos.x, font.size);
+      return TextMetrics(finalPos.x - initPos.x, font.size * getDisplayScale());
     }        
 
   private:
