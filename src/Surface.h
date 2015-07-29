@@ -20,20 +20,27 @@ namespace canvas {
   public:
     friend class Context;
 
-    Surface(unsigned int _width, unsigned int _height)
-      : texture(_width, _height),
-      width(_width),
-      height(_height) { }
-
+    Surface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height)
+      : texture(_logical_width, _logical_height, _actual_width, _actual_height),
+      logical_width(_logical_width),
+      logical_height(_logical_height),
+      actual_width(_actual_width),
+      actual_height(_actual_height) { }
+    Surface(const Surface & other) = delete;
+    Surface & operator=(const Surface & other) = delete;
     virtual ~Surface() {
       delete[] scaled_buffer;
     }
 
-    virtual void resize(unsigned int _width, unsigned int _height) {
-      texture.setWidth(_width);
-      texture.setHeight(_height);
-      width = _width;
-      height = _height;
+    virtual void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height) {
+      texture.setLogicalWidth(_logical_width);
+      texture.setLogicalHeight(_logical_height);
+      texture.setActualWidth(_logical_width);
+      texture.setActualHeight(_logical_height);
+      logical_width = _logical_width;
+      logical_height = _logical_height;
+      actual_width = _actual_width;
+      actual_height = _actual_height;
     }
 
     virtual void flush() { }
@@ -61,8 +68,10 @@ namespace canvas {
 
     std::shared_ptr<Image> createImage(unsigned int required_width = 0, unsigned int required_height = 0);
 
-    unsigned int getWidth() const { return width; }
-    unsigned int getHeight() const { return height; }
+    unsigned int getLogicalWidth() const { return logical_width; }
+    unsigned int getLogicalHeight() const { return logical_height; }
+    unsigned int getActualWidth() const { return actual_width; }
+    unsigned int getActualHeight() const { return actual_height; }
 
     void setMagFilter(FilterMode mode) { mag_filter = mode; }
     void setMinFilter(FilterMode mode) { min_filter = mode; }
@@ -80,12 +89,7 @@ namespace canvas {
     TextureRef texture;
 
   private:
-    Surface(const Surface & other) { }
-    Surface & operator=(const Surface & other) {
-      return *this;
-    }
-
-    unsigned int width, height;
+    unsigned int logical_width, logical_height, actual_width, actual_height;
     FilterMode mag_filter = LINEAR;
     FilterMode min_filter = LINEAR;
     unsigned int * scaled_buffer = 0;

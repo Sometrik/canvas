@@ -45,7 +45,7 @@ Surface::gaussianBlur(float hradius, float vradius, float alpha) {
   unsigned char * buffer = (unsigned char *)lockMemory(true);
   assert(buffer);
 
-  unsigned char * tmp = new unsigned char[width * height * 4];
+  unsigned char * tmp = new unsigned char[actual_width * actual_height * 4];
   if (hradius > 0.0f) {
     vector<int> hkernel = make_kernel(hradius);
     unsigned short hsize = hkernel.size();
@@ -54,18 +54,18 @@ Surface::gaussianBlur(float hradius, float vradius, float alpha) {
       htotal += *it;
     }
     htotal = int(htotal / alpha);
-    memset(tmp, 0, width * height * 4);
-    for (unsigned int row = 0; row < height; row++) {
-      for (unsigned int col = 0; col + hsize < width; col++) {
+    memset(tmp, 0, actual_width * actual_height * 4);
+    for (unsigned int row = 0; row < actual_height; row++) {
+      for (unsigned int col = 0; col + hsize < actual_width; col++) {
 	int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
 	for (unsigned int i = 0; i < hsize; i++) {
-	  unsigned char * ptr = buffer + (row * width + col + i) * 4;
+	  unsigned char * ptr = buffer + (row * actual_width + col + i) * 4;
 	  c0 += *ptr++ * hkernel[i];
 	  c1 += *ptr++ * hkernel[i];
 	  c2 += *ptr++ * hkernel[i];
 	  c3 += *ptr++ * hkernel[i];
 	}
-	unsigned char * ptr = tmp + (row * width + col + hsize / 2) * 4;
+	unsigned char * ptr = tmp + (row * actual_width + col + hsize / 2) * 4;
 	*ptr++ = (unsigned char)(c0 / htotal);
 	*ptr++ = (unsigned char)(c1 / htotal);
 	*ptr++ = (unsigned char)(c2 / htotal);
@@ -73,7 +73,7 @@ Surface::gaussianBlur(float hradius, float vradius, float alpha) {
       }
     }
   } else {
-    memcpy(tmp, buffer, width * height * 4);    
+    memcpy(tmp, buffer, actual_width * actual_height * 4);
   }
   if (vradius > 0) {
     vector<int> vkernel = make_kernel(vradius);
@@ -84,18 +84,18 @@ Surface::gaussianBlur(float hradius, float vradius, float alpha) {
     }
     vtotal = int(vtotal / alpha);
 
-    memset(buffer, 0, width * height * 4);
-    for (unsigned int col = 0; col < width; col++) {
-      for (unsigned int row = 0; row + vsize < height; row++) {
+    memset(buffer, 0, actual_width * actual_height * 4);
+    for (unsigned int col = 0; col < actual_width; col++) {
+      for (unsigned int row = 0; row + vsize < actual_height; row++) {
 	int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
 	for (unsigned int i = 0; i < vsize; i++) {
-	  unsigned char * ptr = tmp + ((row + i) * width + col) * 4;
+	  unsigned char * ptr = tmp + ((row + i) * actual_width + col) * 4;
 	  c0 += *ptr++ * vkernel[i];
 	  c1 += *ptr++ * vkernel[i];
 	  c2 += *ptr++ * vkernel[i];
 	  c3 += *ptr++ * vkernel[i];
 	}
-	unsigned char * ptr = buffer + ((row + vsize / 2) * width + col) * 4;
+	unsigned char * ptr = buffer + ((row + vsize / 2) * actual_width + col) * 4;
 	*ptr++ = (unsigned char)(c0 / vtotal);
 	*ptr++ = (unsigned char)(c1 / vtotal);
 	*ptr++ = (unsigned char)(c2 / vtotal);
@@ -103,7 +103,7 @@ Surface::gaussianBlur(float hradius, float vradius, float alpha) {
       }
     }
   } else {
-    memcpy(buffer, tmp, width * height * 4);    
+    memcpy(buffer, tmp, actual_width * actual_height * 4);
   }
   delete[] tmp;
 
@@ -125,7 +125,7 @@ Surface::colorFill(const Color & color) {
   unsigned int green = toByte(color.green * color.alpha);
   unsigned int blue = toByte(color.blue * color.alpha);
   unsigned int alpha = toByte(color.alpha);
-  for (unsigned int i = 0; i < width * height; i++) {
+  for (unsigned int i = 0; i < actual_width * actual_height; i++) {
     unsigned char * ptr = buffer + (i * 4);
     unsigned int dest_alpha = ptr[3];
     *ptr++ = (unsigned char)(dest_alpha * red / 255);
@@ -144,7 +144,7 @@ Surface::multiply(const Color & color) {
   unsigned int green = toByte(color.green);
   unsigned int blue = toByte(color.blue);
   unsigned int alpha = toByte(color.alpha);
-  for (unsigned int i = 0; i < width * height; i++) {
+  for (unsigned int i = 0; i < actual_width * actual_height; i++) {
     unsigned char * ptr = buffer + (i * 4);
     ptr[0] = (unsigned char)(ptr[0] * red / 255);
     ptr[1] = (unsigned char)(ptr[1] * green / 255);
@@ -157,7 +157,7 @@ Surface::multiply(const Color & color) {
 const TextureRef &
 Surface::updateTexture() {
   if (!texture.isDefined()) {
-    texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
+    texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter);
   }
 
   void * buffer = lockMemory();
@@ -171,7 +171,7 @@ Surface::updateTexture() {
 const TextureRef &
 Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int subwidth, unsigned int subheight) {
   if (!texture.isDefined()) {
-    texture = OpenGLTexture::createTexture(getWidth(), getHeight(), min_filter, mag_filter);
+    texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter);
   }
 
   void * buffer = lockMemoryPartial(x0, y0, subwidth, subheight);
@@ -186,7 +186,7 @@ std::shared_ptr<Image>
 Surface::createImage(unsigned int required_width, unsigned int required_height) {
   unsigned char * buffer = (unsigned char *)lockMemory(false, required_width, required_height);
   assert(buffer);
-  shared_ptr<Image> image(new Image(required_width ? required_width : getWidth(), required_height ? required_height : getHeight(), buffer, true));
+  shared_ptr<Image> image(new Image(required_width ? required_width : getActualWidth(), required_height ? required_height : getActualHeight(), buffer, true));
   releaseMemory();
   
   return image;
@@ -203,7 +203,7 @@ Surface::lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int requir
   unsigned int offset = 0;
   for (unsigned int y = y0; y < y0 + required_height; y++) {
     for (unsigned int x = x0; x < x0 + required_width; x++) {
-      scaled_buffer[offset++] = buffer[y * width + x];
+      scaled_buffer[offset++] = buffer[y * actual_width + x];
     }
   }
 
