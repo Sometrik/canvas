@@ -12,7 +12,8 @@ namespace canvas {
     friend class ContextQuartz2D;
         
   Quartz2DSurface(unsigned int _width, unsigned int _height, bool has_alpha = true) :
-    Surface(_width, _height) {
+    Surface(_width, _height),
+      is_screen(false) {
       colorspace = CGColorSpaceCreateDeviceRGB();
 
       unsigned int bitmapBytesPerRow = _width * 4; // (has_alpha ? 4 : 3);
@@ -32,13 +33,13 @@ namespace canvas {
   
   Quartz2DSurface(unsigned int _width, unsigned int _height, CGContextRef  _gc, bool _is_screen) :
     Surface(_width, _height),
-      bitmapData(0)
+      bitmapData(0),
+      is_screen(_is_screen)
 	{
       colorspace = CGColorSpaceCreateDeviceRGB();
        gc = _gc;
-       is_screen = _is_screen;
     }
-    Quartz2DSurface(const Image & image) : Surface(image.getWidth(), image.getHeight()) {
+  Quartz2DSurface(const Image & image) : Surface(image.getWidth(), image.getHeight()), is_screen(false) {
         colorspace = CGColorSpaceCreateDeviceRGB();
 
 	bool has_alpha = image.hasAlpha();
@@ -127,7 +128,7 @@ namespace canvas {
 							 0.0,  0.0 );
 	CGContextSetTextMatrix(gc, xform);
 	CGContextSetTextDrawingMode(gc, kCGTextStroke);
-	CGContextShowTextAtPoint(gc, (int)x, (int)y, text.c_str(), text.size());
+	CGContextShowTextAtPoint(gc, (int)(x * display_scale), (int)(y * display_scale), text.c_str(), text.size());
       }
       
       void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float display_scale) {
@@ -143,7 +144,7 @@ namespace canvas {
 							 0.0,  0.0 );
 	CGContextSetTextMatrix(gc, xform);
 	CGContextSetTextDrawingMode(gc, kCGTextFill);
-	CGContextShowTextAtPoint(gc, (int)x, (int)y, text.c_str(), text.size());
+	CGContextShowTextAtPoint(gc, (int)(x * display_scale), (int)(y * display_scale), text.c_str(), text.size());
 #else
       // Prepare font
       CTFontRef font = CTFontCreateWithName(CFSTR("Times"), 20, NULL);
@@ -234,7 +235,7 @@ namespace canvas {
       CGContextShowTextAtPoint(default_surface.gc, initPos.x, initPos.y, text.c_str(), text.size());
       // CGContextShowText (default_surface.gc, text.c_str(), text.size());
       CGPoint finalPos = CGContextGetTextPosition(default_surface.gc);
-      return TextMetrics(finalPos.x - initPos.x, font.size * getDisplayScale());
+      return TextMetrics((finalPos.x - initPos.x) / getDisplayScale(), font.size);
     }        
 
   private:
@@ -267,9 +268,7 @@ namespace canvas {
     }
   private:
     std::shared_ptr<FilenameConverter> converter;
-
   };
-
 };
 
 #endif
