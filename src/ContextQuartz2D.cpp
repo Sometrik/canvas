@@ -5,7 +5,7 @@
 using namespace canvas;
 using namespace std;
 
-Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0), is_screen(false) {
+Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0, 0, 0), is_screen(false) {
   cerr << "trying to load file " << filename << endl;
   CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
   CGImageRef img;
@@ -21,34 +21,34 @@ Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0), 
   CGDataProviderRelease(provider);
   colorspace = CGColorSpaceCreateDeviceRGB();
   if (img) {
-    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img));
+    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img));
   
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
-    unsigned int bitmapBytesPerRow = getWidth() * 4; // (has_alpha ? 4 : 3);
-    unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
+    unsigned int bitmapBytesPerRow = getActualWidth() * 4;
+    unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   
     gc = CGBitmapContextCreate(bitmapData,
-                               getWidth(),
-                               getHeight(),
+                               getActualWidth(),
+                               getActualHeight(),
                                8,
                                bitmapBytesPerRow,
                                colorspace,
                                (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
     initialize();
-    CGContextDrawImage(gc, CGRectMake(0, 0, getWidth(), getHeight()), img);
+    CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
     CGImageRelease(img);
   } else {
-    resize(16, 16);
-    unsigned int bitmapBytesPerRow = getWidth() * 4;
-    unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
+    resize(16, 16, 16, 16);
+    unsigned int bitmapBytesPerRow = getActualWidth() * 4;
+    unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
     
     gc = CGBitmapContextCreate(bitmapData,
-                               getWidth(),
-                               getHeight(),
+                               getActualWidth(),
+                               getActualHeight(),
                                8,
                                bitmapBytesPerRow,
                                colorspace,
@@ -57,7 +57,7 @@ Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0), 
   }
 }
 
-Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Surface(0, 0), is_screen(false) {
+Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0), is_screen(false) {
   CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
   CGImageRef img;
   if (isPNG(buffer, size)) {
@@ -71,34 +71,34 @@ Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Su
   CGDataProviderRelease(provider);
   colorspace = CGColorSpaceCreateDeviceRGB();
   if (img) {
-    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img));
+    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img));
   
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
-    unsigned int bitmapBytesPerRow = getWidth() * 4; // (has_alpha ? 4 : 3);
-    unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
+    unsigned int bitmapBytesPerRow = getActualWidth() * 4;
+    unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   
     gc = CGBitmapContextCreate(bitmapData,
-                               getWidth(),
-                               getHeight(),
+                               getActualWidth(),
+                               getActualHeight(),
                                8,
                                bitmapBytesPerRow,
                                colorspace,
                                (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
     initialize();
-    CGContextDrawImage(gc, CGRectMake(0, 0, getWidth(), getHeight()), img);
+    CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
     CGImageRelease(img);
   } else {
-    Surface::resize(16, 16);
-    unsigned int bitmapBytesPerRow = getWidth() * 4;
-    unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
+    Surface::resize(16, 16, 16, 16);
+    unsigned int bitmapBytesPerRow = getActualWidth() * 4;
+    unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
     
     gc = CGBitmapContextCreate(bitmapData,
-                               getWidth(),
-                               getHeight(),
+                               getActualWidth(),
+                               getActualHeight(),
                                8,
                                bitmapBytesPerRow,
                                colorspace,
@@ -109,12 +109,13 @@ Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Su
 
 void
 Quartz2DSurface::sendPath(const Path & path) {
+  float scale = path.getDisplayScale();
   CGContextBeginPath(gc);
   for (auto pc : path.getData()) {
     switch (pc.type) {
-    case PathComponent::MOVE_TO: CGContextMoveToPoint(gc, pc.x0, pc.y0); break;
-    case PathComponent::LINE_TO: CGContextAddLineToPoint(gc, pc.x0, pc.y0); break;
-    case PathComponent::ARC: CGContextAddArc(gc, pc.x0, pc.y0, pc.radius, pc.sa, pc.ea, pc.anticlockwise); break;
+    case PathComponent::MOVE_TO: CGContextMoveToPoint(gc, pc.x0 * scale, pc.y0 * scale); break;
+    case PathComponent::LINE_TO: CGContextAddLineToPoint(gc, pc.x0 * scale, pc.y0 * scale); break;
+    case PathComponent::ARC: CGContextAddArc(gc, pc.x0 * scale, pc.y0 * scale, pc.radius * scale, pc.sa, pc.ea, pc.anticlockwise); break;
     case PathComponent::CLOSE: CGContextClosePath(gc); break;
     }
   }

@@ -11,19 +11,21 @@ namespace canvas {
   public:
     friend class ContextQuartz2D;
         
-  Quartz2DSurface(unsigned int _width, unsigned int _height, bool has_alpha = true) :
-    Surface(_width, _height),
-      is_screen(false) {
+  Quartz2DSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool has_alpha = true)
+    : Surface(_logical_width, _logical_height, _actual_width, _actual_height), is_screen(false) {
       colorspace = CGColorSpaceCreateDeviceRGB();
 
-      unsigned int bitmapBytesPerRow = _width * 4; // (has_alpha ? 4 : 3);
-      unsigned int bitmapByteCount = bitmapBytesPerRow * _height;
+      assert(_logical_width && _logical_height);
+      assert(_actual_width && _actual_height);
+      
+      unsigned int bitmapBytesPerRow = _actual_width * 4;
+      unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
       bitmapData = new unsigned char[bitmapByteCount];
       memset(bitmapData, 0, bitmapByteCount);
       
       gc = CGBitmapContextCreate(bitmapData,
-				 _width,
-				 _height,
+				 _actual_width,
+				 _actual_height,
 				 8,
 				 bitmapBytesPerRow,
 				 colorspace,
@@ -32,25 +34,25 @@ namespace canvas {
     }
   
   Quartz2DSurface(unsigned int _width, unsigned int _height, CGContextRef  _gc, bool _is_screen) :
-    Surface(_width, _height),
+    Surface(_width, _height, _width, _height),
       bitmapData(0),
       is_screen(_is_screen)
 	{
       colorspace = CGColorSpaceCreateDeviceRGB();
        gc = _gc;
     }
-  Quartz2DSurface(const Image & image) : Surface(image.getWidth(), image.getHeight()), is_screen(false) {
+  Quartz2DSurface(const Image & image) : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight()), is_screen(false) {
         colorspace = CGColorSpaceCreateDeviceRGB();
 
 	bool has_alpha = image.hasAlpha();
-	unsigned int bitmapBytesPerRow = getWidth() * 4;
-        unsigned int bitmapByteCount = bitmapBytesPerRow * getHeight();
+	unsigned int bitmapBytesPerRow = getActualWidth() * 4;
+        unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
         bitmapData = new unsigned char[bitmapByteCount];
         memcpy(bitmapData, image.getData(), bitmapByteCount);
         
         gc = CGBitmapContextCreate(bitmapData,
-                                   getWidth(),
-                                   getHeight(),
+                                   getActualWidth(),
+                                   getActualHeight(),
                                    8,
                                    bitmapBytesPerRow,
                                    colorspace,
@@ -65,7 +67,7 @@ namespace canvas {
       assert(gc);
       CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
       CGContextSetShouldAntialias(gc, true);
-      CGContextTranslateCTM(gc, 0, getHeight());
+      CGContextTranslateCTM(gc, 0, getActualHeight());
       CGContextScaleCTM(gc, 1.0, -1.0);
     }
       
@@ -99,19 +101,19 @@ namespace canvas {
           return new Quartz2DSurface(*img);
       }
 
-    void resize(unsigned int _width, unsigned int _height) {
-      Surface::resize(_width, _height);
+    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height) {
+      Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height);
 
       CGContextRelease(gc);
       delete[] bitmapData;
 
       bool has_alpha = true;
-      unsigned int bitmapBytesPerRow = _width * 4;
-      unsigned int bitmapByteCount = bitmapBytesPerRow * _height;
+      unsigned int bitmapBytesPerRow = _actual_width * 4;
+      unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
       bitmapData = new unsigned char[bitmapByteCount];
       memset(bitmapData, 0, bitmapByteCount);
       
-      gc = CGBitmapContextCreate(bitmapData, _width, _height, 8, bitmapBytesPerRow, colorspace,
+      gc = CGBitmapContextCreate(bitmapData, _actual_width, _actual_height, 8, bitmapBytesPerRow, colorspace,
                                  (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast));
       initialize();
     }
@@ -203,12 +205,12 @@ namespace canvas {
     // get context with UIGraphicsGetCurrentContext();
   ContextQuartz2D(unsigned int _width, unsigned int _height, CGContextRef _gc, bool is_screen, float _display_scale)
     : Context(_width, _height, _display_scale),
-      default_surface(_width, _height, _gc, is_screen)  {
+      default_surface((unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), _gc, is_screen)  {
           setgc(_gc);
     }
   ContextQuartz2D(unsigned int _width, unsigned int _height, float _display_scale)
     : Context(_width, _height, _display_scale),
-      default_surface(_width, _height)
+      default_surface(_width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale))
       {
       }
 
@@ -216,7 +218,7 @@ namespace canvas {
         return std::shared_ptr<Surface>(new Quartz2DSurface(image));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
-      return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height));
+      return std::shared_ptr<Surface>(new Quartz2DSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale())));
     }
       std::shared_ptr<Surface> createSurface(const std::string & filename) {
           return std::shared_ptr<Surface>(new Quartz2DSurface(filename));
@@ -259,7 +261,7 @@ namespace canvas {
       }
     }
     std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const {
-      std::shared_ptr<Surface> ptr(new Quartz2DSurface(width, height, false));
+      std::shared_ptr<Surface> ptr(new Quartz2DSurface(width, height, (unsigned int)(width * getDisplayScale()), (unsigned int)(height * getDisplayScale()), false));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) const {
