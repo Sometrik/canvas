@@ -53,7 +53,7 @@ static GLenum getOpenGLFilterType(FilterMode mode) {
 
 void
 OpenGLTexture::updateData(const void * buffer) {
-  updateData(buffer, 0, 0, getWidth(), getHeight());
+  updateData(buffer, 0, 0, getActualWidth(), getActualHeight());
 }
 
 void
@@ -74,12 +74,12 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
   
   if (initialize) {
     // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-    glTexStorage2D(GL_TEXTURE_2D, getMipmapLevels(), GL_RGBA8, getWidth(), getHeight());
+    glTexStorage2D(GL_TEXTURE_2D, getMipmapLevels(), GL_RGBA8, getActualWidth(), getActualHeight());
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()) );
-    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()) );
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()));
   }
 
 #ifdef __APPLE__
@@ -106,6 +106,6 @@ OpenGLTexture::releaseTextures() {
 }
 
 TextureRef
-OpenGLTexture::createTexture(unsigned int width, unsigned int height, FilterMode min_filter, FilterMode mag_filter, unsigned int mipmap_levels) {
-  return TextureRef(width, height, new OpenGLTexture(width, height, min_filter, mag_filter, mipmap_levels));  
+OpenGLTexture::createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, unsigned int mipmap_levels) {
+  return TextureRef(_logical_width, _logical_height, _actual_width, _actual_height, new OpenGLTexture(_logical_width, _logical_height, _actual_width, _actual_height, min_filter, mag_filter, mipmap_levels));
 }

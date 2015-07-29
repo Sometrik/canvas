@@ -25,7 +25,7 @@ namespace canvas {
   
   class Path {
   public:
-  Path() : current_point(0, 0) { }
+    Path(float _display_scale) : display_scale(_display_scale), current_point(0, 0) { }
     
     void moveTo(double x, double y) {
       data.push_back(PathComponent(PathComponent::MOVE_TO, x, y));
@@ -59,8 +59,11 @@ namespace canvas {
 	pc.y0 += dy;
       }
     }
+
+    float getDisplayScale() const { return display_scale; }
     
   private:
+    float display_scale;
     std::vector<PathComponent> data;
     Point current_point;
   };
