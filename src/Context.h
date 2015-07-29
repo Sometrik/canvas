@@ -13,14 +13,18 @@ namespace canvas {
   class SavedContext {
   public:
     friend class Context;
+    SavedContext() : current_path(1.0) { }
   private:
-    float globalAlpha;
+    float globalAlpha = 0;
     Path current_path;
   };
+  
   class Context {
   public:
     Context(unsigned int _width, unsigned int _height, float _display_scale = 1.0f)
-      : width(_width), height(_height), display_scale(_display_scale) { }
+      : width(_width), height(_height), display_scale(_display_scale), current_path(_display_scale) { }
+    Context(const Context & other) = delete;
+    Context & operator=(const Context & other) = delete;
     virtual ~Context() { }
 
     virtual std::shared_ptr<Surface> createSurface(const Image & image) = 0;
@@ -104,9 +108,6 @@ namespace canvas {
     Path current_path;
 
   private:
-    Context(const Context & other) { }
-    Context & operator=(const Context & other) { return *this; }
-
     unsigned int width, height;
     Style current_linear_gradient;
     std::vector<SavedContext> restore_stack;
