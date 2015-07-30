@@ -16,6 +16,11 @@ namespace canvas {
   class Context;
   class Image;
 
+  enum RenderMode {
+    FILL = 1,
+    STROKE
+  };
+
   class Surface {
   public:
     friend class Context;
@@ -47,7 +52,7 @@ namespace canvas {
     virtual void markDirty() { }
 
     virtual Surface * copy() = 0;
-    virtual void * lockMemory(bool write_access = false, unsigned int scaled_width = 0, unsigned int scaled_height = 0) = 0;
+    virtual void * lockMemory(bool write_access = false) = 0;
     virtual void * lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height);
     virtual void releaseMemory() {
       delete[] scaled_buffer;
@@ -55,9 +60,12 @@ namespace canvas {
     }
 
     virtual void clip(const Path & path) = 0;
-    virtual void stroke(const Path & path, const Style & style, double lineWidth) = 0;
-    virtual void fill(const Path & path, const Style & style) = 0;
-    
+    virtual void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth) = 0;
+    virtual void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) = 0;
+    virtual void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) = 0;
+    virtual void save() = 0;
+    virtual void restore() = 0;
+
     void colorFill(const Color & color);
     void gaussianBlur(float hradius, float vradius, float alpha = 1.0f);
     void multiply(const Color & color);
@@ -66,7 +74,7 @@ namespace canvas {
     const TextureRef & updateTexture();
     const TextureRef & updateTexture(unsigned int x, unsigned int y, unsigned int width, unsigned int height);
 
-    std::shared_ptr<Image> createImage(unsigned int required_width = 0, unsigned int required_height = 0);
+    std::shared_ptr<Image> createImage();
 
     unsigned int getLogicalWidth() const { return logical_width; }
     unsigned int getLogicalHeight() const { return logical_height; }
@@ -75,13 +83,7 @@ namespace canvas {
 
     void setMagFilter(FilterMode mode) { mag_filter = mode; }
     void setMinFilter(FilterMode mode) { min_filter = mode; }
-  
-    virtual void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float display_scale) = 0;
-    virtual void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float display_scale) = 0;
-    virtual void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) = 0;
-    virtual void save() = 0;
-    virtual void restore() = 0;
-    
+      
   protected:
     static bool isPNG(const unsigned char * buffer, size_t size);
     static bool isJPEG(const unsigned char * buffer, size_t size);
