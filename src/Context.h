@@ -21,8 +21,8 @@ namespace canvas {
   
   class Context {
   public:
-    Context(unsigned int _width, unsigned int _height, float _display_scale = 1.0f)
-      : current_path(_display_scale), width(_width), height(_height), display_scale(_display_scale) { }
+    Context(float _display_scale = 1.0f)
+      : current_path(_display_scale), display_scale(_display_scale) { }
     Context(const Context & other) = delete;
     Context & operator=(const Context & other) = delete;
     virtual ~Context() { }
@@ -64,19 +64,21 @@ namespace canvas {
     virtual Surface & getDefaultSurface() = 0;
     virtual const Surface & getDefaultSurface() const = 0;
 
-    unsigned int getWidth() const { return width; }
-    unsigned int getHeight() const { return height; }
+    unsigned int getWidth() const { return getDefaultSurface().getLogicalWidth(); }
+    unsigned int getHeight() const { return getDefaultSurface().getLogicalHeight(); }
+    unsigned int getActualWidth() const { return getDefaultSurface().getActualWidth(); }
+    unsigned int getActualHeight() const { return getDefaultSurface().getActualHeight(); }
 
     void drawImage(Context & other, double x, double y, double w, double h) {
       drawImage(other.getDefaultSurface(), x, y, w, h);
     }
-    void drawImage(const Image & img, double x, double y, double w, double h) {
+    virtual void drawImage(const Image & img, double x, double y, double w, double h) {
       if (img.getData()) {
 	auto surface = createSurface(img);
 	drawImage(*surface, x, y, w, h);
       }
     }
-    void drawImage(Surface & img, double x, double y, double w, double h);
+    virtual void drawImage(Surface & img, double x, double y, double w, double h);
         
     Style & createLinearGradient(double x0, double y0, double x1, double y1) {
       current_linear_gradient.setType(Style::LINEAR_GRADIENT);
@@ -95,7 +97,7 @@ namespace canvas {
     float lineWidth = 1.0f;
     Style fillStyle;
     Style strokeStyle;
-    float shadowBlur = 0.0f, shadowBlurX = 0.0f, shadowBlurY = 0.0f;   
+    float shadowBlur = 0.0f;
     Color shadowColor;
     float shadowOffsetX = 0.0f, shadowOffsetY = 0.0f;
     float globalAlpha = 1.0f;
@@ -105,16 +107,16 @@ namespace canvas {
     bool imageSmoothingEnabled = true;
     
   protected:
-    void renderPath(RenderMode mode, const Style & style);
-    void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y);
+    virtual void renderPath(RenderMode mode, const Style & style);
+    virtual void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y);
 
-    bool hasShadow() const { return shadowBlur > 0 || shadowBlurX > 0 || shadowBlurY > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
+    bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
     float getDisplayScale() const { return display_scale; }
     
     Path current_path;
 
   private:
-    unsigned int width, height;
+    // unsigned int width, height;
     Style current_linear_gradient;
     std::vector<SavedContext> restore_stack;
     float display_scale;
@@ -136,7 +138,7 @@ namespace canvas {
   public:
     ContextFactory(float _display_scale = 1.0f) : display_scale(_display_scale) { }
     virtual ~ContextFactory() { }
-    virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const = 0;
+    virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling = true) const = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) const = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const = 0;
     virtual std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) const = 0;
