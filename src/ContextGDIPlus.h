@@ -81,7 +81,7 @@ namespace canvas {
     void flush() { }
     void markDirty() { }
 
-    void * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
+    void * lockMemory(bool write_access = false) {
       flush();
       Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
       bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), PixelFormat32bppPARGB, &data);
@@ -103,16 +103,11 @@ namespace canvas {
       markDirty();
     }
 
-    void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y);
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale);
+    void renderPath(RenderMode mode, const Path & path, const Style & style, double lineWidth);
     
-    void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
-      
-    }  
-
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void clip(const Path & path);
-    void stroke(const Path & path, const Style & style, double lineWidth);
-    void fill(const Path & path, const Style & style);
     void save() {
       save_stack.push_back(g->Save());
     }
@@ -142,10 +137,6 @@ namespace canvas {
 	default_surface(_width, _height)
     {
     
-    }
-
-    ~ContextGDIPlus() {
-      
     }
 
     static void initialize() {

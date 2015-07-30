@@ -119,34 +119,35 @@ GDIPlusSurface::GDIPlusSurface(const std::string & filename) : Surface(0, 0) {
 }
 
 void
-GDIPlusSurface::fill(const Path & input_path, const Style & style) {
+GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style & style, float lineWidth) {
   Gdiplus::GraphicsPath path;
   toGDIPath(input_path, path);
- 
-  if (style.getType() == Style::LINEAR_GRADIENT) {
-    const std::map<float, Color> & colors = style.getColors();
-    if (!colors.empty()) {
-      std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
-      it1--;
-      const Color & c0 = it0->second, c1 = it1->second;
-      Gdiplus::LinearGradientBrush brush(Gdiplus::PointF(Gdiplus::REAL(style.x0), Gdiplus::REAL(style.y0)),
-					 Gdiplus::PointF(Gdiplus::REAL(style.x1), Gdiplus::REAL(style.y1)),
-					 toGDIColor(c0),
-					 toGDIColor(c1));
+
+  switch (mode) {
+  case STROKE:
+    {
+      Gdiplus::Pen pen(toGDIColor(style.color), lineWidth);
+      g->DrawPath(&pen, &path);
+    }
+    break;
+  case FILL:
+    if (style.getType() == Style::LINEAR_GRADIENT) {
+      const std::map<float, Color> & colors = style.getColors();
+      if (!colors.empty()) {
+	std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
+	it1--;
+	const Color & c0 = it0->second, c1 = it1->second;
+	Gdiplus::LinearGradientBrush brush(Gdiplus::PointF(Gdiplus::REAL(style.x0), Gdiplus::REAL(style.y0)),
+					   Gdiplus::PointF(Gdiplus::REAL(style.x1), Gdiplus::REAL(style.y1)),
+					   toGDIColor(c0),
+					   toGDIColor(c1));
+	g->FillPath(&brush, &path);
+      }
+    } else {
+      Gdiplus::SolidBrush brush(toGDIColor(style.color));
       g->FillPath(&brush, &path);
     }
-  } else {
-    Gdiplus::SolidBrush brush(toGDIColor(style.color));
-    g->FillPath(&brush, &path);
   }
-}
-
-void
-GDIPlusSurface::stroke(const Path & input_path, const Style & style, double lineWidth) {
-  Gdiplus::GraphicsPath path;
-  toGDIPath(input_path, path);
-  Gdiplus::Pen pen(toGDIColor(style.color), lineWidth);
-  g->DrawPath(&pen, &path);
 }
 
 void
@@ -207,7 +208,7 @@ GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h
 }
 
 void
-GDIPlusSurface::fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) {
+GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) {
   std::wstring text2 = convert_to_wstring(text);
   int style_bits = 0;
   if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {
@@ -217,7 +218,6 @@ GDIPlusSurface::fillText(const Font & font, const Style & style, TextBaseline te
     style_bits |= Gdiplus::FontStyleItalic;
   }
   Gdiplus::Font gdifont(&Gdiplus::FontFamily(L"Arial"), font.size, style_bits, Gdiplus::UnitPixel);
-  Gdiplus::SolidBrush brush(toGDIColor(style.color));
 
   Gdiplus::RectF rect(Gdiplus::REAL(x), Gdiplus::REAL(y), 0.0f, 0.0f);
   Gdiplus::StringFormat f;
@@ -235,7 +235,17 @@ GDIPlusSurface::fillText(const Font & font, const Style & style, TextBaseline te
   case TextAlign::START: case TextAlign::LEFT: f.SetAlignment(Gdiplus::StringAlignmentNear); break;
   }
 
-  g->DrawString(text2.data(), text2.size(), &gdifont, rect, &f, &brush);
+  switch (mode) {
+  case STROKE:
+    // implement
+    break;
+  case FILL:
+    {
+      Gdiplus::SolidBrush brush(toGDIColor(style.color));
+      g->DrawString(text2.data(), text2.size(), &gdifont, rect, &f, &brush);
+    }
+    break;
+  }
 }
 
 TextMetrics
