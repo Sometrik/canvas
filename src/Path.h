@@ -61,6 +61,22 @@ namespace canvas {
     }
 
     float getDisplayScale() const { return display_scale; }
+
+    void getExtents(double & min_x, double & min_y, double & max_x, double & max_y) const {
+      if (data.empty()) {
+	min_x = min_y = max_x = max_y = 0;
+      } else {
+	auto it = data.begin();
+	min_x = max_x = it->x0;
+	min_y = max_y = it->y0;
+	for (auto & pc : data) {
+	  if (pc.x0 < min_x) min_x = pc.x0;
+	  if (pc.y0 < min_y) min_y = pc.x0;
+	  if (pc.x0 < max_x) max_x = pc.y0;
+	  if (pc.y0 < max_y) max_y = pc.y0;
+	}
+      }
+    }
     
   private:
     float display_scale;
