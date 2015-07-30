@@ -3,15 +3,20 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 #include "Color.h"
+#include "Filter.h"
 
 namespace canvas {
   class Style {
   public:
     enum StyleType {
       SOLID = 1,
-      LINEAR_GRADIENT
+      LINEAR_GRADIENT,
+      RADIAL_GRADIENT,
+      PATTERN,
+      FILTER
     };
     Style() { }
     Style(const std::string & s);
@@ -43,6 +48,7 @@ namespace canvas {
   private:
     StyleType type = SOLID;
     std::map<float, Color> colors;
+    std::shared_ptr<Filter> filter;
   };
 };
 
