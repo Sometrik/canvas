@@ -78,29 +78,18 @@ namespace canvas {
       delete[] bitmapData;
     }
 
-    void * lockMemory(bool write_access = false) {
-      // this should not be done for other contexts
-#if 0
-      void * ptr = CGBitmapContextGetData(gc);
-      assert(ptr == bitmapData);
-      return ptr;
-#else
-      return bitmapData;
-#endif
-    }
+    void * lockMemory(bool write_access = false) { return bitmapData; }
     
-    void releaseMemory() {
-      
-    }
+    void releaseMemory() { }
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, double lineWidth);
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth) override;
       
       Quartz2DSurface * copy() {
           auto img = createImage();
           return new Quartz2DSurface(*img);
       }
 
-    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height) {
+    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height) override {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height);
 
       CGContextRelease(gc);
@@ -117,7 +106,7 @@ namespace canvas {
       initialize();
     }
       
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) {
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) override {
 	CGContextSelectFont(gc, "Arial", font.size * display_scale, kCGEncodingMacRoman);
 	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
 							 0.0, -1.0,
@@ -162,7 +151,7 @@ namespace canvas {
       // Draw the string
       CTLineRef line = CTLineCreateWithAttributedString(attrString);
       CGContextSetTextMatrix(context, CGAffineTransformIdentity);  // Use this one when using standard view coordinates
-      // CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0)); //Use this one if the view's coordinates are flipped
+      // CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0)); // Use this one if the view's coordinates are flipped
       
       CGContextSetTextPosition(context, x, y);
       CTLineDraw(line, context);
@@ -175,13 +164,20 @@ namespace canvas {
     }
 #endif
 
-      void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
-      assert(gc);
+    void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
       assert(img.gc);
       CGImageRef myImage = CGBitmapContextCreateImage(img.gc);
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), myImage);
       CGImageRelease(myImage);
+    }
+    void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
+      CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), 4 * _img.getWidth() * _img.getHeight(), 0);
+      CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, 32, 4 * _img.getWidth(), colorspace, (_img.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast),
+                                     provider, 0, true, kCGRenderingIntentDefault);
+      CGContextDrawImage(gc, CGRectMake(x, y, w, h), img);
+      CGDataProviderRelease(provider);
+      CGImageRelease(img);
     }
     void clip(const Path & path) {
       sendPath(path);
@@ -191,6 +187,7 @@ namespace canvas {
     void restore() { CGContextRestoreGState(gc); }
 
   protected:
+    void renderPath(RenderMode mode, const Style & style);
     void sendPath(const Path & path);
 
   private:
@@ -204,12 +201,12 @@ namespace canvas {
   public:
     // get context with UIGraphicsGetCurrentContext();
   ContextQuartz2D(unsigned int _width, unsigned int _height, CGContextRef _gc, bool is_screen, float _display_scale)
-    : Context(_width, _height, _display_scale),
+    : Context(_display_scale),
       default_surface((unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), _gc, is_screen)  {
           setgc(_gc);
     }
   ContextQuartz2D(unsigned int _width, unsigned int _height, float _display_scale)
-    : Context(_width, _height, _display_scale),
+    : Context(_display_scale),
       default_surface(_width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale))
       {
       }
@@ -240,6 +237,13 @@ namespace canvas {
       return TextMetrics((finalPos.x - initPos.x) / getDisplayScale(), font.size);
     }        
 
+    void drawImage(const Image & img, double x, double y, double w, double h) override;
+    void drawImage(Surface & img, double x, double y, double w, double h) override;
+    
+  protected:
+    void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y) override;
+    void renderPath(RenderMode mode, const Style & style) override;
+    
   private:
     Quartz2DSurface default_surface;
   };
@@ -247,8 +251,8 @@ namespace canvas {
   class Quartz2DContextFactory : public ContextFactory {
   public:
     Quartz2DContextFactory(float _display_scale, std::shared_ptr<FilenameConverter> & _converter) : ContextFactory(_display_scale), converter(_converter) { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const {
-      std::shared_ptr<Context> ptr(new ContextQuartz2D(width, height, getDisplayScale()));
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling = true) const {
+      std::shared_ptr<Context> ptr(new ContextQuartz2D(width, height, apply_scaling ? getDisplayScale() : 1.0f));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) const {
