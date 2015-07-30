@@ -12,9 +12,7 @@ using namespace canvas;
 
 void
 Context::resize(unsigned int _width, unsigned int _height) {
-  width = _width;
-  height = _height;
-  getDefaultSurface().resize(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()));
+   getDefaultSurface().resize(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()));
 }
 
 void
@@ -43,15 +41,15 @@ Context::strokeRect(double x, double y, double w, double h) {
 void
 Context::renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y) {  
   if (hasShadow()) {
-    float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
-    float bxs = bx * getDisplayScale(), bys = by * getDisplayScale();
-    auto shadow = createSurface(getDefaultSurface().getActualWidth() + 2 * int(ceil(bxs)), getDefaultSurface().getActualHeight() + 2 * int(ceil(bys)));
+    float b = shadowBlur, bs = shadowBlur * getDisplayScale();
+    int bi = int(ceil(b));
+    auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi);
     Style shadow_style = shadowColor;
     float shadow_alpha = shadowColor.alpha;
     shadow_style.color.alpha = 1.0f;
-    shadow->renderText(mode, font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bx, y + shadowOffsetY + by, lineWidth, getDisplayScale());
-    shadow->gaussianBlur(bxs, bys, shadow_alpha);
-    getDefaultSurface().drawImage(*shadow, -bxs, -bys, shadow->getActualWidth(), shadow->getActualHeight());
+    shadow->renderText(mode, font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bi, y + shadowOffsetY + bi, lineWidth, getDisplayScale());
+    shadow->gaussianBlur(bs, bs, shadow_alpha);
+    getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
   getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, getDisplayScale());
 }
@@ -59,17 +57,17 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
 void
 Context::renderPath(RenderMode mode, const Style & style) {
   if (hasShadow()) {
-    float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
-    float bxs = bx * getDisplayScale(), bys = by * getDisplayScale();
-    auto shadow = createSurface(getDefaultSurface().getActualWidth() + 2 * int(ceil(bxs)), getDefaultSurface().getActualHeight() + 2 * int(ceil(bys)));
+    float b = shadowBlur, bs = shadowBlur * getDisplayScale();
+    float bi = int(ceil(b));
+    auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi);
     Style shadow_style = shadowColor;
     Path tmp_path = current_path;
-    tmp_path.offset(shadowOffsetX + bx, shadowOffsetY + by);
+    tmp_path.offset(shadowOffsetX + bi, shadowOffsetY + bi);
     
     shadow->renderPath(mode, tmp_path, shadow_style, getDisplayScale() * lineWidth);
-    shadow->gaussianBlur(bxs, bys);
+    shadow->gaussianBlur(bs, bs);
     
-    getDefaultSurface().drawImage(*shadow, -bxs, -bys, shadow->getActualWidth(), shadow->getActualHeight());
+    getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
   getDefaultSurface().renderPath(mode, current_path, style, getDisplayScale() * lineWidth);
 }
@@ -77,15 +75,15 @@ Context::renderPath(RenderMode mode, const Style & style) {
 void
 Context::drawImage(Surface & img, double x, double y, double w, double h) {
   if (hasShadow()) {
-    float bx = shadowBlurX ? shadowBlurX : shadowBlur, by = shadowBlurY ? shadowBlurY : shadowBlur;
-    float bxs = bx * getDisplayScale(), bys = by * getDisplayScale();
-    auto shadow = createSurface(getDefaultSurface().getActualWidth() + 2 * int(ceil(bxs)), getDefaultSurface().getActualHeight() + 2 * int(ceil(bys)));
+    float b = shadowBlur, bs = shadowBlur * getDisplayScale();
+    float bi = int(ceil(b));
+    auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi);
     
-    shadow->drawImage(img, (x + bx + shadowOffsetX) * getDisplayScale(), (y + by + shadowOffsetY) * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
+    shadow->drawImage(img, (x + bi + shadowOffsetX) * getDisplayScale(), (y + bi + shadowOffsetY) * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
     shadow->colorFill(shadowColor);
-    shadow->gaussianBlur(bx, by);
+    shadow->gaussianBlur(bs, bs);
     
-    getDefaultSurface().drawImage(*shadow, -bxs, -bys, shadow->getActualWidth(), shadow->getActualHeight());
+    getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
   getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
 }
