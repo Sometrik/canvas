@@ -85,8 +85,8 @@ static inline float lerp(float t, float a, float b) {
 
 #endif
 
-PerlinSurface::PerlinSurface(unsigned int _width, unsigned int _height, int _octaves, float _alpha, float _beta)
-  : Surface(_width, _height), octaves(_octaves), alpha(_alpha), beta(_beta) 
+PerlinSurface::PerlinSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, int _octaves, float _alpha, float _beta)
+  : Surface(_logical_width, _logical_height, _actual_width, _actual_height), octaves(_octaves), alpha(_alpha), beta(_beta) 
 {  
   
 #ifndef FIXED_PERMUTATION

@@ -8,14 +8,13 @@
 namespace canvas {
   class PerlinSurface : public Surface {
   public:
-    PerlinSurface(unsigned int width, unsigned int height, int octaves = 1, float alpha = 2, float beta = 2);
+    PerlinSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, int octaves = 1, float alpha = 2, float beta = 2);
     ~PerlinSurface() {
       delete[] buffer;
     }
 
-    void * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
-      unsigned int w = required_width ? required_width : getWidth();
-      unsigned int h = required_height ? required_height : getHeight();
+    void * lockMemory(bool write_access = false) {
+      unsigned int w = getActualWidth(), h = getActualHeight();
       delete[] buffer;
       buffer = new unsigned char[w * h * 4];
       unsigned int offset = 0;
