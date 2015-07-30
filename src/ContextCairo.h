@@ -24,7 +24,7 @@ namespace canvas {
     
     void flush();
     void markDirty();
-    void * lockMemory(bool write_access = false, unsigned int required_width = 0, unsigned int required_height = 0) {
+    void * lockMemory(bool write_access = false) {
       flush();
       locked_for_write = write_access;
       return cairo_image_surface_get_data(surface);
@@ -36,21 +36,18 @@ namespace canvas {
 	markDirty();
       }
     }
-    void resize(unsigned int width, unsigned int height);
+    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height);
 
-    void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y);
-    void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y);
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth);
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale);
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void clip(const Path & path);
-    void stroke(const Path & path, const Style & style, double lineWidth);
-    void fill(const Path & path, const Style & style);
     void save();
     void restore();
     
   protected:
     void drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled);
 
-    void prepareTextStyle(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign);
     void sendPath(const Path & path);
 
   private:
@@ -63,7 +60,6 @@ namespace canvas {
   class ContextCairo : public Context {
   public:
     ContextCairo(unsigned int _width = 0, unsigned int _height = 0);
-    ~ContextCairo();
 
 #if 0
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) {
