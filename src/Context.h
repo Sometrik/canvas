@@ -9,7 +9,7 @@
 #include "Image.h"
 #include "TextMetrics.h"
 
-namespace canvas {  
+namespace canvas {
   class SavedContext {
   public:
     friend class Context;
@@ -22,7 +22,7 @@ namespace canvas {
   class Context {
   public:
     Context(unsigned int _width, unsigned int _height, float _display_scale = 1.0f)
-      : width(_width), height(_height), display_scale(_display_scale), current_path(_display_scale) { }
+      : current_path(_display_scale), width(_width), height(_height), display_scale(_display_scale) { }
     Context(const Context & other) = delete;
     Context & operator=(const Context & other) = delete;
     virtual ~Context() { }
@@ -47,8 +47,8 @@ namespace canvas {
       getDefaultSurface().clip(current_path);
       current_path.clear();
     }
-    void stroke();
-    void fill();
+    void stroke() { renderPath(STROKE, strokeStyle); }
+    void fill() { renderPath(FILL, fillStyle); }
 
     void save();
     void restore();
@@ -58,8 +58,8 @@ namespace canvas {
     void rect(double x, double y, double w, double h);
     void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
-    void fillText(const std::string & text, double x, double y);
-    void strokeText(const std::string & text, double x, double y);
+    void fillText(const std::string & text, double x, double y) { renderText(FILL, fillStyle, text, x, y); }
+    void strokeText(const std::string & text, double x, double y) { renderText(STROKE, strokeStyle, text, x, y); }
     
     virtual Surface & getDefaultSurface() = 0;
     virtual const Surface & getDefaultSurface() const = 0;
@@ -82,9 +82,12 @@ namespace canvas {
       current_linear_gradient.setType(Style::LINEAR_GRADIENT);
       current_linear_gradient.setVector(x0, y0, x1, y1);
       return current_linear_gradient;
-    }    
+    }
 
 #if 0
+    Style & createPattern(const Image & image, const char * repeat) {
+      
+    }
     Style & createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1) {
      }
 #endif
@@ -102,6 +105,9 @@ namespace canvas {
     bool imageSmoothingEnabled = true;
     
   protected:
+    void renderPath(RenderMode mode, const Style & style);
+    void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y);
+
     bool hasShadow() const { return shadowBlur > 0 || shadowBlurX > 0 || shadowBlurY > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
     float getDisplayScale() const { return display_scale; }
     
