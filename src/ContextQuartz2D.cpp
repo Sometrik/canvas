@@ -113,62 +113,63 @@ Quartz2DSurface::sendPath(const Path & path) {
   CGContextBeginPath(gc);
   for (auto pc : path.getData()) {
     switch (pc.type) {
-    case PathComponent::MOVE_TO: CGContextMoveToPoint(gc, pc.x0 * scale, pc.y0 * scale); break;
-    case PathComponent::LINE_TO: CGContextAddLineToPoint(gc, pc.x0 * scale, pc.y0 * scale); break;
-    case PathComponent::ARC: CGContextAddArc(gc, pc.x0 * scale, pc.y0 * scale, pc.radius * scale, pc.sa, pc.ea, pc.anticlockwise); break;
+    case PathComponent::MOVE_TO: CGContextMoveToPoint(gc, pc.x0 * scale + 0.5, pc.y0 * scale + 0.5); break;
+    case PathComponent::LINE_TO: CGContextAddLineToPoint(gc, pc.x0 * scale + 0.5, pc.y0 * scale + 0.5); break;
+    case PathComponent::ARC: CGContextAddArc(gc, pc.x0 * scale + 0.5, pc.y0 * scale + 0.5, pc.radius * scale, pc.sa, pc.ea, pc.anticlockwise); break;
     case PathComponent::CLOSE: CGContextClosePath(gc); break;
     }
   }
 }
 
 void
-Quartz2DSurface::fill(const Path & path, const Style & style) {
-  if (style.getType() == Style::LINEAR_GRADIENT) {
-    const std::map<float, Color> & colors = style.getColors();
-    if (!colors.empty()) {
-      std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
-      it1--;
-      const Color & c0 = it0->second, c1 = it1->second;
-      
-      size_t num_locations = 2;
-      CGFloat locations[2] = { 0.0, 1.0 };
-      CGFloat components[8] = {
-        c0.red, c0.green, c0.blue, c0.alpha,
-        c1.red, c1.green, c1.blue, c1.alpha
-      };
-      
-      CGGradientRef myGradient = CGGradientCreateWithColorComponents(colorspace, components, locations, num_locations);
-      
-      save();
-      clip(path);
-      
-      CGPoint myStartPoint, myEndPoint;
-      myStartPoint.x = style.x0;
-      myStartPoint.y = style.y0;
-      myEndPoint.x = style.x1;
-      myEndPoint.y = style.y1;
-      CGContextDrawLinearGradient(gc, myGradient, myStartPoint, myEndPoint, 0);
-      restore();
-      
-      CGGradientRelease(myGradient);
-    }
-  } else {
+Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth) {
+  switch (mode) {
+  case STROKE:
     sendPath(path);
-    CGContextSetRGBFillColor(gc, style.color.red,
-			     style.color.green,
-			     style.color.blue,
-			     style.color.alpha);
-    CGContextFillPath(gc);
+    CGContextSetRGBStrokeColor(gc, style.color.red,
+			       style.color.green,
+			       style.color.blue,
+			       style.color.alpha);
+    CGContextSetLineWidth(context, lineWidth);
+    CGContextStrokePath(gc);  
+    break;
+  case FILL:
+    if (style.getType() == Style::LINEAR_GRADIENT) {
+      const std::map<float, Color> & colors = style.getColors();
+      if (!colors.empty()) {
+	std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
+	it1--;
+	const Color & c0 = it0->second, c1 = it1->second;
+	
+	size_t num_locations = 2;
+	CGFloat locations[2] = { 0.0, 1.0 };
+	CGFloat components[8] = {
+	  c0.red, c0.green, c0.blue, c0.alpha,
+	  c1.red, c1.green, c1.blue, c1.alpha
+	};
+	
+	CGGradientRef myGradient = CGGradientCreateWithColorComponents(colorspace, components, locations, num_locations);
+	
+	save();
+	clip(path);
+	
+	CGPoint myStartPoint, myEndPoint;
+	myStartPoint.x = style.x0;
+	myStartPoint.y = style.y0;
+	myEndPoint.x = style.x1;
+	myEndPoint.y = style.y1;
+	CGContextDrawLinearGradient(gc, myGradient, myStartPoint, myEndPoint, 0);
+	restore();
+	
+	CGGradientRelease(myGradient);
+      }
+    } else {
+      sendPath(path);
+      CGContextSetRGBFillColor(gc, style.color.red,
+			       style.color.green,
+			       style.color.blue,
+			       style.color.alpha);
+      CGContextFillPath(gc);
+    }
   }
-}
-
-void
-Quartz2DSurface::stroke(const Path & path, const Style & style, double lineWidth) {
-  sendPath(path);
-  CGContextSetRGBStrokeColor(gc, style.color.red,
-			   style.color.green,
-			   style.color.blue,
-			   style.color.alpha);
-  // CGContextSetLineWidth(context, fillStyle.);
-  CGContextStrokePath(gc);  
 }

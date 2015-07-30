@@ -78,7 +78,7 @@ namespace canvas {
       delete[] bitmapData;
     }
 
-    void * lockMemory(bool write_access = false, unsigned int scaled_width = 0, unsigned int scaled_height = 0) {
+    void * lockMemory(bool write_access = false) {
       // this should not be done for other contexts
 #if 0
       void * ptr = CGBitmapContextGetData(gc);
@@ -93,8 +93,7 @@ namespace canvas {
       
     }
 
-    void stroke(const Path & path, const Style & style, double lineWidth);
-    void fill(const Path & path, const Style & style);
+    void renderPath(RenderMode mode, const Path & path, const Style & style, double lineWidth);
       
       Quartz2DSurface * copy() {
           auto img = createImage();
@@ -118,36 +117,36 @@ namespace canvas {
       initialize();
     }
       
-      void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float display_scale) {
-        CGContextSetRGBStrokeColor(gc, style.color.red,
-                                 style.color.green,
-                                 style.color.blue,
-                                 style.color.alpha);
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) {
 	CGContextSelectFont(gc, "Arial", font.size * display_scale, kCGEncodingMacRoman);
-	// CGContextSetTextDrawingMode(gc, kCGTextStroke);
 	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
 							 0.0, -1.0,
 							 0.0,  0.0 );
 	CGContextSetTextMatrix(gc, xform);
-	CGContextSetTextDrawingMode(gc, kCGTextStroke);
+
+	switch (mode) {
+	case STROKE:
+	  CGContextSetRGBStrokeColor(gc, style.color.red,
+				     style.color.green,
+				     style.color.blue,
+				     style.color.alpha);
+	  CGContextSetTextDrawingMode(gc, kCGTextStroke);
+	  break;
+	case FILL:
+	  CGContextSetRGBFillColor(gc, style.color.red,
+				   style.color.green,
+				   style.color.blue,
+				   style.color.alpha);
+
+	  CGContextSetTextDrawingMode(gc, kCGTextFill);
+	  break;
+	}
+	
 	CGContextShowTextAtPoint(gc, (int)(x * display_scale), (int)(y * display_scale), text.c_str(), text.size());
       }
-      
+
+#if 0
       void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float display_scale) {
-#if 1
-        CGContextSetRGBFillColor(gc, style.color.red,
-                                 style.color.green,
-                                 style.color.blue,
-                                 style.color.alpha);
-	CGContextSelectFont(gc, "Arial", font.size * display_scale, kCGEncodingMacRoman);
-	// CGContextSetTextDrawingMode(gc, kCGTextFill);
-	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
-							 0.0, -1.0,
-							 0.0,  0.0 );
-	CGContextSetTextMatrix(gc, xform);
-	CGContextSetTextDrawingMode(gc, kCGTextFill);
-	CGContextShowTextAtPoint(gc, (int)(x * display_scale), (int)(y * display_scale), text.c_str(), text.size());
-#else
       // Prepare font
       CTFontRef font = CTFontCreateWithName(CFSTR("Times"), 20, NULL);
 
@@ -173,9 +172,10 @@ namespace canvas {
       CFRelease(attrString);
       CFRelease(font);
       CFRelease(text2);
-#endif
     }
-    void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
+#endif
+
+      void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
       assert(gc);
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
       assert(img.gc);
