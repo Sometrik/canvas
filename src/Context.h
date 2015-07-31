@@ -13,7 +13,7 @@ namespace canvas {
   class SavedContext {
   public:
     friend class Context;
-    SavedContext() : current_path(1.0) { }
+    SavedContext() { }
   private:
     float globalAlpha = 0;
     Path current_path;
@@ -22,7 +22,7 @@ namespace canvas {
   class Context {
   public:
     Context(float _display_scale = 1.0f)
-      : current_path(_display_scale), display_scale(_display_scale) { }
+      : display_scale(_display_scale) { }
     Context(const Context & other) = delete;
     Context & operator=(const Context & other) = delete;
     virtual ~Context() { }
@@ -44,7 +44,7 @@ namespace canvas {
     void arcTo(double x1, double y1, double x2, double y2, double radius) { current_path.arcTo(x1, y1, x2, y2, radius); }
 
     void clip() {
-      getDefaultSurface().clip(current_path);
+      getDefaultSurface().clip(current_path, getDisplayScale());
       current_path.clear();
     }
     void stroke() { renderPath(STROKE, strokeStyle); }
