@@ -51,7 +51,7 @@ namespace canvas {
     virtual void flush() { }
     virtual void markDirty() { }
 
-    virtual Surface * copy() = 0;
+    // virtual Surface * copy() = 0;
     virtual void * lockMemory(bool write_access = false) = 0;
     virtual void * lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height);
     virtual void releaseMemory() {
