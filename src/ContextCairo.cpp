@@ -140,16 +140,16 @@ CairoSurface::sendPath(const Path & path) {
 }
 
 void
-CairoSurface::clip(const Path & path) {
+CairoSurface::clip(const Path & path, float display_scale) {
   sendPath(path);
   cairo_clip(cr);
 }
 
 void
-CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth) {
+CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) {
   cairo_pattern_t * pat = 0;
   if (style.getType() == Style::LINEAR_GRADIENT) {
-    pat = cairo_pattern_create_linear(style.x0, style.y0, style.x1, style.y1);
+    pat = cairo_pattern_create_linear(style.x0 * display_scale, style.y0 * display_scale, style.x1 * display_scale, style.y1 * display_scale);
     for (map<float, Color>::const_iterator it = style.getColors().begin(); it != style.getColors().end(); it++) {
       cairo_pattern_add_color_stop_rgba(pat, it->first, it->second.red, it->second.green, it->second.blue, it->second.alpha);
     }

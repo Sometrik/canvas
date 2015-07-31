@@ -40,11 +40,11 @@ namespace canvas {
     }
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height);
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth);
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale);
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale);
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
-    void clip(const Path & path);
+    void clip(const Path & path, float display_scale);
     void save();
     void restore();
     
