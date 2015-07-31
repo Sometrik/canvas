@@ -83,11 +83,13 @@ namespace canvas {
     void releaseMemory() { }
 
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth) override;
-      
+
+#if 0
       Quartz2DSurface * copy() {
           auto img = createImage();
           return new Quartz2DSurface(*img);
       }
+#endif
 
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height) override {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height);
