@@ -59,8 +59,8 @@ namespace canvas {
       scaled_buffer = 0;
     }
 
-    virtual void clip(const Path & path) = 0;
-    virtual void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth) = 0;
+    virtual void clip(const Path & path, float display_scale) = 0;
+    virtual void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) = 0;
     virtual void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) = 0;
     virtual void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) = 0;
     virtual void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) = 0;
