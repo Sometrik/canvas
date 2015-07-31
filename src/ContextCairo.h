@@ -17,10 +17,12 @@ namespace canvas {
     CairoSurface(const unsigned char * buffer, size_t size);
     ~CairoSurface();
 
+#if 0
     CairoSurface * copy() {
       auto img = createImage();
       return new CairoSurface(*img);
     }
+#endif
     
     void flush();
     void markDirty();
@@ -41,6 +43,7 @@ namespace canvas {
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth);
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale);
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
+    void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void clip(const Path & path);
     void save();
     void restore();
@@ -59,13 +62,8 @@ namespace canvas {
 
   class ContextCairo : public Context {
   public:
-    ContextCairo(unsigned int _width = 0, unsigned int _height = 0);
+    ContextCairo(unsigned int _width = 0, unsigned int _height = 0, float _display_scale = 1.0f);
 
-#if 0
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const unsigned char * _data) {
-      return std::shared_ptr<Surface>(new CairoSurface(_width, _height, _data));
-    }
-#endif
     std::shared_ptr<Surface> createSurface(const Image & image) {
       return std::shared_ptr<Surface>(new CairoSurface(image));
     }
@@ -90,7 +88,7 @@ namespace canvas {
   class CairoContextFactory : public ContextFactory {
   public:
     CairoContextFactory() { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height) const { return std::shared_ptr<Context>(new ContextCairo(width, height)); }
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling) const { return std::shared_ptr<Context>(new ContextCairo(width, height)); }
     std::shared_ptr<Surface> createSurface(const std::string & filename) const { return std::shared_ptr<Surface>(new CairoSurface(filename)); }
     std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const { return std::shared_ptr<Surface>(new CairoSurface(width, height, false)); }
     std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) const {

@@ -249,6 +249,12 @@ CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, 
 }
 
 void
+CairoSurface::drawImage(const Image & _img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled) {
+  CairoSurface img(_img);
+  drawNativeSurface(img, x, y, w, h, alpha, imageSmoothingEnabled);
+}
+
+void
 CairoSurface::save() {  
   cairo_save(cr);
 }
@@ -258,8 +264,8 @@ CairoSurface::restore() {
   cairo_restore(cr);
 }
 
-ContextCairo::ContextCairo(unsigned int _width, unsigned int _height)
-  : Context(_width, _height),
+ContextCairo::ContextCairo(unsigned int _width, unsigned int _height, float _display_scale)
+  : Context(_display_scale),
     default_surface(_width, _height)
 { 
 }
