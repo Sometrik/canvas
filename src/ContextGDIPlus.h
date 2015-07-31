@@ -57,9 +57,11 @@ namespace canvas {
     ~GDIPlusSurface() {
       delete[] storage;
     }
+#if 0
     GDIPlusSurface * copy() {
       return 0;
     }
+#endif
     void resize(unsigned int _width, unsigned int _height) {
       Surface::resize(_width, _height);
       bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_width, _height));
