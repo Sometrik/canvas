@@ -25,7 +25,7 @@ namespace canvas {
   
   class Path {
   public:
-    Path(float _display_scale) : display_scale(_display_scale), current_point(0, 0) { }
+    Path() : current_point(0, 0) { }
     
     void moveTo(double x, double y) {
       data.push_back(PathComponent(PathComponent::MOVE_TO, x, y));
@@ -60,8 +60,6 @@ namespace canvas {
       }
     }
 
-    float getDisplayScale() const { return display_scale; }
-
     void getExtents(double & min_x, double & min_y, double & max_x, double & max_y) const {
       if (data.empty()) {
 	min_x = min_y = max_x = max_y = 0;
@@ -79,7 +77,6 @@ namespace canvas {
     }
     
   private:
-    float display_scale;
     std::vector<PathComponent> data;
     Point current_point;
   };
