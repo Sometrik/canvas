@@ -108,8 +108,7 @@ Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Su
 }
 
 void
-Quartz2DSurface::sendPath(const Path & path) {
-  float scale = path.getDisplayScale();
+Quartz2DSurface::sendPath(const Path & path, float scale) {
   CGContextBeginPath(gc);
   for (auto pc : path.getData()) {
     switch (pc.type) {
@@ -122,15 +121,15 @@ Quartz2DSurface::sendPath(const Path & path) {
 }
 
 void
-Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth) {
+Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) {
   switch (mode) {
   case STROKE:
-    sendPath(path);
+    sendPath(path, display_scale);
     CGContextSetRGBStrokeColor(gc, style.color.red,
 			       style.color.green,
 			       style.color.blue,
 			       style.color.alpha);
-    CGContextSetLineWidth(gc, lineWidth);
+    CGContextSetLineWidth(gc, lineWidth * display_scale);
     CGContextStrokePath(gc);  
     break;
   case FILL:
@@ -151,20 +150,20 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
 	CGGradientRef myGradient = CGGradientCreateWithColorComponents(colorspace, components, locations, num_locations);
 	
 	save();
-	clip(path);
+	clip(path, display_scale);
 	
 	CGPoint myStartPoint, myEndPoint;
-	myStartPoint.x = style.x0;
-	myStartPoint.y = style.y0;
-	myEndPoint.x = style.x1;
-	myEndPoint.y = style.y1;
+	myStartPoint.x = style.x0 * display_scale;
+	myStartPoint.y = style.y0 * display_scale;
+	myEndPoint.x = style.x1 * display_scale;
+	myEndPoint.y = style.y1 * display_scale;
 	CGContextDrawLinearGradient(gc, myGradient, myStartPoint, myEndPoint, 0);
 	restore();
 	
 	CGGradientRelease(myGradient);
       }
     } else {
-      sendPath(path);
+      sendPath(path, display_scale);
       CGContextSetRGBFillColor(gc, style.color.red,
 			       style.color.green,
 			       style.color.blue,
@@ -197,11 +196,11 @@ ContextQuartz2D::renderPath(RenderMode mode, const Style & style) {
     CGFloat cv[] = { shadowColor.red, shadowColor.green, shadowColor.blue, shadowColor.alpha };
     CGColorRef myColor = CGColorCreate(default_surface.colorspace, cv);
     CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, myColor);
-    getDefaultSurface().renderPath(mode, current_path, style, getDisplayScale() * lineWidth);
+    getDefaultSurface().renderPath(mode, current_path, style, lineWidth, getDisplayScale());
     CGContextRestoreGState(default_surface.gc);
     CGColorRelease(myColor);
   } else {
-    getDefaultSurface().renderPath(mode, current_path, style, getDisplayScale() * lineWidth);
+    getDefaultSurface().renderPath(mode, current_path, style, lineWidth, getDisplayScale());
   }
 }
 

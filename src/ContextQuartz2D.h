@@ -82,7 +82,7 @@ namespace canvas {
     
     void releaseMemory() { }
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth) override;
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) override;
 
 #if 0
       Quartz2DSurface * copy() {
@@ -181,8 +181,8 @@ namespace canvas {
       CGDataProviderRelease(provider);
       CGImageRelease(img);
     }
-    void clip(const Path & path) {
-      sendPath(path);
+    void clip(const Path & path, float display_scale) {
+      sendPath(path, display_scale);
       CGContextClip(gc);
     }
     void save() { CGContextSaveGState(gc); }
@@ -190,7 +190,7 @@ namespace canvas {
 
   protected:
     void renderPath(RenderMode mode, const Style & style);
-    void sendPath(const Path & path);
+    void sendPath(const Path & path, float display_scale);
 
   private:
     CGContextRef gc;
