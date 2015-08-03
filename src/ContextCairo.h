@@ -10,19 +10,11 @@ namespace canvas {
     friend class ContextCairo;
 
     CairoSurface(unsigned int _width, unsigned int _height, bool has_alpha = true);
-    // CairoSurface(unsigned int _width, unsigned int _height, const unsigned char * data, bool has_alpha = false);
     CairoSurface(const Image & image);
     CairoSurface(const std::string & filename);
     CairoSurface(const CairoSurface & other) = delete;
     CairoSurface(const unsigned char * buffer, size_t size);
     ~CairoSurface();
-
-#if 0
-    CairoSurface * copy() {
-      auto img = createImage();
-      return new CairoSurface(*img);
-    }
-#endif
     
     void flush();
     void markDirty();
