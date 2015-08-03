@@ -191,7 +191,10 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   
   cairo_text_extents_t text_extents;
   cairo_text_extents(cr, text.c_str(), &text_extents);
-  
+
+  x *= display_scale;
+  y *= display_scale;
+
   switch (textBaseline.getType()) {
     // case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
   case TextBaseline::MIDDLE: y += -font_extents.descent + (font_extents.ascent + font_extents.descent) / 2.0; break;
@@ -206,7 +209,7 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   default: break;
   }
   
-  cairo_move_to(cr, x * display_scale + 0.5, y * display_scale + 0.5);
+  cairo_move_to(cr, x + 0.5, y + 0.5);
   
   switch (mode) {
   case STROKE:
