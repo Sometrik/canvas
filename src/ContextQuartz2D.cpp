@@ -178,11 +178,11 @@ ContextQuartz2D::renderText(RenderMode mode, const Style & style, const std::str
   if (hasShadow()) {
     CGSize myShadowOffset = CGSizeMake(shadowOffsetX * getDisplayScale(), shadowOffsetY * getDisplayScale());
     CGContextSaveGState(default_surface.gc);
-    CGFloat cv[] = { shadowColor.red, shadowColor.green, shadowColor.blue, shadowColor.alpha };
-    CGColorRef myColor = CGColorCreate(default_surface.colorspace, cv);
-    CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, myColor);
+    CGColorRef color = default_surface.createCGColor(shadowColor);
+    CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, color);
     getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, getDisplayScale());
     CGContextRestoreGState(default_surface.gc);
+    CGColorRelease(color);
   } else {
     getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, getDisplayScale());
   }
@@ -193,12 +193,11 @@ ContextQuartz2D::renderPath(RenderMode mode, const Style & style) {
   if (hasShadow()) {
     CGSize myShadowOffset = CGSizeMake(getDisplayScale() * shadowOffsetX, getDisplayScale() * shadowOffsetY);
     CGContextSaveGState(default_surface.gc);
-    CGFloat cv[] = { shadowColor.red, shadowColor.green, shadowColor.blue, shadowColor.alpha };
-    CGColorRef myColor = CGColorCreate(default_surface.colorspace, cv);
-    CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, myColor);
+    CGColorRef color = default_surface.createCGColor(shadowColor);
+    CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, color);
     getDefaultSurface().renderPath(mode, current_path, style, lineWidth, getDisplayScale());
     CGContextRestoreGState(default_surface.gc);
-    CGColorRelease(myColor);
+    CGColorRelease(color);
   } else {
     getDefaultSurface().renderPath(mode, current_path, style, lineWidth, getDisplayScale());
   }
@@ -209,11 +208,11 @@ ContextQuartz2D::drawImage(const Image & img, double x, double y, double w, doub
   if (hasShadow()) {
     CGSize myShadowOffset = CGSizeMake(shadowOffsetX, shadowOffsetY);
     CGContextSaveGState(default_surface.gc);
-    CGFloat cv[] = { shadowColor.red, shadowColor.green, shadowColor.blue, shadowColor.alpha };
-    CGColorRef myColor = CGColorCreate(default_surface.colorspace, cv);
-    CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, myColor);
+    CGColorRef color = default_surface.createCGColor(shadowColor);
+    CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, color);
     getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
     CGContextRestoreGState(default_surface.gc);
+    CGColorRelease(color);
   } else {
     getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
   }
@@ -224,11 +223,11 @@ ContextQuartz2D::drawImage(Surface & img, double x, double y, double w, double h
   if (hasShadow()) {
     CGSize myShadowOffset = CGSizeMake(shadowOffsetX, shadowOffsetY);
     CGContextSaveGState(default_surface.gc);
-    CGFloat cv[] = { shadowColor.red, shadowColor.green, shadowColor.blue, shadowColor.alpha };
-    CGColorRef myColor = CGColorCreate(default_surface.colorspace, cv);
-    CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, myColor);
+    CGColorRef color = default_surface.createCGColor(shadowColor);
+    CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, color);
     getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
     CGContextRestoreGState(default_surface.gc);
+    CGColorRelease(color);
   } else {
     getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
   }

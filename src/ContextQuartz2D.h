@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <QuartzCore/QuartzCore.h>
+#include <CoreText/CoreText.h>
 
 namespace canvas {
   class Quartz2DSurface : public Surface {
@@ -107,53 +108,49 @@ namespace canvas {
                                  (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast));
       initialize();
     }
-      
+    
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) override {
-#if 0
-	CGContextSelectFont(gc, "Arial", font.size * display_scale, kCGEncodingMacRoman);
-	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
-							 0.0, -1.0,
-							 0.0,  0.0 );
-	CGContextSetTextMatrix(gc, xform);
+      CTFontRef font2 = CTFontCreateWithName(CFSTR("ArialMT"), font.size * display_scale, NULL);
+      CGColorRef color = createCGColor(style.color);
+      CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
+      CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
+      CFTypeRef values[] = { font2, color };
+      CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+      
+      CFAttributedStringRef attrString = CFAttributedStringCreate(NULL, text2, attr);
+      CTLineRef line = CTLineCreateWithAttributedString(attrString);
+      
+      x *= display_scale;
+      y *= display_scale;
 
-	switch (mode) {
-	case STROKE:
-	  CGContextSetRGBStrokeColor(gc, style.color.red,
-				     style.color.green,
-				     style.color.blue,
-				     style.color.alpha);
-	  CGContextSetTextDrawingMode(gc, kCGTextStroke);
-	  break;
-	case FILL:
-	  CGContextSetRGBFillColor(gc, style.color.red,
-				   style.color.green,
-				   style.color.blue,
-				   style.color.alpha);
+      CGFloat ascent, descent, leading;
+      double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
 
-	  CGContextSetTextDrawingMode(gc, kCGTextFill);
-	  break;
-	}
-	
-	CGContextShowTextAtPoint(gc, (int)(x * display_scale), (int)(y * display_scale), text.c_str(), text.size());
-#else
-	CTFontRef font = CTFontCreateWithName(CFSTR("Times"), font.size * display_scale, NULL);
-	CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
-	CFStringRef keys[] = { kCTFontAttributeName };
-	CFTypeRef values[] = { font };	
-	CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-	CFAttributedStringRef attrString = CFAttributedStringCreate(NULL, text2, attr);
-	CTLineRef line = CTLineCreateWithAttributedString(attrString);
-	CGContextSetTextMatrix(context, CGAffineTransformIdentity);  // Use this one when using standard view coordinates
-	// CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0)); // Use this one if the view's coordinates are flipped
-	CGContextSetTextPosition(context, x * display_scale, y * display_scale);
-	CTLineDraw(line, context);
+      switch (textBaseline.getType()) {
+        // case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
+      case TextBaseline::MIDDLE: y += -descent + (ascent + descent) / 2.0; break;
+      case TextBaseline::TOP: y += ascent; break;
+      default: break;
+      }
+      
+      switch (textAlign.getType()) {
+        case TextAlign::LEFT: break;
+        case TextAlign::CENTER: x -= width / 2; break;
+        case TextAlign::RIGHT: x -= width; break;
+        default: break;
+      }
+      
+      // CGContextSetTextMatrix(gc, CGAffineTransformIdentity);
+      CGContextSetTextMatrix(gc, CGAffineTransformMakeScale(1.0, -1.0)); // Use this one if the view's coordinates are flipped
+      CGContextSetTextPosition(gc, x, y);
+      CTLineDraw(line, gc);
 
-	CFRelease(attr);
-	CFRelease(line);
-	CFRelease(attrString);
-	CFRelease(font);
-	CFRelease(text2);
-#endif
+      CFRelease(line);
+      CFRelease(attrString);
+      CFRelease(attr);
+      CFRelease(font2);
+      CFRelease(text2);
+      CGColorRelease(color);
     }
 
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
@@ -181,6 +178,10 @@ namespace canvas {
   protected:
     void renderPath(RenderMode mode, const Style & style);
     void sendPath(const Path & path, float display_scale);
+    CGColorRef createCGColor(const Color & color) {
+      CGFloat cv[] = { color.red, color.green, color.blue, color.alpha };
+      return CGColorCreate(colorspace, cv);
+    }
 
   private:
     CGContextRef gc;
@@ -220,6 +221,7 @@ namespace canvas {
     void setgc(CGContextRef _gc) { default_surface.gc = _gc; }
 
     TextMetrics measureText(const std::string & text) {
+#if 0
       CGContextSelectFont(default_surface.gc, "Arial", font.size * getDisplayScale(), kCGEncodingMacRoman);
       CGContextSetTextDrawingMode(default_surface.gc, kCGTextInvisible);
       CGPoint initPos = CGContextGetTextPosition(default_surface.gc);
@@ -227,7 +229,21 @@ namespace canvas {
       // CGContextShowText (default_surface.gc, text.c_str(), text.size());
       CGPoint finalPos = CGContextGetTextPosition(default_surface.gc);
       return TextMetrics((finalPos.x - initPos.x) / getDisplayScale(), font.size);
-    }        
+#else
+      CTFontRef font2 = CTFontCreateWithName(CFSTR("ArialMT"), font.size * getDisplayScale(), NULL);
+      CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
+      CFStringRef keys[] = { kCTFontAttributeName };
+      CFTypeRef values[] = { font2 };
+      CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+      
+      CFAttributedStringRef attrString = CFAttributedStringCreate(NULL, text2, attr);
+      CTLineRef line = CTLineCreateWithAttributedString(attrString);
+      
+      CGFloat ascent, descent, leading;
+      double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
+      return TextMetrics(width / getDisplayScale(), font.size);
+#endif
+    }
 
     void drawImage(const Image & img, double x, double y, double w, double h) override;
     void drawImage(Surface & img, double x, double y, double w, double h) override;
