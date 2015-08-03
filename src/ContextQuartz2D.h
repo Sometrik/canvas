@@ -109,6 +109,7 @@ namespace canvas {
     }
       
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) override {
+#if 0
 	CGContextSelectFont(gc, "Arial", font.size * display_scale, kCGEncodingMacRoman);
 	CGAffineTransform xform = CGAffineTransformMake( 1.0,  0.0,
 							 0.0, -1.0,
@@ -134,37 +135,26 @@ namespace canvas {
 	}
 	
 	CGContextShowTextAtPoint(gc, (int)(x * display_scale), (int)(y * display_scale), text.c_str(), text.size());
-      }
+#else
+	CTFontRef font = CTFontCreateWithName(CFSTR("Times"), font.size * display_scale, NULL);
+	CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
+	CFStringRef keys[] = { kCTFontAttributeName };
+	CFTypeRef values[] = { font };	
+	CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	CFAttributedStringRef attrString = CFAttributedStringCreate(NULL, text2, attr);
+	CTLineRef line = CTLineCreateWithAttributedString(attrString);
+	CGContextSetTextMatrix(context, CGAffineTransformIdentity);  // Use this one when using standard view coordinates
+	// CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0)); // Use this one if the view's coordinates are flipped
+	CGContextSetTextPosition(context, x * display_scale, y * display_scale);
+	CTLineDraw(line, context);
 
-#if 0
-      void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float display_scale) {
-      // Prepare font
-      CTFontRef font = CTFontCreateWithName(CFSTR("Times"), 20, NULL);
-
-      CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
-
-      // Create an attributed string
-      CFStringRef keys[] = { kCTFontAttributeName };
-      CFTypeRef values[] = { font };
-      CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-      CFAttributedStringRef attrString = CFAttributedStringCreate(NULL, text2, attr);
-      CFRelease(attr);
-
-      // Draw the string
-      CTLineRef line = CTLineCreateWithAttributedString(attrString);
-      CGContextSetTextMatrix(context, CGAffineTransformIdentity);  // Use this one when using standard view coordinates
-      // CGContextSetTextMatrix(context, CGAffineTransformMakeScale(1.0, -1.0)); // Use this one if the view's coordinates are flipped
-      
-      CGContextSetTextPosition(context, x, y);
-      CTLineDraw(line, context);
-
-      // Clean up
-      CFRelease(line);
-      CFRelease(attrString);
-      CFRelease(font);
-      CFRelease(text2);
-    }
+	CFRelease(attr);
+	CFRelease(line);
+	CFRelease(attrString);
+	CFRelease(font);
+	CFRelease(text2);
 #endif
+    }
 
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
