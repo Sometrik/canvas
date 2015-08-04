@@ -107,10 +107,10 @@ namespace canvas {
       gc = CGBitmapContextCreate(bitmapData, _actual_width, _actual_height, 8, bitmapBytesPerRow, colorspace,
                                  (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast));
       initialize();
-    }
+    }    
     
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) override {
-      CTFontRef font2 = CTFontCreateWithName(CFSTR("ArialMT"), font.size * display_scale, NULL);
+      CTFontRef font2 = createCGFont(font, display_scale);
       CGColorRef color = createCGColor(style.color);
       CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
       CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName };
@@ -123,21 +123,24 @@ namespace canvas {
       x *= display_scale;
       y *= display_scale;
 
-      CGFloat ascent, descent, leading;
-      double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
-
-      switch (textBaseline.getType()) {
-        // case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
-      case TextBaseline::MIDDLE: y += -descent + (ascent + descent) / 2.0; break;
-      case TextBaseline::TOP: y += ascent; break;
-      default: break;
-      }
-      
-      switch (textAlign.getType()) {
+      if (textAlign.getType() != TextAlign::LEFT ||
+	  (textBaseline.getType() != TextBaseline::MIDDLE &&
+	   textBaseline.getType() != TextBaseline::TOP)) {
+	CGFloat ascent, descent, leading;
+	double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
+	
+	switch (textBaseline.getType()) {
+	case TextBaseline::MIDDLE: y += -descent + (ascent + descent) / 2.0; break;
+	case TextBaseline::TOP: y += ascent; break;
+	default: break;
+	}
+	
+	switch (textAlign.getType()) {
         case TextAlign::LEFT: break;
         case TextAlign::CENTER: x -= width / 2; break;
         case TextAlign::RIGHT: x -= width; break;
         default: break;
+	}
       }
       
       // CGContextSetTextMatrix(gc, CGAffineTransformIdentity);
@@ -182,6 +185,19 @@ namespace canvas {
       CGFloat cv[] = { color.red, color.green, color.blue, color.alpha };
       return CGColorCreate(colorspace, cv);
     }
+    CTFontRef createCGFont(const Font & font, float displa_scale) {
+      switch (font.weight) {
+      case BOLD:
+      case BOLDER:
+	return CTFontCreateWithName(CFSTR("Arial-Bold"), font.size * display_scale, NULL);
+	break;
+      case NORMAL:
+      case LIGHTER:
+      default:
+	return CTFontCreateWithName(CFSTR("ArialMT"), font.size * display_scale, NULL);
+	
+      }
+    }
 
   private:
     CGContextRef gc;
@@ -221,16 +237,7 @@ namespace canvas {
     void setgc(CGContextRef _gc) { default_surface.gc = _gc; }
 
     TextMetrics measureText(const std::string & text) {
-#if 0
-      CGContextSelectFont(default_surface.gc, "Arial", font.size * getDisplayScale(), kCGEncodingMacRoman);
-      CGContextSetTextDrawingMode(default_surface.gc, kCGTextInvisible);
-      CGPoint initPos = CGContextGetTextPosition(default_surface.gc);
-      CGContextShowTextAtPoint(default_surface.gc, initPos.x, initPos.y, text.c_str(), text.size());
-      // CGContextShowText (default_surface.gc, text.c_str(), text.size());
-      CGPoint finalPos = CGContextGetTextPosition(default_surface.gc);
-      return TextMetrics((finalPos.x - initPos.x) / getDisplayScale(), font.size);
-#else
-      CTFontRef font2 = CTFontCreateWithName(CFSTR("ArialMT"), font.size * getDisplayScale(), NULL);
+      CTFontRef font2 = createCGFont(font, getDisplayScale());
       CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
       CFStringRef keys[] = { kCTFontAttributeName };
       CFTypeRef values[] = { font2 };
@@ -242,7 +249,6 @@ namespace canvas {
       CGFloat ascent, descent, leading;
       double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
       return TextMetrics(width / getDisplayScale(), font.size);
-#endif
     }
 
     void drawImage(const Image & img, double x, double y, double w, double h) override;
