@@ -5,7 +5,8 @@
 using namespace canvas;
 using namespace std;
 
-Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0, 0, 0), is_screen(false) {
+Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::string & filename)
+  : Surface(0, 0, 0, 0), font_cache(_font_cache), is_screen(false) {
   cerr << "trying to load file " << filename << endl;
   CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
   CGImageRef img;
@@ -57,7 +58,8 @@ Quartz2DSurface::Quartz2DSurface(const std::string & filename) : Surface(0, 0, 0
   }
 }
 
-Quartz2DSurface::Quartz2DSurface(const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0), is_screen(false) {
+Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const unsigned char * buffer, size_t size)
+: Surface(0, 0, 0, 0), font_cache(_font_cache), is_screen(false) {
   CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
   CGImageRef img;
   if (isPNG(buffer, size)) {
