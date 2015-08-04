@@ -149,14 +149,17 @@ namespace canvas {
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) override {
       CTFontRef font2 = font_cache->getFont(font, display_scale);
       CGColorRef color = createCGColor(style.color);
+      
+#if 0
       int traits = 0;
       if (font.weight == Font::BOLD || font.weight == Font::BOLDER) traits |= kCTFontBoldTrait;
       if (font.slant == Font::ITALIC) traits |= kCTFontItalicTrait;
       CFNumberRef traits2 = CFNumberCreate(NULL, kCFNumberSInt32Type, &traits);
+#endif
       
       CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
-      CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName, kCTFontSymbolicTrait };
-      CFTypeRef values[] = { font2, color, traits2 };
+      CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName }; // kCTFontSymbolicTrait };
+      CFTypeRef values[] = { font2, color }; // traits2
       
       CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
       
@@ -193,7 +196,7 @@ namespace canvas {
       CFRelease(attrString);
       CFRelease(attr);
       CFRelease(text2);
-      CFRelease(traits2);
+      // CFRelease(traits2);
       CGColorRelease(color);
     }
 
