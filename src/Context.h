@@ -138,10 +138,10 @@ namespace canvas {
   public:
     ContextFactory(float _display_scale = 1.0f) : display_scale(_display_scale) { }
     virtual ~ContextFactory() { }
-    virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling = true) const = 0;
-    virtual std::shared_ptr<Surface> createSurface(const std::string & filename) const = 0;
-    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) const = 0;
-    virtual std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) const = 0;
+    virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling = true) = 0;
+    virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
+    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) = 0;
+    virtual std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) = 0;
     
     float getDisplayScale() const { return display_scale; }
     
