@@ -178,12 +178,12 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
 void
 ContextQuartz2D::renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y) {
   if (hasShadow()) {
+    default_surface.save();
     CGSize myShadowOffset = CGSizeMake(shadowOffsetX * getDisplayScale(), shadowOffsetY * getDisplayScale());
-    CGContextSaveGState(default_surface.gc);
     CGColorRef color = default_surface.createCGColor(shadowColor);
     CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, color);
     getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, getDisplayScale());
-    CGContextRestoreGState(default_surface.gc);
+    default_surface.restore();
     CGColorRelease(color);
   } else {
     getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, getDisplayScale());
@@ -193,12 +193,12 @@ ContextQuartz2D::renderText(RenderMode mode, const Style & style, const std::str
 void
 ContextQuartz2D::renderPath(RenderMode mode, const Style & style) {
   if (hasShadow()) {
+    default_surface.save();
     CGSize myShadowOffset = CGSizeMake(getDisplayScale() * shadowOffsetX, getDisplayScale() * shadowOffsetY);
-    CGContextSaveGState(default_surface.gc);
     CGColorRef color = default_surface.createCGColor(shadowColor);
     CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, color);
     getDefaultSurface().renderPath(mode, current_path, style, lineWidth, getDisplayScale());
-    CGContextRestoreGState(default_surface.gc);
+    default_surface.restore();
     CGColorRelease(color);
   } else {
     getDefaultSurface().renderPath(mode, current_path, style, lineWidth, getDisplayScale());
@@ -208,12 +208,12 @@ ContextQuartz2D::renderPath(RenderMode mode, const Style & style) {
 void
 ContextQuartz2D::drawImage(const Image & img, double x, double y, double w, double h) {
   if (hasShadow()) {
+    default_surface.save();
     CGSize myShadowOffset = CGSizeMake(shadowOffsetX, shadowOffsetY);
-    CGContextSaveGState(default_surface.gc);
     CGColorRef color = default_surface.createCGColor(shadowColor);
     CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, color);
     getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
-    CGContextRestoreGState(default_surface.gc);
+    default_surface.restore();
     CGColorRelease(color);
   } else {
     getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
@@ -223,12 +223,12 @@ ContextQuartz2D::drawImage(const Image & img, double x, double y, double w, doub
 void
 ContextQuartz2D::drawImage(Surface & img, double x, double y, double w, double h) {
   if (hasShadow()) {
+    default_surface.save();
     CGSize myShadowOffset = CGSizeMake(shadowOffsetX, shadowOffsetY);
-    CGContextSaveGState(default_surface.gc);
     CGColorRef color = default_surface.createCGColor(shadowColor);
     CGContextSetShadowWithColor(default_surface.gc, myShadowOffset, getDisplayScale() * shadowBlur, color);
     getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
-    CGContextRestoreGState(default_surface.gc);
+    default_surface.restore();
     CGColorRelease(color);
   } else {
     getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
