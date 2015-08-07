@@ -7,10 +7,10 @@
 using namespace canvas;
 using namespace std;
 
-CairoSurface::CairoSurface(unsigned int _width, unsigned int _height, bool has_alpha)
-  : Surface(_width, _height, _width, _height) {
+CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool has_alpha)
+  : Surface(_logical_width, _logical_height, _actual_width, _actual_height) {
   cairo_format_t format = has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
-  surface = cairo_image_surface_create(format, _width, _height);
+  surface = cairo_image_surface_create(format, _actual_width, _actual_height);
   assert(surface);
   cr = cairo_create(surface);  
   assert(cr);
@@ -185,28 +185,32 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
 			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
 			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
   cairo_set_font_size(cr, font.size * display_scale);
-
-  cairo_font_extents_t font_extents;
-  cairo_font_extents(cr, &font_extents);
   
-  cairo_text_extents_t text_extents;
-  cairo_text_extents(cr, text.c_str(), &text_extents);
-
   x *= display_scale;
   y *= display_scale;
 
-  switch (textBaseline.getType()) {
-    // case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
-  case TextBaseline::MIDDLE: y += -font_extents.descent + (font_extents.ascent + font_extents.descent) / 2.0; break;
-  case TextBaseline::TOP: y += font_extents.ascent; break;
-  default: break;
+  if (textBaseline.getType() == TextBaseline::MIDDLE || textBaseline.getType() == TextBaseline::TOP) {
+    cairo_font_extents_t font_extents;
+    cairo_font_extents(cr, &font_extents);
+    
+    switch (textBaseline.getType()) {
+      // case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
+    case TextBaseline::MIDDLE: y += -font_extents.descent + (font_extents.ascent + font_extents.descent) / 2.0; break;
+    case TextBaseline::TOP: y += font_extents.ascent; break;
+    default: break;
+    }
   }
 
-  switch (textAlign.getType()) {
-  case TextAlign::LEFT: break;
-  case TextAlign::CENTER: x -= text_extents.width / 2; break;
-  case TextAlign::RIGHT: x -= text_extents.width; break;
-  default: break;
+  if (textAlign.getType() != TextAlign::LEFT) {
+    cairo_text_extents_t text_extents;
+    cairo_text_extents(cr, text.c_str(), &text_extents);
+    
+    switch (textAlign.getType()) {
+    case TextAlign::LEFT: break;
+    case TextAlign::CENTER: x -= text_extents.width / 2; break;
+    case TextAlign::RIGHT: x -= text_extents.width; break;
+    default: break;
+    }
   }
   
   cairo_move_to(cr, x + 0.5, y + 0.5);
@@ -269,7 +273,7 @@ CairoSurface::restore() {
 
 ContextCairo::ContextCairo(unsigned int _width, unsigned int _height, float _display_scale)
   : Context(_display_scale),
-    default_surface(_width, _height)
+    default_surface(_width, _height, (unsigned int)(_display_scale * _width), (unsigned int)(_display_scale * _height), true)
 { 
 }
 
