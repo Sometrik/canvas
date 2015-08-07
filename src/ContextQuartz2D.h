@@ -258,8 +258,8 @@ namespace canvas {
     std::shared_ptr<Surface> createSurface(const Image & image) {
         return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, image));
     }
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) {
-      return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale())));
+    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, bool _has_alpha) {
+      return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), has_alpha));
     }
       std::shared_ptr<Surface> createSurface(const std::string & filename) {
           return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, filename));
@@ -320,8 +320,8 @@ namespace canvas {
         return createSurface(16, 16);
       }
     }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) override {
-      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&font_cache, width, height, (unsigned int)(width * getDisplayScale()), (unsigned int)(height * getDisplayScale()), false));
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, bool has_alpha) override {
+      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&font_cache, width, height, (unsigned int)(width * getDisplayScale()), (unsigned int)(height * getDisplayScale()), has_alpha));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) override {
