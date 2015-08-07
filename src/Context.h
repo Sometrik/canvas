@@ -28,7 +28,7 @@ namespace canvas {
     virtual ~Context() { }
 
     virtual std::shared_ptr<Surface> createSurface(const Image & image) = 0;
-    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height) = 0;
+    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, bool has_alpha) = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
 
     virtual void resize(unsigned int _width, unsigned int _height);
@@ -140,7 +140,7 @@ namespace canvas {
     virtual ~ContextFactory() { }
     virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling = true) = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
-    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height) = 0;
+    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, bool has_alpha) = 0;
     virtual std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) = 0;
     
     float getDisplayScale() const { return display_scale; }
