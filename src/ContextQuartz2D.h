@@ -54,7 +54,7 @@ namespace canvas {
         
   Quartz2DSurface(Quartz2DFontCache * _font_cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool has_alpha = true)
     : Surface(_logical_width, _logical_height, _actual_width, _actual_height),
-      font_cache(_font_cache), is_screen(false) {
+      font_cache(_font_cache) {
       colorspace = CGColorSpaceCreateDeviceRGB();
 
       assert(_logical_width && _logical_height);
@@ -75,18 +75,9 @@ namespace canvas {
       initialize();
     }
   
-  Quartz2DSurface(Quartz2DFontCache * _font_cache, unsigned int _width, unsigned int _height, CGContextRef  _gc, bool _is_screen) :
-    Surface(_width, _height, _width, _height),
-    font_cache(_font_cache),
-      bitmapData(0),
-      is_screen(_is_screen)
-	{
-      colorspace = CGColorSpaceCreateDeviceRGB();
-       gc = _gc;
-    }
   Quartz2DSurface(Quartz2DFontCache * _font_cache, const Image & image)
     : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight()),
-      font_cache(_font_cache), is_screen(false) {
+      font_cache(_font_cache) {
         colorspace = CGColorSpaceCreateDeviceRGB();
 
 	bool has_alpha = image.hasAlpha();
@@ -117,9 +108,8 @@ namespace canvas {
     }
       
     ~Quartz2DSurface() {
+      if (active_shadow_color) CGColorRelease(active_shadow_color);
       CGColorSpaceRelease(colorspace);
-      // Do not release screen, iOS will do that
-      if (!is_screen) CGContextRelease(gc);
       delete[] bitmapData;
     }
 
@@ -229,25 +219,24 @@ namespace canvas {
       CGFloat cv[] = { color.red, color.green, color.blue, color.alpha };
       return CGColorCreate(colorspace, cv);
     }
-
+    
+    void setShadow(float shadowOffsetX, float shadowOffsetY, float shadowBlur, const Color & shadowColor, float display_scale) {
+      CGSize offset = CGSizeMake(display_scale * shadowOffsetX, display_scale * shadowOffsetY);
+      if (active_shadow_color) CGColorRelease(active_shadow_color);
+      active_shadow_color = createCGColor(shadowColor);
+      CGContextSetShadowWithColor(gc, offset, display_scale * shadowBlur, active_shadow_color);
+    }
+    
   private:
     Quartz2DFontCache * font_cache;
     CGContextRef gc;
     CGColorSpaceRef colorspace;
-    bool is_screen;
     unsigned char * bitmapData;
-    // map<std::string, CTFontRef> loaded_fonts;
+    CGColorRef active_shadow_color = 0;
   };
 
   class ContextQuartz2D : public Context {
   public:
-    // get context with UIGraphicsGetCurrentContext();
-  ContextQuartz2D(Quartz2DFontCache * _font_cache, unsigned int _width, unsigned int _height, CGContextRef _gc, bool is_screen, float _display_scale)
-    : Context(_display_scale),
-      font_cache(_font_cache),
-      default_surface(_font_cache, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), _gc, is_screen)  {
-          setgc(_gc);
-    }
   ContextQuartz2D(Quartz2DFontCache * _font_cache, unsigned int _width, unsigned int _height, float _display_scale)
     : Context(_display_scale),
       font_cache(_font_cache),
@@ -259,7 +248,7 @@ namespace canvas {
         return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, image));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, bool _has_alpha) {
-      return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), has_alpha));
+      return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _has_alpha));
     }
       std::shared_ptr<Surface> createSurface(const std::string & filename) {
           return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, filename));
@@ -317,7 +306,7 @@ namespace canvas {
         std::shared_ptr<Surface> ptr(new Quartz2DSurface(&font_cache, filename2));
         return ptr;
       } else {
-        return createSurface(16, 16);
+        return createSurface(16, 16, false);
       }
     }
     std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, bool has_alpha) override {
