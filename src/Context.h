@@ -7,7 +7,6 @@
 #include "Color.h"
 #include "Surface.h"
 #include "Image.h"
-#include "TextMetrics.h"
 
 namespace canvas {
   class SavedContext {
@@ -53,7 +52,9 @@ namespace canvas {
     void save();
     void restore();
 
-    virtual TextMetrics measureText(const std::string & text) = 0;
+    TextMetrics measureText(const std::string & text) {
+      return getDefaultSurface().measureText(font, text, getDisplayScale());
+    }
     
     void rect(double x, double y, double w, double h);
     void fillRect(double x, double y, double w, double h);
