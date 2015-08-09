@@ -4,10 +4,24 @@
 namespace canvas {
   class TextMetrics {
   public:
-  TextMetrics() : width(0), height(0) { }
-  TextMetrics(float _width, float _height) : width(_width), height(_height) { }
+  TextMetrics() : width(0) { }
+  TextMetrics(float _width) : width(_width) { }
     
-    float width, height;
+    float width;
+
+#if 0
+    float ideographicBaseline;
+    float alphabeticBaseline;
+    float hangingBaseline;
+    float emHeightDescent;
+    float emHeightAscent;
+    float actualBoundingBoxDescent;
+    float actualBoundingBoxAscent;
+    float fontBoundingBoxDescent;
+    float fontBoundingBoxAscent;
+    float actualBoundingBoxRight;
+    float actualBoundingBoxLeft;
+#endif
   };
 };
 
