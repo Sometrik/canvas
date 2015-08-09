@@ -190,6 +190,27 @@ namespace canvas {
       CGColorRelease(color);
     }
 
+    TextMetrics measureText(const Font & font, const std::string & text, float display_scale) {
+      CTFontRef font2 = font_cache->getFont(font, display_scale);
+      CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
+      CFStringRef keys[] = { kCTFontAttributeName };
+      CFTypeRef values[] = { font2 };
+      CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+      
+      CFAttributedStringRef attrString = CFAttributedStringCreate(NULL, text2, attr);
+      CTLineRef line = CTLineCreateWithAttributedString(attrString);
+      
+      CGFloat ascent, descent, leading;
+      double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
+      
+      CFRelease(line);
+      CFRelease(attrString);
+      CFRelease(attr);
+      CFRelease(text2);
+      
+      return TextMetrics(width / display_scale);
+    }
+
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
       assert(img.gc);
@@ -259,27 +280,6 @@ namespace canvas {
     const Surface & getDefaultSurface() const { return default_surface; }
       
     void setgc(CGContextRef _gc) { default_surface.gc = _gc; }
-
-    TextMetrics measureText(const std::string & text) {
-      CTFontRef font2 = font_cache->getFont(font, getDisplayScale());
-      CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
-      CFStringRef keys[] = { kCTFontAttributeName };
-      CFTypeRef values[] = { font2 };
-      CFDictionaryRef attr = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-      
-      CFAttributedStringRef attrString = CFAttributedStringCreate(NULL, text2, attr);
-      CTLineRef line = CTLineCreateWithAttributedString(attrString);
-      
-      CGFloat ascent, descent, leading;
-      double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
-      
-      CFRelease(line);
-      CFRelease(attrString);
-      CFRelease(attr);
-      CFRelease(text2);
-      
-      return TextMetrics(width / getDisplayScale(), font.size);
-    }
 
     void drawImage(const Image & img, double x, double y, double w, double h) override;
     void drawImage(Surface & img, double x, double y, double w, double h) override;
