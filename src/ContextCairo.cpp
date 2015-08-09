@@ -12,8 +12,6 @@ CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_he
   cairo_format_t format = has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
   surface = cairo_image_surface_create(format, _actual_width, _actual_height);
   assert(surface);
-  cr = cairo_create(surface);  
-  assert(cr);
 }
  
 CairoSurface::CairoSurface(const Image & image)
@@ -43,8 +41,6 @@ CairoSurface::CairoSurface(const Image & image)
 						getActualHeight(),
 						stride);
   assert(surface);
-  cr = cairo_create(surface);  
-  assert(cr);
 }
 
 CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0, 0, 0) {
@@ -52,8 +48,6 @@ CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0, 0, 0) {
   assert(surface);
   unsigned int w = cairo_image_surface_get_width(surface), h = cairo_image_surface_get_height(surface);
   Surface::resize(w, h, w, h);		  
-  cr = cairo_create(surface);
-  assert(cr);
 }
 
 struct read_buffer_s {
@@ -84,8 +78,6 @@ CairoSurface::CairoSurface(const unsigned char * buffer, size_t size) : Surface(
     surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, getActualWidth(), getActualHeight());
   }
   assert(surface);
-  cr = cairo_create(surface);
-  assert(cr);
 }
 
 CairoSurface::~CairoSurface() {
@@ -111,18 +103,20 @@ CairoSurface::markDirty() {
 void
 CairoSurface::resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height) {
   Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height);
-  if (cr) cairo_destroy(cr);
+  if (cr) {
+    cairo_destroy(cr);
+    cr = 0;
+  }
   if (surface) cairo_surface_destroy(surface);  
   cairo_format_t format = CAIRO_FORMAT_ARGB32;
   // format = CAIRO_FORMAT_RGB24;
   surface = cairo_image_surface_create(format, _actual_width, _actual_height);
   assert(surface);
-  cr = cairo_create(surface);
-  assert(cr);
 } 
 
 void
 CairoSurface::sendPath(const Path & path) {
+  initializeContext();
   for (auto pc : path.getData()) {
     switch (pc.type) {
     case PathComponent::MOVE_TO: cairo_move_to(cr, pc.x0 + 0.5, pc.y0 + 0.5); break;
@@ -147,6 +141,7 @@ CairoSurface::clip(const Path & path, float display_scale) {
 
 void
 CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) {
+  initializeContext();
   cairo_pattern_t * pat = 0;
   if (style.getType() == Style::LINEAR_GRADIENT) {
     pat = cairo_pattern_create_linear(style.x0 * display_scale, style.y0 * display_scale, style.x1 * display_scale, style.y1 * display_scale);
@@ -180,6 +175,7 @@ CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style
 
 void
 CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) {
+  initializeContext();
   cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha);
   cairo_select_font_face(cr, font.family.c_str(),
 			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
@@ -227,13 +223,28 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   }
 }
 
+// renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) {
+
+TextMetrics
+CairoSurface::measureText(const Font & font, const std::string & text, float display_scale) {
+  initializeContext();
+  cairo_select_font_face(cr, font.family.c_str(),
+			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
+			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
+  cairo_set_font_size(cr, font.size * display_scale);
+  cairo_text_extents_t te;
+  cairo_text_extents(cr, text.c_str(), &te);
+  return TextMetrics((float)te.width / display_scale); //, (float)te.height);
+}
+
 void
 CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled) {
+  initializeContext();
   double sx = w / img.getActualWidth(), sy = h / img.getActualHeight();
   cairo_save(cr);
   cairo_scale(cr, sx, sy);
   cairo_set_source_surface(cr, img.surface, (x / sx) + 0.5, (y / sy) + 0.5);
-  cairo_pattern_set_filter (cairo_get_source (cr), imageSmoothingEnabled ? CAIRO_FILTER_BILINEAR : CAIRO_FILTER_NEAREST);
+  cairo_pattern_set_filter(cairo_get_source(cr), imageSmoothingEnabled ? CAIRO_FILTER_BILINEAR : CAIRO_FILTER_NEAREST);
   if (alpha < 1.0f) {
     cairo_paint_with_alpha(cr, alpha);
   } else {
@@ -262,29 +273,13 @@ CairoSurface::drawImage(const Image & _img, double x, double y, double w, double
 }
 
 void
-CairoSurface::save() {  
+CairoSurface::save() {
+  initializeContext();
   cairo_save(cr);
 }
 
 void
 CairoSurface::restore() {
+  initializeContext();
   cairo_restore(cr);
 }
-
-ContextCairo::ContextCairo(unsigned int _width, unsigned int _height, float _display_scale)
-  : Context(_display_scale),
-    default_surface(_width, _height, (unsigned int)(_display_scale * _width), (unsigned int)(_display_scale * _height), true)
-{ 
-}
-
-TextMetrics
-ContextCairo::measureText(const std::string & text) {
-  cairo_select_font_face(default_surface.cr, font.family.c_str(),
-			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
-			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
-  cairo_set_font_size(default_surface.cr, font.size);
-  cairo_text_extents_t te;
-  cairo_text_extents(default_surface.cr, text.c_str(), &te);
-  return TextMetrics((float)te.width, (float)te.height);
-}
-

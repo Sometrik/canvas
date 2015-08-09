@@ -34,6 +34,7 @@ namespace canvas {
 
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale);
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale);
+    TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void clip(const Path & path, float display_scale);
@@ -41,12 +42,20 @@ namespace canvas {
     void restore();
     
   protected:
+    void initializeContext() {
+      if (!cr) {
+	assert(surface);
+	cr = cairo_create(surface);  
+	assert(cr);
+      }
+    }
+
     void drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled);
 
     void sendPath(const Path & path);
 
   private:
-    cairo_t * cr;  
+    cairo_t * cr = 0;
     cairo_surface_t * surface;
     unsigned int * storage = 0;
     bool locked_for_write = false;
@@ -54,8 +63,12 @@ namespace canvas {
 
   class ContextCairo : public Context {
   public:
-    ContextCairo(unsigned int _width = 0, unsigned int _height = 0, float _display_scale = 1.0f);
-
+    ContextCairo(unsigned int _width = 0, unsigned int _height = 0, float _display_scale = 1.0f)
+      : Context(_display_scale),
+      default_surface(_width, _height, (unsigned int)(_display_scale * _width), (unsigned int)(_display_scale * _height), true)
+	{ 
+	}
+    
     std::shared_ptr<Surface> createSurface(const Image & image) {
       return std::shared_ptr<Surface>(new CairoSurface(image));
     }
@@ -70,8 +83,6 @@ namespace canvas {
     const CairoSurface & getDefaultSurface() const { return default_surface; }
         
     void clearRect(double x, double y, double w, double h) { }
-
-    TextMetrics measureText(const std::string & text);
 
   protected:
     CairoSurface default_surface;
