@@ -31,9 +31,7 @@ namespace canvas {
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
 
     virtual void resize(unsigned int _width, unsigned int _height);
-    
-    virtual void clearRect(double x, double y, double w, double h) = 0;
-
+        
     void beginPath() { current_path.clear(); }
     void closePath() { current_path.close(); }
 
@@ -59,6 +57,8 @@ namespace canvas {
     void rect(double x, double y, double w, double h);
     void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
+    void clearRect(double x, double y, double w, double h);
+
     void fillText(const std::string & text, double x, double y) { renderText(FILL, fillStyle, text, x, y); }
     void strokeText(const std::string & text, double x, double y) { renderText(STROKE, strokeStyle, text, x, y); }
     
@@ -108,7 +108,7 @@ namespace canvas {
     bool imageSmoothingEnabled = true;
     
   protected:
-    virtual void renderPath(RenderMode mode, const Style & style);
+    virtual void renderPath(RenderMode mode, const Style & style, Operator op = SOURCE_OVER);
     virtual void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y);
 
     bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }

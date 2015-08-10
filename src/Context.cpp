@@ -106,3 +106,10 @@ Context::restore() {
   }
   getDefaultSurface().restore();
 }
+
+void
+Context::clearRect(double x, double y, double w, double h) {
+  beginPath();
+  rect(x, y, w, h);  
+  renderPath(FILL, fillStyle, COPY);
+}
