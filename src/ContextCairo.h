@@ -30,7 +30,7 @@ namespace canvas {
 	markDirty();
       }
     }
-    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height);
+    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool has_alpha);
 
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale);
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale);
