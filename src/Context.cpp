@@ -55,7 +55,7 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
 }
 
 void
-Context::renderPath(RenderMode mode, const Style & style) {
+Context::renderPath(RenderMode mode, const Style & style, Operator op) {
   if (hasShadow()) {
     float b = shadowBlur, bs = shadowBlur * getDisplayScale();
     float bi = int(ceil(b));
@@ -64,12 +64,12 @@ Context::renderPath(RenderMode mode, const Style & style) {
     Path tmp_path = current_path;
     tmp_path.offset(shadowOffsetX + bi, shadowOffsetY + bi);
     
-    shadow->renderPath(mode, tmp_path, shadow_style, lineWidth, getDisplayScale());
+    shadow->renderPath(mode, tmp_path, shadow_style, lineWidth, op, getDisplayScale());
     shadow->gaussianBlur(bs, bs);
     
     getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
-  getDefaultSurface().renderPath(mode, current_path, style, getDisplayScale(), getDisplayScale());
+  getDefaultSurface().renderPath(mode, current_path, style, getDisplayScale(), op, getDisplayScale());
 }
 
 void
