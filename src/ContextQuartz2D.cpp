@@ -20,12 +20,10 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::str
     img = 0;
   }
   CGDataProviderRelease(provider);
-  colorspace = CGColorSpaceCreateDeviceRGB();
   if (img) {
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
     Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha);
-    unsigned int bitmapBytesPerRow = getActualWidth() * 4;
-    unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
+    unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   
@@ -35,8 +33,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::str
     CGImageRelease(img);
   } else {
     resize(16, 16, 16, 16, true);
-    unsigned int bitmapBytesPerRow = getActualWidth() * 4;
-    unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
+    unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   }
@@ -54,12 +51,10 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const unsigned
     img = 0;
   }
   CGDataProviderRelease(provider);
-  colorspace = CGColorSpaceCreateDeviceRGB();
   if (img) {
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
     Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha);
-    unsigned int bitmapBytesPerRow = getActualWidth() * 4;
-    unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
+    unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   
@@ -69,8 +64,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const unsigned
     CGImageRelease(img);
   } else {
     Surface::resize(16, 16, 16, 16, true);
-    unsigned int bitmapBytesPerRow = getActualWidth() * 4;
-    unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
+    unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   }
@@ -91,7 +85,7 @@ Quartz2DSurface::sendPath(const Path & path, float scale) {
 }
 
 void
-Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) {
+Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale) {
   initializeContext();
   switch (mode) {
   case STROKE:
@@ -157,14 +151,14 @@ ContextQuartz2D::renderText(RenderMode mode, const Style & style, const std::str
 }
 
 void
-ContextQuartz2D::renderPath(RenderMode mode, const Style & style) {
+ContextQuartz2D::renderPath(RenderMode mode, const Style & style, Operator op) {
   if (hasShadow()) {
     default_surface.save();
     default_surface.setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
-    default_surface.renderPath(mode, current_path, style, lineWidth, getDisplayScale());
+    default_surface.renderPath(mode, current_path, style, lineWidth, op, getDisplayScale());
     default_surface.restore();
   } else {
-    getDefaultSurface().renderPath(mode, current_path, style, lineWidth, getDisplayScale());
+    getDefaultSurface().renderPath(mode, current_path, style, lineWidth, op, getDisplayScale());
   }
 }
 

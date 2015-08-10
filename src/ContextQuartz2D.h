@@ -55,24 +55,17 @@ namespace canvas {
         
   Quartz2DSurface(Quartz2DFontCache * _font_cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha)
     : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha), font_cache(_font_cache) {
-      colorspace = CGColorSpaceCreateDeviceRGB();
-
       if (_actual_width && _actual_height) {
         unsigned int bitmapBytesPerRow = _actual_width * 4;
         unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
         bitmapData = new unsigned char[bitmapByteCount];
         memset(bitmapData, 0, bitmapByteCount);
-      } else {
-        bitmapData = 0;
       }
   }
   
   Quartz2DSurface(Quartz2DFontCache * _font_cache, const Image & image)
     : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.hasAlpha()), font_cache(_font_cache) {
-      colorspace = CGColorSpaceCreateDeviceRGB();
-
       assert(getActualWidth() && getActualHeight());
-        
       size_t bitmapByteCount = 4 * getActualWidth() * getActualHeight();
       bitmapData = new unsigned char[bitmapByteCount];
       memcpy(bitmapData, image.getData(), bitmapByteCount);
@@ -83,16 +76,16 @@ namespace canvas {
     
     ~Quartz2DSurface() {
       if (active_shadow_color) CGColorRelease(active_shadow_color);
-      CGColorSpaceRelease(colorspace);
-      delete[] bitmapData;
+      if (colorspace) CGColorSpaceRelease(colorspace);
       if (gc) CGContextRelease(gc);
+      delete[] bitmapData;
     }
 
     void * lockMemory(bool write_access = false) { return bitmapData; }
     
     void releaseMemory() { }
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) override;
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale) override;
 
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) override {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
@@ -205,6 +198,7 @@ namespace canvas {
       CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), 4 * _img.getWidth() * _img.getHeight(), 0);
       CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, 32, 4 * _img.getWidth(), colorspace, (_img.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast),
                                      provider, 0, true, kCGRenderingIntentDefault);
+      assert(img);
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), img);
       CGDataProviderRelease(provider);
       CGImageRelease(img);
@@ -223,7 +217,6 @@ namespace canvas {
     }
 
   protected:
-    void renderPath(RenderMode mode, const Style & style);
     void sendPath(const Path & path, float display_scale);
     CGColorRef createCGColor(const Color & color) {
       CGFloat cv[] = { color.red, color.green, color.blue, color.alpha };
@@ -240,6 +233,8 @@ namespace canvas {
     
     void initializeContext() {
       if (!gc) {
+        if (!colorspace) colorspace = CGColorSpaceCreateDeviceRGB();
+        assert(bitmapData);
         unsigned int bitmapBytesPerRow = getActualWidth() * 4;
         gc = CGBitmapContextCreate(bitmapData, getActualWidth(), getActualHeight(), 8, bitmapBytesPerRow, colorspace,
                                    (hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
@@ -253,8 +248,8 @@ namespace canvas {
   private:
     Quartz2DFontCache * font_cache;
     CGContextRef gc = 0;
-    CGColorSpaceRef colorspace;
-    unsigned char * bitmapData;
+    CGColorSpaceRef colorspace = 0;
+    unsigned char * bitmapData = 0;
     CGColorRef active_shadow_color = 0;
   };
 
@@ -288,7 +283,7 @@ namespace canvas {
     
   protected:
     void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y) override;
-    void renderPath(RenderMode mode, const Style & style) override;
+    void renderPath(RenderMode mode, const Style & style, Operator op) override;
     
   private:
     Quartz2DFontCache * font_cache;
