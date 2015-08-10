@@ -39,7 +39,7 @@ namespace canvas {
       delete[] scaled_buffer;
     }
 
-    virtual void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height) {
+    virtual void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) {
       texture.setLogicalWidth(_logical_width);
       texture.setLogicalHeight(_logical_height);
       texture.setActualWidth(_logical_width);
@@ -48,6 +48,7 @@ namespace canvas {
       logical_height = _logical_height;
       actual_width = _actual_width;
       actual_height = _actual_height;
+      has_alpha = _has_alpha;
     }
 
     virtual void flush() { }
@@ -85,6 +86,7 @@ namespace canvas {
     unsigned int getLogicalHeight() const { return logical_height; }
     unsigned int getActualWidth() const { return actual_width; }
     unsigned int getActualHeight() const { return actual_height; }
+    bool hasAlpha() const { return has_alpha; }
 
     void setMagFilter(FilterMode mode) { mag_filter = mode; }
     void setMinFilter(FilterMode mode) { min_filter = mode; }
