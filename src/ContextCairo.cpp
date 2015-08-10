@@ -51,8 +51,8 @@ CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0, 0, 0, t
   surface = cairo_image_surface_create_from_png(filename.c_str());
   assert(surface);
   unsigned int w = cairo_image_surface_get_width(surface), h = cairo_image_surface_get_height(surface);
-  bool has_alpha = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
-  Surface::resize(w, h, w, h, has_alpha);
+  bool a = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
+  Surface::resize(w, h, w, h, a);
 }
 
 struct read_buffer_s {
@@ -77,8 +77,8 @@ CairoSurface::CairoSurface(const unsigned char * buffer, size_t size) : Surface(
   if (isPNG(buffer, size)) {
     surface = cairo_image_surface_create_from_png_stream(read_buffer, &buf);
     unsigned int w = cairo_image_surface_get_width(surface), h = cairo_image_surface_get_height(surface);
-    bool has_alpha = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
-    Surface::resize(w, h, w, h, has_alpha);
+    bool a = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
+    Surface::resize(w, h, w, h, a);
   } else {
     cerr << "failed to load image from memory\n";
     surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, getActualWidth(), getActualHeight());
@@ -107,14 +107,14 @@ CairoSurface::markDirty() {
 }
 
 void
-CairoSurface::resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool has_alpha) {
-  Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, has_alpha);
+CairoSurface::resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) {
+  Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
   if (cr) {
     cairo_destroy(cr);
     cr = 0;
   }
   if (surface) cairo_surface_destroy(surface);  
-  cairo_format_t format = has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
+  cairo_format_t format = hasAlpha() ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
   surface = cairo_image_surface_create(format, _actual_width, _actual_height);
   assert(surface);
 } 
@@ -150,8 +150,8 @@ CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style
 
   if (op != SOURCE_OVER) {
     switch (op) {
-    case OPERATOR_SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
-    case OPERATOR_COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
+    case SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
+    case COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
     }
   }
 
@@ -273,9 +273,9 @@ CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w
 
 void
 CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled) {
-  CairoSurface * cs = dynamic_cast<CairoSurface*>(&_img);
-  if (cs) {
-    drawNativeSurface(*cs, x, y, w, h, alpha, imageSmoothingEnabled);    
+  CairoSurface * cs_ptr = dynamic_cast<CairoSurface*>(&_img);
+  if (cs_ptr) {
+    drawNativeSurface(*cs_ptr, x, y, w, h, alpha, imageSmoothingEnabled);    
   } else {
     auto img = _img.createImage();
     CairoSurface cs(*img);

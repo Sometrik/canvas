@@ -44,7 +44,9 @@ namespace canvas {
   protected:
     void initializeContext() {
       if (!cr) {
-	assert(surface);
+	if (!surface) {
+	  surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 4, 4);
+	}
 	cr = cairo_create(surface);  
 	assert(cr);
       }
