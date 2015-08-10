@@ -8,6 +8,7 @@
 #include <CoreText/CoreText.h>
 
 #include <sstream>
+#include <iostream>
 
 namespace canvas {
   class Quartz2DFontCache {
@@ -52,8 +53,8 @@ namespace canvas {
   public:
     friend class ContextQuartz2D;
         
-  Quartz2DSurface(Quartz2DFontCache * _font_cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool has_alpha = true)
-    : Surface(_logical_width, _logical_height, _actual_width, _actual_height),
+  Quartz2DSurface(Quartz2DFontCache * _font_cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha)
+    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha),
       font_cache(_font_cache) {
       colorspace = CGColorSpaceCreateDeviceRGB();
 
@@ -64,53 +65,27 @@ namespace canvas {
       unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
       bitmapData = new unsigned char[bitmapByteCount];
       memset(bitmapData, 0, bitmapByteCount);
-      
-      gc = CGBitmapContextCreate(bitmapData,
-				 _actual_width,
-				 _actual_height,
-				 8,
-				 bitmapBytesPerRow,
-				 colorspace,
-                                 (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // kCGImageAlphaNone);  | kCGBitmapByteOrder32Big
-      initialize();
-    }
+  }
   
   Quartz2DSurface(Quartz2DFontCache * _font_cache, const Image & image)
-    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight()),
+    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.hasAlpha()),
       font_cache(_font_cache) {
         colorspace = CGColorSpaceCreateDeviceRGB();
 
-	bool has_alpha = image.hasAlpha();
 	unsigned int bitmapBytesPerRow = getActualWidth() * 4;
         unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
         bitmapData = new unsigned char[bitmapByteCount];
         memcpy(bitmapData, image.getData(), bitmapByteCount);
-        
-        gc = CGBitmapContextCreate(bitmapData,
-                                   getActualWidth(),
-                                   getActualHeight(),
-                                   8,
-                                   bitmapBytesPerRow,
-                                   colorspace,
-                                   (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); //  | kCGBitmapByteOrder32Big);
-	initialize();
     }
     
     Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::string & filename);
     Quartz2DSurface(Quartz2DFontCache * _font_cache, const unsigned char * buffer, size_t size);
-
-    void initialize() {
-      assert(gc);
-      CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
-      CGContextSetShouldAntialias(gc, true);
-      CGContextTranslateCTM(gc, 0, getActualHeight());
-      CGContextScaleCTM(gc, 1.0, -1.0);
-    }
-      
+    
     ~Quartz2DSurface() {
       if (active_shadow_color) CGColorRelease(active_shadow_color);
       CGColorSpaceRelease(colorspace);
       delete[] bitmapData;
+      if (gc) CGContextRelease(gc);
     }
 
     void * lockMemory(bool write_access = false) { return bitmapData; }
@@ -119,24 +94,23 @@ namespace canvas {
 
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) override;
 
-    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height) override {
-      Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height);
+    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) override {
+      Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
 
-      CGContextRelease(gc);
+      if (gc) {
+        CGContextRelease(gc);
+        gc = 0;
+      }
       delete[] bitmapData;
 
-      bool has_alpha = true;
       unsigned int bitmapBytesPerRow = _actual_width * 4;
       unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
       bitmapData = new unsigned char[bitmapByteCount];
       memset(bitmapData, 0, bitmapByteCount);
-      
-      gc = CGBitmapContextCreate(bitmapData, _actual_width, _actual_height, 8, bitmapBytesPerRow, colorspace,
-                                 (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast));
-      initialize();
     }    
     
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) override {
+      initializeContext();
       CTFontRef font2 = font_cache->getFont(font, display_scale);
       CGColorRef color = createCGColor(style.color);
       
@@ -211,14 +185,23 @@ namespace canvas {
       return TextMetrics(width / display_scale);
     }
 
-    void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
+    void drawImage(Surface & surface, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
+      initializeContext();
+#if 1
+      auto img = surface.createImage();
+      drawImage(*img, x, y, w, h, alpha, imageSmoothingEnabled);
+#else
+      _img.initializeContext();
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
       assert(img.gc);
       CGImageRef myImage = CGBitmapContextCreateImage(img.gc);
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), myImage);
       CGImageRelease(myImage);
+#endif
     }
     void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
+      initializeContext();
+      std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " " << _img.hasAlpha() << std::endl;
       CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), 4 * _img.getWidth() * _img.getHeight(), 0);
       CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, 32, 4 * _img.getWidth(), colorspace, (_img.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast),
                                      provider, 0, true, kCGRenderingIntentDefault);
@@ -230,8 +213,14 @@ namespace canvas {
       sendPath(path, display_scale);
       CGContextClip(gc);
     }
-    void save() { CGContextSaveGState(gc); }
-    void restore() { CGContextRestoreGState(gc); }
+    void save() {
+      initializeContext();
+      CGContextSaveGState(gc);
+    }
+    void restore() {
+      initializeContext();
+      CGContextRestoreGState(gc);
+    }
 
   protected:
     void renderPath(RenderMode mode, const Style & style);
@@ -242,15 +231,28 @@ namespace canvas {
     }
     
     void setShadow(float shadowOffsetX, float shadowOffsetY, float shadowBlur, const Color & shadowColor, float display_scale) {
+      initializeContext();
       CGSize offset = CGSizeMake(display_scale * shadowOffsetX, display_scale * shadowOffsetY);
       if (active_shadow_color) CGColorRelease(active_shadow_color);
       active_shadow_color = createCGColor(shadowColor);
       CGContextSetShadowWithColor(gc, offset, display_scale * shadowBlur, active_shadow_color);
     }
     
+    void initializeContext() {
+      if (!gc) {
+        unsigned int bitmapBytesPerRow = getActualWidth() * 4;
+        gc = CGBitmapContextCreate(bitmapData, getActualWidth(), getActualHeight(), 8, bitmapBytesPerRow, colorspace,
+                                   (hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
+        CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
+        CGContextSetShouldAntialias(gc, true);
+        CGContextTranslateCTM(gc, 0, getActualHeight());
+        CGContextScaleCTM(gc, 1.0, -1.0);
+      }
+    }
+    
   private:
     Quartz2DFontCache * font_cache;
-    CGContextRef gc;
+    CGContextRef gc = 0;
     CGColorSpaceRef colorspace;
     unsigned char * bitmapData;
     CGColorRef active_shadow_color = 0;
@@ -261,7 +263,7 @@ namespace canvas {
   ContextQuartz2D(Quartz2DFontCache * _font_cache, unsigned int _width, unsigned int _height, float _display_scale)
     : Context(_display_scale),
       font_cache(_font_cache),
-      default_surface(_font_cache, _width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale))
+      default_surface(_font_cache, _width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), true)
       {
       }
 

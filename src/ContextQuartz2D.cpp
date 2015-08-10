@@ -6,7 +6,7 @@ using namespace canvas;
 using namespace std;
 
 Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::string & filename)
-  : Surface(0, 0, 0, 0), font_cache(_font_cache) {
+  : Surface(0, 0, 0, 0, true), font_cache(_font_cache) {
   cerr << "trying to load file " << filename << endl;
   CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
   CGImageRef img;
@@ -22,44 +22,27 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::str
   CGDataProviderRelease(provider);
   colorspace = CGColorSpaceCreateDeviceRGB();
   if (img) {
-    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img));
-  
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
+    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha);
     unsigned int bitmapBytesPerRow = getActualWidth() * 4;
     unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   
-    gc = CGBitmapContextCreate(bitmapData,
-                               getActualWidth(),
-                               getActualHeight(),
-                               8,
-                               bitmapBytesPerRow,
-                               colorspace,
-                               (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
-    initialize();
+    initializeContext();
+    
     CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
     CGImageRelease(img);
   } else {
-    resize(16, 16, 16, 16);
+    resize(16, 16, 16, 16, true);
     unsigned int bitmapBytesPerRow = getActualWidth() * 4;
     unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
-    
-    gc = CGBitmapContextCreate(bitmapData,
-                               getActualWidth(),
-                               getActualHeight(),
-                               8,
-                               bitmapBytesPerRow,
-                               colorspace,
-                               kCGImageAlphaPremultipliedLast); // | kCGBitmapByteOrder32Big);
-    initialize();
   }
 }
 
-Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const unsigned char * buffer, size_t size)
-: Surface(0, 0, 0, 0), font_cache(_font_cache) {
+Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, true), font_cache(_font_cache) {
   CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
   CGImageRef img;
   if (isPNG(buffer, size)) {
@@ -73,44 +56,29 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const unsigned
   CGDataProviderRelease(provider);
   colorspace = CGColorSpaceCreateDeviceRGB();
   if (img) {
-    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img));
-  
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
+    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha);
     unsigned int bitmapBytesPerRow = getActualWidth() * 4;
     unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   
-    gc = CGBitmapContextCreate(bitmapData,
-                               getActualWidth(),
-                               getActualHeight(),
-                               8,
-                               bitmapBytesPerRow,
-                               colorspace,
-                               (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
-    initialize();
+    initializeContext();
+    
     CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
     CGImageRelease(img);
   } else {
-    Surface::resize(16, 16, 16, 16);
+    Surface::resize(16, 16, 16, 16, true);
     unsigned int bitmapBytesPerRow = getActualWidth() * 4;
     unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
-    
-    gc = CGBitmapContextCreate(bitmapData,
-                               getActualWidth(),
-                               getActualHeight(),
-                               8,
-                               bitmapBytesPerRow,
-                               colorspace,
-                               kCGImageAlphaPremultipliedLast); // | kCGBitmapByteOrder32Big);
-    initialize();
   }
 }
 
 void
 Quartz2DSurface::sendPath(const Path & path, float scale) {
+  initializeContext();
   CGContextBeginPath(gc);
   for (auto pc : path.getData()) {
     switch (pc.type) {
@@ -124,6 +92,7 @@ Quartz2DSurface::sendPath(const Path & path, float scale) {
 
 void
 Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) {
+  initializeContext();
   switch (mode) {
   case STROKE:
     sendPath(path, display_scale);
