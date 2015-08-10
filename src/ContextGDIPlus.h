@@ -62,9 +62,9 @@ namespace canvas {
       return 0;
     }
 #endif
-    void resize(unsigned int _width, unsigned int _height) {
-      Surface::resize(_width, _height);
-      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_width, _height));
+    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) {
+      Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
+      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, _has_alpha ? PixelFormat32bppRGB : PixelFormat32bppPARGB));
       g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
       initialize();
     }
