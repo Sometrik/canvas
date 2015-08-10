@@ -141,8 +141,16 @@ CairoSurface::clip(const Path & path, float display_scale) {
 }
 
 void
-CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) {
+CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale) {
   initializeContext();
+
+  if (op != SOURCE_OVER) {
+    switch (op) {
+    case OPERATOR_SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
+    case OPERATOR_COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
+    }
+  }
+
   cairo_pattern_t * pat = 0;
   if (style.getType() == Style::LINEAR_GRADIENT) {
     pat = cairo_pattern_create_linear(style.x0 * display_scale, style.y0 * display_scale, style.x1 * display_scale, style.y1 * display_scale);
@@ -171,6 +179,10 @@ CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style
   if (pat) {
     cairo_pattern_destroy(pat);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+  }
+
+  if (op != SOURCE_OVER) {
+    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   }
 }
 

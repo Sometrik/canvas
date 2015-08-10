@@ -32,7 +32,7 @@ namespace canvas {
     }
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool has_alpha);
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale);
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale);
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale);
     TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
@@ -81,9 +81,7 @@ namespace canvas {
 
     CairoSurface & getDefaultSurface() { return default_surface; }
     const CairoSurface & getDefaultSurface() const { return default_surface; }
-        
-    void clearRect(double x, double y, double w, double h) { }
-
+    
   protected:
     CairoSurface default_surface;
   };
