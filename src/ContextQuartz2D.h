@@ -54,28 +54,28 @@ namespace canvas {
     friend class ContextQuartz2D;
         
   Quartz2DSurface(Quartz2DFontCache * _font_cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha)
-    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha),
-      font_cache(_font_cache) {
+    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha), font_cache(_font_cache) {
       colorspace = CGColorSpaceCreateDeviceRGB();
 
-      assert(_logical_width && _logical_height);
-      assert(_actual_width && _actual_height);
-      
-      unsigned int bitmapBytesPerRow = _actual_width * 4;
-      unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
-      bitmapData = new unsigned char[bitmapByteCount];
-      memset(bitmapData, 0, bitmapByteCount);
+      if (_actual_width && _actual_height) {
+        unsigned int bitmapBytesPerRow = _actual_width * 4;
+        unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
+        bitmapData = new unsigned char[bitmapByteCount];
+        memset(bitmapData, 0, bitmapByteCount);
+      } else {
+        bitmapData = 0;
+      }
   }
   
   Quartz2DSurface(Quartz2DFontCache * _font_cache, const Image & image)
-    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.hasAlpha()),
-      font_cache(_font_cache) {
-        colorspace = CGColorSpaceCreateDeviceRGB();
+    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.hasAlpha()), font_cache(_font_cache) {
+      colorspace = CGColorSpaceCreateDeviceRGB();
 
-	unsigned int bitmapBytesPerRow = getActualWidth() * 4;
-        unsigned int bitmapByteCount = bitmapBytesPerRow * getActualHeight();
-        bitmapData = new unsigned char[bitmapByteCount];
-        memcpy(bitmapData, image.getData(), bitmapByteCount);
+      assert(getActualWidth() && getActualHeight());
+        
+      size_t bitmapByteCount = 4 * getActualWidth() * getActualHeight();
+      bitmapData = new unsigned char[bitmapByteCount];
+      memcpy(bitmapData, image.getData(), bitmapByteCount);
     }
     
     Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::string & filename);
@@ -96,18 +96,18 @@ namespace canvas {
 
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) override {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
-
+      
       if (gc) {
         CGContextRelease(gc);
         gc = 0;
       }
       delete[] bitmapData;
 
-      unsigned int bitmapBytesPerRow = _actual_width * 4;
-      unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
+      assert(getActualWidth() && getActualHeight());
+      unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
       bitmapData = new unsigned char[bitmapByteCount];
       memset(bitmapData, 0, bitmapByteCount);
-    }    
+    }
     
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) override {
       initializeContext();
