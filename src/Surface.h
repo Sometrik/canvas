@@ -26,12 +26,13 @@ namespace canvas {
   public:
     friend class Context;
 
-    Surface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height)
+  Surface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha)
       : texture(_logical_width, _logical_height, _actual_width, _actual_height),
       logical_width(_logical_width),
       logical_height(_logical_height),
       actual_width(_actual_width),
-      actual_height(_actual_height) { }
+      actual_height(_actual_height),
+      has_alpha(_has_alpha) { }
     Surface(const Surface & other) = delete;
     Surface & operator=(const Surface & other) = delete;
     virtual ~Surface() {
@@ -99,6 +100,7 @@ namespace canvas {
     FilterMode mag_filter = LINEAR;
     FilterMode min_filter = LINEAR;
     unsigned int * scaled_buffer = 0;
+    bool has_alpha;
   };
 
   class NullSurface : public Surface {

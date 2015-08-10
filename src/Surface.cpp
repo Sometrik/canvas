@@ -186,7 +186,7 @@ std::shared_ptr<Image>
 Surface::createImage() {
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
-  shared_ptr<Image> image(new Image(getActualWidth(), getActualHeight(), buffer, true));
+  shared_ptr<Image> image(new Image(getActualWidth(), getActualHeight(), buffer, has_alpha));
   releaseMemory();
   
   return image;
