@@ -10,6 +10,7 @@
 #include "TextBaseline.h"
 #include "TextAlign.h"
 #include "TextMetrics.h"
+#include "Operator.h"
 
 #include <memory>
 
@@ -63,7 +64,7 @@ namespace canvas {
     }
 
     virtual void clip(const Path & path, float display_scale) = 0;
-    virtual void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, float display_scale) = 0;
+    virtual void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale) = 0;
     virtual void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) = 0;
     virtual TextMetrics measureText(const Font & font, const std::string & text, float display_scale) = 0;
 	  
