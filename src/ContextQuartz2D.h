@@ -72,10 +72,10 @@ namespace canvas {
 	memcpy(bitmapData, image.getData(), bitmapByteCount);
       } else {
 	for (unsigned int i = 0; i < getActualWidth() * getActualHeight(); i++) {
-	  storage[4 * i + 0] = image.getData()[3 * i + 2];
-	  storage[4 * i + 1] = image.getData()[3 * i + 1];
-	  storage[4 * i + 2] = image.getData()[3 * i + 0];
-	  storage[4 * i + 3] = 255;
+	  bitmapData[4 * i + 0] = image.getData()[3 * i + 2];
+	  bitmapData[4 * i + 1] = image.getData()[3 * i + 1];
+	  bitmapData[4 * i + 2] = image.getData()[3 * i + 0];
+	  bitmapData[4 * i + 3] = 255;
 	}
       }
     }
@@ -203,11 +203,12 @@ namespace canvas {
     }
     void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
       initializeContext();
-      std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " " << _img.hasAlpha() << std::endl;
-      CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), _img.getFormat().getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
-      assert(_img.getFormat().getBytesPerPixel() == 4);
-      auto f = (_img.getFormat().hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
-      CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, img.getBytesPerPixel() * 8, _img.getBytesPerPixel() * _img.getWidth(), colorspace, f, provider, 0, true, kCGRenderingIntentDefault);
+      auto format = _img.getFormat();
+      std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " " << format.hasAlpha() << std::endl;
+      CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), format.getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
+      assert(format.getBytesPerPixel() == 4);
+      auto f = (format.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
+      CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), colorspace, f, provider, 0, true, kCGRenderingIntentDefault);
       assert(img);
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), img);
       CGDataProviderRelease(provider);
