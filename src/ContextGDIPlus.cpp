@@ -19,18 +19,18 @@ static std::wstring convert_to_wstring(const std::string & input) {
   return output;
 }
 
-static void toGDIPath(const Path & path, Gdiplus::GraphicsPath & output) {
+static void toGDIPath(const Path & path, Gdiplus::GraphicsPath & output, float display_scale) {  
   output.StartFigure();
   Gdiplus::PointF current_pos;
 
   for (auto pc : path.getData()) {
     switch (pc.type) {
     case PathComponent::MOVE_TO:
-      current_pos = Gdiplus::PointF(Gdiplus::REAL(pc.x0), Gdiplus::REAL(pc.y0));
+      current_pos = Gdiplus::PointF(Gdiplus::REAL(pc.x0 * display_scale), Gdiplus::REAL(pc.y0 * display_scale));
       break;
     case PathComponent::LINE_TO:
       {
-	Gdiplus::PointF point(Gdiplus::REAL(pc.x0), Gdiplus::REAL(pc.y0));
+	Gdiplus::PointF point(Gdiplus::REAL(pc.x0 * display_scale), Gdiplus::REAL(pc.y0 * display_scale));
 	output.AddLine(current_pos, point);
 	current_pos = point;
       }
@@ -83,7 +83,7 @@ static void toGDIPath(const Path & path, Gdiplus::GraphicsPath & output) {
     span = M_PI / 2.0;
   }
 #endif
-  Gdiplus::RectF rect(Gdiplus::REAL(pc.x0 - pc.radius), Gdiplus::REAL(pc.y0 - pc.radius), Gdiplus::REAL(2 * pc.radius), Gdiplus::REAL(2 * pc.radius));
+  Gdiplus::RectF rect(Gdiplus::REAL(pc.x0 * display_scale - pc.radius * display_scale), Gdiplus::REAL(pc.y0 * display_scale - pc.radius * display_scale), Gdiplus::REAL(2 * pc.radius * display_scale), Gdiplus::REAL(2 * pc.radius * display_scale));
 
 	output.AddArc(rect, Gdiplus::REAL(pc.sa * 180.0f / M_PI), Gdiplus::REAL(span * 180.0f / M_PI));
 	output.GetLastPoint(&current_pos);
@@ -110,18 +110,16 @@ static Gdiplus::Color toGDIColor(const Color & input) {
 #endif
 }
 
-GDIPlusSurface::GDIPlusSurface(const std::string & filename) : Surface(0, 0) {
+GDIPlusSurface::GDIPlusSurface(const std::string & filename) : Surface(0, 0, 0, 0, false) {
   std::wstring tmp = convert_to_wstring(filename);
   bitmap = std::shared_ptr<Gdiplus::Bitmap>(Gdiplus::Bitmap::FromFile(tmp.data()));
-  Surface::resize(bitmap->GetWidth(), bitmap->GetHeight());
-  g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
-  initialize();
+  Surface::resize(bitmap->GetWidth(), bitmap->GetHeight(), bitmap->GetWidth(), bitmap->GetHeight(), true);
 }
 
 void
-GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style & style, float lineWidth) {
+GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style & style, float lineWidth, Operator op, float display_scale) {
   Gdiplus::GraphicsPath path;
-  toGDIPath(input_path, path);
+  toGDIPath(input_path, path, display_scale);
 
   switch (mode) {
   case STROKE:
@@ -152,6 +150,7 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style
 
 void
 GDIPlusSurface::clip(const Path & input_path) {
+  initializeContext();
   Gdiplus::GraphicsPath path;
   toGDIPath(input_path, path);
 
@@ -161,6 +160,7 @@ GDIPlusSurface::clip(const Path & input_path) {
 
 void
 GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha, bool imageSmoothingEnabled) {
+  initializeContext();
   if (imageSmoothingEnabled) {
     // g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
     g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBilinear );
@@ -209,6 +209,7 @@ GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h
 
 void
 GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) {
+  initializeContext();
   std::wstring text2 = convert_to_wstring(text);
   int style_bits = 0;
   if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {
@@ -217,9 +218,9 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   if (font.slant == Font::ITALIC) {
     style_bits |= Gdiplus::FontStyleItalic;
   }
-  Gdiplus::Font gdifont(&Gdiplus::FontFamily(L"Arial"), font.size, style_bits, Gdiplus::UnitPixel);
+  Gdiplus::Font gdifont(&Gdiplus::FontFamily(L"Arial"), font.size * display_scale, style_bits, Gdiplus::UnitPixel);
 
-  Gdiplus::RectF rect(Gdiplus::REAL(x), Gdiplus::REAL(y), 0.0f, 0.0f);
+  Gdiplus::RectF rect(Gdiplus::REAL(x * display_scale), Gdiplus::REAL(y * display_scale), 0.0f, 0.0f);
   Gdiplus::StringFormat f;
 
   switch (textBaseline.getType()) {
@@ -249,7 +250,8 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
 }
 
 TextMetrics
-ContextGDIPlus::measureText(const std::string & text) {
+GDIPlusSurface::measureText(const Font & font, const std::string & text, float display_scale) {
+  initializeContext();
   std::wstring text2 = convert_to_wstring(text);
   int style = 0;
   if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {
@@ -258,11 +260,11 @@ ContextGDIPlus::measureText(const std::string & text) {
   if (font.slant == Font::ITALIC) {
     style |= Gdiplus::FontStyleItalic;
   }
-  Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), font.size, style, Gdiplus::UnitPixel);
+  Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), font.size * display_scale, style, Gdiplus::UnitPixel);
   Gdiplus::RectF layoutRect(0, 0, 512, 512), boundingBox;
-  default_surface.g->MeasureString(text2.data(), text2.size(), &font, layoutRect, &boundingBox);
+  g->MeasureString(text2.data(), text2.size(), &font, layoutRect, &boundingBox);
   Gdiplus::SizeF size;
   boundingBox.GetSize(&size);
   
-  return TextMetrics((float)size.Width, (float)size.Height);
+  return TextMetrics(size.Width / display_scale);
 }

@@ -23,71 +23,60 @@ namespace canvas {
   public:
     friend class ContextGDIPlus;
 
-    GDIPlusSurface(unsigned int _width, unsigned int _height) : Surface(_width, _height), 
-      bitmap(new Gdiplus::Bitmap(_width, _height, PixelFormat32bppPARGB)),
-      g(new Gdiplus::Graphics(&(*bitmap)))
-    {
-      initialize();
+  GDIPlusSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool has_alpha)
+    : Surface(_width, _height) {
+      if (_width && _height) {
+	bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_width, _height, has_alpha ? PixelFormat32bppPARGB : PixelFormat32bppRGB));
+      }
     }
     GDIPlusSurface(const std::string & filename);
-    GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight())
+  GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha())
     {
       // stride must be a multiple of four
-      storage = new BYTE[4 * image.getWidth() * image.getHeight()];
-      if (image.hasAlpha()) {
-	for (unsigned int i = 0; i < image.getWidth() * image.getHeight(); i++) {
+      size_t numPixels = image.getWidth() * image.getHeight();
+      storage = new BYTE[4 * numPixels];
+      if (image.hasAlpha() || image.getBytesPerPixel() == 4) {
+#if 0
+	for (unsigned int i = 0; i < numPixels; i++) {
 	  storage[4 * i + 0] = image.getData()[4 * i + 0];
 	  storage[4 * i + 1] = image.getData()[4 * i + 1];
 	  storage[4 * i + 2] = image.getData()[4 * i + 2];
 	  storage[4 * i + 3] = image.getData()[4 * i + 3];
 	}
+#else
+	memcpy(storage, image.getData(), 4 * numPixels);
+#endif
       } else {
-	for (unsigned int i = 0; i < image.getWidth() * image.getHeight(); i++) {
+  	for (unsigned int i = 0; i < numPixels; i++) {
 	  storage[4 * i + 0] = image.getData()[3 * i + 2];
 	  storage[4 * i + 1] = image.getData()[3 * i + 1];
 	  storage[4 * i + 2] = image.getData()[3 * i + 0];
 	  storage[4 * i + 3] = 255;
 	}
       }
-      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 4, image.hasAlpha() ? PixelFormat32bppRGB : PixelFormat32bppPARGB, storage));
+      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 4, image.hasAlpha() ? PixelFormat32bppPARGB : PixelFormat32bppRGB, storage));
       // can the storage be freed here?
-      g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
-      initialize();
     }
     ~GDIPlusSurface() {
       delete[] storage;
     }
-#if 0
-    GDIPlusSurface * copy() {
-      return 0;
-    }
-#endif
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
-      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, _has_alpha ? PixelFormat32bppRGB : PixelFormat32bppPARGB));
-      g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
-      initialize();
-    }
-    void initialize() {
-      g->SetCompositingMode( Gdiplus::CompositingModeSourceOver );
-#if 0
-      g->SetPixelOffsetMode( PixelOffsetModeNone );
-#endif
-      g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
-      g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
-      g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
-#if 0
-      g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAlias );
-#endif
+      bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, _has_alpha ? PixelFormat32bppPARGB : PixelFormat32bppRGB ));
+      g = std::shared_ptr<Gdiplus::Graphics>(0);
     }
     void flush() { }
     void markDirty() { }
 
     void * lockMemory(bool write_access = false) {
-      flush();
-      Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-      bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), PixelFormat32bppPARGB, &data);
-      return data.Scan0;
+      if (bitmap.get()) {
+	flush();
+	Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+	bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), hasAlpha() ? PixelFormat32bppPARGB : PixelFormat32bppRGB, &data);
+	return data.Scan0;
+      } else {
+	return 0;
+      }
     }
 
 #if 0
@@ -106,14 +95,18 @@ namespace canvas {
     }
 
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale);
+    TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
+
     void renderPath(RenderMode mode, const Path & path, const Style & style, double lineWidth);
     
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void clip(const Path & path);
     void save() {
+      initializeContext();
       save_stack.push_back(g->Save());
     }
     void restore() {
+      initializeContext();
       assert(!save_stack.empty());
       if (!save_stack.empty()) {
 	g->Restore(save_stack.back());
@@ -122,6 +115,24 @@ namespace canvas {
     }
 
   protected:
+    void initializeContext() {
+      if (!g.get()) {
+	if (!bitmap.get()) {
+	  bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(4, 4, PixelFormat32bppPARGB));
+	}
+	g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+	g->SetCompositingMode( Gdiplus::CompositingModeSourceOver );
+#if 0
+	g->SetPixelOffsetMode( PixelOffsetModeNone );
+#endif
+	g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
+	g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
+	g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
+#if 0
+	g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAlias );
+#endif
+      }
+    }
     void drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha, bool imageSmoothingEnabled);
 
   private:
@@ -162,10 +173,7 @@ namespace canvas {
 
     GDIPlusSurface & getDefaultSurface() { return default_surface; }
     const GDIPlusSurface & getDefaultSurface() const { return default_surface; }
-    
-    void clearRect(double x, double y, double w, double h) { }
-    TextMetrics measureText(const std::string & text);
-    
+        
   protected:
 
   private:   
