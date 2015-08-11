@@ -15,6 +15,10 @@ namespace canvas {
     SavedContext() { }
   private:
     float globalAlpha = 0;
+    bool imageSmoothingEnabled = false;
+    float shadowBlur = 0;
+    Color shadowColor;
+    float shadowOffsetX = 0, shadowOffsetY = 0;
     Path current_path;
   };
   

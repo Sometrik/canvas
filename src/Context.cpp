@@ -93,6 +93,11 @@ Context::save() {
   restore_stack.push_back(SavedContext());
   auto & data = restore_stack.back();
   data.globalAlpha = globalAlpha;
+  data.imageSmoothingEnabled = imageSmoothingEnabled;
+  data.shadowBlur = shadowBlur;
+  data.shadowColor = shadowColor;
+  data.shadowOffsetX = shadowOffsetX;
+  data.shadowOffsetY = shadowOffsetY;
   data.current_path = current_path;
   getDefaultSurface().save();
 }
@@ -102,6 +107,11 @@ Context::restore() {
   if (!restore_stack.empty()) {
     auto & data = restore_stack.back();
     globalAlpha = data.globalAlpha;
+    imageSmoothingEnabled = data.imageSmoothingEnabled;
+    shadowBlur = data.shadowBlur;
+    shadowColor = data.shadowColor;
+    shadowOffsetX = data.shadowOffsetX;
+    shadowOffsetY = data.shadowOffsetY;
     current_path = data.current_path;
   }
   getDefaultSurface().restore();
