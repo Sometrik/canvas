@@ -1,5 +1,7 @@
 #include "ImageFormat.h"
 
+using namespace canvas;
+
 ImageFormat ImageFormat::UNDEF(0, 0);
 ImageFormat ImageFormat::RGB24(3, 3);
 ImageFormat ImageFormat::RGB32(3, 4);

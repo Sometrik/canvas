@@ -19,34 +19,36 @@
 #define PACK_RGB24(r, g, b) (r + (g << 8) + (b << 16))
 #define PACK_RGBA32(r, g, b, a) (r + (g << 8) + (b << 16) + (a << 24))
 
-class ImageFormat {
- public:
-  static ImageFormat UNDEF;
-  static ImageFormat RGB24;
-  static ImageFormat RGB32;
-  static ImageFormat RGBA32;
-  static ImageFormat RGB565;
-  static ImageFormat PAL8;
-  static ImageFormat LUM8;
-  static ImageFormat ALPHA8;
+namespace canvas {
+  class ImageFormat {
+  public:
+    static ImageFormat UNDEF;
+    static ImageFormat RGB24;
+    static ImageFormat RGB32;
+    static ImageFormat RGBA32;
+    static ImageFormat RGB565;
+    static ImageFormat PAL8;
+    static ImageFormat LUM8;
+    static ImageFormat ALPHA8;
 
-  ImageFormat(unsigned short channels, unsigned short bytes_per_pixel, bool force_alpha = false);
+    ImageFormat(unsigned short channels, unsigned short bytes_per_pixel, bool force_alpha = false);
 
-  bool operator==(const ImageFormat & other);
+    bool operator==(const ImageFormat & other);
 
-  unsigned short getNumChannels() const { return channels; }
-  unsigned short getBytesPerPixel() const { return bytes_per_pixel; }
+    unsigned short getNumChannels() const { return channels; }
+    unsigned short getBytesPerPixel() const { return bytes_per_pixel; }
 
-  void setBytesPerPixel(unsigned short _bytes_per_pixel) { bytes_per_pixel = _bytes_per_pixel; }
+    void setBytesPerPixel(unsigned short _bytes_per_pixel) { bytes_per_pixel = _bytes_per_pixel; }
 
-  void clear() { channels = bytes_per_pixel = 0; }
+    void clear() { channels = bytes_per_pixel = 0; }
 
-  bool hasAlpha() const { return channels >= 4 || force_alpha; }
+    bool hasAlpha() const { return channels >= 4 || force_alpha; }
   
- private:
-  unsigned short channels;
-  unsigned short bytes_per_pixel;
-  bool force_alpha;
+  private:
+    unsigned short channels;
+    unsigned short bytes_per_pixel;
+    bool force_alpha;
+  };
 };
 
 #endif
