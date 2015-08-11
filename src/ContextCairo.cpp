@@ -19,23 +19,22 @@ CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_he
 }
  
 CairoSurface::CairoSurface(const Image & image)
-  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.hasAlpha())
+  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha())
 {
-  cairo_format_t format = image.hasAlpha() ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
+  cairo_format_t format = hasAlpha() ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
   unsigned int stride = cairo_format_stride_for_width(format, getActualWidth());
   assert(stride == 4 * getActualWidth());
-  storage = new unsigned int[getActualWidth() * getActualHeight()];
+  size_t numPixels = getActualWidth() * getActualHeight();
+  storage = new unsigned int[numPixels];
   const unsigned char * data = image.getData();
-  if (image.hasAlpha()) {
-    for (unsigned int i = 0; i < getActualWidth() * getActualHeight(); i++) {
-#if 0
-      storage[i] = (data[4 * i + 0] << 24) + (data[4 * i + 1] << 16) + (data[4 * i + 2] << 8) + data[4 * i + 3];
-#else
+  if (image.getFormat().getBytesPerPixel() == 4) {
+    memcpy(storage, data, numPixels * 4);
+  } else if (image.getFormat().hasAlpha()) {
+    for (unsigned int i = 0; i < numPixels; i++) {
       storage[i] = (data[4 * i + 0]) + (data[4 * i + 1] << 8) + (data[4 * i + 2] << 16) + (data[4 * i + 3] << 24);
-#endif
     }
   } else {
-    for (unsigned int i = 0; i < getActualWidth() * getActualHeight(); i++) {
+    for (unsigned int i = 0; i < numPixels; i++) {
       storage[i] = data[3 * i + 2] + (data[3 * i + 1] << 8) + (data[3 * i + 0] << 16);
     }
   }
