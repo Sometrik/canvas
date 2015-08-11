@@ -64,11 +64,20 @@ namespace canvas {
   }
   
   Quartz2DSurface(Quartz2DFontCache * _font_cache, const Image & image)
-    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.hasAlpha()), font_cache(_font_cache) {
+    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha()), font_cache(_font_cache) {
       assert(getActualWidth() && getActualHeight());
       size_t bitmapByteCount = 4 * getActualWidth() * getActualHeight();
       bitmapData = new unsigned char[bitmapByteCount];
-      memcpy(bitmapData, image.getData(), bitmapByteCount);
+      if (image.getFormat().getBytesPerPixel() == 4) {
+	memcpy(bitmapData, image.getData(), bitmapByteCount);
+      } else {
+	for (unsigned int i = 0; i < getActualWidth() * getActualHeight(); i++) {
+	  storage[4 * i + 0] = image.getData()[3 * i + 2];
+	  storage[4 * i + 1] = image.getData()[3 * i + 1];
+	  storage[4 * i + 2] = image.getData()[3 * i + 0];
+	  storage[4 * i + 3] = 255;
+	}
+      }
     }
     
     Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::string & filename);
@@ -195,9 +204,10 @@ namespace canvas {
     void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
       initializeContext();
       std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " " << _img.hasAlpha() << std::endl;
-      CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), 4 * _img.getWidth() * _img.getHeight(), 0);
-      CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, 32, 4 * _img.getWidth(), colorspace, (_img.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast),
-                                     provider, 0, true, kCGRenderingIntentDefault);
+      CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), _img.getFormat().getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
+      assert(_img.getFormat().getBytesPerPixel() == 4);
+      auto f = (_img.getFormat().hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
+      CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, img.getBytesPerPixel() * 8, _img.getBytesPerPixel() * _img.getWidth(), colorspace, f, provider, 0, true, kCGRenderingIntentDefault);
       assert(img);
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), img);
       CGDataProviderRelease(provider);
