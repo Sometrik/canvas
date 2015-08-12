@@ -85,3 +85,12 @@ Path::arcTo(double x1, double y1, double x2, double y2, double radius) {
   arc(p.x, p.y, radius, sa, ea, anticlockwise); // && M_PI * 2 != radius);
   // current_point = p2;
 }
+
+void
+Path::rect(double x, double y, double w, double h) {
+  moveTo(x, y);
+  lineTo(x + w, y);
+  lineTo(x + w, y + h);
+  lineTo(x, y + h); 
+  closePath();
+}

@@ -35,7 +35,7 @@ namespace canvas {
       data.push_back(PathComponent(PathComponent::LINE_TO, x, y));
       current_point = Point(x, y);
     }
-    void close() {
+    void closePath() {
       if (!data.empty()) {
 	data.push_back(PathComponent(PathComponent::CLOSE));
 	current_point = Point(data.front().x0, data.front().y0);
@@ -43,6 +43,8 @@ namespace canvas {
     }
     void arc(double x, double y, double radius, double sa, double ea, bool anticlockwise);
     void arcTo(double x1, double y1, double x2, double y2, double radius);
+
+    void rect(double x, double y, double w, double h);
 
     const std::vector<PathComponent> & getData() const { return data; }
 
