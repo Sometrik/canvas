@@ -16,15 +16,6 @@ Context::resize(unsigned int _width, unsigned int _height) {
 }
 
 void
-Context::rect(double x, double y, double w, double h) {
-  moveTo(x, y);
-  lineTo(x + w, y);
-  lineTo(x + w, y + h);
-  lineTo(x, y + h); 
-  closePath();
-}
-
-void
 Context::fillRect(double x, double y, double w, double h) {
   beginPath();
   rect(x, y, w, h);  
@@ -55,13 +46,13 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
 }
 
 void
-Context::renderPath(RenderMode mode, const Style & style, Operator op) {
+Context::renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) {
   if (hasShadow()) {
     float b = shadowBlur, bs = shadowBlur * getDisplayScale();
     float bi = int(ceil(b));
     auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, true);
     Style shadow_style = shadowColor;
-    Path tmp_path = current_path;
+    Path tmp_path = path;
     tmp_path.offset(shadowOffsetX + bi, shadowOffsetY + bi);
     
     shadow->renderPath(mode, tmp_path, shadow_style, lineWidth, op, getDisplayScale());
@@ -69,7 +60,7 @@ Context::renderPath(RenderMode mode, const Style & style, Operator op) {
     
     getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
-  getDefaultSurface().renderPath(mode, current_path, style, getDisplayScale(), op, getDisplayScale());
+  getDefaultSurface().renderPath(mode, path, style, getDisplayScale(), op, getDisplayScale());
 }
 
 void
@@ -98,7 +89,7 @@ Context::save() {
   data.shadowColor = shadowColor;
   data.shadowOffsetX = shadowOffsetX;
   data.shadowOffsetY = shadowOffsetY;
-  data.current_path = current_path;
+  data.currentPath = currentPath;
   getDefaultSurface().save();
 }
 
@@ -112,14 +103,14 @@ Context::restore() {
     shadowColor = data.shadowColor;
     shadowOffsetX = data.shadowOffsetX;
     shadowOffsetY = data.shadowOffsetY;
-    current_path = data.current_path;
+    currentPath = data.currentPath;
   }
   getDefaultSurface().restore();
 }
 
 void
 Context::clearRect(double x, double y, double w, double h) {
-  beginPath();
-  rect(x, y, w, h);  
-  renderPath(FILL, fillStyle, COPY);
+  Path path;
+  path.rect(x, y, w, h);
+  renderPath(FILL, path, fillStyle, COPY);
 }

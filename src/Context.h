@@ -19,7 +19,7 @@ namespace canvas {
     float shadowBlur = 0;
     Color shadowColor;
     float shadowOffsetX = 0, shadowOffsetY = 0;
-    Path current_path;
+    Path currentPath;
   };
   
   class Context {
@@ -36,29 +36,34 @@ namespace canvas {
 
     virtual void resize(unsigned int _width, unsigned int _height);
         
-    void beginPath() { current_path.clear(); }
-    void closePath() { current_path.close(); }
+    void beginPath() { currentPath.clear(); }
+    void closePath() { currentPath.closePath(); }
 
-    void arc(double x, double y, double r, double a0, double a1, bool t = false) { current_path.arc(x, y, r, a0, a1, t); }
-    void moveTo(double x, double y) { current_path.moveTo(x, y); }
-    void lineTo(double x, double y) { current_path.lineTo(x, y); }
-    void arcTo(double x1, double y1, double x2, double y2, double radius) { current_path.arcTo(x1, y1, x2, y2, radius); }
+    void arc(double x, double y, double r, double a0, double a1, bool t = false) { currentPath.arc(x, y, r, a0, a1, t); }
+    void moveTo(double x, double y) { currentPath.moveTo(x, y); }
+    void lineTo(double x, double y) { currentPath.lineTo(x, y); }
+    void arcTo(double x1, double y1, double x2, double y2, double radius) { currentPath.arcTo(x1, y1, x2, y2, radius); }
+    void rect(double x, double y, double w, double h) { currentPath.rect(x, y, w, h); }
 
     void clip() {
-      getDefaultSurface().clip(current_path, getDisplayScale());
-      current_path.clear();
+      getDefaultSurface().clip(currentPath, getDisplayScale());
+      currentPath.clear();
     }
-    void stroke() { renderPath(STROKE, strokeStyle); }
-    void fill() { renderPath(FILL, fillStyle); }
+    void resetClip() { /* implement */ }
+    void stroke() { renderPath(STROKE, currentPath, strokeStyle); }
+    void stroke(const Path & path) { renderPath(STROKE, path, strokeStyle); }
+    void fill() { renderPath(FILL, currentPath, fillStyle); }
+    void fill(const Path & path) { renderPath(FILL, path, fillStyle); }
 
     void save();
     void restore();
 
+    bool isPointInPath(const Path & path, double x, double y) { return false; }
+    
     TextMetrics measureText(const std::string & text) {
       return getDefaultSurface().measureText(font, text, getDisplayScale());
     }
     
-    void rect(double x, double y, double w, double h);
     void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
     void clearRect(double x, double y, double w, double h);
@@ -110,18 +115,16 @@ namespace canvas {
     TextBaseline textBaseline;
     TextAlign textAlign;
     bool imageSmoothingEnabled = true;
+    Path currentPath;
     
   protected:
-    virtual void renderPath(RenderMode mode, const Style & style, Operator op = SOURCE_OVER);
+    virtual void renderPath(RenderMode mode, const Path & path, const Style & style, Operator op = SOURCE_OVER);
     virtual void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y);
 
     bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
     float getDisplayScale() const { return display_scale; }
     
-    Path current_path;
-
   private:
-    // unsigned int width, height;
     Style current_linear_gradient;
     std::vector<SavedContext> restore_stack;
     float display_scale;
