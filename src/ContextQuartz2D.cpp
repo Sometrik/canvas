@@ -151,7 +151,7 @@ ContextQuartz2D::renderText(RenderMode mode, const Style & style, const std::str
 }
 
 void
-ContextQuartz2D::renderPath(RenderMode mode, const Style & style, const Path & path, Operator op) {
+ContextQuartz2D::renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) {
   if (hasShadow()) {
     default_surface.save();
     default_surface.setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());

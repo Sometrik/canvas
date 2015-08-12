@@ -294,7 +294,7 @@ namespace canvas {
     
   protected:
     void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y) override;
-    void renderPath(RenderMode mode, const Style & style, Operator op) override;
+    void renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) override;
     
   private:
     Quartz2DFontCache * font_cache;
