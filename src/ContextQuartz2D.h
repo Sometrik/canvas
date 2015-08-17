@@ -11,10 +11,13 @@
 #include <iostream>
 
 namespace canvas {
-  class Quartz2DFontCache {
+  class Quartz2DCache {
   public:
-    Quartz2DFontCache() { }
-    ~Quartz2DFontCache() {
+    Quartz2DCache() {
+      colorspace = CGColorSpaceCreateDeviceRGB();
+    }
+    ~Quartz2DCache() {
+      CGColorSpaceRelease(colorspace);
       for (auto it : fonts) {
         CFRelease(it.second);
       }
@@ -46,15 +49,16 @@ namespace canvas {
     }
     
   private:
-    std::map<std::string, CTFontRef> fonts;
+    CGColorSpaceRef colorspace;
+    std::map<std::string, CTFontRef> fonts;    
   };
   
   class Quartz2DSurface : public Surface {
   public:
     friend class ContextQuartz2D;
         
-  Quartz2DSurface(Quartz2DFontCache * _font_cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha)
-    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha), font_cache(_font_cache) {
+  Quartz2DSurface(Quartz2DCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha)
+    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha), cache(_cache) {
       if (_actual_width && _actual_height) {
         unsigned int bitmapBytesPerRow = _actual_width * 4;
         unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
@@ -63,8 +67,8 @@ namespace canvas {
       }
   }
   
-  Quartz2DSurface(Quartz2DFontCache * _font_cache, const Image & image)
-    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha()), font_cache(_font_cache) {
+  Quartz2DSurface(Quartz2DCache * _cache, const Image & image)
+    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha()), cache(_cache) {
       assert(getActualWidth() && getActualHeight());
       size_t bitmapByteCount = 4 * getActualWidth() * getActualHeight();
       bitmapData = new unsigned char[bitmapByteCount];
@@ -80,12 +84,11 @@ namespace canvas {
       }
     }
     
-    Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::string & filename);
-    Quartz2DSurface(Quartz2DFontCache * _font_cache, const unsigned char * buffer, size_t size);
+    Quartz2DSurface(Quartz2DCache * _cache, const std::string & filename);
+    Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * buffer, size_t size);
     
     ~Quartz2DSurface() {
       if (active_shadow_color) CGColorRelease(active_shadow_color);
-      if (colorspace) CGColorSpaceRelease(colorspace);
       if (gc) CGContextRelease(gc);
       delete[] bitmapData;
     }
@@ -113,7 +116,7 @@ namespace canvas {
     
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) override {
       initializeContext();
-      CTFontRef font2 = font_cache->getFont(font, display_scale);
+      CTFontRef font2 = cache->getFont(font, display_scale);
       CGColorRef color = createCGColor(style.color);
       
 #if 0
@@ -167,7 +170,7 @@ namespace canvas {
     }
 
     TextMetrics measureText(const Font & font, const std::string & text, float display_scale) {
-      CTFontRef font2 = font_cache->getFont(font, display_scale);
+      CTFontRef font2 = cache->getFont(font, display_scale);
       CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
       CFStringRef keys[] = { kCTFontAttributeName };
       CFTypeRef values[] = { font2 };
@@ -208,7 +211,7 @@ namespace canvas {
       CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), format.getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
       assert(format.getBytesPerPixel() == 4);
       auto f = (format.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
-      CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), colorspace, f, provider, 0, true, kCGRenderingIntentDefault);
+      CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), cache->getColorSpace(), f, provider, 0, true, kCGRenderingIntentDefault);
       assert(img);
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), img);
       CGDataProviderRelease(provider);
@@ -231,7 +234,7 @@ namespace canvas {
     void sendPath(const Path & path, float display_scale);
     CGColorRef createCGColor(const Color & color) {
       CGFloat cv[] = { color.red, color.green, color.blue, color.alpha };
-      return CGColorCreate(colorspace, cv);
+      return CGColorCreate(cache->getColorSpace(), cv);
     }
     
     void setShadow(float shadowOffsetX, float shadowOffsetY, float shadowBlur, const Color & shadowColor, float display_scale) {
@@ -244,10 +247,9 @@ namespace canvas {
     
     void initializeContext() {
       if (!gc) {
-        if (!colorspace) colorspace = CGColorSpaceCreateDeviceRGB();
         assert(bitmapData);
         unsigned int bitmapBytesPerRow = getActualWidth() * 4;
-        gc = CGBitmapContextCreate(bitmapData, getActualWidth(), getActualHeight(), 8, bitmapBytesPerRow, colorspace,
+        gc = CGBitmapContextCreate(bitmapData, getActualWidth(), getActualHeight(), 8, bitmapBytesPerRow, cache->getColorSpace(),
                                    (hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
         CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
         CGContextSetShouldAntialias(gc, true);
@@ -257,30 +259,29 @@ namespace canvas {
     }
     
   private:
-    Quartz2DFontCache * font_cache;
+    Quartz2DCache * cache;
     CGContextRef gc = 0;
-    CGColorSpaceRef colorspace = 0;
     unsigned char * bitmapData = 0;
     CGColorRef active_shadow_color = 0;
   };
 
   class ContextQuartz2D : public Context {
   public:
-  ContextQuartz2D(Quartz2DFontCache * _font_cache, unsigned int _width, unsigned int _height, float _display_scale)
+  ContextQuartz2D(Quartz2DCache * _cache, unsigned int _width, unsigned int _height, float _display_scale)
     : Context(_display_scale),
-      font_cache(_font_cache),
-      default_surface(_font_cache, _width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), true)
+      cache(_cache),
+      default_surface(_cache, _width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), true)
       {
       }
 
     std::shared_ptr<Surface> createSurface(const Image & image) {
-        return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, image));
+        return std::shared_ptr<Surface>(new Quartz2DSurface(cache, image));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, bool _has_alpha) {
-      return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _has_alpha));
+      return std::shared_ptr<Surface>(new Quartz2DSurface(cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _has_alpha));
     }
       std::shared_ptr<Surface> createSurface(const std::string & filename) {
-          return std::shared_ptr<Surface>(new Quartz2DSurface(font_cache, filename));
+          return std::shared_ptr<Surface>(new Quartz2DSurface(cache, filename));
       }
     void clearRect(double x, double y, double w, double h) { }
         
@@ -297,7 +298,7 @@ namespace canvas {
     void renderPath(RenderMode mode, const Style & style, Operator op) override;
     
   private:
-    Quartz2DFontCache * font_cache;
+    Quartz2DCache * cache;
     Quartz2DSurface default_surface;
   };
 
@@ -305,28 +306,28 @@ namespace canvas {
   public:
     Quartz2DContextFactory(float _display_scale, std::shared_ptr<FilenameConverter> & _converter) : ContextFactory(_display_scale), converter(_converter) { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling = true) override {
-      std::shared_ptr<Context> ptr(new ContextQuartz2D(&font_cache, width, height, apply_scaling ? getDisplayScale() : 1.0f));
+      std::shared_ptr<Context> ptr(new ContextQuartz2D(&cache, width, height, apply_scaling ? getDisplayScale() : 1.0f));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) override {
       std::string filename2;
       if (converter->convert(filename, filename2)) {
-        std::shared_ptr<Surface> ptr(new Quartz2DSurface(&font_cache, filename2));
+        std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, filename2));
         return ptr;
       } else {
         return createSurface(16, 16, false);
       }
     }
     std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, bool has_alpha) override {
-      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&font_cache, width, height, (unsigned int)(width * getDisplayScale()), (unsigned int)(height * getDisplayScale()), has_alpha));
+      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, width, height, (unsigned int)(width * getDisplayScale()), (unsigned int)(height * getDisplayScale()), has_alpha));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) override {
-      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&font_cache, buffer, size));
+      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, buffer, size));
       return ptr;
     }
   private:
-    Quartz2DFontCache font_cache;
+    Quartz2DCache cache;
     std::shared_ptr<FilenameConverter> converter;
   };
 };

@@ -112,7 +112,7 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
 	  c1.red, c1.green, c1.blue, c1.alpha
 	};
 	
-	CGGradientRef myGradient = CGGradientCreateWithColorComponents(colorspace, components, locations, num_locations);
+	CGGradientRef myGradient = CGGradientCreateWithColorComponents(cache->getColorSpace(), components, locations, num_locations);
 	
 	save();
 	clip(path, display_scale);
