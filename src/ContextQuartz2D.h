@@ -211,8 +211,8 @@ namespace canvas {
       CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), colorspace, f, provider, 0, true, kCGRenderingIntentDefault);
       assert(img);
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), img);
-      CGDataProviderRelease(provider);
       CGImageRelease(img);
+      CGDataProviderRelease(provider);
     }
     void clip(const Path & path, float display_scale) {
       sendPath(path, display_scale);

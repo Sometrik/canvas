@@ -19,7 +19,6 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::str
     assert(0);
     img = 0;
   }
-  CGDataProviderRelease(provider);
   if (img) {
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
     Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha);
@@ -37,6 +36,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const std::str
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   }
+  CGDataProviderRelease(provider);
 }
 
 Quartz2DSurface::Quartz2DSurface(Quartz2DFontCache * _font_cache, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, true), font_cache(_font_cache) {
