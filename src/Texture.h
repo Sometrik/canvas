@@ -2,16 +2,19 @@
 #define _TEXTURE_H_
 
 #include "FilterMode.h"
+#include "InternalFormat.h"
 
 namespace canvas {
   class Texture {
   public:
     friend class TextureRef;
 
-  Texture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode _min_filter, FilterMode _mag_filter, unsigned int _mipmap_levels)
+  Texture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode _min_filter, FilterMode _mag_filter, InternalFormat _internal_format, unsigned int _mipmap_levels)
     : logical_width(_logical_width), logical_height(_logical_height),
       actual_width(_actual_width), actual_height(_actual_height),
-      mipmap_levels(_mipmap_levels), min_filter(_min_filter), mag_filter(_mag_filter) { }
+      mipmap_levels(_mipmap_levels),
+      min_filter(_min_filter), mag_filter(_mag_filter),
+      internal_format(_internal_format) { }     
     virtual ~Texture() { }
 
     virtual void updateData(const void * buffer) = 0;
@@ -25,6 +28,7 @@ namespace canvas {
     unsigned int getMipmapLevels() const { return mipmap_levels; }
     FilterMode getMinFilter() const { return min_filter; }
     FilterMode getMagFilter() const { return mag_filter; }
+    InternalFormat getInternalFormat() const { return internal_format; }
     bool isDefined() const { return getTextureId() != 0; }
 
   protected:
@@ -39,6 +43,7 @@ namespace canvas {
     unsigned int logical_width, logical_height, actual_width, actual_height, mipmap_levels;
     FilterMode min_filter;
     FilterMode mag_filter;
+    InternalFormat internal_format;
   };
 
   class TextureFactory {
