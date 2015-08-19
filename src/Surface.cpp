@@ -157,7 +157,7 @@ Surface::multiply(const Color & color) {
 const TextureRef &
 Surface::updateTexture() {
   if (!texture.isDefined()) {
-    texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter);
+    texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter, RGBA8);
   }
 
   void * buffer = lockMemory();
@@ -168,10 +168,11 @@ Surface::updateTexture() {
   return texture;
 }
 
+#if 0
 const TextureRef &
 Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int subwidth, unsigned int subheight) {
   if (!texture.isDefined()) {
-    texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter);
+    texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter, RGB5);
   }
 
   void * buffer = lockMemoryPartial(x0, y0, subwidth, subheight);
@@ -181,6 +182,7 @@ Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int subwidth, 
   
   return texture;
 }
+#endif
 
 std::shared_ptr<Image>
 Surface::createImage() {

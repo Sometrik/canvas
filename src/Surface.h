@@ -79,7 +79,9 @@ namespace canvas {
     
     const TextureRef & getTexture() const { return texture; }
     const TextureRef & updateTexture();
+#if 0
     const TextureRef & updateTexture(unsigned int x, unsigned int y, unsigned int width, unsigned int height);
+#endif
 
     std::shared_ptr<Image> createImage();
 
