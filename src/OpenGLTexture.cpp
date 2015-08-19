@@ -42,6 +42,26 @@ using namespace canvas;
 size_t OpenGLTexture::total_textures = 0;
 vector<unsigned int> OpenGLTexture::freed_textures;
 
+static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
+  switch (internal_format) {
+  case RG8: return GL_RG8;
+  case RGB5: return GL_RGB5;
+  case RGBA4: return GL_RGBA4;
+  case RGBA8: return GL_RGBA8;
+#ifdef __linux__
+  case COMPRESSED_RG: return GL_RG8;
+  case COMPRESSED_RGB: return GL_RGB5;
+  case COMPRESSED_RGBA: return GL_RGBA8;
+#else
+  case COMPRESSED_RG: return GL_COMPRESSED_RG;
+  case COMPRESSED_RGB: return GL_COMPRESSED_RGB; // GL_COMPRESSED_RGB8_ETC2
+  case COMPRESSED_RGBA: return GL_COMPRESSED_RGBA;
+#endif
+  case LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
+  }
+  return 0;
+}
+
 static GLenum getOpenGLFilterType(FilterMode mode) {
   switch (mode) {
   case NEAREST: return GL_NEAREST;
@@ -71,10 +91,11 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
   glBindTexture(GL_TEXTURE_2D, texture_id);
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  
+
+  bool has_mipmaps = getMinFilter() == LINEAR_MIPMAP_LINEAR;
   if (initialize) {
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-    glTexStorage2D(GL_TEXTURE_2D, getMipmapLevels(), GL_RGBA8, getActualWidth(), getActualHeight());
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);    
+    glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, getOpenGLInternalFormat(getInternalFormat()), getActualWidth(), getActualHeight());
 
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -87,7 +108,7 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
 #else
   glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
 #endif
-  if (getMinFilter() == LINEAR_MIPMAP_LINEAR) {
+  if (has_mipmaps) {
     glGenerateMipmap(GL_TEXTURE_2D);
   }
 
@@ -106,6 +127,6 @@ OpenGLTexture::releaseTextures() {
 }
 
 TextureRef
-OpenGLTexture::createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, unsigned int mipmap_levels) {
-  return TextureRef(_logical_width, _logical_height, _actual_width, _actual_height, new OpenGLTexture(_logical_width, _logical_height, _actual_width, _actual_height, min_filter, mag_filter, mipmap_levels));
+OpenGLTexture::createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels) {
+  return TextureRef(_logical_width, _logical_height, _actual_width, _actual_height, new OpenGLTexture(_logical_width, _logical_height, _actual_width, _actual_height, min_filter, mag_filter, _internal_format, mipmap_levels));
 }
