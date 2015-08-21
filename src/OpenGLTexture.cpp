@@ -45,7 +45,7 @@ vector<unsigned int> OpenGLTexture::freed_textures;
 static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   switch (internal_format) {
   case RG8: return GL_RG8;
-  case RGB5: return GL_RGB5;
+  case RGB5: return GL_RGB565;
   case RGBA4: return GL_RGBA4;
   case RGBA8: return GL_RGBA8;
 #ifdef __linux__
@@ -53,9 +53,9 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case COMPRESSED_RGB: return GL_RGB5;
   case COMPRESSED_RGBA: return GL_RGBA8;
 #else
-  case COMPRESSED_RG: return GL_COMPRESSED_RG;
-  case COMPRESSED_RGB: return GL_COMPRESSED_RGB; // GL_COMPRESSED_RGB8_ETC2
-  case COMPRESSED_RGBA: return GL_COMPRESSED_RGBA;
+  case COMPRESSED_RG: return GL_COMPRESSED_RG11_EAC;
+  case COMPRESSED_RGB: return GL_COMPRESSED_RGB8_ETC2;
+  case COMPRESSED_RGBA: return GL_COMPRESSED_RGBA8_ETC2_EAC;
 #endif
   case LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
   }
