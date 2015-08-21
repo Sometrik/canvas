@@ -150,6 +150,11 @@ namespace canvas {
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, bool has_alpha) = 0;
     virtual std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) = 0;
+
+    std::shared_ptr<Image> createImage(const std::string & filename) {
+      auto surface = createSurface(filename);
+      return surface->createImage();
+    }
     
     float getDisplayScale() const { return display_scale; }
     
