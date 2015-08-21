@@ -48,6 +48,8 @@ namespace canvas {
       }
     }
     
+    CGColorSpaceRef & getColorSpace() { return colorspace; }
+    
   private:
     CGColorSpaceRef colorspace;
     std::map<std::string, CTFontRef> fonts;    
