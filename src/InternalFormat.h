@@ -4,7 +4,7 @@
 namespace canvas {
   enum InternalFormat {
     RG8 = 1,
-    RGB5,
+    RGB565,
     RGBA4,
     RGBA8,
     COMPRESSED_RG,

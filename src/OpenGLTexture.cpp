@@ -45,7 +45,7 @@ vector<unsigned int> OpenGLTexture::freed_textures;
 static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   switch (internal_format) {
   case RG8: return GL_RG8;
-  case RGB5: return GL_RGB565;
+  case RGB565: return GL_RGB565;
   case RGBA4: return GL_RGBA4;
   case RGBA8: return GL_RGBA8;
 #ifdef __linux__
