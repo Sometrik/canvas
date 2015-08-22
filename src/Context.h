@@ -9,17 +9,23 @@
 #include "Image.h"
 
 namespace canvas {
+  class Context;
+  
   class SavedContext {
   public:
     friend class Context;
-    SavedContext() { }
+    SavedContext(const Context & context);
+ 
   private:
-    float globalAlpha = 0;
-    bool imageSmoothingEnabled = false;
-    float shadowBlur = 0;
+    float globalAlpha;
+    bool imageSmoothingEnabled;
+    float shadowBlur;
     Color shadowColor;
-    float shadowOffsetX = 0, shadowOffsetY = 0;
+    float shadowOffsetX, shadowOffsetY;
     Path currentPath;
+    float lineWidth;
+    Style fillStyle, strokeStyle;
+    Font font;
   };
   
   class Context {

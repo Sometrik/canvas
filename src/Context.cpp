@@ -10,6 +10,20 @@
 using namespace std;
 using namespace canvas;
 
+SavedContext::SavedContext(const Context & context) :
+  globalAlpha(context.globalAlpha),
+  imageSmoothingEnabled(context.imageSmoothingEnabled),
+  shadowBlur(context.shadowBlur),
+  shadowColor(context.shadowColor),
+  shadowOffsetX(context.shadowOffsetX),
+  shadowOffsetY(context.shadowOffsetY),
+  currentPath(context.currentPath),
+  lineWidth(context.lineWidth),
+  fillStyle(context.fillStyle),
+  strokeStyle(context.strokeStyle),
+  font(context.font)
+{ }
+
 void
 Context::resize(unsigned int _width, unsigned int _height) {
    getDefaultSurface().resize(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), getDefaultSurface().hasAlpha());
@@ -81,15 +95,7 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
 
 void
 Context::save() {
-  restore_stack.push_back(SavedContext());
-  auto & data = restore_stack.back();
-  data.globalAlpha = globalAlpha;
-  data.imageSmoothingEnabled = imageSmoothingEnabled;
-  data.shadowBlur = shadowBlur;
-  data.shadowColor = shadowColor;
-  data.shadowOffsetX = shadowOffsetX;
-  data.shadowOffsetY = shadowOffsetY;
-  data.currentPath = currentPath;
+  restore_stack.push_back(SavedContext(*this));
   getDefaultSurface().save();
 }
 
@@ -104,6 +110,10 @@ Context::restore() {
     shadowOffsetX = data.shadowOffsetX;
     shadowOffsetY = data.shadowOffsetY;
     currentPath = data.currentPath;
+    lineWidth = data.lineWidth;
+    fillStyle = data.fillStyle;
+    strokeStyle = data.strokeStyle;
+    font = data.font;
   }
   getDefaultSurface().restore();
 }
@@ -112,5 +122,6 @@ void
 Context::clearRect(double x, double y, double w, double h) {
   Path path;
   path.rect(x, y, w, h);
-  renderPath(FILL, path, fillStyle, COPY);
+  Style style(Color(0.0f, 0.0f, 0.0f, 0.0f));
+  renderPath(FILL, path, style, COPY);
 }
