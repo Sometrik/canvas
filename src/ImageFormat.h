@@ -30,6 +30,7 @@ namespace canvas {
     static ImageFormat PAL8;
     static ImageFormat LUM8;
     static ImageFormat ALPHA8;
+    static ImageFormat LUMALPHA8;
 
     ImageFormat(unsigned short channels, unsigned short bytes_per_pixel, bool force_alpha = false);
 

@@ -10,6 +10,7 @@ ImageFormat ImageFormat::RGB565(3, 2);
 ImageFormat ImageFormat::PAL8(3, 1);
 ImageFormat ImageFormat::LUM8(1, 1);
 ImageFormat ImageFormat::ALPHA8(1, 1, true);
+ImageFormat ImageFormat::LUMALPHA8(2, 2, true);
 
 ImageFormat::ImageFormat(unsigned short _channels, unsigned short _bytes_per_pixel, bool _force_alpha)
   : channels(_channels),
