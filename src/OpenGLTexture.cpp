@@ -108,6 +108,10 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
     Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGBA32);
     auto tmp_image2 = tmp_image.changeFormat(ImageFormat::LUMALPHA8);
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RG, GL_UNSIGNED_BYTE, tmp_image2->getData());
+  } else if (getInternalFormat() == RGB565) {
+    Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGBA32);
+    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB565);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image2->getData());
   } else {
 #ifdef __APPLE__
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
