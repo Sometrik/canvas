@@ -1,6 +1,7 @@
 #include "OpenGLTexture.h"
 
 #include "TextureRef.h"
+#include "Image.h"
 
 #ifdef WIN32
 #include <GL/glew.h>
@@ -57,7 +58,7 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case COMPRESSED_RGB: return GL_COMPRESSED_RGB8_ETC2;
   case COMPRESSED_RGBA: return GL_COMPRESSED_RGBA8_ETC2_EAC;
 #endif
-  case LUMINANCE_ALPHA: return GL_LUMINANCE_ALPHA;
+  case LUMINANCE_ALPHA: return GL_RG8;
   }
   return 0;
 }
@@ -103,11 +104,17 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()));
   }
 
+  if (getInternalFormat() == LUMINANCE_ALPHA) {
+    Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGBA32);
+    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::LUMALPHA8);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RG, GL_UNSIGNED_BYTE, tmp_image2->getData());
+  } else {
 #ifdef __APPLE__
-  glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 #else
-  glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
 #endif
+  }
   if (has_mipmaps) {
     glGenerateMipmap(GL_TEXTURE_2D);
   }
