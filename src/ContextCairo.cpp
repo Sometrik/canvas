@@ -144,16 +144,19 @@ CairoSurface::clip(const Path & path, float display_scale) {
 }
 
 void
+CairoSurface::resetClip() {
+  if (cr) cairo_reset_clip(cr);
+}
+
+void
 CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale) {
   initializeContext();
 
-  if (op != SOURCE_OVER) {
-    switch (op) {
-    case SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
-    case COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
-    }
+  switch (op) {
+  case SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
+  case COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
   }
-
+  
   cairo_pattern_t * pat = 0;
   if (style.getType() == Style::LINEAR_GRADIENT) {
     pat = cairo_pattern_create_linear(style.x0 * display_scale, style.y0 * display_scale, style.x1 * display_scale, style.y1 * display_scale);
@@ -170,7 +173,7 @@ CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style
   sendPath(path);
   switch (mode) {
   case STROKE:
-    cairo_set_line_width(cr, lineWidth);
+    cairo_set_line_width(cr, lineWidth * display_scale);
     // cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
     cairo_stroke(cr);  
     break;
@@ -183,15 +186,17 @@ CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style
     cairo_pattern_destroy(pat);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
   }
-
-  if (op != SOURCE_OVER) {
-    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  }
 }
 
 void
-CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) {
+CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale) {
   initializeContext();
+
+  switch (op) {
+  case SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
+  case COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
+  }
+  
   cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha);
   cairo_select_font_face(cr, font.family.c_str(),
 			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
@@ -239,8 +244,6 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   }
 }
 
-// renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) {
-
 TextMetrics
 CairoSurface::measureText(const Font & font, const std::string & text, float display_scale) {
   initializeContext();
@@ -260,7 +263,7 @@ CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w
   cairo_save(cr);
   cairo_scale(cr, sx, sy);
   cairo_set_source_surface(cr, img.surface, (x / sx) + 0.5, (y / sy) + 0.5);
-  cairo_pattern_set_filter(cairo_get_source(cr), imageSmoothingEnabled ? CAIRO_FILTER_BILINEAR : CAIRO_FILTER_NEAREST);
+  cairo_pattern_set_filter(cairo_get_source(cr), imageSmoothingEnabled ? CAIRO_FILTER_BEST : CAIRO_FILTER_NEAREST);
   if (alpha < 1.0f) {
     cairo_paint_with_alpha(cr, alpha);
   } else {

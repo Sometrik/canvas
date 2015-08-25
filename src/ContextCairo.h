@@ -33,11 +33,12 @@ namespace canvas {
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool has_alpha);
 
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale);
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale);
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale);
     TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void clip(const Path & path, float display_scale);
+    void resetClip();
     void save();
     void restore();
     
@@ -47,8 +48,9 @@ namespace canvas {
 	if (!surface) {
 	  surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 4, 4);
 	}
-	cr = cairo_create(surface);  
+	cr = cairo_create(surface);	
 	assert(cr);
+	cairo_set_antialias(cr, CAIRO_ANTIALIAS_BEST);
       }
     }
 
