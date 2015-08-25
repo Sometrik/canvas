@@ -118,6 +118,17 @@ GDIPlusSurface::GDIPlusSurface(const std::string & filename) : Surface(0, 0, 0, 
 
 void
 GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style & style, float lineWidth, Operator op, float display_scale) {
+  initializeContext();
+  
+  switch (op) {
+  case SOURCE_OVER:
+    g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
+    break;
+  case COPY:
+    g->SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
+    break;    
+  }
+
   Gdiplus::GraphicsPath path;
   toGDIPath(input_path, path, display_scale);
 
@@ -151,6 +162,7 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style
 void
 GDIPlusSurface::clip(const Path & input_path) {
   initializeContext();
+  
   Gdiplus::GraphicsPath path;
   toGDIPath(input_path, path);
 
@@ -161,6 +173,9 @@ GDIPlusSurface::clip(const Path & input_path) {
 void
 GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha, bool imageSmoothingEnabled) {
   initializeContext();
+
+  g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
+  
   if (imageSmoothingEnabled) {
     // g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBicubic );
     g->SetInterpolationMode( Gdiplus::InterpolationModeHighQualityBilinear );
@@ -208,8 +223,18 @@ GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h
 }
 
 void
-GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) {
+GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale) {
   initializeContext();
+  
+  switch (op) {
+  case SOURCE_OVER:
+    g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
+    break;
+  case COPY:
+    g->SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
+    break;    
+  }
+  
   std::wstring text2 = convert_to_wstring(text);
   int style_bits = 0;
   if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {

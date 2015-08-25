@@ -94,10 +94,10 @@ namespace canvas {
       markDirty();
     }
 
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale);
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale);
     TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, double lineWidth);
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale);
     
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void clip(const Path & path);
@@ -121,7 +121,6 @@ namespace canvas {
 	  bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(4, 4, PixelFormat32bppPARGB));
 	}
 	g = std::shared_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
-	g->SetCompositingMode( Gdiplus::CompositingModeSourceOver );
 #if 0
 	g->SetPixelOffsetMode( PixelOffsetModeNone );
 #endif
