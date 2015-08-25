@@ -33,8 +33,12 @@ Image::changeFormat(const ImageFormat & target_format) const {
       int red = RGBA_TO_RED(v) >> 3;
       int green = RGBA_TO_GREEN(v) >> 2;
       int blue = RGBA_TO_BLUE(v) >> 3;
-      
+
+#ifdef __APPLE__
       *output_data++ = PACK_RGB565(blue, green, red);
+#else
+      *output_data++ = PACK_RGB565(red, green, blue);
+#endif
     }
   }
 
