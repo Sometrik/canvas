@@ -44,7 +44,7 @@ Context::strokeRect(double x, double y, double w, double h) {
 }
 
 void
-Context::renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y) {  
+Context::renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) {  
   if (hasShadow()) {
     float b = shadowBlur, bs = shadowBlur * getDisplayScale();
     int bi = int(ceil(b));
@@ -52,11 +52,11 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
     Style shadow_style = shadowColor;
     float shadow_alpha = shadowColor.alpha;
     shadow_style.color.alpha = 1.0f;
-    shadow->renderText(mode, font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bi, y + shadowOffsetY + bi, lineWidth, getDisplayScale());
+    shadow->renderText(mode, font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bi, y + shadowOffsetY + bi, lineWidth, op, getDisplayScale());
     shadow->gaussianBlur(bs, bs, shadow_alpha);
     getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
-  getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, getDisplayScale());
+  getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, op, getDisplayScale());
 }
 
 void

@@ -55,7 +55,7 @@ namespace canvas {
       getDefaultSurface().clip(currentPath, getDisplayScale());
       currentPath.clear();
     }
-    void resetClip() { /* implement */ }
+    void resetClip() { getDefaultSurface().resetClip(); }
     void stroke() { renderPath(STROKE, currentPath, strokeStyle); }
     void stroke(const Path & path) { renderPath(STROKE, path, strokeStyle); }
     void fill() { renderPath(FILL, currentPath, fillStyle); }
@@ -125,7 +125,7 @@ namespace canvas {
     
   protected:
     virtual void renderPath(RenderMode mode, const Path & path, const Style & style, Operator op = SOURCE_OVER);
-    virtual void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y);
+    virtual void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
 
     bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
     float getDisplayScale() const { return display_scale; }
