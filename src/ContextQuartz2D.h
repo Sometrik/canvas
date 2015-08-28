@@ -59,8 +59,8 @@ namespace canvas {
   public:
     friend class ContextQuartz2D;
         
-  Quartz2DSurface(Quartz2DCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha)
-    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha), cache(_cache) {
+  Quartz2DSurface(Quartz2DCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const ImageFormat & _format)
+    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format.hasAlpha()), cache(_cache) {
       if (_actual_width && _actual_height) {
         unsigned int bitmapBytesPerRow = _actual_width * 4;
         unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
@@ -116,7 +116,7 @@ namespace canvas {
       memset(bitmapData, 0, bitmapByteCount);
     }
     
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, float display_scale) override {
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale) override {
       initializeContext();
       CTFontRef font2 = cache->getFont(font, display_scale);
       CGColorRef color = createCGColor(style.color);
@@ -223,6 +223,9 @@ namespace canvas {
       sendPath(path, display_scale);
       CGContextClip(gc);
     }
+    void resetClip() {
+      // implement
+    }
     void save() {
       initializeContext();
       CGContextSaveGState(gc);
@@ -269,34 +272,34 @@ namespace canvas {
 
   class ContextQuartz2D : public Context {
   public:
-  ContextQuartz2D(Quartz2DCache * _cache, unsigned int _width, unsigned int _height, float _display_scale)
+  ContextQuartz2D(Quartz2DCache * _cache, unsigned int _width, unsigned int _height, const ImageFormat & format, float _display_scale)
     : Context(_display_scale),
       cache(_cache),
-      default_surface(_cache, _width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), true)
+      default_surface(_cache, _width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), format)
       {
       }
 
     std::shared_ptr<Surface> createSurface(const Image & image) {
         return std::shared_ptr<Surface>(new Quartz2DSurface(cache, image));
     }
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, bool _has_alpha) {
-      return std::shared_ptr<Surface>(new Quartz2DSurface(cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _has_alpha));
+    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const ImageFormat & _format) override {
+      return std::shared_ptr<Surface>(new Quartz2DSurface(cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _format));
     }
       std::shared_ptr<Surface> createSurface(const std::string & filename) {
           return std::shared_ptr<Surface>(new Quartz2DSurface(cache, filename));
       }
-    void clearRect(double x, double y, double w, double h) { }
+    // void clearRect(double x, double y, double w, double h) { }
         
     Surface & getDefaultSurface() { return default_surface; }
     const Surface & getDefaultSurface() const { return default_surface; }
       
-    void setgc(CGContextRef _gc) { default_surface.gc = _gc; }
+    // void setgc(CGContextRef _gc) { default_surface.gc = _gc; }
 
     void drawImage(const Image & img, double x, double y, double w, double h) override;
     void drawImage(Surface & img, double x, double y, double w, double h) override;
     
   protected:
-    void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y) override;
+    void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override;
     void renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) override;
     
   private:
@@ -307,8 +310,8 @@ namespace canvas {
   class Quartz2DContextFactory : public ContextFactory {
   public:
     Quartz2DContextFactory(float _display_scale, std::shared_ptr<FilenameConverter> & _converter) : ContextFactory(_display_scale), converter(_converter) { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling = true) override {
-      std::shared_ptr<Context> ptr(new ContextQuartz2D(&cache, width, height, apply_scaling ? getDisplayScale() : 1.0f));
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const ImageFormat & format, bool apply_scaling = true) override {
+      std::shared_ptr<Context> ptr(new ContextQuartz2D(&cache, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) override {
@@ -317,11 +320,11 @@ namespace canvas {
         std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, filename2));
         return ptr;
       } else {
-        return createSurface(16, 16, false);
+        return createSurface(16, 16, ImageFormat::RGBA32);
       }
     }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, bool has_alpha) override {
-      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, width, height, (unsigned int)(width * getDisplayScale()), (unsigned int)(height * getDisplayScale()), has_alpha));
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const ImageFormat & format) override {
+      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, width, height, (unsigned int)(width * getDisplayScale()), (unsigned int)(height * getDisplayScale()), format));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) override {
