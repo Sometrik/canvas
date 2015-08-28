@@ -19,8 +19,3 @@ ImageFormat::ImageFormat(unsigned short _channels, unsigned short _bytes_per_pix
 {
   
 }
-
-bool
-ImageFormat::operator==(const ImageFormat & other) {
-  return channels == other.channels && bytes_per_pixel == other.bytes_per_pixel && force_alpha == other.force_alpha;
-}

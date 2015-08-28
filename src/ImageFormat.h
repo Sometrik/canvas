@@ -34,8 +34,10 @@ namespace canvas {
 
     ImageFormat(unsigned short channels, unsigned short bytes_per_pixel, bool force_alpha = false);
 
-    bool operator==(const ImageFormat & other);
-
+    bool operator==(const ImageFormat & other) const {
+      return channels == other.channels && bytes_per_pixel == other.bytes_per_pixel && force_alpha == other.force_alpha;
+    }
+    
     unsigned short getNumChannels() const { return channels; }
     unsigned short getBytesPerPixel() const { return bytes_per_pixel; }
 
