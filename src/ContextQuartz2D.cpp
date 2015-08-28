@@ -43,12 +43,17 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
   CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
   CGImageRef img;
   if (isPNG(buffer, size)) {
+    cerr << "loading png from memory" << endl;
     img = CGImageCreateWithPNGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
   } else if (isJPEG(buffer, size)) {
+    cerr << "loading jpeg from memory" << endl;
     img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-  } else {
-    cerr << "could not open" << endl;
+  } else if (isGIF(buffer, size)) {
+    cerr << "could not open GIF" << endl;
     img = 0;
+  } else {
+    cerr << "unhandled image type 1 = " << (int)buffer[0] << " 2 = " << (int)buffer[1] << " 3 = " << (int)buffer[2] << " 4 = " << (int)buffer[3] << " 5 = " << (int)buffer[4] << " 6 = " << (int)buffer[5] << endl;
+    assert(0);
   }
   CGDataProviderRelease(provider);
   if (img) {
