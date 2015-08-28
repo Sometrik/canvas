@@ -214,7 +214,7 @@ Surface::lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int requir
 
 bool
 Surface::isPNG(const unsigned char * buffer, size_t size) {
-  if (size >= 4 && (buffer[0] == 0x89 || buffer[1] == 0x50 || buffer[2] == 0x4e || buffer[3] == 0x47)) {
+  if (size >= 4 && buffer[0] == 0x89 && buffer[1] == 0x50 && buffer[2] == 0x4e && buffer[3] == 0x47) {
     return true;
   } else {
     return false;
@@ -223,7 +223,16 @@ Surface::isPNG(const unsigned char * buffer, size_t size) {
 
 bool
 Surface::isJPEG(const unsigned char * buffer, size_t size) {
-  if (size >= 3 && (buffer[0] == 0xff || buffer[1] == 0xd8 || buffer[2] == 0xff)) {
+  if (size >= 3 && buffer[0] == 0xff && buffer[1] == 0xd8 && buffer[2] == 0xff) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool
+Surface::isGIF(const unsigned char * buffer, size_t size) {
+  if (size >= 6 && buffer[0] == 'G' && buffer[1] == 'I' && buffer[2] == 'F' && buffer[3] == '8' && (buffer[4] == '7' || buffer[4] == '9') && buffer[5] == 'a') {
     return true;
   } else {
     return false;

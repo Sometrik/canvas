@@ -98,6 +98,7 @@ namespace canvas {
   protected:
     static bool isPNG(const unsigned char * buffer, size_t size);
     static bool isJPEG(const unsigned char * buffer, size_t size);
+    static bool isGIF(const unsigned char * buffer, size_t size);
 
     TextureRef texture;
 
