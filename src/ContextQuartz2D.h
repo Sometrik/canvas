@@ -95,9 +95,9 @@ namespace canvas {
       delete[] bitmapData;
     }
 
-    void * lockMemory(bool write_access = false) { return bitmapData; }
+    void * lockMemory(bool write_access = false) override { return bitmapData; }
     
-    void releaseMemory() { }
+    void releaseMemory() override { }
 
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale) override;
 
@@ -171,7 +171,7 @@ namespace canvas {
       CGColorRelease(color);
     }
 
-    TextMetrics measureText(const Font & font, const std::string & text, float display_scale) {
+    TextMetrics measureText(const Font & font, const std::string & text, float display_scale) override {
       CTFontRef font2 = cache->getFont(font, display_scale);
       CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
       CFStringRef keys[] = { kCTFontAttributeName };
@@ -192,7 +192,7 @@ namespace canvas {
       return TextMetrics(width / display_scale);
     }
 
-    void drawImage(Surface & surface, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
+    void drawImage(Surface & surface, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
       initializeContext();
 #if 1
       auto img = surface.createImage();
@@ -206,7 +206,7 @@ namespace canvas {
       CGImageRelease(myImage);
 #endif
     }
-    void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
+    void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
       initializeContext();
       auto format = _img.getFormat();
       std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " " << format.hasAlpha() << std::endl;
@@ -219,18 +219,18 @@ namespace canvas {
       CGImageRelease(img);
       CGDataProviderRelease(provider);
     }
-    void clip(const Path & path, float display_scale) {
+    void clip(const Path & path, float display_scale) override {
       sendPath(path, display_scale);
       CGContextClip(gc);
     }
-    void resetClip() {
+    void resetClip() override {
       // implement
     }
-    void save() {
+    void save() override {
       initializeContext();
       CGContextSaveGState(gc);
     }
-    void restore() {
+    void restore() override {
       initializeContext();
       CGContextRestoreGState(gc);
     }
@@ -279,19 +279,19 @@ namespace canvas {
       {
       }
 
-    std::shared_ptr<Surface> createSurface(const Image & image) {
+    std::shared_ptr<Surface> createSurface(const Image & image) override {
         return std::shared_ptr<Surface>(new Quartz2DSurface(cache, image));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const ImageFormat & _format) override {
       return std::shared_ptr<Surface>(new Quartz2DSurface(cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _format));
     }
-      std::shared_ptr<Surface> createSurface(const std::string & filename) {
+      std::shared_ptr<Surface> createSurface(const std::string & filename) override {
           return std::shared_ptr<Surface>(new Quartz2DSurface(cache, filename));
       }
     // void clearRect(double x, double y, double w, double h) { }
         
-    Surface & getDefaultSurface() { return default_surface; }
-    const Surface & getDefaultSurface() const { return default_surface; }
+    Surface & getDefaultSurface() override { return default_surface; }
+    const Surface & getDefaultSurface() const override { return default_surface; }
       
     // void setgc(CGContextRef _gc) { default_surface.gc = _gc; }
 
