@@ -9,7 +9,7 @@ namespace canvas {
   public:
     friend class ContextCairo;
 
-    CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool has_alpha = true);
+    CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const ImageFormat & image_format);
     CairoSurface(const Image & image);
     CairoSurface(const std::string & filename);
     CairoSurface(const CairoSurface & other) = delete;
@@ -67,9 +67,9 @@ namespace canvas {
 
   class ContextCairo : public Context {
   public:
-    ContextCairo(unsigned int _width = 0, unsigned int _height = 0, float _display_scale = 1.0f)
+  ContextCairo(unsigned int _width, unsigned int _height, const ImageFormat & image_format, float _display_scale = 1.0f)
       : Context(_display_scale),
-      default_surface(_width, _height, (unsigned int)(_display_scale * _width), (unsigned int)(_display_scale * _height), true)
+      default_surface(_width, _height, (unsigned int)(_display_scale * _width), (unsigned int)(_display_scale * _height), image_format)
 	{ 
 	}
     
@@ -77,7 +77,7 @@ namespace canvas {
       return std::shared_ptr<Surface>(new CairoSurface(image));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, bool has_alpha) {
-      return std::shared_ptr<Surface>(new CairoSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), has_alpha));
+      return std::shared_ptr<Surface>(new CairoSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), has_alpha ? ImageFormat::RGBA32 : ImageFormat::RGB32));
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) {
       return std::shared_ptr<Surface>(new CairoSurface(filename));
@@ -93,9 +93,9 @@ namespace canvas {
   class CairoContextFactory : public ContextFactory {
   public:
     CairoContextFactory() { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling) { return std::shared_ptr<Context>(new ContextCairo(width, height)); }
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const ImageFormat & image_format, bool apply_scaling) { return std::shared_ptr<Context>(new ContextCairo(width, height, image_format)); }
     std::shared_ptr<Surface> createSurface(const std::string & filename) { return std::shared_ptr<Surface>(new CairoSurface(filename)); }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, bool has_alpha) { return std::shared_ptr<Surface>(new CairoSurface(width, height, (unsigned int)(width * getDisplayScale()), (unsigned int)(height * getDisplayScale()), has_alpha)); }
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const ImageFormat & image_format) { return std::shared_ptr<Surface>(new CairoSurface(width, height, (unsigned int)(width * getDisplayScale()), (unsigned int)(height * getDisplayScale()), image_format)); }
     std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) {
       std::shared_ptr<Surface> ptr(new CairoSurface(buffer, size));
       return ptr;

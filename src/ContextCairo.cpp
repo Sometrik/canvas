@@ -7,10 +7,17 @@
 using namespace canvas;
 using namespace std;
 
-CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha)
-  : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha) {
+CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const ImageFormat & image_format)
+  : Surface(_logical_width, _logical_height, _actual_width, _actual_height, image_format.hasAlpha()) {
   if (_actual_width && _actual_height) {
-    cairo_format_t format = _has_alpha ? CAIRO_FORMAT_ARGB32 : CAIRO_FORMAT_RGB24;
+    cairo_format_t format;
+    if (image_format == ImageFormat::RGB565 && 0) {
+      format = CAIRO_FORMAT_RGB16_565;
+    } else if (image_format.hasAlpha()) {
+      format = CAIRO_FORMAT_ARGB32;
+    } else {
+      format = CAIRO_FORMAT_RGB24;
+    }
     surface = cairo_image_surface_create(format, _actual_width, _actual_height);
     assert(surface);
   } else {
