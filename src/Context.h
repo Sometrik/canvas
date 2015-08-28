@@ -37,7 +37,7 @@ namespace canvas {
     virtual ~Context() { }
 
     virtual std::shared_ptr<Surface> createSurface(const Image & image) = 0;
-    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, bool has_alpha) = 0;
+    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const ImageFormat & _format) = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
 
     virtual void resize(unsigned int _width, unsigned int _height);
