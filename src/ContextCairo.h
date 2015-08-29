@@ -76,8 +76,8 @@ namespace canvas {
     std::shared_ptr<Surface> createSurface(const Image & image) {
       return std::shared_ptr<Surface>(new CairoSurface(image));
     }
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, bool has_alpha) {
-      return std::shared_ptr<Surface>(new CairoSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), has_alpha ? ImageFormat::RGBA32 : ImageFormat::RGB32));
+    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const ImageFormat & format) {
+      return std::shared_ptr<Surface>(new CairoSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), format));
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) {
       return std::shared_ptr<Surface>(new CairoSurface(filename));
