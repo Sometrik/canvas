@@ -3,29 +3,24 @@
 #include "TextureRef.h"
 #include "Image.h"
 
-#ifdef WIN32
-#include <GL/glew.h>
-#endif
-
 #define GL_GLEXT_PROTOTYPES
 
-#ifdef __APPLE__
+#if defined __APPLE__
 #include <OpenGLES/ES3/gl.h>
 #include <OpenGLES/ES3/glext.h>
+#elsif defined GL_ES
+#include <GLES3/gl3.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #else
-// #include <GLES3/gl3.h>
-// #include <EGL/egl.h>
-// #include <EGL/eglext.h>
+#define GL_GLEXT_PROTOTYPES
 
 #ifdef _WIN32
+#include <GL/glew.h>
 #include <windows.h>
 #endif
 
-#ifdef __WXMAC__
-#include "OpenGL/gl.h"
-#else
 #include <GL/gl.h>
-#endif
 
 #ifdef _WIN32
 #include "glext.h"
