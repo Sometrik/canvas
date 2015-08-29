@@ -8,7 +8,7 @@
 #if defined __APPLE__
 #include <OpenGLES/ES3/gl.h>
 #include <OpenGLES/ES3/glext.h>
-#elsif defined GL_ES
+#elif (defined GL_ES)
 #include <GLES3/gl3.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -50,8 +50,14 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case COMPRESSED_RGBA: return GL_RGBA8;
 #else
   case COMPRESSED_RG: return GL_COMPRESSED_RG11_EAC;
-  case COMPRESSED_RGB: return GL_COMPRESSED_RGB8_ETC2;
-  case COMPRESSED_RGBA: return GL_COMPRESSED_RGBA8_ETC2_EAC;
+  case COMPRESSED_RGB:
+      assert(0);
+      return GL_COMPRESSED_RGB8_ETC2;
+      // return GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
+  case COMPRESSED_RGBA:
+      // assert(0);
+      // return GL_COMPRESSED_RGBA8_ETC2_EAC;
+      return GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
 #endif
   case LUMINANCE_ALPHA: return GL_RG8;
   }
