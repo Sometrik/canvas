@@ -309,7 +309,7 @@ namespace canvas {
   class Quartz2DContextFactory : public ContextFactory {
   public:
     Quartz2DContextFactory(float _display_scale, std::shared_ptr<FilenameConverter> & _converter) : ContextFactory(_display_scale), converter(_converter) { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const ImageFormat & format, bool apply_scaling = true) override {
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const ImageFormat & format, bool apply_scaling) override {
       std::shared_ptr<Context> ptr(new ContextQuartz2D(&cache, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
       return ptr;
     }
@@ -319,11 +319,13 @@ namespace canvas {
         std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, filename2));
         return ptr;
       } else {
-        return createSurface(16, 16, ImageFormat::RGBA32);
+        return createSurface(16, 16, ImageFormat::RGBA32, false);
       }
     }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const ImageFormat & format) override {
-      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, width, height, (unsigned int)(width * getDisplayScale()), (unsigned int)(height * getDisplayScale()), format));
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const ImageFormat & format, bool apply_scaling) override {
+      unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
+      unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
+      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, width, height, aw, ah, format));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) override {
