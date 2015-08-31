@@ -8,7 +8,6 @@
 #include <CoreText/CoreText.h>
 
 #include <sstream>
-#include <iostream>
 
 namespace canvas {
   class Quartz2DCache {
@@ -209,7 +208,7 @@ namespace canvas {
     void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
       initializeContext();
       auto format = _img.getFormat();
-      std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " a=" << format.hasAlpha() << ", bpp=" << format.getBytesPerPixel() << std::endl;
+      // std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " a=" << format.hasAlpha() << ", bpp=" << format.getBytesPerPixel() << std::endl;
       CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), format.getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
       assert(format.getBytesPerPixel() == 4);
       auto f = (format.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);

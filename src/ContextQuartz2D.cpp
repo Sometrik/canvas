@@ -43,10 +43,8 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
   CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
   CGImageRef img;
   if (isPNG(buffer, size)) {
-    cerr << "loading png from memory" << endl;
     img = CGImageCreateWithPNGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
   } else if (isJPEG(buffer, size)) {
-    cerr << "loading jpeg from memory" << endl;
     img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
   } else if (isGIF(buffer, size)) {
     cerr << "could not open GIF" << endl;
