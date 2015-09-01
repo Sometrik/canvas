@@ -57,6 +57,7 @@ namespace canvas {
     }
 
     std::shared_ptr<Image> changeFormat(const ImageFormat & target_format) const;
+    std::shared_ptr<Image> scale(unsigned int target_width, unsigned int target_height);
 
     bool isValid() const { return width != 0 && height != 0; }
     unsigned int getWidth() const { return width; }

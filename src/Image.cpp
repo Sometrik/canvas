@@ -46,3 +46,21 @@ Image::changeFormat(const ImageFormat & target_format) const {
   delete tmp;
   return r;
 }
+
+std::shared_ptr<Image>
+Image::scale(unsigned int target_width, unsigned int target_height) {
+  assert(target_width < getWidth() && target_height < getHeight());
+  unsigned char * target_data = new unsigned char[target_width * target_height * 3];
+  for (unsigned int y = 0; y < target_height; y++) {
+    for (unsigned int x = 0; x < target_width; x++) {
+      int red = 0, green = 0, blue = 0;
+      int y0 = y * getHeight() / target_height;
+      int y1 = (y + 1) * getHeight() / target_height;
+      int x0 = x * getWidth() / target_width;
+      int x1 = (x + 1) * getWidth() / target_width;
+    }
+  }
+  auto image2 = new Image(target_width, target_height, target_data, canvas::ImageFormat::RGB24);
+  delete[] target_data;
+  return std::shared_ptr<Image>(image2);
+}
