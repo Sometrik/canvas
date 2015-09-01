@@ -43,24 +43,40 @@ Image::changeFormat(const ImageFormat & target_format) const {
   }
 
   auto r = std::shared_ptr<Image>(new Image(getWidth(), getHeight(), tmp, target_format));
-  delete tmp;
+  delete[] tmp;
   return r;
 }
 
 std::shared_ptr<Image>
-Image::scale(unsigned int target_width, unsigned int target_height) {
-  assert(target_width < getWidth() && target_height < getHeight());
-  unsigned char * target_data = new unsigned char[target_width * target_height * 3];
-  for (unsigned int y = 0; y < target_height; y++) {
-    for (unsigned int x = 0; x < target_width; x++) {
-      int red = 0, green = 0, blue = 0;
+Image::scale(unsigned int target_width, unsigned int target_height) const {
+  unsigned char * target_data = new unsigned char[target_width * target_height * 4];
+  unsigned short bpp = format.getBytesPerPixel();
+  int target_offset = 0;
+  for (int y = 0; y < int(target_height); y++) {
+    for (int x = 0; x < int(target_width); x++) {
+      int red = 0, green = 0, blue = 0, n = 0;
       int y0 = y * getHeight() / target_height;
       int y1 = (y + 1) * getHeight() / target_height;
       int x0 = x * getWidth() / target_width;
       int x1 = (x + 1) * getWidth() / target_width;
+      if (y0 == y1) y1++;
+      if (x0 == x1) x1++;
+      for (int j = y0; j < y1; j++) {
+	for (int k = x0; k < x1; k++) {
+	  int offset = (j * getHeight() + k) * bpp;
+	  red += data[offset++];
+	  green += data[offset++];
+	  blue += data[offset++];
+	  n++;
+	}
+      }
+      target_data[target_offset++] = (unsigned char)(red / n);
+      target_data[target_offset++] = (unsigned char)(green / n);
+      target_data[target_offset++] = (unsigned char)(blue / n);
+      target_data[target_offset++] = 0xff;
     }
   }
-  auto image2 = new Image(target_width, target_height, target_data, canvas::ImageFormat::RGB24);
+  std::shared_ptr<Image> image2(new Image(target_width, target_height, target_data, canvas::ImageFormat::RGB32));
   delete[] target_data;
-  return std::shared_ptr<Image>(image2);
+  return image2;
 }
