@@ -31,12 +31,40 @@
 #endif
 
 #include <cassert>
+#include <iostream>
 
 using namespace std;
 using namespace canvas;
 
 size_t OpenGLTexture::total_textures = 0;
 vector<unsigned int> OpenGLTexture::freed_textures;
+
+static bool checkGLError(const std::string & message) {
+  GLenum errLast = GL_NO_ERROR;
+  bool has_errors = false;
+  for ( ;; ) {
+    GLenum err = glGetError();
+    if ( err == GL_NO_ERROR ) {
+      break;
+    }
+    
+    // normally the error is reset by the call to glGetError() but if
+    // glGetError() itself returns an error, we risk looping forever here
+    // so check that we get a different error than the last time
+    if ( err == errLast ) {
+      cerr << "OpenGL error state couldn't be reset.\n";
+      break;
+    }
+    
+    errLast = err;
+    
+    cerr << message << ": OpenGL error " << err << "\n";
+    // assert(0);
+    has_errors = true;
+  }
+  
+  return has_errors;
+}
 
 static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   switch (internal_format) {
@@ -80,6 +108,8 @@ OpenGLTexture::updateData(const void * buffer) {
 
 void
 OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
+  checkGLError("error before texture update");
+  
   assert(buffer);
 
   bool initialize = false;
@@ -106,14 +136,17 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
   }
 
   if (getInternalFormat() == LUMINANCE_ALPHA) {
+    cerr << "trying to update luminance texture" << endl;
     Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGBA32);
     auto tmp_image2 = tmp_image.changeFormat(ImageFormat::LUMALPHA8);
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RG, GL_UNSIGNED_BYTE, tmp_image2->getData());
   } else if (getInternalFormat() == RGB565) {
     Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGBA32);
     auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB565);
+    cerr << "trying to update rgb565 texture, b1 = " << buffer << ", b2 = " << tmp_image2->getData() << ", x = " << x << ", y = " << y << ", w = " << width << ", h = " << height << ", mm = " << has_mipmaps << endl;
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image2->getData());
   } else {
+    cerr << "trying to update rgba texture" << endl;
 #ifdef __APPLE__
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 #else
@@ -125,6 +158,8 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
   }
 
   glBindTexture(GL_TEXTURE_2D, 0);
+
+  checkGLError("Failed to update texture");
 }
 
 void
