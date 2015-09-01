@@ -143,7 +143,7 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
   } else if (getInternalFormat() == RGB565) {
     Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGBA32);
     auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB565);
-    cerr << "trying to update rgb565 texture, b1 = " << buffer << ", b2 = " << tmp_image2->getData() << ", x = " << x << ", y = " << y << ", w = " << width << ", h = " << height << ", mm = " << has_mipmaps << endl;
+    cerr << "trying to update rgb565 texture, b1 = " << (void*)buffer << ", b2 = " << (void*)tmp_image2->getData() << ", x = " << x << ", y = " << y << ", w = " << width << ", h = " << height << ", mm = " << has_mipmaps << endl;
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image2->getData());
   } else {
     cerr << "trying to update rgba texture" << endl;
