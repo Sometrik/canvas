@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <ImageIO/ImageIO.h>
+
 using namespace canvas;
 using namespace std;
 
@@ -40,20 +42,29 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
 }
 
 Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, true), cache(_cache) {
-  CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
   CGImageRef img;
-  if (isPNG(buffer, size)) {
+  if (0 && isPNG(buffer, size)) {
+    CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
     img = CGImageCreateWithPNGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-  } else if (isJPEG(buffer, size)) {
+    CGDataProviderRelease(provider);
+  } else if (0 && isJPEG(buffer, size)) {
+    CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
     img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-  } else if (isGIF(buffer, size)) {
-    cerr << "could not open GIF" << endl;
-    img = 0;
+    CGDataProviderRelease(provider);
+  } else if (1) { // isGIF(buffer, size)) {
+    CFDataRef data = CFDataCreate(0, buffer, size);
+    // CFStringRef keys[] = { kCGImageSourceShouldCache };
+    // CFTypeRef values[] = { kCFBooleanFalse };
+    // CFDictionaryRef options = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    auto isrc = CGImageSourceCreateWithData(data, 0);
+    img = CGImageSourceCreateImageAtIndex(isrc, 0, 0);
+    CFRelease(data);
+    CFRelease(isrc);
+    // CFRelease(options);
   } else {
     cerr << "unhandled image type 1 = " << (int)buffer[0] << " 2 = " << (int)buffer[1] << " 3 = " << (int)buffer[2] << " 4 = " << (int)buffer[3] << " 5 = " << (int)buffer[4] << " 6 = " << (int)buffer[5] << endl;
     assert(0);
   }
-  CGDataProviderRelease(provider);
   if (img) {
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
     Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha);
