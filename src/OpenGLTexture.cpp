@@ -136,21 +136,21 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
   }
 
   if (getInternalFormat() == LUMINANCE_ALPHA) {
-    cerr << "trying to update luminance texture" << endl;
     Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGBA32);
     auto tmp_image2 = tmp_image.changeFormat(ImageFormat::LUMALPHA8);
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RG, GL_UNSIGNED_BYTE, tmp_image2->getData());
   } else if (getInternalFormat() == RGB565) {
     Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGBA32);
     auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB565);
-    cerr << "trying to update rgb565 texture, b1 = " << (void*)buffer << ", b2 = " << (void*)tmp_image2->getData() << ", x = " << x << ", y = " << y << ", w = " << width << ", h = " << height << ", mm = " << has_mipmaps << endl;
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image2->getData());
+  } else if (getInternalFormat() == RGBA4) {
+    assert(0);
   } else {
-    cerr << "trying to update rgba texture" << endl;
-#ifdef __APPLE__
+#if defined __APPLE__
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 #else
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, buffer);    
+    // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
 #endif
   }
   if (has_mipmaps) {
