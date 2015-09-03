@@ -102,6 +102,8 @@ namespace canvas {
       return current_linear_gradient;
     }
 
+    float getDisplayScale() const { return display_scale; }
+
 #if 0
     Style & createPattern(const Image & image, const char * repeat) {
       
@@ -128,7 +130,6 @@ namespace canvas {
     virtual void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
 
     bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
-    float getDisplayScale() const { return display_scale; }
     
   private:
     Style current_linear_gradient;
