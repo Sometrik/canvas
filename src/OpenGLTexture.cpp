@@ -72,20 +72,16 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case RGB565: return GL_RGB565;
   case RGBA4: return GL_RGBA4;
   case RGBA8: return GL_RGBA8;
-#ifdef __linux__
-  case COMPRESSED_RG: return GL_RG8;
-  case COMPRESSED_RGB: return GL_RGB5;
-  case COMPRESSED_RGBA: return GL_RGBA8;
-#else
-  case COMPRESSED_RG: return GL_COMPRESSED_RG11_EAC;
+  case COMPRESSED_RG:
+    assert(0);
+    return GL_COMPRESSED_RG11_EAC;
   case COMPRESSED_RGB:
-      return GL_COMPRESSED_RGB8_ETC2;
-      // return GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
+    return GL_COMPRESSED_RGB8_ETC2;
+    // return GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
   case COMPRESSED_RGBA:
-      // assert(0);
-      // return GL_COMPRESSED_RGBA8_ETC2_EAC;
-      return GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
-#endif
+    assert(0);
+    // return GL_COMPRESSED_RGBA8_ETC2_EAC;
+    return GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
   case LUMINANCE_ALPHA: return GL_RG8;
   }
   return 0;
@@ -125,9 +121,12 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
 
   bool has_mipmaps = getMinFilter() == LINEAR_MIPMAP_LINEAR;
   if (initialize) {
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);    
+#if 1
     glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, getOpenGLInternalFormat(getInternalFormat()), getActualWidth(), getActualHeight());
-
+#else
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+#endif
+    
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()));
@@ -146,8 +145,10 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
     assert(0);
   } else if (getInternalFormat() == COMPRESSED_RGB) {
     Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGB32);
-    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB_ETC1);
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, getOpenGLInternalFormat(getInternalFormat()), 8 * width * height / 16, tmp_image2->getData());    
+    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB_ETC1, getActualWidth() - x, getActualHeight() - y);
+    unsigned int size = 8 * (tmp_image2->getWidth() / 4) * (tmp_image2->getHeight() / 4);
+    cerr << "sending compressed texture to OpenGL, x = " << x << ", y = " << y << ", w = " << tmp_image2->getWidth() << ", h = " << tmp_image2->getHeight() << ", size = " << size << endl;
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image2->getWidth(), tmp_image2->getHeight(), getOpenGLInternalFormat(getInternalFormat()), size, tmp_image2->getData());
   } else {
 #if defined __APPLE__
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
