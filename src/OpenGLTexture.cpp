@@ -79,7 +79,6 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
 #else
   case COMPRESSED_RG: return GL_COMPRESSED_RG11_EAC;
   case COMPRESSED_RGB:
-      assert(0);
       return GL_COMPRESSED_RGB8_ETC2;
       // return GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
   case COMPRESSED_RGBA:
@@ -145,6 +144,10 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image2->getData());
   } else if (getInternalFormat() == RGBA4) {
     assert(0);
+  } else if (getInternalFormat() == COMPRESSED_RGB) {
+    Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGB32);
+    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB_ETC1);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, getOpenGLInternalFormat(getInternalFormat()), 8 * width * height / 16, tmp_image2->getData());    
   } else {
 #if defined __APPLE__
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
