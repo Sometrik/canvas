@@ -11,11 +11,4 @@ ImageFormat ImageFormat::PAL8(3, 1);
 ImageFormat ImageFormat::LUM8(1, 1);
 ImageFormat ImageFormat::ALPHA8(1, 1, true);
 ImageFormat ImageFormat::LUMALPHA8(2, 2, true);
-
-ImageFormat::ImageFormat(unsigned short _channels, unsigned short _bytes_per_pixel, bool _force_alpha)
-  : channels(_channels),
-    bytes_per_pixel(_bytes_per_pixel),
-    force_alpha(_force_alpha)
-{
-  
-}
+ImageFormat ImageFormat::RGB_ETC1(3, 0, false, ImageFormat::ETC1);

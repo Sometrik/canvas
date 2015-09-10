@@ -71,6 +71,7 @@ namespace canvas {
     unsigned int width, height;
     unsigned char * data = 0;
     ImageFormat format;
+    static bool etc1_initialized;
   };
 };
 #endif

@@ -31,11 +31,21 @@ namespace canvas {
     static ImageFormat LUM8;
     static ImageFormat ALPHA8;
     static ImageFormat LUMALPHA8;
+    static ImageFormat RGB_ETC1;
 
-    ImageFormat(unsigned short channels, unsigned short bytes_per_pixel, bool force_alpha = false);
+    enum Compression {
+      NO_COMPRESSION,
+      ETC1
+    };
+    
+    ImageFormat(unsigned short _channels, unsigned short _bytes_per_pixel, bool _force_alpha = false, Compression _compression = NO_COMPRESSION)
+      : channels(_channels),
+      bytes_per_pixel(_bytes_per_pixel),
+      force_alpha(_force_alpha),
+      compression(_compression) { }
 
     bool operator==(const ImageFormat & other) const {
-      return channels == other.channels && bytes_per_pixel == other.bytes_per_pixel && force_alpha == other.force_alpha;
+      return channels == other.channels && bytes_per_pixel == other.bytes_per_pixel && force_alpha == other.force_alpha && compression == other.compression;
     }
     
     unsigned short getNumChannels() const { return channels; }
@@ -43,14 +53,19 @@ namespace canvas {
 
     void setBytesPerPixel(unsigned short _bytes_per_pixel) { bytes_per_pixel = _bytes_per_pixel; }
 
-    void clear() { channels = bytes_per_pixel = 0; }
+    void clear() {
+      channels = bytes_per_pixel = 0;
+      compression = NO_COMPRESSION;
+    }
 
     bool hasAlpha() const { return channels >= 4 || force_alpha; }
+    Compression getCompression() const { return compression; }
   
   private:
     unsigned short channels;
     unsigned short bytes_per_pixel;
     bool force_alpha;
+    Compression compression;
   };
 };
 
