@@ -11,30 +11,43 @@ using namespace canvas;
 bool Image::etc1_initialized = false;
 
 std::shared_ptr<Image>
-Image::changeFormat(const ImageFormat & target_format) const {
+Image::changeFormat(const ImageFormat & target_format, unsigned int target_width, unsigned int target_height) const {
   assert(format.getBytesPerPixel() == 4);
 
   if (target_format.getCompression() == ImageFormat::ETC1) {
-    rg_etc1::etc1_pack_params params;
     if (!etc1_initialized) {
+      cerr << "initializing etc1" << endl;
       etc1_initialized = true;
       rg_etc1::pack_etc1_block_init();
     }
+    rg_etc1::etc1_pack_params params;
+    params.m_quality = rg_etc1::cMediumQuality;
     assert((width & 3) == 0);
     assert((height & 3) == 0);
     unsigned int rows = height >> 2, cols = width >> 2;
-    unsigned char * output_data = new unsigned char[rows * cols * 8];
-    const unsigned int * input_data = (const unsigned int *)data;
-    unsigned int input_block[4*4];
+    unsigned int target_rows = target_width >> 2, target_cols = target_height >> 2;
+    unsigned int target_size = target_rows * target_cols * 8;
+    unsigned char * output_data = new unsigned char[target_size];
+    memset(output_data, 0, target_size);
+    unsigned char input_block[4*4*4];
+    cerr << "converting to etc1, rows = " << rows << ", cols = " << cols << endl;
     for (unsigned int row = 0; row < rows; row++) {
       for (unsigned int col = 0; col < cols; col++) {
 	for (unsigned int y = 0; y < 4; y++) {
-	  memcpy(input_block + y * 4, input_data + (row * 4 + y) * width + col, 4*4);
+	  for (unsigned int x = 0; x < 4; x++) {
+	    int source_offset = ((row * 4 + y) * width + col * 4 + x) * 4;
+	    int target_offset = (y * 4 + x) * 4;
+	    input_block[target_offset++] = data[source_offset++];
+	    input_block[target_offset++] = data[source_offset++];
+	    input_block[target_offset++] = data[source_offset++];
+	    input_block[target_offset++] = 255; // data[source_offset++];
+	  }
 	}
-	rg_etc1::pack_etc1_block(output_data + (row * rows + col) * 8, &(input_block[0]), params);
+	rg_etc1::pack_etc1_block(output_data + (row * target_cols + col) * 8, (const unsigned int *)&(input_block[0]), params);
       }
     }
-    auto r = std::shared_ptr<Image>(new Image(getWidth(), getHeight(), output_data, target_format));
+    cerr << "done" << endl;
+    auto r = std::shared_ptr<Image>(new Image(target_width, target_height, output_data, target_format));
     delete[] output_data;
     return r;
   } else {
