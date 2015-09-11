@@ -7,9 +7,10 @@ namespace canvas {
     RGB565,
     RGBA4,
     RGBA8,
-    COMPRESSED_RG,
-    COMPRESSED_RGB,
-    COMPRESSED_RGBA,
+    // RG_RGTC,
+    RGB_DXT1,
+    RGBA_DXT5,
+    RGB_ETC1,
     LUMINANCE_ALPHA
   };
 };
