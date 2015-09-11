@@ -15,12 +15,12 @@ namespace canvas {
      : width(_width), height(_height), format(_format)
     {
       assert(_data);
-      unsigned int s = width * height * format.getBytesPerPixel();
+      size_t s = calculateSize();
       data = new unsigned char[s];
       memcpy(data, _data, s);
     }
   Image(unsigned int _width, unsigned int _height, const ImageFormat & _format) : width(_width), height(_height), format(_format) {
-      unsigned int s = width * height * format.getBytesPerPixel();
+      size_t s = calculateSize();
       data = new unsigned char[s];
       memset(data, 0, s);
     }
@@ -28,7 +28,7 @@ namespace canvas {
       : width(other.getWidth()), height(other.getHeight()), format(other.format)
     {
       if (other.getData()) {
-	size_t s = width * height * format.getBytesPerPixel();
+	size_t s = calculateSize();
 	data = new unsigned char[s];
 	memcpy(data, other.getData(), s);
       } else {
@@ -46,7 +46,7 @@ namespace canvas {
 	height = other.height;
 	format = other.format;
 	if (other.data) {
-	  unsigned int s = width * height * format.getBytesPerPixel();
+	  size_t s = calculateSize();
 	  data = new unsigned char[s];
 	  memcpy(data, other.data, s);
 	} else {
@@ -56,7 +56,7 @@ namespace canvas {
       return *this;
     }
 
-    std::shared_ptr<Image> changeFormat(const ImageFormat & target_format, unsigned int target_width = 0, unsigned int target_height = 0) const;
+    std::shared_ptr<Image> changeFormat(const ImageFormat & target_format) const;
     std::shared_ptr<Image> scale(unsigned int target_width, unsigned int target_height) const;
 
     bool isValid() const { return width != 0 && height != 0; }
@@ -66,6 +66,13 @@ namespace canvas {
     const unsigned char * getData() const { return data; }
 
   protected:
+    size_t calculateSize() {
+      if (format.getCompression() == ImageFormat::ETC1 || format.getCompression() == ImageFormat::DXT1) {
+	return 8 * (width / 4) * (height / 4);
+      } else {
+	return width * height * format.getBytesPerPixel();
+      }
+    }
     
   private:
     unsigned int width, height;

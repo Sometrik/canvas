@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "rg_etc1.h"
+#include "dxt.h"
 
 using namespace std;
 using namespace canvas;
@@ -11,10 +12,64 @@ using namespace canvas;
 bool Image::etc1_initialized = false;
 
 std::shared_ptr<Image>
-Image::changeFormat(const ImageFormat & target_format, unsigned int target_width, unsigned int target_height) const {
+Image::changeFormat(const ImageFormat & target_format) const {
   assert(format.getBytesPerPixel() == 4);
 
-  if (target_format.getCompression() == ImageFormat::ETC1) {
+  if (target_format.getCompression() == ImageFormat::DXT1) {
+    assert((width & 3) == 0);
+    assert((height & 3) == 0);
+    unsigned int rows = height >> 2, cols = width >> 2;
+    unsigned int target_size = rows * cols * 8;
+    unsigned char * output_data = new unsigned char[target_size];
+    unsigned char input_block[4*4*4];
+    cerr << "converting to dxt1, rows = " << rows << ", cols = " << cols << endl;
+    for (unsigned int row = 0; row < rows; row++) {
+      for (unsigned int col = 0; col < cols; col++) {
+	for (unsigned int y = 0; y < 4; y++) {
+	  for (unsigned int x = 0; x < 4; x++) {
+	    int source_offset = ((row * 4 + y) * width + col * 4 + x) * 4;
+	    int target_offset = (y * 4 + x) * 4;
+	    input_block[target_offset++] = data[source_offset + 2];
+	    input_block[target_offset++] = data[source_offset + 1];
+	    input_block[target_offset++] = data[source_offset + 0];
+	    input_block[target_offset++] = 255; // data[source_offset++];
+	  }
+	}
+	stb_compress_dxt_block(output_data + (row * cols + col) * 8, &(input_block[0]), false, 0);
+      }
+    }
+    auto r = std::shared_ptr<Image>(new Image(width, height, output_data, target_format));
+    delete[] output_data;
+    return r;
+  } else if (target_format.getCompression() == ImageFormat::DXT5) {
+    assert((width & 3) == 0);
+    assert((height & 3) == 0);
+    unsigned int rows = height >> 2, cols = width >> 2;
+    unsigned int target_size = rows * cols * 16;
+    unsigned char * output_data = new unsigned char[target_size];
+    // memset(output_data, 0, target_size);
+    unsigned char input_block[4*4*4];
+    cerr << "converting to dxt5, rows = " << rows << ", cols = " << cols << endl;
+    for (unsigned int row = 0; row < rows; row++) {
+      for (unsigned int col = 0; col < cols; col++) {
+	for (unsigned int y = 0; y < 4; y++) {
+	  for (unsigned int x = 0; x < 4; x++) {
+	    int source_offset = ((row * 4 + y) * width + col * 4 + x) * 4;
+	    int target_offset = (y * 4 + x) * 4;
+	    input_block[target_offset++] = data[source_offset++];
+	    input_block[target_offset++] = data[source_offset++];
+	    input_block[target_offset++] = data[source_offset++];
+	    input_block[target_offset++] = data[source_offset++];
+	  }
+	}
+	stb_compress_dxt_block(output_data + (row * cols + col) * 16, &(input_block[0]), true, 0);
+      }
+    }
+    cerr << "done" << endl;
+    auto r = std::shared_ptr<Image>(new Image(width, height, output_data, target_format));
+    delete[] output_data;
+    return r;
+  } else if (target_format.getCompression() == ImageFormat::ETC1) {
     if (!etc1_initialized) {
       cerr << "initializing etc1" << endl;
       etc1_initialized = true;
@@ -25,10 +80,9 @@ Image::changeFormat(const ImageFormat & target_format, unsigned int target_width
     assert((width & 3) == 0);
     assert((height & 3) == 0);
     unsigned int rows = height >> 2, cols = width >> 2;
-    unsigned int target_rows = target_width >> 2, target_cols = target_height >> 2;
-    unsigned int target_size = target_rows * target_cols * 8;
+    unsigned int target_size = rows * cols * 8;
     unsigned char * output_data = new unsigned char[target_size];
-    memset(output_data, 0, target_size);
+    // memset(output_data, 0, target_size);
     unsigned char input_block[4*4*4];
     cerr << "converting to etc1, rows = " << rows << ", cols = " << cols << endl;
     for (unsigned int row = 0; row < rows; row++) {
@@ -43,11 +97,11 @@ Image::changeFormat(const ImageFormat & target_format, unsigned int target_width
 	    input_block[target_offset++] = 255; // data[source_offset++];
 	  }
 	}
-	rg_etc1::pack_etc1_block(output_data + (row * target_cols + col) * 8, (const unsigned int *)&(input_block[0]), params);
+	rg_etc1::pack_etc1_block(output_data + (row * cols + col) * 8, (const unsigned int *)&(input_block[0]), params);
       }
     }
     cerr << "done" << endl;
-    auto r = std::shared_ptr<Image>(new Image(target_width, target_height, output_data, target_format));
+    auto r = std::shared_ptr<Image>(new Image(width, height, output_data, target_format));
     delete[] output_data;
     return r;
   } else {
