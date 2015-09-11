@@ -72,16 +72,10 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case RGB565: return GL_RGB565;
   case RGBA4: return GL_RGBA4;
   case RGBA8: return GL_RGBA8;
-  case COMPRESSED_RG:
-    assert(0);
-    return GL_COMPRESSED_RG11_EAC;
-  case COMPRESSED_RGB:
-    return GL_COMPRESSED_RGB8_ETC2;
-    // return GL_COMPRESSED_RGB_PVRTC_2BPPV1_IMG;
-  case COMPRESSED_RGBA:
-    assert(0);
-    // return GL_COMPRESSED_RGBA8_ETC2_EAC;
-    return GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
+    // case RG_RGTC: return GL_COMPRESSED_RG11_EAC;
+  case RGB_ETC1: return GL_COMPRESSED_RGB8_ETC2;
+  case RGB_DXT1: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+  case RGBA_DXT5: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
   case LUMINANCE_ALPHA: return GL_RG8;
   }
   return 0;
@@ -143,11 +137,23 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image2->getData());
   } else if (getInternalFormat() == RGBA4) {
     assert(0);
-  } else if (getInternalFormat() == COMPRESSED_RGB) {
+  } else if (getInternalFormat() == RGB_ETC1) {
     Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGB32);
-    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB_ETC1, getActualWidth() - x, getActualHeight() - y);
+    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB_ETC1);
     unsigned int size = 8 * (tmp_image2->getWidth() / 4) * (tmp_image2->getHeight() / 4);
-    cerr << "sending compressed texture to OpenGL, x = " << x << ", y = " << y << ", w = " << tmp_image2->getWidth() << ", h = " << tmp_image2->getHeight() << ", size = " << size << endl;
+    cerr << "sending ETC1 texture to OpenGL, x = " << x << ", y = " << y << ", w = " << tmp_image2->getWidth() << ", h = " << tmp_image2->getHeight() << ", size = " << size << endl;
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image2->getWidth(), tmp_image2->getHeight(), getOpenGLInternalFormat(getInternalFormat()), size, tmp_image2->getData());
+  } else if (getInternalFormat() == RGB_DXT1) {
+    Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGB32);
+    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB_DXT1);
+    unsigned int size = 8 * (tmp_image2->getWidth() / 4) * (tmp_image2->getHeight() / 4);
+    cerr << "sending DXT1 texture to OpenGL, x = " << x << ", y = " << y << ", w = " << tmp_image2->getWidth() << ", h = " << tmp_image2->getHeight() << ", size = " << size << endl;
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image2->getWidth(), tmp_image2->getHeight(), getOpenGLInternalFormat(getInternalFormat()), size, tmp_image2->getData());
+  } else if (getInternalFormat() == RGBA_DXT5) {
+    Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGB32);
+    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGBA_DXT5);
+    unsigned int size = 16 * (tmp_image2->getWidth() / 4) * (tmp_image2->getHeight() / 4);
+    cerr << "sending DXT5 texture to OpenGL, x = " << x << ", y = " << y << ", w = " << tmp_image2->getWidth() << ", h = " << tmp_image2->getHeight() << ", size = " << size << endl;
     glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image2->getWidth(), tmp_image2->getHeight(), getOpenGLInternalFormat(getInternalFormat()), size, tmp_image2->getData());
   } else {
 #if defined __APPLE__
