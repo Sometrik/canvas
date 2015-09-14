@@ -55,11 +55,8 @@ namespace canvas {
       }
     }
   
-    void updateData(const void * buffer) {
-      if (data) data->updateData(buffer);
-    }
-    void updateData(const void * buffer, unsigned int x0, unsigned int y0, unsigned int subwidth, unsigned int subheight) {
-      if (data) data->updateData(buffer, x0, y0, subwidth, subheight);
+    void updateData(const Image & image, unsigned int x, unsigned int y) {
+      if (data) data->updateData(image, x, y);
     }
   
     void clear() {
