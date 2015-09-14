@@ -91,16 +91,50 @@ static GLenum getOpenGLFilterType(FilterMode mode) {
 }
 
 void
-OpenGLTexture::updateData(const void * buffer) {
-  updateData(buffer, 0, 0, getActualWidth(), getActualHeight());
+OpenGLTexture::updateCompressedData(const Image & image, unsigned int x, unsigned int y) {
+  unsigned int offset = 0;
+  unsigned int current_width = image.getWidth(), current_height = image.getHeight();
+  for (unsigned int level = 0; level < image.getLevels(); level++) {
+    size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
+    // cerr << "compressed tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", offset = " << offset << ", size = " << size << endl;
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, getOpenGLInternalFormat(getInternalFormat()), size, image.getData() + offset);
+    offset += size;
+    current_width /= 2;
+    current_height /= 2;
+    x /= 2;
+    y /= 2;
+  }
 }
 
 void
-OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
-  checkGLError("error before texture update");
-  
-  assert(buffer);
+OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int y) {
+  unsigned int offset = 0;
+  unsigned int current_width = image.getWidth(), current_height = image.getHeight();
+  for (unsigned int level = 0; level < image.getLevels(); level++) {
+    size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
+    // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << endl;
+    
+#if defined __APPLE__
+    glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
+#else
+    glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
+    // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image.getWidth(), height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, image.getData());
+#endif
+    
+    // glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, getOpenGLInternalFormat(getInternalFormat()), size, image.getData() + offset);
+    
+    offset += size;
+    current_width /= 2;
+    current_height /= 2;
+    x /= 2;
+    y /= 2;
+  }
+}
 
+void
+OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
+  checkGLError("error before texture update");
+    
   bool initialize = false;
   if (!texture_id) {
     initialize = true;
@@ -128,42 +162,33 @@ OpenGLTexture::updateData(const void * buffer, unsigned int x, unsigned int y, u
   }
 
   if (getInternalFormat() == LUMINANCE_ALPHA) {
-    Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGBA32);
-    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::LUMALPHA8);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RG, GL_UNSIGNED_BYTE, tmp_image2->getData());
+    auto tmp_image = image.convert(ImageFormat::LUMALPHA8);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RG, GL_UNSIGNED_BYTE, tmp_image->getData());
   } else if (getInternalFormat() == RGB565) {
-    Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGBA32);
-    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB565);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image2->getData());
+    auto tmp_image = image.convert(ImageFormat::RGB565);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image->getData());
   } else if (getInternalFormat() == RGBA4) {
     assert(0);
   } else if (getInternalFormat() == RGB_ETC1) {
-    Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGB32);
-    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB_ETC1);
-    unsigned int size = 8 * (tmp_image2->getWidth() / 4) * (tmp_image2->getHeight() / 4);
-    cerr << "sending ETC1 texture to OpenGL, x = " << x << ", y = " << y << ", w = " << tmp_image2->getWidth() << ", h = " << tmp_image2->getHeight() << ", size = " << size << endl;
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image2->getWidth(), tmp_image2->getHeight(), getOpenGLInternalFormat(getInternalFormat()), size, tmp_image2->getData());
+    if (image.getFormat().getCompression() == ImageFormat::ETC1) {
+      updateCompressedData(image, x, y);
+    } else {
+      cerr << "WARNING: compression should be done in thread\n";
+      auto tmp_image = image.convert(ImageFormat::RGB_ETC1);
+      updateCompressedData(*tmp_image, x, y);
+    }
   } else if (getInternalFormat() == RGB_DXT1) {
-    Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGB32);
-    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGB_DXT1);
-    unsigned int size = 8 * (tmp_image2->getWidth() / 4) * (tmp_image2->getHeight() / 4);
-    cerr << "sending DXT1 texture to OpenGL, x = " << x << ", y = " << y << ", w = " << tmp_image2->getWidth() << ", h = " << tmp_image2->getHeight() << ", size = " << size << endl;
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image2->getWidth(), tmp_image2->getHeight(), getOpenGLInternalFormat(getInternalFormat()), size, tmp_image2->getData());
-  } else if (getInternalFormat() == RGBA_DXT5) {
-    Image tmp_image(width, height, (const unsigned char *)buffer, ImageFormat::RGB32);
-    auto tmp_image2 = tmp_image.changeFormat(ImageFormat::RGBA_DXT5);
-    unsigned int size = 16 * (tmp_image2->getWidth() / 4) * (tmp_image2->getHeight() / 4);
-    cerr << "sending DXT5 texture to OpenGL, x = " << x << ", y = " << y << ", w = " << tmp_image2->getWidth() << ", h = " << tmp_image2->getHeight() << ", size = " << size << endl;
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image2->getWidth(), tmp_image2->getHeight(), getOpenGLInternalFormat(getInternalFormat()), size, tmp_image2->getData());
+    if (image.getFormat().getCompression() == ImageFormat::DXT1) {
+      updateCompressedData(image, x, y);
+    } else {
+      cerr << "WARNING: compression should be done in thread\n";
+      auto tmp_image = image.convert(ImageFormat::RGB_DXT1);
+      updateCompressedData(*tmp_image, x, y);
+    }    
   } else {
-#if defined __APPLE__
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-#else
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, buffer);    
-    // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
-#endif
+    updatePlainData(image, x, y);    
   }
-  if (has_mipmaps) {
+  if (has_mipmaps && getInternalFormat() != RGB_DXT1 && getInternalFormat() != RGB_ETC1 && image.getLevels() == 1) {
     glGenerateMipmap(GL_TEXTURE_2D);
   }
 

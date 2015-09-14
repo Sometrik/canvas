@@ -23,13 +23,16 @@ namespace canvas {
 
     unsigned int getTextureId() const { return texture_id; }
     
-    void updateData(const void * buffer);
-    void updateData(const void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height);
+    void updateData(const Image & image, unsigned int x, unsigned int y);
 
     static size_t getNumTextures() { return total_textures; }
     static const std::vector<unsigned int> & getFreedTextures() { return freed_textures; }
     static void releaseTextures();
     static TextureRef createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels = 8);
+
+  protected:
+    void updateCompressedData(const Image & image, unsigned int x, unsigned int y);
+    void updatePlainData(const Image & image, unsigned int x, unsigned int y);
 
   private:
     unsigned int texture_id = 0;
