@@ -36,7 +36,7 @@ namespace canvas {
     static ImageFormat RGBA_DXT5;
 
     enum Compression {
-      NO_COMPRESSION,
+      NO_COMPRESSION = 0,
       ETC1,
       DXT1,
       DXT5
