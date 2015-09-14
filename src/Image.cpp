@@ -18,7 +18,7 @@ Image::convert(const ImageFormat & target_format) const {
 
   if (target_format.getCompression() == ImageFormat::DXT1 || target_format.getCompression() == ImageFormat::ETC1) {
     rg_etc1::etc1_pack_params params;
-    params.m_quality = rg_etc1::cMediumQuality;
+    params.m_quality = rg_etc1::cLowQuality;
     if (target_format.getCompression() == ImageFormat::ETC1 && !etc1_initialized) {
       cerr << "initializing etc1" << endl;
       etc1_initialized = true;
@@ -34,16 +34,22 @@ Image::convert(const ImageFormat & target_format) const {
     for (unsigned int level = 0; level < levels; level++) {
       unsigned int rows = (target_height + 3) / 4, cols = (target_width + 3) / 4;
       int base_source_offset = calculateOffset(level);
-      // cerr << "compressing DXT, level " << level << ", rows = " << rows << ", cols = " << cols << "\n";
+      cerr << "compressing texture, level " << level << ", rows = " << rows << ", cols = " << cols << "\n";
       for (unsigned int row = 0; row < rows; row++) {
 	for (unsigned int col = 0; col < cols; col++) {
 	  for (unsigned int y = 0; y < 4; y++) {
 	    for (unsigned int x = 0; x < 4; x++) {
 	      int source_offset = base_source_offset + ((row * 4 + y) * target_width + col * 4 + x) * 4;
 	      int offset = (y * 4 + x) * 4;
-	      input_block[offset++] = data[source_offset + 2];
-	      input_block[offset++] = data[source_offset + 1];
-	      input_block[offset++] = data[source_offset + 0];
+	      if (target_format.getCompression() == ImageFormat::ETC1) {
+		input_block[offset++] = data[source_offset++];
+		input_block[offset++] = data[source_offset++];
+		input_block[offset++] = data[source_offset++];
+	      } else {
+		input_block[offset++] = data[source_offset + 2];
+		input_block[offset++] = data[source_offset + 1];
+		input_block[offset++] = data[source_offset + 0];
+	      }
 	      input_block[offset++] = 255; // data[source_offset++];
 	    }
 	  }
@@ -106,6 +112,7 @@ std::shared_ptr<Image>
 Image::scale(unsigned int target_base_width, unsigned int target_base_height, unsigned int target_levels) const {
   assert(format.getBytesPerPixel() == 4);
   assert(!format.getCompression());
+  size_t input_size = calculateSize();
   size_t target_size = calculateOffset(target_base_width, target_base_height, target_levels, format);
   cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
   unsigned char * output_data = new unsigned char[target_size];
@@ -117,12 +124,13 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
       int y1 = (y + 1) * getHeight() / target_height;
       int x0 = x * getWidth() / target_width;
       int x1 = (x + 1) * getWidth() / target_width;
-      if (y0 == y1) y1++;
-      if (x0 == x1) x1++;
+      if (y0 == y1 && y1 < height) y1++;
+      if (x0 == x1 && x1 < width) x1++;
       for (int j = y0; j < y1; j++) {
 	for (int k = x0; k < x1; k++) {
-	  int offset = (j * getHeight() + k) * 4;
-	  red += data[offset++];
+          int offset = (j * getWidth() + k) * 4;
+          assert(offset + 4 <= input_size);
+          red += data[offset++];
 	  green += data[offset++];
 	  blue += data[offset++];
 	  alpha += data[offset++];
