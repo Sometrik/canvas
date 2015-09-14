@@ -257,9 +257,13 @@ namespace canvas {
                                    (hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
         CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
         CGContextSetShouldAntialias(gc, true);
-        CGContextTranslateCTM(gc, 0, getActualHeight());
-        CGContextScaleCTM(gc, 1.0, -1.0);
+	flipY();
       }
+    }
+
+    void flipY() {
+      CGContextTranslateCTM(gc, 0, getActualHeight());
+      CGContextScaleCTM(gc, 1.0, -1.0);
     }
     
   private:

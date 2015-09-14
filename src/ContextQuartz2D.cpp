@@ -29,9 +29,12 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
     memset(bitmapData, 0, bitmapByteCount);
   
     initializeContext();
+    flipY();
     
     CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
     CGImageRelease(img);
+
+    flipY();
   } else {
     resize(16, 16, 16, 16, true);
     unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
@@ -53,14 +56,14 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     CGDataProviderRelease(provider);
   } else if (1) { // isGIF(buffer, size)) {
     CFDataRef data = CFDataCreate(0, buffer, size);
-    // CFStringRef keys[] = { kCGImageSourceShouldCache };
-    // CFTypeRef values[] = { kCFBooleanFalse };
-    // CFDictionaryRef options = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CFStringRef keys[] = { kCGImageSourceShouldCache };
+    CFTypeRef values[] = { kCFBooleanFalse };
+    CFDictionaryRef options = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     auto isrc = CGImageSourceCreateWithData(data, 0);
     img = CGImageSourceCreateImageAtIndex(isrc, 0, 0);
     CFRelease(data);
     CFRelease(isrc);
-    // CFRelease(options);
+    CFRelease(options);
   } else {
     cerr << "unhandled image type 1 = " << (int)buffer[0] << " 2 = " << (int)buffer[1] << " 3 = " << (int)buffer[2] << " 4 = " << (int)buffer[3] << " 5 = " << (int)buffer[4] << " 6 = " << (int)buffer[5] << endl;
     assert(0);
