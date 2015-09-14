@@ -29,12 +29,12 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
     memset(bitmapData, 0, bitmapByteCount);
   
     initializeContext();
-    flipY();
+    // flipY();
     
     CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
     CGImageRelease(img);
 
-    flipY();
+    // flipY();
   } else {
     resize(16, 16, 16, 16, true);
     unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
