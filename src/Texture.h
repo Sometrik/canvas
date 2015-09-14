@@ -5,6 +5,8 @@
 #include "InternalFormat.h"
 
 namespace canvas {
+  class Image;
+  
   class Texture {
   public:
     friend class TextureRef;
@@ -17,8 +19,7 @@ namespace canvas {
       internal_format(_internal_format) { }     
     virtual ~Texture() { }
 
-    virtual void updateData(const void * buffer) = 0;
-    virtual void updateData(const void * buffer, unsigned int x, unsigned int y, unsigned int width, unsigned int height) = 0;
+    virtual void updateData(const Image & image, unsigned int x, unsigned int y) = 0;
     virtual unsigned int getTextureId() const { return 0; }
 
     unsigned int getLogicalWidth() const { return logical_width; }
