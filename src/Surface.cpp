@@ -160,9 +160,10 @@ Surface::updateTexture() {
     texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter, RGBA8);
   }
 
-  void * buffer = lockMemory();
+  const unsigned char * buffer = (unsigned char *)lockMemory();
   assert(buffer);
-  texture.updateData(buffer);
+  Image image(buffer, hasAlpha() ? ImageFormat::RGBA32 : ImageFormat::RGB32, getActualWidth(), getActualHeight());
+  texture.updateData(image, 0, 0);
   releaseMemory();
   
   return texture;
@@ -188,7 +189,7 @@ std::shared_ptr<Image>
 Surface::createImage() {
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
-  shared_ptr<Image> image(new Image(getActualWidth(), getActualHeight(), buffer, has_alpha ? ImageFormat::RGBA32 : ImageFormat::RGB32));
+  shared_ptr<Image> image(new Image(buffer, hasAlpha() ? ImageFormat::RGBA32 : ImageFormat::RGB32, getActualWidth(), getActualHeight()));
   releaseMemory();
   
   return image;
