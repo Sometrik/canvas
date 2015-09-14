@@ -30,6 +30,15 @@
 
 #endif
 
+#ifdef __APPLE__
+#ifndef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
+#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0
+#endif
+#ifndef GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
+#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0
+#endif
+#endif
+
 #include <cassert>
 #include <iostream>
 
@@ -39,31 +48,39 @@ using namespace canvas;
 size_t OpenGLTexture::total_textures = 0;
 vector<unsigned int> OpenGLTexture::freed_textures;
 
-static bool checkGLError(const std::string & message) {
+static bool flushErrors() {
   GLenum errLast = GL_NO_ERROR;
   bool has_errors = false;
+  for ( ;; ) {
+    GLenum err = glGetError();
+    if (err == GL_NO_ERROR) {
+      break;
+    }
+    if (err == errLast) {
+      break;
+    }
+    errLast = err;
+    
+    cerr << "got error " << err << " before texture update" << endl;
+    has_errors = true;
+  }
+  
+  return has_errors;
+}
+
+static GLenum getLastError() {
+  GLenum errLast = GL_NO_ERROR;
   for ( ;; ) {
     GLenum err = glGetError();
     if ( err == GL_NO_ERROR ) {
       break;
     }
-    
-    // normally the error is reset by the call to glGetError() but if
-    // glGetError() itself returns an error, we risk looping forever here
-    // so check that we get a different error than the last time
     if ( err == errLast ) {
-      cerr << "OpenGL error state couldn't be reset.\n";
       break;
-    }
-    
+    }   
     errLast = err;
-    
-    cerr << message << ": OpenGL error " << err << "\n";
-    // assert(0);
-    has_errors = true;
-  }
-  
-  return has_errors;
+  }  
+  return errLast;
 }
 
 static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
@@ -133,7 +150,7 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
 
 void
 OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
-  checkGLError("error before texture update");
+  flushErrors();
     
   bool initialize = false;
   if (!texture_id) {
@@ -194,7 +211,10 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
   glBindTexture(GL_TEXTURE_2D, 0);
 
-  checkGLError("Failed to update texture");
+  GLenum err = getLastError();
+  if (err != GL_NO_ERROR) {
+    cerr << "failed to update texture (err = " << int(err) << ", x = " << x << ", y = " << y << ", tw = " << getActualWidth() << ", th = " << getActualHeight() << ", w = " << image.getWidth() << ", h = " << image.getHeight() << ", l = " << image.getLevels() << ", c = " << int(image.getFormat().getCompression()) << ")" << endl;
+  }
 }
 
 void
