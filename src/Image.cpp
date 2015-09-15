@@ -114,7 +114,7 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
   assert(!format.getCompression());
   size_t input_size = calculateSize();
   size_t target_size = calculateOffset(target_base_width, target_base_height, target_levels, format);
-  cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
+  // cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
   unsigned char * output_data = new unsigned char[target_size];
   unsigned int target_offset = 0, target_width = target_base_width, target_height = target_base_height;
   for (int y = 0; y < int(target_height); y++) {
