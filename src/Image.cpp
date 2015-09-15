@@ -34,7 +34,7 @@ Image::convert(const ImageFormat & target_format) const {
     for (unsigned int level = 0; level < levels; level++) {
       unsigned int rows = (target_height + 3) / 4, cols = (target_width + 3) / 4;
       int base_source_offset = calculateOffset(level);
-      cerr << "compressing texture, level " << level << ", rows = " << rows << ", cols = " << cols << "\n";
+      // cerr << "compressing texture, level " << level << ", rows = " << rows << ", cols = " << cols << "\n";
       for (unsigned int row = 0; row < rows; row++) {
 	for (unsigned int col = 0; col < cols; col++) {
 	  for (unsigned int y = 0; y < 4; y++) {
