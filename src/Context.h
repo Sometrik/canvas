@@ -103,6 +103,12 @@ namespace canvas {
     }
 
     float getDisplayScale() const { return display_scale; }
+    void addHitRegion(const std::string & id, const std::string & cursor) {
+      if (!currentPath.empty()) {
+	HitRegion hr(id, currentPath, cursor);
+	hit_regions.push_back(hr);
+      }
+    }
 
 #if 0
     Style & createPattern(const Image & image, const char * repeat) {
@@ -135,6 +141,7 @@ namespace canvas {
     Style current_linear_gradient;
     std::vector<SavedContext> restore_stack;
     float display_scale;
+    std::vector<HitRegion> hit_regions;
   };
   
   class FilenameConverter {

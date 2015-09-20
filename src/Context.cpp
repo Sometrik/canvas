@@ -27,6 +27,7 @@ SavedContext::SavedContext(const Context & context) :
 void
 Context::resize(unsigned int _width, unsigned int _height) {
    getDefaultSurface().resize(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), getDefaultSurface().hasAlpha());
+   hit_regions.clear();
 }
 
 void
