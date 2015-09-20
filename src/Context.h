@@ -7,6 +7,7 @@
 #include "Color.h"
 #include "Surface.h"
 #include "Image.h"
+#include "HitRegion.h"
 
 namespace canvas {
   class Context;
