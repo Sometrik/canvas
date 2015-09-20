@@ -77,6 +77,8 @@ namespace canvas {
 	}
       }
     }
+
+    bool empty() const { return data.empty(); }
     
   private:
     std::vector<PathComponent> data;
