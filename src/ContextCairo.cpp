@@ -128,6 +128,8 @@ CairoSurface::resize(unsigned int _logical_width, unsigned int _logical_height, 
 void
 CairoSurface::sendPath(const Path & path) {
   initializeContext();
+
+  cairo_new_path(cr);
   for (auto pc : path.getData()) {
     switch (pc.type) {
     case PathComponent::MOVE_TO: cairo_move_to(cr, pc.x0 + 0.5, pc.y0 + 0.5); break;
