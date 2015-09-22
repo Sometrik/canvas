@@ -215,7 +215,7 @@ namespace canvas {
       CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), cache->getColorSpace(), f, provider, 0, true, kCGRenderingIntentDefault);
       assert(img);
       flipY();
-      CGContextDrawImage(gc, CGRectMake(x, y, w, h), img);
+      CGContextDrawImage(gc, CGRectMake(x, getActualHeight() - 1 - y, w, h), img);
       flipY();
       CGImageRelease(img);
       CGDataProviderRelease(provider);
