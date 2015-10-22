@@ -8,6 +8,7 @@
 #include <CoreText/CoreText.h>
 
 #include <sstream>
+#include <iostream>
 
 namespace canvas {
   class Quartz2DCache {
@@ -128,6 +129,10 @@ namespace canvas {
 #endif
       
       CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
+      if (!text2) {
+        std::cerr << "failed to create CString from '" << text << "'" << std::endl;
+        assert(0);
+      }
       CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName }; // kCTFontSymbolicTrait };
       CFTypeRef values[] = { font2, color }; // traits2
       
@@ -215,7 +220,7 @@ namespace canvas {
       CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), cache->getColorSpace(), f, provider, 0, true, kCGRenderingIntentDefault);
       assert(img);
       flipY();
-      CGContextDrawImage(gc, CGRectMake(x, getActualHeight() - 1 - y, w, h), img);
+      CGContextDrawImage(gc, CGRectMake(x, getActualHeight() - 1 - y - h, w, h), img);
       flipY();
       CGImageRelease(img);
       CGDataProviderRelease(provider);
