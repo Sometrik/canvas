@@ -4,9 +4,6 @@
 #include "Context.h"
 
 #include <cassert>
-#include <QuartzCore/QuartzCore.h>
-#include <CoreText/CoreText.h>
-
 #include <sstream>
 
 namespace canvas { 
