@@ -2,6 +2,8 @@
 
 #include "utf8.h"
 
+#include <cassert>
+
 bool canvas::ContextGDIPlus::is_initialized = false;
 ULONG_PTR canvas::ContextGDIPlus::m_gdiplusToken;
 
@@ -116,6 +118,11 @@ GDIPlusSurface::GDIPlusSurface(const std::string & filename) : Surface(0, 0, 0, 
   Surface::resize(bitmap->GetWidth(), bitmap->GetHeight(), bitmap->GetWidth(), bitmap->GetHeight(), true);
 }
 
+GDIPlusSurface::GDIPlusSurface(const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, false) {
+	assert(0);
+}
+
+
 void
 GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style & style, float lineWidth, Operator op, float display_scale) {
   initializeContext();
@@ -160,11 +167,11 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style
 }
 
 void
-GDIPlusSurface::clip(const Path & input_path) {
+GDIPlusSurface::clip(const Path & input_path, float display_scale) {
   initializeContext();
   
   Gdiplus::GraphicsPath path;
-  toGDIPath(input_path, path);
+  toGDIPath(input_path, path, display_scale);
 
   Gdiplus::Region region(&path);
   g->SetClip(&region);
@@ -203,7 +210,7 @@ GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, doub
 			Gdiplus::UnitPixel,
 			&imageAttributes);
 #endif
-  } else if (img.getWidth() == (unsigned int)w && img.getHeight() == (unsigned int)h && 0) { // this scales image weirdly
+  } else if (img.getActualWidth() == (unsigned int)w && img.getActualHeight() == (unsigned int)h && 0) { // this scales image weirdly
     g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y));
   } else {
     g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y), Gdiplus::REAL(w), Gdiplus::REAL(h));
@@ -216,7 +223,7 @@ GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h
   if (img) {
     drawNativeSurface(*img, x, y, w, h, alpha, imageSmoothingEnabled);
   } else {
-    auto img = _img.createImage(w, h);
+    auto img = _img.createImage();
     GDIPlusSurface cs(*img);
     drawNativeSurface(cs, x, y, w, h, alpha, imageSmoothingEnabled);
   }
@@ -285,9 +292,9 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, float d
   if (font.slant == Font::ITALIC) {
     style |= Gdiplus::FontStyleItalic;
   }
-  Gdiplus::Font font(&Gdiplus::FontFamily(L"Arial"), font.size * display_scale, style, Gdiplus::UnitPixel);
+  Gdiplus::Font gdi_font(&Gdiplus::FontFamily(L"Arial"), font.size * display_scale, style, Gdiplus::UnitPixel);
   Gdiplus::RectF layoutRect(0, 0, 512, 512), boundingBox;
-  g->MeasureString(text2.data(), text2.size(), &font, layoutRect, &boundingBox);
+  g->MeasureString(text2.data(), text2.size(), &gdi_font, layoutRect, &boundingBox);
   Gdiplus::SizeF size;
   boundingBox.GetSize(&size);
   
