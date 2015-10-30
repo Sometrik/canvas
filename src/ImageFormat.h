@@ -62,6 +62,7 @@ namespace canvas {
       compression = NO_COMPRESSION;
     }
 
+    bool defined() const { return channels > 0; }
     bool hasAlpha() const { return channels >= 4 || force_alpha; }
     Compression getCompression() const { return compression; }
   
