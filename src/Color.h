@@ -16,6 +16,12 @@ namespace canvas {
     
     Color & operator=(const std::string & s);
     
+	Color mix(float f, const Color & other) {
+		return Color(f * other.red + (1 - f) * red,
+			f * other.green + (1 - f) * green,
+			f * other.blue + (1 - f) * blue,
+			f * other.alpha + (1 - f) * alpha);
+	}
     float red, green, blue, alpha;
     
   private:
