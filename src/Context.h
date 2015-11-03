@@ -27,6 +27,8 @@ namespace canvas {
     float lineWidth;
     Style fillStyle, strokeStyle;
     Font font;
+    TextAlign textAlign;
+    TextBaseline textBaseline;
   };
   
   class Context {

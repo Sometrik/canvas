@@ -21,7 +21,9 @@ SavedContext::SavedContext(const Context & context) :
   lineWidth(context.lineWidth),
   fillStyle(context.fillStyle),
   strokeStyle(context.strokeStyle),
-  font(context.font)
+  font(context.font),
+  textAlign(context.textAlign),
+  textBaseline(context.textBaseline)
 { }
 
 void
@@ -115,6 +117,8 @@ Context::restore() {
     fillStyle = data.fillStyle;
     strokeStyle = data.strokeStyle;
     font = data.font;
+    textAlign = data.textAlign;
+    textBaseline = data.textBaseline;
   }
   getDefaultSurface().restore();
 }
