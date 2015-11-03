@@ -37,6 +37,7 @@ namespace canvas {
     Weight weight = NORMAL;
     bool antialiasing = true;
     bool hinting = true;
+	bool cleartype = false;
   };
 };
 
