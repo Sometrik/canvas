@@ -134,11 +134,6 @@ namespace canvas {
 #endif
 	g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
 	g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
-#if 1
-	g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAlias );
-#else
-	g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAliasGridFit );
-#endif
       }
     }
     void drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha, bool imageSmoothingEnabled);

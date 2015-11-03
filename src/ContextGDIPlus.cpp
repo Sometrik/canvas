@@ -232,6 +232,9 @@ GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h
 void
 GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale) {
   initializeContext();
+
+  x = round(x);
+  y = round(y);
   
   switch (op) {
   case SOURCE_OVER:
@@ -241,7 +244,17 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     g->SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
     break;    
   }
-  
+
+  if (font.antialiasing && font.hinting) {
+    g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAliasGridFit );
+  } else if (font.antialiasing) {
+    g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAlias );
+  } else if (font.hinting) {
+    g->SetTextRenderingHint( Gdiplus::TextRenderingHintSingleBitPerPixelGridFit );
+  } else {
+    g->SetTextRenderingHint( Gdiplus::TextRenderingHintSingleBitPerPixel );
+  }
+    
   std::wstring text2 = convert_to_wstring(text);
   int style_bits = 0;
   if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {
