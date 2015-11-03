@@ -28,6 +28,10 @@ namespace canvas {
 900
 #endif
     };
+    enum AntiAliasing {
+      NO_ANTIALIASING = 0,
+      ANTIALIASING
+    };
     Font() { }
     Font(const std::string & s) { }
 
@@ -35,6 +39,7 @@ namespace canvas {
     float size = 10.0f;
     Slant slant = NORMAL_SLANT;
     Weight weight = NORMAL;
+    AntiAliasing antialiasing = ANTIALIASING;
   };
 };
 
