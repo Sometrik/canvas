@@ -245,7 +245,9 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     break;    
   }
 
-  if (font.antialiasing && font.hinting) {
+  if (font.cleartype) {
+	g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
+  } else if (font.antialiasing && font.hinting && 0) {
     g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAliasGridFit );
   } else if (font.antialiasing) {
     g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAlias );
@@ -280,6 +282,8 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   case TextAlign::END: case TextAlign::RIGHT: f.SetAlignment(Gdiplus::StringAlignmentFar); break;
   case TextAlign::START: case TextAlign::LEFT: f.SetAlignment(Gdiplus::StringAlignmentNear); break;
   }
+
+  f.SetFormatFlags(Gdiplus::StringFormatFlagsBypassGDI);
 
   switch (mode) {
   case STROKE:
