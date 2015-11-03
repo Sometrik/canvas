@@ -135,7 +135,7 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
 #else
     glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
-    // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image.getWidth(), height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, image.getData());
+// glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image.getWidth(), height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, image.getData());
 #endif
     
     // glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, getOpenGLInternalFormat(getInternalFormat()), size, image.getData() + offset);
