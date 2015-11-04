@@ -21,11 +21,11 @@ namespace canvas {
 
     }
     
-    AndroidSurface(const std::string & filename) {
+  AndroidSurface(const std::string & filename) : Surface(0, 0, 0, 0, false) {
 
     }
     
-    AndroidSurface(const unsigned char * buffer, size_t size) {
+  AndroidSurface(const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, false) {
 
     }
     
