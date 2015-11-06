@@ -178,7 +178,7 @@ ContextQuartz2D::renderPath(RenderMode mode, const Path & path, const Style & st
   }
 }
 
-void
+Context &
 ContextQuartz2D::drawImage(const Image & img, double x, double y, double w, double h) {
   if (hasShadow()) {
     default_surface.save();
@@ -188,9 +188,10 @@ ContextQuartz2D::drawImage(const Image & img, double x, double y, double w, doub
   } else {
     default_surface.drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
   }
+  return *this;
 }
 
-void
+Context &
 ContextQuartz2D::drawImage(Surface & img, double x, double y, double w, double h) {
   if (hasShadow()) {
     default_surface.save();
@@ -200,5 +201,6 @@ ContextQuartz2D::drawImage(Surface & img, double x, double y, double w, double h
   } else {
     getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
   }
+  return *this;
 }
 

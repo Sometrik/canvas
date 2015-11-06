@@ -54,9 +54,10 @@ namespace canvas {
     void arcTo(double x1, double y1, double x2, double y2, double radius) { currentPath.arcTo(x1, y1, x2, y2, radius); }
     void rect(double x, double y, double w, double h) { currentPath.rect(x, y, w, h); }
 
-    void clip() {
+    Context & clip() {
       getDefaultSurface().clip(currentPath, getDisplayScale());
       currentPath.clear();
+      return *this;
     }
     void resetClip() { getDefaultSurface().resetClip(); }
     void stroke() { renderPath(STROKE, currentPath, strokeStyle); }
@@ -64,9 +65,9 @@ namespace canvas {
     void fill() { renderPath(FILL, currentPath, fillStyle); }
     void fill(const Path & path) { renderPath(FILL, path, fillStyle); }
 
-    void save();
-    void restore();
-
+    Context & save();
+    Context & restore();
+    
     bool isPointInPath(const Path & path, double x, double y) { return false; }
     
     TextMetrics measureText(const std::string & text) {
@@ -88,16 +89,18 @@ namespace canvas {
     unsigned int getActualWidth() const { return getDefaultSurface().getActualWidth(); }
     unsigned int getActualHeight() const { return getDefaultSurface().getActualHeight(); }
 
-    void drawImage(Context & other, double x, double y, double w, double h) {
-      drawImage(other.getDefaultSurface(), x, y, w, h);
+    Context & drawImage(Context & other, double x, double y, double w, double h) {
+      return drawImage(other.getDefaultSurface(), x, y, w, h);
     }
-    virtual void drawImage(const Image & img, double x, double y, double w, double h) {
+    virtual Context & drawImage(const Image & img, double x, double y, double w, double h) {
       if (img.getData()) {
 	auto surface = createSurface(img);
-	drawImage(*surface, x, y, w, h);
+	return drawImage(*surface, x, y, w, h);
+      } else {
+	return *this;
       }
     }
-    virtual void drawImage(Surface & img, double x, double y, double w, double h);
+    virtual Context & drawImage(Surface & img, double x, double y, double w, double h);
         
     Style & createLinearGradient(double x0, double y0, double x1, double y1) {
       current_linear_gradient.setType(Style::LINEAR_GRADIENT);

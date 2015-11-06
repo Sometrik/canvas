@@ -80,7 +80,7 @@ Context::renderPath(RenderMode mode, const Path & path, const Style & style, Ope
   getDefaultSurface().renderPath(mode, path, style, getDisplayScale(), op, getDisplayScale());
 }
 
-void
+Context &
 Context::drawImage(Surface & img, double x, double y, double w, double h) {
   if (hasShadow()) {
     float b = shadowBlur, bs = shadowBlur * getDisplayScale();
@@ -94,15 +94,17 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
     getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
   getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
+  return *this;
 }
 
-void
+Context &
 Context::save() {
   restore_stack.push_back(SavedContext(*this));
   getDefaultSurface().save();
+  return *this;
 }
 
-void
+Context &
 Context::restore() {
   if (!restore_stack.empty()) {
     auto & data = restore_stack.back();
@@ -121,6 +123,7 @@ Context::restore() {
     textBaseline = data.textBaseline;
   }
   getDefaultSurface().restore();
+  return *this;
 }
 
 void

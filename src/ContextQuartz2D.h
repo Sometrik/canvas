@@ -305,8 +305,8 @@ namespace canvas {
       
     // void setgc(CGContextRef _gc) { default_surface.gc = _gc; }
 
-    void drawImage(const Image & img, double x, double y, double w, double h) override;
-    void drawImage(Surface & img, double x, double y, double w, double h) override;
+    Context & drawImage(const Image & img, double x, double y, double w, double h) override;
+    Context & drawImage(Surface & img, double x, double y, double w, double h) override;
     
   protected:
     void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override;
