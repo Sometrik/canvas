@@ -1,10 +1,10 @@
 #ifndef _FONT_H_
 #define _FONT_H_
 
-#include <string>
+#include "Attribute.h"
 
 namespace canvas {
-  class Font {
+  class Font : public Attribute {
   public:
     enum Slant {
       NORMAL_SLANT = 1,
@@ -37,7 +37,7 @@ namespace canvas {
     Weight weight = NORMAL;
     bool antialiasing = true;
     bool hinting = true;
-	bool cleartype = false;
+    bool cleartype = false;
   };
 };
 

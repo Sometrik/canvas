@@ -1,11 +1,13 @@
 #ifndef _CANVAS_TEXTBASELINE_H_
 #define _CANVAS_TEXTBASELINE_H_
 
+#include "Attribute.h"
+
 #include <cstring>
 #include <cassert>
 
 namespace canvas {
-  class TextBaseline {
+  class TextBaseline : public Attribute {
   public:
     enum TextBaselineType {
       TOP = 1,
