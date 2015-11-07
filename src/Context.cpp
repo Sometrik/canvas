@@ -32,18 +32,23 @@ Context::resize(unsigned int _width, unsigned int _height) {
    hit_regions.clear();
 }
 
-void
+Context &
 Context::fillRect(double x, double y, double w, double h) {
-  beginPath();
-  rect(x, y, w, h);  
-  fill();
+  return beginPath().rect(x, y, w, h).fill();
 } 
 
 void
 Context::strokeRect(double x, double y, double w, double h) {
-  beginPath();
-  rect(x, y, w, h);  
-  stroke();
+  return beginPath().rect(x, y, w, h).stroke();
+}
+
+void
+Context::clearRect(double x, double y, double w, double h) {
+  Path path;
+  path.rect(x, y, w, h);
+  Style style(Color(0.0f, 0.0f, 0.0f, 0.0f));
+  renderPath(FILL, path, style, COPY);
+  return *this;
 }
 
 void
@@ -124,12 +129,4 @@ Context::restore() {
   }
   getDefaultSurface().restore();
   return *this;
-}
-
-void
-Context::clearRect(double x, double y, double w, double h) {
-  Path path;
-  path.rect(x, y, w, h);
-  Style style(Color(0.0f, 0.0f, 0.0f, 0.0f));
-  renderPath(FILL, path, style, COPY);
 }

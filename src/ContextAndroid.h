@@ -97,12 +97,12 @@ namespace canvas {
     Surface & getDefaultSurface() override { return default_surface; }
     const Surface & getDefaultSurface() const override { return default_surface; }
       
-    void drawImage(const Image & img, double x, double y, double w, double h) override {
-
+    Context & drawImage(const Image & img, double x, double y, double w, double h) override {
+      return *this;
     }
     
-    void drawImage(Surface & img, double x, double y, double w, double h) override {
-
+    Context & drawImage(Surface & img, double x, double y, double w, double h) override {
+      return *this;
     }
     
   protected:

@@ -33,8 +33,7 @@ namespace canvas {
   
   class Context {
   public:
-    Context(float _display_scale = 1.0f)
-      : display_scale(_display_scale) { }
+    Context(float _display_scale = 1.0f) : display_scale(_display_scale) { }
     Context(const Context & other) = delete;
     Context & operator=(const Context & other) = delete;
     virtual ~Context() { }
@@ -42,31 +41,28 @@ namespace canvas {
     virtual std::shared_ptr<Surface> createSurface(const Image & image) = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const ImageFormat & _format) = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
-
     virtual void resize(unsigned int _width, unsigned int _height);
         
-    void beginPath() { currentPath.clear(); }
-    void closePath() { currentPath.closePath(); }
-
-    void arc(double x, double y, double r, double a0, double a1, bool t = false) { currentPath.arc(x, y, r, a0, a1, t); }
-    void moveTo(double x, double y) { currentPath.moveTo(x, y); }
-    void lineTo(double x, double y) { currentPath.lineTo(x, y); }
-    void arcTo(double x1, double y1, double x2, double y2, double radius) { currentPath.arcTo(x1, y1, x2, y2, radius); }
-    void rect(double x, double y, double w, double h) { currentPath.rect(x, y, w, h); }
+    Context & beginPath() { currentPath.clear(); }
+    Context & closePath() { currentPath.closePath(); }
+    Context & arc(double x, double y, double r, double a0, double a1, bool t = false) { currentPath.arc(x, y, r, a0, a1, t); return *this; }
+    Context & moveTo(double x, double y) { currentPath.moveTo(x, y); return *this; }
+    Context & lineTo(double x, double y) { currentPath.lineTo(x, y); return *this; }
+    Context & arcTo(double x1, double y1, double x2, double y2, double radius) { currentPath.arcTo(x1, y1, x2, y2, radius); return *this; }
+    Context & rect(double x, double y, double w, double h) { currentPath.rect(x, y, w, h); return *this; }
+    Context & resetClip() { getDefaultSurface().resetClip(); return *this; }
+    Context & stroke() { renderPath(STROKE, currentPath, strokeStyle); return *this; }
+    Context & stroke(const Path & path) { renderPath(STROKE, path, strokeStyle); return *this; }
+    Context & fill() { renderPath(FILL, currentPath, fillStyle); return *this; }
+    Context & fill(const Path & path) { renderPath(FILL, path, fillStyle); return *this; }
+    Context & save();
+    Context & restore();
 
     Context & clip() {
       getDefaultSurface().clip(currentPath, getDisplayScale());
       currentPath.clear();
       return *this;
     }
-    void resetClip() { getDefaultSurface().resetClip(); }
-    void stroke() { renderPath(STROKE, currentPath, strokeStyle); }
-    void stroke(const Path & path) { renderPath(STROKE, path, strokeStyle); }
-    void fill() { renderPath(FILL, currentPath, fillStyle); }
-    void fill(const Path & path) { renderPath(FILL, path, fillStyle); }
-
-    Context & save();
-    Context & restore();
     
     bool isPointInPath(const Path & path, double x, double y) { return false; }
     
@@ -74,12 +70,11 @@ namespace canvas {
       return getDefaultSurface().measureText(font, text, getDisplayScale());
     }
     
-    void fillRect(double x, double y, double w, double h);
-    void strokeRect(double x, double y, double w, double h);
-    void clearRect(double x, double y, double w, double h);
-
-    void fillText(const std::string & text, double x, double y) { renderText(FILL, fillStyle, text, x, y); }
-    void strokeText(const std::string & text, double x, double y) { renderText(STROKE, strokeStyle, text, x, y); }
+    Context & fillRect(double x, double y, double w, double h);
+    Context & strokeRect(double x, double y, double w, double h);
+    Context & clearRect(double x, double y, double w, double h);
+    Context & fillText(const std::string & text, double x, double y) { renderText(FILL, fillStyle, text, x, y); }
+    Context & strokeText(const std::string & text, double x, double y) { renderText(STROKE, strokeStyle, text, x, y); }
     
     virtual Surface & getDefaultSurface() = 0;
     virtual const Surface & getDefaultSurface() const = 0;
@@ -109,11 +104,12 @@ namespace canvas {
     }
 
     float getDisplayScale() const { return display_scale; }
-    void addHitRegion(const std::string & id, const std::string & cursor) {
+    Context & addHitRegion(const std::string & id, const std::string & cursor) {
       if (!currentPath.empty()) {
 	HitRegion hr(id, currentPath, cursor);
 	hit_regions.push_back(hr);
       }
+      return *this;
     }
 
 #if 0
