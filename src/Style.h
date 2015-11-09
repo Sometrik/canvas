@@ -1,5 +1,7 @@
-#ifndef _STYLE_H_
-#define _STYLE_H_
+#ifndef _CANVAS_STYLE_H_
+#define _CANVAS_STYLE_H_
+
+#include "Attribute.h"
 
 #include <string>
 #include <map>
@@ -9,7 +11,7 @@
 #include "Filter.h"
 
 namespace canvas {
-  class Style {
+  class Style : public Attribute {
   public:
     enum StyleType {
       SOLID = 1,
