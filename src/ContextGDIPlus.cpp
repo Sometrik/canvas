@@ -95,8 +95,8 @@ static void toGDIPath(const Path & path, Gdiplus::GraphicsPath & output, float d
   }
 }
 
-static Gdiplus::Color toGDIColor(const Color & input, float alpha = 1.0f) {
-  int red = int(input.red * 255), green = int(input.green * 255), blue = int(input.blue * 255), alpha = int(input.alpha * alpha * 255);
+static Gdiplus::Color toGDIColor(const Color & input, float globalAlpha = 1.0f) {
+  int red = int(input.red * 255), green = int(input.green * 255), blue = int(input.blue * 255), alpha = int(input.alpha * globalAlpha * 255);
   if (red < 0) red = 0;
   else if (red > 255) red = 255;
   if (green < 0) green = 0;
@@ -230,7 +230,7 @@ GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h
 }
 
 void
-GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale) {
+GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha) {
   initializeContext();
 
   x = round(x);
@@ -246,7 +246,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   }
 
   if (font.cleartype) {
-	g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
+    g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
   } else if (font.antialiasing && font.hinting && 0) {
     g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAliasGridFit );
   } else if (font.antialiasing) {
@@ -291,7 +291,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     break;
   case FILL:
     {
-      Gdiplus::SolidBrush brush(toGDIColor(style.color));
+      Gdiplus::SolidBrush brush(toGDIColor(style.color, globalAlpha));
       g->DrawString(text2.data(), text2.size(), &gdifont, rect, &f, &brush);
     }
     break;
