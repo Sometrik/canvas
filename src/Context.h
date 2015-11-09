@@ -43,18 +43,18 @@ namespace canvas {
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
     virtual void resize(unsigned int _width, unsigned int _height);
         
-    Context & beginPath() { currentPath.clear(); }
-    Context & closePath() { currentPath.closePath(); }
+    Context & beginPath() { currentPath.clear(); return *this; }
+    Context & closePath() { currentPath.closePath(); return *this; }
     Context & arc(double x, double y, double r, double a0, double a1, bool t = false) { currentPath.arc(x, y, r, a0, a1, t); return *this; }
     Context & moveTo(double x, double y) { currentPath.moveTo(x, y); return *this; }
     Context & lineTo(double x, double y) { currentPath.lineTo(x, y); return *this; }
     Context & arcTo(double x1, double y1, double x2, double y2, double radius) { currentPath.arcTo(x1, y1, x2, y2, radius); return *this; }
     Context & rect(double x, double y, double w, double h) { currentPath.rect(x, y, w, h); return *this; }
     Context & resetClip() { getDefaultSurface().resetClip(); return *this; }
-    Context & stroke() { renderPath(STROKE, currentPath, strokeStyle); return *this; }
-    Context & stroke(const Path & path) { renderPath(STROKE, path, strokeStyle); return *this; }
-    Context & fill() { renderPath(FILL, currentPath, fillStyle); return *this; }
-    Context & fill(const Path & path) { renderPath(FILL, path, fillStyle); return *this; }
+    Context & stroke() { return renderPath(STROKE, currentPath, strokeStyle); }
+    Context & stroke(const Path & path) { return renderPath(STROKE, path, strokeStyle); }
+    Context & fill() { return renderPath(FILL, currentPath, fillStyle); }
+    Context & fill(const Path & path) { return renderPath(FILL, path, fillStyle); }
     Context & save();
     Context & restore();
 
@@ -73,8 +73,8 @@ namespace canvas {
     Context & fillRect(double x, double y, double w, double h);
     Context & strokeRect(double x, double y, double w, double h);
     Context & clearRect(double x, double y, double w, double h);
-    Context & fillText(const std::string & text, double x, double y) { renderText(FILL, fillStyle, text, x, y); }
-    Context & strokeText(const std::string & text, double x, double y) { renderText(STROKE, strokeStyle, text, x, y); }
+    Context & fillText(const std::string & text, double x, double y) { return renderText(FILL, fillStyle, text, x, y); }
+    Context & strokeText(const std::string & text, double x, double y) { return renderText(STROKE, strokeStyle, text, x, y); }
     
     virtual Surface & getDefaultSurface() = 0;
     virtual const Surface & getDefaultSurface() const = 0;
@@ -134,8 +134,8 @@ namespace canvas {
     Path currentPath;
     
   protected:
-    virtual void renderPath(RenderMode mode, const Path & path, const Style & style, Operator op = SOURCE_OVER);
-    virtual void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
+    virtual Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op = SOURCE_OVER);
+    virtual Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
 
     bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
     
