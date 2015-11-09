@@ -158,7 +158,7 @@ CairoSurface::resetClip() {
 }
 
 void
-CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale) {
+CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) {
   initializeContext();
 
   switch (op) {
@@ -170,14 +170,14 @@ CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style
   if (style.getType() == Style::LINEAR_GRADIENT) {
     pat = cairo_pattern_create_linear(style.x0 * display_scale, style.y0 * display_scale, style.x1 * display_scale, style.y1 * display_scale);
     for (map<float, Color>::const_iterator it = style.getColors().begin(); it != style.getColors().end(); it++) {
-      cairo_pattern_add_color_stop_rgba(pat, it->first, it->second.red, it->second.green, it->second.blue, it->second.alpha);
+      cairo_pattern_add_color_stop_rgba(pat, it->first, it->second.red, it->second.green, it->second.blue, it->second.alpha * globalAlpha);
     }
     cairo_set_source(cr, pat);    
   } else if (style.getType() == Style::FILTER) {
     double min_x, min_y, max_x, max_y;
     path.getExtents(min_x, min_y, max_x, max_y);
   } else {
-    cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha);
+    cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha * globalAlpha);
   }
   sendPath(path);
   switch (mode) {
@@ -198,7 +198,7 @@ CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style
 }
 
 void
-CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale) {
+CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float alpha) {
   initializeContext();
 
   switch (op) {
@@ -206,7 +206,7 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   case COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
   }
   
-  cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha);
+  cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha * alpha);
   cairo_select_font_face(cr, font.family.c_str(),
 			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
 			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
