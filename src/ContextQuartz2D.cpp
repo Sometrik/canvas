@@ -101,7 +101,7 @@ Quartz2DSurface::sendPath(const Path & path, float scale) {
 }
 
 void
-Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale) {
+Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) {
   initializeContext();
   switch (mode) {
   case STROKE:
@@ -109,7 +109,7 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
     CGContextSetRGBStrokeColor(gc, style.color.red,
 			       style.color.green,
 			       style.color.blue,
-			       style.color.alpha);
+			       style.color.alpha * globalAlpha);
     CGContextSetLineWidth(gc, lineWidth * display_scale);
     CGContextStrokePath(gc);  
     break;
@@ -124,8 +124,8 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
 	size_t num_locations = 2;
 	CGFloat locations[2] = { 0.0, 1.0 };
 	CGFloat components[8] = {
-	  c0.red, c0.green, c0.blue, c0.alpha,
-	  c1.red, c1.green, c1.blue, c1.alpha
+	  c0.red, c0.green, c0.blue, c0.alpha * globalAlpha,
+	  c1.red, c1.green, c1.blue, c1.alpha * globalAlpha
 	};
 	
 	CGGradientRef myGradient = CGGradientCreateWithColorComponents(cache->getColorSpace(), components, locations, num_locations);
@@ -148,7 +148,7 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
       CGContextSetRGBFillColor(gc, style.color.red,
 			       style.color.green,
 			       style.color.blue,
-			       style.color.alpha);
+			       style.color.alpha * globalAlpha);
       CGContextFillPath(gc);
     }
   }
@@ -174,7 +174,7 @@ ContextQuartz2D::renderPath(RenderMode mode, const Path & path, const Style & st
     default_surface.renderPath(mode, path, style, lineWidth, op, getDisplayScale());
     default_surface.restore();
   } else {
-    getDefaultSurface().renderPath(mode, path, style, lineWidth, op, getDisplayScale());
+    getDefaultSurface().renderPath(mode, path, style, lineWidth, op, getDisplayScale(), globalAlpha);
   }
 }
 

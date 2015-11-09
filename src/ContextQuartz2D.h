@@ -99,7 +99,7 @@ namespace canvas {
     
     void releaseMemory() override { }
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale) override;
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
 
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) override {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
@@ -116,10 +116,10 @@ namespace canvas {
       memset(bitmapData, 0, bitmapByteCount);
     }
     
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale) override {
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha) override {
       initializeContext();
       CTFontRef font2 = cache->getFont(font, display_scale);
-      CGColorRef color = createCGColor(style.color);
+      CGColorRef color = createCGColor(style.color, globalAlpha);
       
 #if 0
       int traits = 0;
@@ -243,8 +243,8 @@ namespace canvas {
 
   protected:
     void sendPath(const Path & path, float display_scale);
-    CGColorRef createCGColor(const Color & color) {
-      CGFloat cv[] = { color.red, color.green, color.blue, color.alpha };
+    CGColorRef createCGColor(const Color & color, float globalAlpha = 1.0f) {
+      CGFloat cv[] = { color.red, color.green, color.blue, color.alpha * globalAlpha};
       return CGColorCreate(cache->getColorSpace(), cv);
     }
     
@@ -303,14 +303,12 @@ namespace canvas {
     Surface & getDefaultSurface() override { return default_surface; }
     const Surface & getDefaultSurface() const override { return default_surface; }
       
-    // void setgc(CGContextRef _gc) { default_surface.gc = _gc; }
-
     Context & drawImage(const Image & img, double x, double y, double w, double h) override;
     Context & drawImage(Surface & img, double x, double y, double w, double h) override;
     
   protected:
-    void renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override;
-    void renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) override;
+    Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override;
+    Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) override;
     
   private:
     Quartz2DCache * cache;
