@@ -154,28 +154,30 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
   }
 }
 
-void
+Context &
 ContextQuartz2D::renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) {
   if (hasShadow()) {
     default_surface.save();
     default_surface.setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
-    default_surface.renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, op, getDisplayScale());
+    default_surface.renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, op, getDisplayScale(), globalAlpha);
     default_surface.restore();
   } else {
-    getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, op, getDisplayScale());
+    getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, op, getDisplayScale(), globalAlpha);
   }
+  return *this;
 }
 
-void
+Context &
 ContextQuartz2D::renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) {
   if (hasShadow()) {
     default_surface.save();
     default_surface.setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
-    default_surface.renderPath(mode, path, style, lineWidth, op, getDisplayScale());
+    default_surface.renderPath(mode, path, style, lineWidth, op, getDisplayScale(), globalAlpha);
     default_surface.restore();
   } else {
     getDefaultSurface().renderPath(mode, path, style, lineWidth, op, getDisplayScale(), globalAlpha);
   }
+  return *this;
 }
 
 Context &
