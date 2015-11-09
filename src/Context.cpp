@@ -37,12 +37,12 @@ Context::fillRect(double x, double y, double w, double h) {
   return beginPath().rect(x, y, w, h).fill();
 } 
 
-void
+Context &
 Context::strokeRect(double x, double y, double w, double h) {
   return beginPath().rect(x, y, w, h).stroke();
 }
 
-void
+Context &
 Context::clearRect(double x, double y, double w, double h) {
   Path path;
   path.rect(x, y, w, h);
@@ -51,7 +51,7 @@ Context::clearRect(double x, double y, double w, double h) {
   return *this;
 }
 
-void
+Context &
 Context::renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) {  
   if (hasShadow()) {
     float b = shadowBlur, bs = shadowBlur * getDisplayScale();
@@ -60,14 +60,15 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
     Style shadow_style = shadowColor;
     float shadow_alpha = shadowColor.alpha;
     shadow_style.color.alpha = 1.0f;
-    shadow->renderText(mode, font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bi, y + shadowOffsetY + bi, lineWidth, op, getDisplayScale());
+    shadow->renderText(mode, font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bi, y + shadowOffsetY + bi, lineWidth, op, getDisplayScale(), globalAlpha);
     shadow->gaussianBlur(bs, bs, shadow_alpha);
     getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
-  getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, op, getDisplayScale());
+  getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, op, getDisplayScale(), globalAlpha);
+  return *this;
 }
 
-void
+Context &
 Context::renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) {
   if (hasShadow()) {
     float b = shadowBlur, bs = shadowBlur * getDisplayScale();
@@ -77,12 +78,13 @@ Context::renderPath(RenderMode mode, const Path & path, const Style & style, Ope
     Path tmp_path = path;
     tmp_path.offset(shadowOffsetX + bi, shadowOffsetY + bi);
     
-    shadow->renderPath(mode, tmp_path, shadow_style, lineWidth, op, getDisplayScale());
+    shadow->renderPath(mode, tmp_path, shadow_style, lineWidth, op, getDisplayScale(), globalAlpha);
     shadow->gaussianBlur(bs, bs);
     
     getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
-  getDefaultSurface().renderPath(mode, path, style, getDisplayScale(), op, getDisplayScale());
+  getDefaultSurface().renderPath(mode, path, style, getDisplayScale(), op, getDisplayScale(), globalAlpha);
+  return *this;
 }
 
 Context &
