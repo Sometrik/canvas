@@ -95,8 +95,8 @@ static void toGDIPath(const Path & path, Gdiplus::GraphicsPath & output, float d
   }
 }
 
-static Gdiplus::Color toGDIColor(const Color & input) {
-  int red = int(input.red * 255), green = int(input.green * 255), blue = int(input.blue * 255), alpha = int(input.alpha * 255);
+static Gdiplus::Color toGDIColor(const Color & input, float alpha = 1.0f) {
+  int red = int(input.red * 255), green = int(input.green * 255), blue = int(input.blue * 255), alpha = int(input.alpha * alpha * 255);
   if (red < 0) red = 0;
   else if (red > 255) red = 255;
   if (green < 0) green = 0;
@@ -124,7 +124,7 @@ GDIPlusSurface::GDIPlusSurface(const unsigned char * buffer, size_t size) : Surf
 
 
 void
-GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style & style, float lineWidth, Operator op, float display_scale) {
+GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) {
   initializeContext();
   
   switch (op) {
@@ -142,7 +142,7 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style
   switch (mode) {
   case STROKE:
     {
-      Gdiplus::Pen pen(toGDIColor(style.color), lineWidth);
+      Gdiplus::Pen pen(toGDIColor(style.color, globalAlpha), lineWidth);
       g->DrawPath(&pen, &path);
     }
     break;
@@ -155,12 +155,12 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style
 	const Color & c0 = it0->second, c1 = it1->second;
 	Gdiplus::LinearGradientBrush brush(Gdiplus::PointF(Gdiplus::REAL(style.x0), Gdiplus::REAL(style.y0)),
 					   Gdiplus::PointF(Gdiplus::REAL(style.x1), Gdiplus::REAL(style.y1)),
-					   toGDIColor(c0),
-					   toGDIColor(c1));
+					   toGDIColor(c0, globalAlpha),
+					   toGDIColor(c1, globalAlpha));
 	g->FillPath(&brush, &path);
       }
     } else {
-      Gdiplus::SolidBrush brush(toGDIColor(style.color));
+      Gdiplus::SolidBrush brush(toGDIColor(style.color, globalAlpha));
       g->FillPath(&brush, &path);
     }
   }
