@@ -20,12 +20,17 @@
 #include <windows.h>
 #endif
 
+#if 1
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
+#else
 #include <GL/gl.h>
 
 #ifdef _WIN32
 #include "glext.h"
 #else
 #include <GL/glext.h>
+#endif
 #endif
 
 #endif
@@ -91,8 +96,12 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case RGBA8: return GL_RGBA8;
     // case RG_RGTC: return GL_COMPRESSED_RG11_EAC;
   case RGB_ETC1: return GL_COMPRESSED_RGB8_ETC2;
+#ifdef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
   case RGB_DXT1: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
+#endif
+#ifdef GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
   case RGBA_DXT5: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+#endif
   case LUMINANCE_ALPHA: return GL_RG8;
   }
   return 0;
@@ -131,7 +140,8 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
     // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << endl;
     
-#if defined __APPLE__
+#ifndef GL_BGRA
+    // defined __APPLE__
     glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
 #else
     glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
