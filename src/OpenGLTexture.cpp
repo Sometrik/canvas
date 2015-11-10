@@ -20,7 +20,7 @@
 #include <windows.h>
 #endif
 
-#if 1
+#ifdef ANDROID
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 #else
@@ -35,7 +35,7 @@
 
 #endif
 
-#ifdef __APPLE__
+#if defined __APPLE__ || defined ANDROID
 #ifndef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
 #define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0
 #endif
@@ -96,12 +96,8 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case RGBA8: return GL_RGBA8;
     // case RG_RGTC: return GL_COMPRESSED_RG11_EAC;
   case RGB_ETC1: return GL_COMPRESSED_RGB8_ETC2;
-#ifdef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
   case RGB_DXT1: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-#endif
-#ifdef GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
   case RGBA_DXT5: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-#endif
   case LUMINANCE_ALPHA: return GL_RG8;
   }
   return 0;
