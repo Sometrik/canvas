@@ -20,7 +20,7 @@
 #include <windows.h>
 #endif
 
-#if 1
+#ifdef ANDROID
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 #else
