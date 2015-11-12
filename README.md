@@ -14,7 +14,7 @@ Fluent Style
 
 Fluent programming style is supported in this implementation, even though it's not available in the original HTML5 Canvas:
 
-    context->strokeStyle("#ff0000").moveTo(10, 10).lineTo(20, 20).stroke()
+    context->strokeStyle("#ff0000").moveTo(10, 10).lineTo(20, 20).stroke();
 
 Example
 =======
