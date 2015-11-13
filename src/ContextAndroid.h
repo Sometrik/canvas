@@ -31,34 +31,45 @@ namespace canvas {
   AndroidSurface(JNIEnv * _env, jobject _mgr, const std::string & filename) : Surface(0, 0, 0, 0, false), env(_env), mgr(_mgr) {
 
 
-		//AAssetManager *mgr2 = AAssetManager_fromJava(env, mgr);
+	  //Get inputStream from the picture(filename)
+	  jclass mgrClass = env->GetObjectClass(mgr);
+	  jmethodID streamingMethod = env->GetMethodID(mgrClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
+	  jobject inputStream = env->CallObjectMethod(mgr, streamingMethod, env->NewStringUTF(filename.c_str()));
 
-	  jclass clsObj = env->GetObjectClass(mgr);
-	  jmethodID methodRef2 = env->GetMethodID(clsObj,
-	  						"openFd",
-	  						"(Ljava/lang/Object;)Ljava/lang/String;");
+	  //Create a bitmap from the inputStream
+	  jclass factoryCls = env->FindClass("android/graphics/BitmapFactory");
+	  jmethodID factoryMethod = env->GetStaticMethodID(factoryCls, "decodeStream",
+	  								"(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
+	  jobject firstBitmap = env->CallStaticObjectMethod(factoryCls, factoryMethod, inputStream);
 
-	  jobject fd = env->CallObjectMethod(mgr, methodRef2, filename.c_str());
-      // bitmap = BitmapFactory.decoreResourse(fd);
+	  //Make bitmap mutable by calling Copy Method with setting isMutable() to true
+	  jclass bitmapClass = env->GetObjectClass(firstBitmap);
+	  jmethodID bitmapCopyMethod = env->GetMethodID(bitmapClass,"copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
+	  jclass clSTATUS    = env->FindClass("android/graphics/Bitmap$Config");
+	  jfieldID fidONE    = env->GetStaticFieldID(clSTATUS , "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
+	  jobject STATUS_ONE = env->GetStaticObjectField(clSTATUS, fidONE);
+	  jboolean copyBoolean = JNI_TRUE;
+	  bitmap = env->CallObjectMethod(firstBitmap, bitmapCopyMethod, STATUS_ONE, copyBoolean);
 
-		AndroidBitmapInfo info;
-
-		AndroidBitmap_getInfo(env, bitmap, &info);
-
-  	    bool has_alpha = info.format == ANDROID_BITMAP_FORMAT_RGBA_8888 || info.format == ANDROID_BITMAP_FORMAT_RGBA_4444;
-		Surface::resize(info.width, info.height, info.width, info.height, has_alpha);
-
-		// Canvas canvas = new Canvas(bmp);
-
-		//jclass cls = env->FindClass("com/example/work/MyGLSurfaceView");
-		//		jmethodID methodRef = env->GetStaticMethodID(cls,
-		//				"LoadImage",
-		//				"(Lcom/example/work/MyGLSurfaceView;I)V");
-
-				//env->CallStaticVoidMethod(cls, methodRef, *framework, message);
-
+	  //Create new Canvas from the mutable bitmap
+	  jclass canvasClass = env->FindClass("android/graphics/Canvas");
+	  jmethodID canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
+	  canvas = env->NewObject(canvasClass, canvasConstructor, bitmap);
 
 
+#if 0
+		//AndroidBitmapInfo info;
+
+		//AndroidBitmap_getInfo(env, bitmap, &info);
+
+		//bool has_alpha = info.format == ANDROID_BITMAP_FORMAT_RGBA_8888 || info.format == ANDROID_BITMAP_FORMAT_RGBA_4444;
+		//	Surface::resize(info.width, info.height, info.width, info.height, has_alpha);
+
+
+	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
+
+#endif
 
     }
     
