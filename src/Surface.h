@@ -75,7 +75,9 @@ namespace canvas {
     virtual void restore() = 0;
 
     void colorFill(const Color & color);
-    void gaussianBlur(float hradius, float vradius, float alpha = 1.0f);
+    void slowBlur(float hradius, float vradius, float alpha = 1.0f);
+    void blur(float r);
+
     void multiply(const Color & color);
     
     const TextureRef & getTexture() const { return texture; }

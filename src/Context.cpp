@@ -61,7 +61,11 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
     float shadow_alpha = shadowColor.alpha;
     shadow_style.color.alpha = 1.0f;
     shadow->renderText(mode, font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bi, y + shadowOffsetY + bi, lineWidth, op, getDisplayScale(), globalAlpha);
-    shadow->gaussianBlur(bs, bs, shadow_alpha);
+#if 1
+    shadow->slowBlur(bs, bs, shadow_alpha);
+#else
+    shadow->blur(bs);
+#endif
     getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
   getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, op, getDisplayScale(), globalAlpha);
@@ -79,8 +83,11 @@ Context::renderPath(RenderMode mode, const Path & path, const Style & style, Ope
     tmp_path.offset(shadowOffsetX + bi, shadowOffsetY + bi);
     
     shadow->renderPath(mode, tmp_path, shadow_style, lineWidth, op, getDisplayScale(), globalAlpha);
-    shadow->gaussianBlur(bs, bs);
-    
+#if 1
+    shadow->slowBlur(bs, bs);
+#else
+    shadow->blur(bs);
+#endif
     getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
   getDefaultSurface().renderPath(mode, path, style, getDisplayScale(), op, getDisplayScale(), globalAlpha);
@@ -96,7 +103,11 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
     
     shadow->drawImage(img, (x + bi + shadowOffsetX) * getDisplayScale(), (y + bi + shadowOffsetY) * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
     shadow->colorFill(shadowColor);
-    shadow->gaussianBlur(bs, bs);
+#if 1
+    shadow->slowBlur(bs, bs);
+#else
+    shadow->blur(bs);
+#endif
     
     getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
   }
