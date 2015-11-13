@@ -90,6 +90,7 @@ static GLenum getLastError() {
 
 static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   switch (internal_format) {
+  case R8: return GL_R8;
   case RG8: return GL_RG8;
   case RGB565: return GL_RGB565;
   case RGBA4: return GL_RGBA4;
@@ -184,9 +185,15 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()));
   }
 
-  if (getInternalFormat() == LUMINANCE_ALPHA) {
-    auto tmp_image = image.convert(ImageFormat::LUMALPHA8);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RG, GL_UNSIGNED_BYTE, tmp_image->getData());
+  if (getInternalFormat() == R8) {
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_R8, GL_UNSIGNED_BYTE, image.getData());    
+  } else if (getInternalFormat() == LUMINANCE_ALPHA) {
+    if (image.getFormat() == ImageFormat::LUMALPHA8) {
+      glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RG, GL_UNSIGNED_BYTE, image.getData());
+    } else {
+      auto tmp_image = image.convert(ImageFormat::LUMALPHA8);
+      glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RG, GL_UNSIGNED_BYTE, tmp_image->getData()); 
+    }
   } else if (getInternalFormat() == RGB565) {
     auto tmp_image = image.convert(ImageFormat::RGB565);
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image->getData());
