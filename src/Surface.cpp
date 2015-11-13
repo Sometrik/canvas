@@ -35,9 +35,112 @@ static vector<int> make_kernel(float radius) {
   }
   return kernel;
 }
+
+// standard deviation, number of boxes
+static vector<int> boxesForGauss(float sigma, unsigned int n) {
+  // Ideal averaging filter width 
+  float wIdeal = sqrtf((12.0f * sigma * sigma / n) + 1);
+  int wl = int(floor(wIdeal));
+  if (wl % 2 == 0) wl--;
+  int wu = wl + 2;
   
+  float mIdeal = (12.0f * sigma * sigma - n*wl*wl - 4*n*wl - 3*n) / (-4*wl - 4);
+  int m = int(round(mIdeal));
+  // var sigmaActual = Math.sqrt( (m*wl*wl + (n-m)*wu*wu - n)/12 );
+
+  vector<int> sizes;
+  for (int i = 0; i < n; i++) sizes.push_back(i < m ? wl : wu);
+  return sizes;
+}
+
+static void boxBlurH_4(unsigned char * scl, unsigned char * tcl, int w, int h, int r) {
+  float iarr = 1 / (r+r+1);
+  for (int ch = 0; ch < 4; ch++) {
+    for (int i=0; i < h; i++) {
+      int ti = i*w;
+      int li = ti;
+      int ri = ti + r;
+      int fv = scl[4 * ti + ch];
+      int lv = scl[4 * (ti + w - 1) + ch];
+      int val = (r+1)*fv;
+      for (int j = 0; j  < r; j++) val += scl[4 * (ti + j) + ch];
+      for (int j = 0; j <= r; j++) {
+	val += scl[4 * ri++ + ch] - fv;
+	tcl[4 * ti++ + ch] = int(round(val * iarr));
+      }
+      for (int j = r+1; j < w-r; j++) {
+	val += scl[4 * ri++ + ch] - scl[4 * li++ + ch];
+	tcl[4 * ti++ + ch] = int(round(val*iarr));
+      }
+      for (int j = w-r; j < w; j++) {
+	val += lv - scl[4 * li++ + ch];
+	tcl[4 * ti++ + ch] = int(round(val*iarr));
+      }
+    }
+  }
+}
+
+static void boxBlurT_4(unsigned char * scl, unsigned char * tcl, int w, int h, int r) {
+  float iarr = 1 / (r+r+1);
+  for (int ch = 0; ch < 4; ch++) {
+    for (int i = 0; i < w; i++) {
+      int ti = i;
+      int li = ti;
+      int ri = ti + r * w;
+      int fv = scl[4 * ti + ch];
+      int lv = scl[4 * (ti+w*(h-1)) + ch];
+      int val = (r+1)*fv;
+      for (int j = 0; j < r; j++) val += scl[4 * (ti+j*w) + ch];
+      for (int j = 0; j <= r; j++) {
+	val += scl[4 * ri + ch] - fv;
+	tcl[4 * ti + ch] = int(round(val*iarr));
+	ri += w;
+	ti += w;
+      }
+      for (int j = r+1; j<h-r; j++) {
+	val += scl[4 * ri + ch] - scl[4 * li + ch];
+	tcl[4 * ti + ch] = int(round(val*iarr));
+	li += w;
+	ri += w;
+	ti += w;
+      }
+      for (int j = h-r; j < h; j++) {
+	val += lv - scl[4 * li + ch];
+	tcl[4 * ti + ch] = int(round(val*iarr));
+	li += w;
+	ti += w;
+      }
+    }
+  }
+}
+
+static void boxBlur_4(unsigned char * scl, unsigned char * tcl, int w, int h, int r) {
+  for (int i = 0; i < 4 * w * h; i++) tcl[i] = scl[i];
+  boxBlurH_4(tcl, scl, w, h, r);
+  boxBlurT_4(scl, tcl, w, h, r);
+}
+
 void
-Surface::gaussianBlur(float hradius, float vradius, float alpha) {
+Surface::blur(float r) {
+  auto bxs = boxesForGauss(r, 3);
+
+  int w = getActualWidth(), h = getActualHeight();
+  unsigned char * scl = (unsigned char *)lockMemory(true);  
+  unsigned char * tcl = new unsigned char[w * h * 4];
+
+  cerr << "boxes: " << bxs[0] << ", " << bxs[1] << ", " << bxs[2] << endl;
+  
+  boxBlur_4(scl, tcl, w, h, (bxs[0]-1) / 2);
+  boxBlur_4(tcl, scl, w, h, (bxs[1]-1) / 2);
+  boxBlur_4(scl, tcl, w, h, (bxs[2]-1) / 2);
+
+  memcpy(scl, tcl, w * h * 4);
+  delete[] tcl;
+  releaseMemory();
+}
+
+void
+Surface::slowBlur(float hradius, float vradius, float alpha) {
   if (!(hradius > 0 || vradius > 0)) {
     return;
   }
