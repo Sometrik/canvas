@@ -136,8 +136,7 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
     // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << endl;
     
-#ifndef GL_BGRA
-    // defined __APPLE__
+#if defined __APPLE__ || defined ANDROID 
     glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
 #else
     glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
