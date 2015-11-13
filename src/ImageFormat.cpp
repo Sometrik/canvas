@@ -14,3 +14,4 @@ ImageFormat ImageFormat::LUMALPHA8(2, 2, true);
 ImageFormat ImageFormat::RGB_ETC1(3, 0, false, ImageFormat::ETC1);
 ImageFormat ImageFormat::RGB_DXT1(3, 0, false, ImageFormat::DXT1);
 ImageFormat ImageFormat::RGBA_DXT5(4, 0, false, ImageFormat::DXT5);
+ImageFormat ImageFormat::FLOAT32(1, 4, false);

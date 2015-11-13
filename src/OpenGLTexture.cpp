@@ -100,6 +100,7 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case RGB_DXT1: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
   case RGBA_DXT5: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
   case LUMINANCE_ALPHA: return GL_RG8;
+  case R32F: return GL_R32F;
   }
   return 0;
 }
@@ -184,7 +185,9 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()));
   }
 
-  if (getInternalFormat() == R8) {
+  if (getInternalFormat() == R32F) {
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RED, GL_FLOAT, image.getData());
+  } else if (getInternalFormat() == R8) {
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_R8, GL_UNSIGNED_BYTE, image.getData());    
   } else if (getInternalFormat() == LUMINANCE_ALPHA) {
     if (image.getFormat() == ImageFormat::LUMALPHA8) {

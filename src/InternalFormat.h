@@ -12,7 +12,8 @@ namespace canvas {
     RGB_DXT1,
     RGBA_DXT5,
     RGB_ETC1,
-    LUMINANCE_ALPHA
+    LUMINANCE_ALPHA,
+    R32F
   };
 };
 
