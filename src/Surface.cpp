@@ -259,8 +259,8 @@ Surface::multiply(const Color & color) {
 
 const TextureRef &
 Surface::updateTexture() {
-  if (!texture.isDefined()) {
-    texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter, RGBA8);
+  if (!texture.get()) {
+    texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter, target_format);
   }
 
   const unsigned char * buffer = (unsigned char *)lockMemory();
