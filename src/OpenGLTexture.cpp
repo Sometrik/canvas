@@ -136,7 +136,7 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
   unsigned int current_width = image.getWidth(), current_height = image.getHeight();
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
-    // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << endl;
+    cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
     
 #if defined __APPLE__ || defined ANDROID 
     glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
@@ -163,21 +163,18 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   if (!texture_id) {
     initialize = true;
     glGenTextures(1, &texture_id);
+    cerr << "created texture id " << texture_id << " (total = " << total_textures << ")" << endl;
     if (texture_id >= 1) total_textures++;    
   }
   assert(texture_id >= 1);
-  
+
   glBindTexture(GL_TEXTURE_2D, texture_id);
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   bool has_mipmaps = getMinFilter() == LINEAR_MIPMAP_LINEAR;
   if (initialize) {
-#if 1
     glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, getOpenGLInternalFormat(getInternalFormat()), getActualWidth(), getActualHeight());
-#else
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-#endif
     
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
