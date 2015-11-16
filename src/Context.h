@@ -137,7 +137,7 @@ namespace canvas {
     virtual Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op = SOURCE_OVER);
     virtual Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
 
-    bool hasShadow() const { return shadowBlur > 0 || shadowOffsetX != 0 || shadowOffsetY != 0; }
+    bool hasShadow() const { return shadowBlur > 0.0f || shadowOffsetX != 0 || shadowOffsetY != 0; }
     
   private:
     Style current_linear_gradient;
