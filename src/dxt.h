@@ -31,6 +31,7 @@
 #define STB_DXT_DITHER    1   // use dithering. dubious win. never use for normal maps and the like!
 #define STB_DXT_HIGHQUAL  2   // high quality mode, does two refinement steps instead of 1. ~30-40% slower.
 
-void stb_compress_dxt_block(unsigned char *dest, const unsigned char *src, bool alpha, int mode);
+void stb_compress_dxt1_block(unsigned char *dest, const unsigned char *src, bool alpha, int mode);
+void stb_compress_rgtc_block(unsigned char *dest, const unsigned char *src);
 
 #endif
