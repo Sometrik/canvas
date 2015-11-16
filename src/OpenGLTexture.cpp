@@ -95,7 +95,8 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case RGB565: return GL_RGB565;
   case RGBA4: return GL_RGBA4;
   case RGBA8: return GL_RGBA8;
-    // case RG_RGTC: return GL_COMPRESSED_RG11_EAC;
+  case RED_RGTC1: return GL_COMPRESSED_RED_RGTC1;
+  case RG_RGTC2: return GL_COMPRESSED_RG_RGTC2;
   case RGB_ETC1: return GL_COMPRESSED_RGB8_ETC2;
   case RGB_DXT1: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
   case RGBA_DXT5: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
@@ -212,6 +213,14 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     } else {
       cerr << "WARNING: compression should be done in thread\n";
       auto tmp_image = image.convert(ImageFormat::RGB_DXT1);
+      updateCompressedData(*tmp_image, x, y);
+    }    
+  } else if (getInternalFormat() == RG_RGTC2) {
+    if (image.getFormat().getCompression() == ImageFormat::RGTC2) {
+      updateCompressedData(image, x, y);
+    } else {
+      cerr << "WARNING: compression should be done in thread\n";
+      auto tmp_image = image.convert(ImageFormat::RG_RGTC2);
       updateCompressedData(*tmp_image, x, y);
     }    
   } else {

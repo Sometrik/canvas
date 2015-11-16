@@ -75,9 +75,15 @@ namespace canvas {
 
     static size_t calculateOffset(unsigned int width, unsigned int height, unsigned int level, const ImageFormat & format) {
       size_t s = 0;
-      if (format.getCompression() == ImageFormat::ETC1 || format.getCompression() == ImageFormat::DXT1) {
+      if (format.getCompression() == ImageFormat::ETC1 || format.getCompression() == ImageFormat::DXT1 || format.getCompression() == ImageFormat::RGTC1) {
 	for (unsigned int l = 0; l < level; l++) {
 	  s += 8 * ((width + 3) / 4) * ((height + 3) / 4);
+	  width = (width + 1) / 2;
+	  height = (height + 1) / 2;
+	}
+      } else if (format.getCompression() == ImageFormat::RGTC2) {
+	for (unsigned int l = 0; l < level; l++) {
+	  s += 16 * ((width + 3) / 4) * ((height + 3) / 4);
 	  width = (width + 1) / 2;
 	  height = (height + 1) / 2;
 	}
