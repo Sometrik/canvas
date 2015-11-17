@@ -30,7 +30,8 @@ namespace canvas {
     static ImageFormat PAL8;
     static ImageFormat LUM8;
     static ImageFormat ALPHA8;
-    static ImageFormat LUMALPHA8;
+    static ImageFormat LA88;
+    static ImageFormat LA44;
     static ImageFormat RGB_ETC1;
     static ImageFormat RGB_DXT1;
     static ImageFormat RGBA_DXT5;
