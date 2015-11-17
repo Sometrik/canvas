@@ -250,13 +250,15 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
 void
 OpenGLTexture::releaseTextures() {
-  // cerr << "DELETING TEXTURES: " << OpenGLTexture::getFreedTextures().size() << "/" << OpenGLTexture::getNumTextures() << endl;
-  
-  for (vector<unsigned int>::const_iterator it = freed_textures.begin(); it != freed_textures.end(); it++) {
-    GLuint texid = *it;
-    glDeleteTextures(1, &texid);
+  if (!freed_textures.empty()) {
+    cerr << "DELETING TEXTURES: " << OpenGLTexture::getFreedTextures().size() << "/" << OpenGLTexture::getNumTextures() << endl;
+    
+    for (vector<unsigned int>::const_iterator it = freed_textures.begin(); it != freed_textures.end(); it++) {
+      GLuint texid = *it;
+      glDeleteTextures(1, &texid);
+    }
+    freed_textures.clear();
   }
-  freed_textures.clear();
 }
 
 TextureRef
