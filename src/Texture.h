@@ -32,6 +32,9 @@ namespace canvas {
     InternalFormat getInternalFormat() const { return internal_format; }
     bool isDefined() const { return getTextureId() != 0; }
 
+    int getUpdateCursor() const { return update_cursor; }
+    void setUpdateCursor(int c) { update_cursor = c; }
+    
   protected:
     void incRefcnt() { ++refcnt; }
     int decRefcnt();
@@ -45,6 +48,7 @@ namespace canvas {
     FilterMode min_filter;
     FilterMode mag_filter;
     InternalFormat internal_format;
+    int update_cursor = 0;
   };
 
   class TextureFactory {

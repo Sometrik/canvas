@@ -25,55 +25,49 @@ static unsigned char stb__OMatch6[256][2];
 static unsigned char stb__QuantRBTab[256+16];
 static unsigned char stb__QuantGTab[256+16];
 
-static int stb__Mul8Bit(int a, int b)
-{
+static inline int stb__Mul8Bit(int a, int b) {
   int t = a*b + 128;
   return (t + (t >> 8)) >> 8;
 }
 
-static void stb__From16Bit(unsigned char *out, unsigned short v)
-{
-   int rv = (v & 0xf800) >> 11;
-   int gv = (v & 0x07e0) >>  5;
-   int bv = (v & 0x001f) >>  0;
-
-   out[0] = stb__Expand5[rv];
-   out[1] = stb__Expand6[gv];
-   out[2] = stb__Expand5[bv];
-   out[3] = 0;
+static inline void stb__From16Bit(unsigned char *out, unsigned short v) {
+  int rv = (v & 0xf800) >> 11;
+  int gv = (v & 0x07e0) >>  5;
+  int bv = (v & 0x001f) >>  0;
+  
+  out[0] = stb__Expand5[rv];
+  out[1] = stb__Expand6[gv];
+  out[2] = stb__Expand5[bv];
+  out[3] = 0;
 }
 
-static unsigned short stb__As16Bit(int r, int g, int b)
-{
+static inline unsigned short stb__As16Bit(int r, int g, int b) {
    return (stb__Mul8Bit(r,31) << 11) + (stb__Mul8Bit(g,63) << 5) + stb__Mul8Bit(b,31);
 }
 
 // linear interpolation at 1/3 point between a and b, using desired rounding type
-static int stb__Lerp13(int a, int b)
-{
+static inline int stb__Lerp13(int a, int b) {
 #ifdef STB_DXT_USE_ROUNDING_BIAS
-   // with rounding bias
-   return a + stb__Mul8Bit(b-a, 0x55);
+  // with rounding bias
+  return a + stb__Mul8Bit(b-a, 0x55);
 #else
-   // without rounding bias
-   // replace "/ 3" by "* 0xaaab) >> 17" if your compiler sucks or you really need every ounce of speed.
-   return (2*a + b) / 3;
+  // without rounding bias
+  // replace "/ 3" by "* 0xaaab) >> 17" if your compiler sucks or you really need every ounce of speed.
+  return (2*a + b) / 3;
 #endif
 }
 
 // lerp RGB color
-static void stb__Lerp13RGB(unsigned char *out, unsigned char *p1, unsigned char *p2)
-{
-   out[0] = stb__Lerp13(p1[0], p2[0]);
-   out[1] = stb__Lerp13(p1[1], p2[1]);
-   out[2] = stb__Lerp13(p1[2], p2[2]);
+static inline void stb__Lerp13RGB(unsigned char *out, unsigned char *p1, unsigned char *p2) {
+  out[0] = stb__Lerp13(p1[0], p2[0]);
+  out[1] = stb__Lerp13(p1[1], p2[1]);
+  out[2] = stb__Lerp13(p1[2], p2[2]);
 }
 
 /****************************************************************************/
 
 // compute table to reproduce constant colors as accurately as possible
-static void stb__PrepareOptTable(unsigned char *Table,const unsigned char *expand,int size)
-{
+static inline void stb__PrepareOptTable(unsigned char *Table,const unsigned char *expand,int size) {
    int i,mn,mx;
    for (i=0;i<256;i++) {
       int bestErr = 256;
@@ -100,18 +94,16 @@ static void stb__PrepareOptTable(unsigned char *Table,const unsigned char *expan
    }
 }
 
-static void stb__EvalColors(unsigned char *color,unsigned short c0,unsigned short c1)
-{
-   stb__From16Bit(color+ 0, c0);
-   stb__From16Bit(color+ 4, c1);
-   stb__Lerp13RGB(color+ 8, color+0, color+4);
-   stb__Lerp13RGB(color+12, color+4, color+0);
+static inline void stb__EvalColors(unsigned char *color,unsigned short c0,unsigned short c1) {
+  stb__From16Bit(color+ 0, c0);
+  stb__From16Bit(color+ 4, c1);
+  stb__Lerp13RGB(color+ 8, color+0, color+4);
+  stb__Lerp13RGB(color+12, color+4, color+0);
 }
 
 // Block dithering function. Simply dithers a block to 565 RGB.
 // (Floyd-Steinberg)
-static void stb__DitherBlock(unsigned char *dest, unsigned char *block)
-{
+static inline void stb__DitherBlock(unsigned char *dest, unsigned char *block) {
   int err[8],*ep1 = err,*ep2 = err+4, *et;
   int ch,y;
 
@@ -137,8 +129,7 @@ static void stb__DitherBlock(unsigned char *dest, unsigned char *block)
 }
 
 // The color matching function
-static unsigned int stb__MatchColorsBlock(unsigned char *block, unsigned char *color,int dither)
-{
+static inline unsigned int stb__MatchColorsBlock(unsigned char *block, unsigned char *color,int dither) {
    unsigned int mask = 0;
    int dirr = color[0*4+0] - color[1*4+0];
    int dirg = color[0*4+1] - color[1*4+1];
@@ -234,8 +225,7 @@ static unsigned int stb__MatchColorsBlock(unsigned char *block, unsigned char *c
 }
 
 // The color optimization function. (Clever code, part 1)
-static void stb__OptimizeColorsBlock(unsigned char *block, unsigned short *pmax16, unsigned short *pmin16)
-{
+static inline void stb__OptimizeColorsBlock(unsigned char *block, unsigned short *pmax16, unsigned short *pmin16) {
   int mind = 0x7fffffff,maxd = -0x7fffffff;
   unsigned char *minp, *maxp;
   double magn;
@@ -338,7 +328,7 @@ static void stb__OptimizeColorsBlock(unsigned char *block, unsigned short *pmax1
    *pmin16 = stb__As16Bit(minp[0],minp[1],minp[2]);
 }
 
-static int stb__sclamp(float y, int p0, int p1)
+static inline int stb__sclamp(float y, int p0, int p1)
 {
    int x = (int) y;
    if (x < p0) return p0;
@@ -349,7 +339,7 @@ static int stb__sclamp(float y, int p0, int p1)
 // The refinement function. (Clever code, part 2)
 // Tries to optimize colors to suit block contents better.
 // (By solving a least squares system via normal equations+Cramer's rule)
-static int stb__RefineBlock(unsigned char *block, unsigned short *pmax16, unsigned short *pmin16, unsigned int mask)
+static inline int stb__RefineBlock(unsigned char *block, unsigned short *pmax16, unsigned short *pmin16, unsigned int mask)
 {
    static const int w1Tab[4] = { 3,0,2,1 };
    static const int prods[4] = { 0x090000,0x000900,0x040102,0x010402 };
@@ -428,8 +418,7 @@ static int stb__RefineBlock(unsigned char *block, unsigned short *pmax16, unsign
 }
 
 // Color block compression
-static void stb__CompressColorBlock(unsigned char *dest, unsigned char *block, int mode)
-{
+static inline void stb__CompressColorBlock(unsigned char *dest, unsigned char *block, int mode) {
    unsigned int mask;
    int i;
    int dither;
@@ -502,8 +491,7 @@ static void stb__CompressColorBlock(unsigned char *dest, unsigned char *block, i
 }
 
 // Alpha block compression (this is easy for a change)
-static void stb__CompressAlphaBlock(unsigned char *dest,unsigned char *src,int mode)
-{
+static inline void stb__CompressAlphaBlock(unsigned char *dest,unsigned char *src,int mode) {
    int i,dist,bias,dist4,dist2,bits,mask;
 
    // find min/max color
@@ -554,8 +542,111 @@ static void stb__CompressAlphaBlock(unsigned char *dest,unsigned char *src,int m
    }
 }
 
-static void stb__InitDXT()
-{
+// Red block compression (this is easy for a change)
+static inline void stb__CompressRedBlock(unsigned char *dest,unsigned char *src) {
+   int i,dist,bias,dist4,dist2,bits,mask;
+
+   // find min/max color
+   int mn,mx;
+   mn = mx = src[0];
+
+   for (i=1;i<16;i++)
+   {
+      if (src[i*2+0] < mn) mn = src[i*2+0];
+      else if (src[i*2+0] > mx) mx = src[i*2+0];
+   }
+
+   // encode them
+   ((unsigned char *)dest)[0] = mx;
+   ((unsigned char *)dest)[1] = mn;
+   dest += 2;
+
+   // determine bias and emit color indices
+   // given the choice of mx/mn, these indices are optimal:
+   // http://fgiesen.wordpress.com/2009/12/15/dxt5-alpha-block-index-determination/
+   dist = mx-mn;
+   dist4 = dist*4;
+   dist2 = dist*2;
+   bias = (dist < 8) ? (dist - 1) : (dist/2 + 2);
+   bias -= mn * 7;
+   bits = 0,mask=0;
+   
+   for (i=0;i<16;i++) {
+      int a = src[i*2+0]*7 + bias;
+      int ind,t;
+
+      // select index. this is a "linear scale" lerp factor between 0 (val=min) and 7 (val=max).
+      t = (a >= dist4) ? -1 : 0; ind =  t & 4; a -= dist4 & t;
+      t = (a >= dist2) ? -1 : 0; ind += t & 2; a -= dist2 & t;
+      ind += (a >= dist);
+      
+      // turn linear scale into DXT index (0/1 are extremal pts)
+      ind = -ind & 7;
+      ind ^= (2 > ind);
+
+      // write index
+      mask |= ind << bits;
+      if((bits += 3) >= 8) {
+         *dest++ = mask;
+         mask >>= 8;
+         bits -= 8;
+      }
+   }
+}
+
+// Red block compression (this is easy for a change)
+static inline void stb__CompressGreenBlock(unsigned char *dest,unsigned char *src) {
+   int i,dist,bias,dist4,dist2,bits,mask;
+
+   // find min/max color
+   int mn,mx;
+   mn = mx = src[1];
+
+   for (i=1;i<16;i++)
+   {
+      if (src[i*2+1] < mn) mn = src[i*2+1];
+      else if (src[i*2+1] > mx) mx = src[i*2+1];
+   }
+
+   // encode them
+   ((unsigned char *)dest)[0] = mx;
+   ((unsigned char *)dest)[1] = mn;
+   dest += 2;
+
+   // determine bias and emit color indices
+   // given the choice of mx/mn, these indices are optimal:
+   // http://fgiesen.wordpress.com/2009/12/15/dxt5-alpha-block-index-determination/
+   dist = mx-mn;
+   dist4 = dist*4;
+   dist2 = dist*2;
+   bias = (dist < 8) ? (dist - 1) : (dist/2 + 2);
+   bias -= mn * 7;
+   bits = 0,mask=0;
+   
+   for (i=0;i<16;i++) {
+      int a = src[i*2+1]*7 + bias;
+      int ind,t;
+
+      // select index. this is a "linear scale" lerp factor between 0 (val=min) and 7 (val=max).
+      t = (a >= dist4) ? -1 : 0; ind =  t & 4; a -= dist4 & t;
+      t = (a >= dist2) ? -1 : 0; ind += t & 2; a -= dist2 & t;
+      ind += (a >= dist);
+      
+      // turn linear scale into DXT index (0/1 are extremal pts)
+      ind = -ind & 7;
+      ind ^= (2 > ind);
+
+      // write index
+      mask |= ind << bits;
+      if((bits += 3) >= 8) {
+         *dest++ = mask;
+         mask >>= 8;
+         bits -= 8;
+      }
+   }
+}
+
+static void stb__InitDXT() {
    int i;
    for(i=0;i<32;i++)
       stb__Expand5[i] = (i<<3)|(i>>2);
@@ -574,9 +665,9 @@ static void stb__InitDXT()
    stb__PrepareOptTable(&stb__OMatch6[0][0],stb__Expand6,64);
 }
 
-void stb_compress_dxt_block(unsigned char *dest, const unsigned char *src, bool alpha, int mode)
-{
-   static int init=1;
+static int init=1;
+
+void stb_compress_dxt1_block(unsigned char *dest, const unsigned char *src, bool alpha, int mode) {
    if (init) {
       stb__InitDXT();
       init=0;
@@ -588,4 +679,16 @@ void stb_compress_dxt_block(unsigned char *dest, const unsigned char *src, bool 
    }
 
    stb__CompressColorBlock(dest,(unsigned char*) src,mode);
+}
+
+void stb_compress_rgtc_block(unsigned char *dest, const unsigned char *src) {
+  if (init) {
+    stb__InitDXT();
+    init=0;
+  }
+  
+  stb__CompressRedBlock(dest, (unsigned char*) src);
+  dest += 8;
+  stb__CompressGreenBlock(dest, (unsigned char*) src);
+  dest += 8;   
 }

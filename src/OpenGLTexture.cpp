@@ -42,6 +42,12 @@
 #ifndef GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
 #define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0
 #endif
+#ifndef GL_COMPRESSED_RED_RGTC1
+#define GL_COMPRESSED_RED_RGTC1 0x8DBB
+#endif
+#ifndef GL_COMPRESSED_RG_RGTC2
+#define GL_COMPRESSED_RG_RGTC2 0x8DBD
+#endif
 #endif
 
 #include <cassert>
@@ -90,15 +96,19 @@ static GLenum getLastError() {
 
 static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   switch (internal_format) {
+  case R8: return GL_R8;
   case RG8: return GL_RG8;
   case RGB565: return GL_RGB565;
   case RGBA4: return GL_RGBA4;
   case RGBA8: return GL_RGBA8;
-    // case RG_RGTC: return GL_COMPRESSED_RG11_EAC;
+  case RED_RGTC1: return GL_COMPRESSED_RED_RGTC1;
+  case RG_RGTC2: return GL_COMPRESSED_RG_RGTC2;
   case RGB_ETC1: return GL_COMPRESSED_RGB8_ETC2;
   case RGB_DXT1: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
   case RGBA_DXT5: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
   case LUMINANCE_ALPHA: return GL_RG8;
+  case LA44: return GL_R8; // pack luminance and alpha to single byte
+  case R32F: return GL_R32F;
   }
   return 0;
 }
@@ -134,10 +144,9 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
   unsigned int current_width = image.getWidth(), current_height = image.getHeight();
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
-    // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << endl;
+    cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
     
-#ifndef GL_BGRA
-    // defined __APPLE__
+#if defined __APPLE__ || defined ANDROID 
     glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
 #else
     glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
@@ -162,21 +171,18 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   if (!texture_id) {
     initialize = true;
     glGenTextures(1, &texture_id);
+    cerr << "created texture id " << texture_id << " (total = " << total_textures << ")" << endl;
     if (texture_id >= 1) total_textures++;    
   }
   assert(texture_id >= 1);
-  
+
   glBindTexture(GL_TEXTURE_2D, texture_id);
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   bool has_mipmaps = getMinFilter() == LINEAR_MIPMAP_LINEAR;
   if (initialize) {
-#if 1
     glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, getOpenGLInternalFormat(getInternalFormat()), getActualWidth(), getActualHeight());
-#else
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWidth(), getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-#endif
     
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -184,9 +190,20 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()));
   }
 
-  if (getInternalFormat() == LUMINANCE_ALPHA) {
-    auto tmp_image = image.convert(ImageFormat::LUMALPHA8);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RG, GL_UNSIGNED_BYTE, tmp_image->getData());
+  if (getInternalFormat() == R32F) {
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RED, GL_FLOAT, image.getData());
+  } else if (getInternalFormat() == R8) {
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RED, GL_UNSIGNED_BYTE, image.getData());
+  } else if (getInternalFormat() == LA44) {
+    auto tmp_image = image.convert(ImageFormat::LA44);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RED, GL_UNSIGNED_BYTE, tmp_image->getData());
+  } else if (getInternalFormat() == LUMINANCE_ALPHA) {
+    if (image.getFormat() == ImageFormat::LA88) {
+      glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RG, GL_UNSIGNED_BYTE, image.getData());
+    } else {
+      auto tmp_image = image.convert(ImageFormat::LA88);
+      glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RG, GL_UNSIGNED_BYTE, tmp_image->getData()); 
+    }
   } else if (getInternalFormat() == RGB565) {
     auto tmp_image = image.convert(ImageFormat::RGB565);
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image->getData());
@@ -208,6 +225,14 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       auto tmp_image = image.convert(ImageFormat::RGB_DXT1);
       updateCompressedData(*tmp_image, x, y);
     }    
+  } else if (getInternalFormat() == RG_RGTC2) {
+    if (image.getFormat().getCompression() == ImageFormat::RGTC2) {
+      updateCompressedData(image, x, y);
+    } else {
+      cerr << "WARNING: compression should be done in thread\n";
+      auto tmp_image = image.convert(ImageFormat::RG_RGTC2);
+      updateCompressedData(*tmp_image, x, y);
+    }    
   } else {
     updatePlainData(image, x, y);    
   }
@@ -225,13 +250,15 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
 void
 OpenGLTexture::releaseTextures() {
-  // cerr << "DELETING TEXTURES: " << OpenGLTexture::getFreedTextures().size() << "/" << OpenGLTexture::getNumTextures() << endl;
-  
-  for (vector<unsigned int>::const_iterator it = freed_textures.begin(); it != freed_textures.end(); it++) {
-    GLuint texid = *it;
-    glDeleteTextures(1, &texid);
+  if (!freed_textures.empty()) {
+    cerr << "DELETING TEXTURES: " << OpenGLTexture::getFreedTextures().size() << "/" << OpenGLTexture::getNumTextures() << endl;
+    
+    for (vector<unsigned int>::const_iterator it = freed_textures.begin(); it != freed_textures.end(); it++) {
+      GLuint texid = *it;
+      glDeleteTextures(1, &texid);
+    }
+    freed_textures.clear();
   }
-  freed_textures.clear();
 }
 
 TextureRef

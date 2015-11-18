@@ -75,7 +75,9 @@ namespace canvas {
     virtual void restore() = 0;
 
     void colorFill(const Color & color);
-    void gaussianBlur(float hradius, float vradius, float alpha = 1.0f);
+    void slowBlur(float hradius, float vradius, float alpha = 1.0f);
+    void blur(float r);
+
     void multiply(const Color & color);
     
     const TextureRef & getTexture() const { return texture; }
@@ -94,7 +96,8 @@ namespace canvas {
 
     void setMagFilter(FilterMode mode) { mag_filter = mode; }
     void setMinFilter(FilterMode mode) { min_filter = mode; }
-      
+    void setTargetFormat(InternalFormat format) { target_format = format; }
+
   protected:
     static bool isPNG(const unsigned char * buffer, size_t size);
     static bool isJPEG(const unsigned char * buffer, size_t size);
@@ -106,16 +109,19 @@ namespace canvas {
     unsigned int logical_width, logical_height, actual_width, actual_height;
     FilterMode mag_filter = LINEAR;
     FilterMode min_filter = LINEAR;
+    InternalFormat target_format = RGBA8;
     unsigned int * scaled_buffer = 0;
     bool has_alpha;
   };
 
+#if 0
   class NullSurface : public Surface {
   public:
-    void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) { }
-    void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) { }
-    void drawImage(Surface & _img, double x, double y, double w, double h) { }
+    void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) override { }
+    void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) override { }
+    void drawImage(Surface & _img, double x, double y, double w, double h) override { }
   };
+#endif
 };
 
 #endif

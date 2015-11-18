@@ -30,16 +30,21 @@ namespace canvas {
     static ImageFormat PAL8;
     static ImageFormat LUM8;
     static ImageFormat ALPHA8;
-    static ImageFormat LUMALPHA8;
+    static ImageFormat LA88;
+    static ImageFormat LA44;
     static ImageFormat RGB_ETC1;
     static ImageFormat RGB_DXT1;
     static ImageFormat RGBA_DXT5;
+    static ImageFormat RG_RGTC2;
+    static ImageFormat FLOAT32;
 
     enum Compression {
       NO_COMPRESSION = 0,
       ETC1,
       DXT1,
-      DXT5
+      DXT5,
+      RGTC1,
+      RGTC2
     };
     
     ImageFormat(unsigned short _channels, unsigned short _bytes_per_pixel, bool _force_alpha = false, Compression _compression = NO_COMPRESSION)

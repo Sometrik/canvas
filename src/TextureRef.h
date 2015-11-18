@@ -39,7 +39,7 @@ namespace canvas {
     unsigned int getActualWidth() const { return actual_width; }
     unsigned int getActualHeight() const { return actual_height; }
     unsigned int getTextureId() const { return data ? data->getTextureId() : 0; }
-    bool isDefined() const { return data != 0; }
+    Texture * get() const { return data; }
 
     void setLogicalWidth(unsigned int w) { logical_width = w; }
     void setLogicalHeight(unsigned int h) { logical_height = h; }
@@ -66,6 +66,9 @@ namespace canvas {
     }
 
     const Texture * getData() const { return data; }
+
+    int getUpdateCursor() const { return data ? data->getUpdateCursor() : 0; }
+    void setUpdateCursor(int c) { if (data) data->setUpdateCursor(c); }
 
   private:
     unsigned int logical_width, logical_height, actual_width, actual_height;

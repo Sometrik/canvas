@@ -16,7 +16,7 @@ Image::convert(const ImageFormat & target_format) const {
   assert(format.getBytesPerPixel() == 4);
   assert(!format.getCompression());
 
-  if (target_format.getCompression() == ImageFormat::DXT1 || target_format.getCompression() == ImageFormat::ETC1) {
+  if (target_format.getCompression() == ImageFormat::DXT1 || target_format.getCompression() == ImageFormat::ETC1 || target_format.getCompression() == ImageFormat::RGTC2) {
     rg_etc1::etc1_pack_params params;
     params.m_quality = rg_etc1::cLowQuality;
     if (target_format.getCompression() == ImageFormat::ETC1 && !etc1_initialized) {
@@ -40,25 +40,35 @@ Image::convert(const ImageFormat & target_format) const {
 	  for (unsigned int y = 0; y < 4; y++) {
 	    for (unsigned int x = 0; x < 4; x++) {
 	      int source_offset = base_source_offset + ((row * 4 + y) * target_width + col * 4 + x) * 4;
-	      int offset = (y * 4 + x) * 4;
 	      if (target_format.getCompression() == ImageFormat::ETC1) {
+		int offset = (y * 4 + x) * 4;
 		input_block[offset++] = data[source_offset++];
 		input_block[offset++] = data[source_offset++];
 		input_block[offset++] = data[source_offset++];
-	      } else {
+		input_block[offset++] = 255; // data[source_offset++];
+	      } else if (target_format.getCompression() == ImageFormat::DXT1) {
+		int offset = (y * 4 + x) * 4;
 		input_block[offset++] = data[source_offset + 2];
 		input_block[offset++] = data[source_offset + 1];
 		input_block[offset++] = data[source_offset + 0];
+		input_block[offset++] = 255; // data[source_offset++];
+	      } else {
+		int offset = (y * 4 + x) * 2;
+		input_block[offset++] = data[source_offset + 0];
+		input_block[offset++] = data[source_offset + 3];
 	      }
-	      input_block[offset++] = 255; // data[source_offset++];
 	    }
 	  }
 	  if (target_format.getCompression() == ImageFormat::ETC1) {
-	    rg_etc1::pack_etc1_block(output_data + target_offset, (const unsigned int *)&(input_block[0]), params);
+	    rg_etc1::pack_etc1_block(output_data + target_offset, (const unsigned int *)&(input_block[0]), params);	  
+	    target_offset += 8;
+	  } else if (target_format.getCompression() == ImageFormat::DXT1) {
+	    stb_compress_dxt1_block(output_data + target_offset, &(input_block[0]), false, 0);
+	    target_offset += 8;
 	  } else {
-	    stb_compress_dxt_block(output_data + target_offset, &(input_block[0]), false, 0);
+	    stb_compress_rgtc_block(output_data + target_offset, &(input_block[0]));
+	    target_offset += 16;
 	  }
-	  target_offset += 8;
 	}
       }
       target_width = (target_width + 1) / 2;
@@ -66,6 +76,28 @@ Image::convert(const ImageFormat & target_format) const {
     }
     auto r = std::shared_ptr<Image>(new Image(output_data, target_format, width, height, levels));
     delete[] output_data;
+    return r;
+  } else if (target_format.getNumChannels() == 2 && target_format.getBytesPerPixel() == 1) {
+    assert(levels == 1);
+    
+    unsigned int n = width * height;
+    unsigned char * tmp = new unsigned char[target_format.getBytesPerPixel() * n];
+    unsigned char * output_data = (unsigned char *)tmp;
+    const unsigned int * input_data = (const unsigned int *)data;
+    
+    for (unsigned int i = 0; i < n; i++) {
+      int v = input_data[i];
+      int red = RGBA_TO_RED(v);
+      int green = RGBA_TO_GREEN(v);
+      int blue = RGBA_TO_BLUE(v);
+      int alpha = RGBA_TO_ALPHA(v) >> 4;
+      int lum = ((red + green + blue) / 3) >> 4;
+      if (lum >= 16) lum = 15;
+      *output_data++ = (alpha << 4) | lum;
+    }
+
+    auto r = std::shared_ptr<Image>(new Image(tmp, target_format, getWidth(), getHeight()));
+    delete[] tmp;
     return r;
   } else {
     assert(levels == 1);
@@ -75,7 +107,7 @@ Image::convert(const ImageFormat & target_format) const {
     unsigned char * tmp = new unsigned char[target_format.getBytesPerPixel() * n];
     unsigned short * output_data = (unsigned short *)tmp;
     const unsigned int * input_data = (const unsigned int *)data;
-    
+
     if (target_format.getNumChannels() == 2) {
       for (unsigned int i = 0; i < n; i++) {
 	int v = input_data[i];
