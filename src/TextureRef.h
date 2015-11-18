@@ -67,6 +67,9 @@ namespace canvas {
 
     const Texture * getData() const { return data; }
 
+    int getUpdateCursor() const { return data ? data->getUpdateCursor() : 0; }
+    void setUpdateCursor(int c) { if (data) data->setUpdateCursor(c); }
+
   private:
     unsigned int logical_width, logical_height, actual_width, actual_height;
     Texture * data;
