@@ -21,6 +21,18 @@ namespace canvas {
 	  // Bitmap.Config conf = Bitmap.Config.ARGB_8888;
 	  // Bitmap bmp = Bitmap.createBitmap(w, h, conf);
 	  // Canvas canvas = new Canvas(bmp);
+
+	  jclass clSTATUS    = env->FindClass("android/graphics/Bitmap$Config");
+	  jfieldID fidONE    = env->GetStaticFieldID(clSTATUS , "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
+	  jobject STATUS_ONE = env->GetStaticObjectField(clSTATUS, fidONE);
+
+	  //Not Tested
+	  jclass bitmapClass = env->FindClass("android/graphics/Bitmap");
+	  jmethodID bitmapCreate = env->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+	  bitmap = env->CallStaticObjectMethod(bitmapClass, bitmapCreate, 10, 10, STATUS_ONE);
+
+
+
   }
   
   AndroidSurface(JNIEnv * _env, jobject _mgr, const Image & image)
@@ -44,7 +56,7 @@ namespace canvas {
 
 	  //Make bitmap mutable by calling Copy Method with setting isMutable() to true
 	  jclass bitmapClass = env->GetObjectClass(firstBitmap);
-	  jmethodID bitmapCopyMethod = env->GetMethodID(bitmapClass,"copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
+	  jmethodID bitmapCopyMethod = env->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
 	  jclass clSTATUS    = env->FindClass("android/graphics/Bitmap$Config");
 	  jfieldID fidONE    = env->GetStaticFieldID(clSTATUS , "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
 	  jobject STATUS_ONE = env->GetStaticObjectField(clSTATUS, fidONE);
@@ -55,6 +67,7 @@ namespace canvas {
 	  jclass canvasClass = env->FindClass("android/graphics/Canvas");
 	  jmethodID canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
 	  canvas = env->NewObject(canvasClass, canvasConstructor, bitmap);
+
 
 
 #if 0
@@ -98,7 +111,46 @@ namespace canvas {
     }
 
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override {
-    	// render path with style
+
+	  //debug of renderpath-----------------------
+	 	 // renderPath(1, Path::rect(10.1,10.1,10.1,10.1), 1, 10, 1, 10, 10)
+
+	 	//   void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override {
+
+	 	  	  jclass paintClass = env->FindClass("android.graphics.Paint");
+	 		  jmethodID paintConstructor = env->GetMethodID(paintClass, "<init>", "()V");
+	 		  jobject jpaint = env->NewObject(paintClass, paintConstructor);
+
+	 		  //Paint.setColor
+	 		  jmethodID paintColor = env->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
+	 		  env->CallVoidMethod(jpaint, paintColor, copyBoolean);
+	 		  //Set more Paint things here------<
+
+	 	  	  jclass pathClass = env->FindClass("android.graphics.Path");
+	 		  jmethodID pathConstructor = env->GetMethodID(pathClass, "<init>", "()V");
+	 		  jobject jpath = env->NewObject(pathClass, pathConstructor);
+
+	 		  // if op == 1 example   Move Path
+	 		jmethodID pathMoveMethod = env->GetMethodID(pathClass, "moveTo", "(FF)V");
+	 			env->CallVoidMethod(jpath, pathMoveMethod, 10,10);
+
+
+	 		  //Draw path to canvas
+	 		  jmethodID canvasPathDraw = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
+	 		  env->CallVoidMethod(canvas, canvasPathDraw, jpath, jpaint);
+
+	 			  //DEBUG call java debug method to check path, paint or canvas
+	 			//jclass debugClass = env->FindClass("com/example/work/MyGLSurfaceView");
+	 			//jmethodID debugMethod = env->GetStaticMethodID(debugClass, "pathDebug", "(Landroid/graphics/Path;Landroid/graphics/Paint;Landroid/graphics/Canvas;)V");
+	 			//env->CallStaticVoidMethod(debugClass, debugMethod, jpath, jpaint, canvas);
+
+
+
+	 	    	// jobject android_path = createAndroidPath(path);
+	 	    	// drawPath(android_path, paint)
+
+
+	  	// render path with style
     	// Paint paint = createPaintFromStyle(mode, style, globalAlpha, lineWidth);
     	// jobject android_path = createAndroidPath(path);
     	// drawPath(android_path, paint)
