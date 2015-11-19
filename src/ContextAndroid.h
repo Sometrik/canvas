@@ -123,6 +123,7 @@ namespace canvas {
 
 	 		  //Paint.setColor
 	 		  jmethodID paintColor = env->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
+	 		  jboolean copyBoolean = JNI_TRUE;
 	 		  env->CallVoidMethod(jpaint, paintColor, copyBoolean);
 	 		  //Set more Paint things here------<
 
@@ -136,6 +137,7 @@ namespace canvas {
 
 
 	 		  //Draw path to canvas
+	 			jclass canvasClass = env->FindClass("android/graphics/Canvas");
 	 		  jmethodID canvasPathDraw = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
 	 		  env->CallVoidMethod(canvas, canvasPathDraw, jpath, jpaint);
 
