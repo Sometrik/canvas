@@ -13,7 +13,82 @@ namespace canvas {
   class AndroidSurface : public Surface {
   public:
     friend class ContextAndroid;
-        
+
+    void testCode() {
+
+    	jboolean copyBoolean = JNI_TRUE;
+  	  jclass canvasClass = env->FindClass("android/graphics/Canvas");
+
+  	  //RenderPath debug
+  	  //create paint
+  	  jclass paintClass = env->FindClass("android/graphics/Paint");
+  	  jmethodID paintConstructor = env->GetMethodID(paintClass, "<init>", "()V");
+  	  jobject jpaint = env->NewObject(paintClass, paintConstructor);
+
+  	  //Paint.setColor;
+  	  env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setAntiAlias", "(Z)V"), copyBoolean);
+
+  	  //Paint Set Style
+  	  env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStyle", "(Landroid/graphics/Paint$Style;)V"),
+  			  env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
+  					  env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style") , "STROKE", "Landroid/graphics/Paint$Style;")));
+
+  	  //Paint Set Stroke Width
+  	  env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStrokeWidth", "(F)V"), 5.0f);
+  	  //Paint set Color
+  	  env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setColor", "(I)V"), -16776961);
+  	  //Paint set StrokeJoin
+  	  env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V"),
+  			  env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Join"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Join"),
+  					  "ROUND", "Landroid/graphics/Paint$Join;")));
+
+  	  //Set more Paint things here------<
+
+  	  jclass pathClass = env->FindClass("android/graphics/Path");
+  	  jmethodID pathConstructor = env->GetMethodID(pathClass, "<init>", "()V");
+  	  	 		  jobject jpath = env->NewObject(pathClass, pathConstructor);
+
+  	  	 		  // if op == 1 example   Move Path
+  		 jmethodID pathMoveMethod = env->GetMethodID(pathClass, "moveTo", "(FF)V");
+  			env->CallVoidMethod(jpath, pathMoveMethod, 100.0f,100.0f);
+
+  			//Path Line to debug
+  		jmethodID pathLineToMethod = env->GetMethodID(pathClass, "lineTo", "(FF)V");
+  		env->CallVoidMethod(jpath, pathLineToMethod, 300.0f,300.0f);
+
+
+  		  //Draw path to canvas
+  		  jmethodID canvasPathDraw = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
+  		  env->CallVoidMethod(canvas, canvasPathDraw, jpath, jpaint);
+
+
+  			//path close debug
+  		jmethodID pathCloseMethod = env->GetMethodID(pathClass, "close", "()V");
+  		env->CallVoidMethod(jpath, pathCloseMethod);
+
+  		  //DEBUG call java debug method to check path, paint or canvas
+  		jclass debugClass = env->FindClass("com/example/work/MyGLSurfaceView");
+  		  jmethodID debugMethod = env->GetStaticMethodID(debugClass, "pathDebug", "(Landroid/graphics/Path;Landroid/graphics/Paint;Landroid/graphics/Canvas;)V");
+  			env->CallStaticVoidMethod(debugClass, debugMethod, jpath, jpaint, canvas);
+
+
+
+  #if 0
+  		//AndroidBitmapInfo info;
+
+  		//AndroidBitmap_getInfo(env, bitmap, &info);
+
+  		//bool has_alpha = info.format == ANDROID_BITMAP_FORMAT_RGBA_8888 || info.format == ANDROID_BITMAP_FORMAT_RGBA_4444;
+  		//	Surface::resize(info.width, info.height, info.width, info.height, has_alpha);
+
+
+  	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+  	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
+
+  #endif
+
+    }
+
   AndroidSurface(JNIEnv * _env, jobject _mgr, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const ImageFormat & _format)
     : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format.hasAlpha()), env(_env), mgr(_mgr) {
 	  // creates an empty canvas
@@ -26,13 +101,18 @@ namespace canvas {
 	  jfieldID fidONE    = env->GetStaticFieldID(clSTATUS , "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
 	  jobject STATUS_ONE = env->GetStaticObjectField(clSTATUS, fidONE);
 
+
 	  //Not Tested
 	  jclass bitmapClass = env->FindClass("android/graphics/Bitmap");
 	  jmethodID bitmapCreate = env->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-	  bitmap = env->CallStaticObjectMethod(bitmapClass, bitmapCreate, 10, 10, STATUS_ONE);
+	  bitmap = env->CallStaticObjectMethod(bitmapClass, bitmapCreate, _actual_width, _actual_height, STATUS_ONE);
 
+	  //Create new Canvas from the mutable bitmap
+	  jclass canvasClass = env->FindClass("android/graphics/Canvas");
+	  jmethodID canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
+	  canvas = env->NewObject(canvasClass, canvasConstructor, bitmap);
 
-
+	  testCode();
   }
   
   AndroidSurface(JNIEnv * _env, jobject _mgr, const Image & image)
@@ -68,22 +148,7 @@ namespace canvas {
 	  jmethodID canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
 	  canvas = env->NewObject(canvasClass, canvasConstructor, bitmap);
 
-
-
-#if 0
-		//AndroidBitmapInfo info;
-
-		//AndroidBitmap_getInfo(env, bitmap, &info);
-
-		//bool has_alpha = info.format == ANDROID_BITMAP_FORMAT_RGBA_8888 || info.format == ANDROID_BITMAP_FORMAT_RGBA_4444;
-		//	Surface::resize(info.width, info.height, info.width, info.height, has_alpha);
-
-
-	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
-	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
-
-#endif
-
+	  testCode();
     }
     
   AndroidSurface(JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, false), env(_env), mgr(_mgr) {
@@ -92,6 +157,15 @@ namespace canvas {
 	  // make some wizardry: convert C byte array buffer to Java byte array data
 	  // BitmapFactory.decoreByteArray
 	  // create canvas
+
+	  //Create a bitmap from bytearray
+      //Will propably fatal error 11, size probaly needs to be converted for java.
+
+	//  jbyteArray array = env->NewByteArray (size);
+	//      env->SetByteArrayRegion (array, 0, size, reinterpret_cast<jbyte*>(buffer));
+	//      bitmap = env->CallStaticObjectMethod(env->FindClass("android/graphics/BitmapFactory"),
+	//    		  env->GetStaticMethodID(env->FindClass("android/graphics/BitmapFactory"), "decodeByteArray", "([BII)Landroid/graphics/Bitmap;"), array, 0, size);
+
     }
     
     ~AndroidSurface() {
@@ -112,45 +186,93 @@ namespace canvas {
 
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override {
 
+
+
+    	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+    	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
 	  //debug of renderpath-----------------------
-	 	 // renderPath(1, Path::rect(10.1,10.1,10.1,10.1), 1, 10, 1, 10, 10)
+	 	 // renderPath(1, , 1, 10, 1, 10, 10)
 
-	 	//   void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override {
+  	  jclass canvasClass = env->FindClass("android/graphics/Canvas");
+	  jboolean copyBoolean = JNI_TRUE;
 
-	 	  	  jclass paintClass = env->FindClass("android.graphics.Paint");
-	 		  jmethodID paintConstructor = env->GetMethodID(paintClass, "<init>", "()V");
-	 		  jobject jpaint = env->NewObject(paintClass, paintConstructor);
+	 	//RenderPath debug
+    		  //create paint
 
-	 		  //Paint.setColor
-	 		  jmethodID paintColor = env->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
-	 		  jboolean copyBoolean = JNI_TRUE;
-	 		  env->CallVoidMethod(jpaint, paintColor, copyBoolean);
-	 		  //Set more Paint things here------<
+    		  jclass paintClass = env->FindClass("android/graphics/Paint");
+    		  jobject jpaint = env->NewObject(paintClass, env->GetMethodID(paintClass, "<init>", "()V"));
 
-	 	  	  jclass pathClass = env->FindClass("android.graphics.Path");
-	 		  jmethodID pathConstructor = env->GetMethodID(pathClass, "<init>", "()V");
-	 		  jobject jpath = env->NewObject(pathClass, pathConstructor);
+    		  //Paint.setColor;
+    		  env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setAntiAlias", "(Z)V"), copyBoolean);
 
-	 		  // if op == 1 example   Move Path
-	 		jmethodID pathMoveMethod = env->GetMethodID(pathClass, "moveTo", "(FF)V");
-	 			env->CallVoidMethod(jpath, pathMoveMethod, 10,10);
+    		  //if (style.getType() == Style.StyleType.SOLID){
+    			// set paint style to SOLID
+    		 // }
+    		  //Paint Set Style
+    		  switch (mode) {
+    		  case STROKE:
+    		  	  env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStyle", "(Landroid/graphics/Paint$Style;)V"),
+    				  env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
+    						  env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style") , "STROKE", "Landroid/graphics/Paint$Style;")));
+    		  	 //Paint Set Stroke Width
+    		  	 env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStrokeWidth", "(F)V"), lineWidth);
+    		  	//Paint set StrokeJoin
+    		  	 env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V"),
+    		  	    				  env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Join"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Join"),
+    		  	    						  "ROUND", "Landroid/graphics/Paint$Join;")));
+    		  	 break;
+    		  case FILL:
+    			  env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStyle", "(Landroid/graphics/Paint$Style;)V"),
+    			      				  env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
+    			      						  env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style") , "FILL", "Landroid/graphics/Paint$Style;")));
+
+    		  break;
+    		  }
+    		  //Paint set Color
+    		  env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setColor", "(I)V"), getAndroidColor(style.color, globalAlpha));
+
+    		  //Set more Paint things here------<
+
+    		  jclass pathClass = env->FindClass("android/graphics/Path");
+    		  jmethodID pathConstructor = env->GetMethodID(pathClass, "<init>", "()V");
+    		  jobject jpath = env->NewObject(pathClass, pathConstructor);
+
+    		  	 		  // if op == 1 example   Move Path
 
 
-	 		  //Draw path to canvas
-	 			jclass canvasClass = env->FindClass("android/graphics/Canvas");
-	 		  jmethodID canvasPathDraw = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
-	 		  env->CallVoidMethod(canvas, canvasPathDraw, jpath, jpaint);
+    				for (auto pc : path.getData()) {
+    				    switch (pc.type) {
+    				    case PathComponent::MOVE_TO:{
+    				    	jmethodID pathMoveMethod = env->GetMethodID(pathClass, "moveTo", "(FF)V");
+    				    	    	env->CallVoidMethod(jpath, pathMoveMethod, pc.x0, pc.y0);
+    				    }
+    				    		break;
+    				    case PathComponent::LINE_TO:{
+    				    	jmethodID pathLineToMethod = env->GetMethodID(pathClass, "lineTo", "(FF)V");
+    				    	    			env->CallVoidMethod(jpath, pathLineToMethod, pc.x0, pc.y0);
+    				    }
+    				    	    break;
+    				    case PathComponent::ARC: {//CGContextAddArc(gc, pc.x0 * scale + 0.5, pc.y0 * scale + 0.5, pc.radius * scale, pc.sa, pc.ea, pc.anticlockwise);
 
-	 			  //DEBUG call java debug method to check path, paint or canvas
-	 			//jclass debugClass = env->FindClass("com/example/work/MyGLSurfaceView");
-	 			//jmethodID debugMethod = env->GetStaticMethodID(debugClass, "pathDebug", "(Landroid/graphics/Path;Landroid/graphics/Paint;Landroid/graphics/Canvas;)V");
-	 			//env->CallStaticVoidMethod(debugClass, debugMethod, jpath, jpaint, canvas);
+    				    }
+    				    break;
+    				    case PathComponent::CLOSE:{
+    				    	  jmethodID pathCloseMethod = env->GetMethodID(pathClass, "close", "()V");
+    				    	    	    	env->CallVoidMethod(jpath, pathCloseMethod);
+    				    }
+    				    	break;
+    				    }
+    				  }
 
 
+    			  //Draw path to canvas
+    			  jmethodID canvasPathDraw = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
+    			  env->CallVoidMethod(canvas, canvasPathDraw, jpath, jpaint);
 
-	 	    	// jobject android_path = createAndroidPath(path);
-	 	    	// drawPath(android_path, paint)
 
+    			  jclass debugClass = env->FindClass("com/example/work/MyGLSurfaceView");
+    			    		  jmethodID debugMethod = env->GetStaticMethodID(debugClass, "pathDebug", "(Landroid/graphics/Path;Landroid/graphics/Paint;Landroid/graphics/Canvas;)V");
+    			    			env->CallStaticVoidMethod(debugClass, debugMethod, jpath, jpaint, canvas);
 
 	  	// render path with style
     	// Paint paint = createPaintFromStyle(mode, style, globalAlpha, lineWidth);
@@ -172,12 +294,15 @@ namespace canvas {
       return TextMetrics(0);
     }
 
-    void drawImage(Surface & surface, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
+    void drawImage(Surface & _surface, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
+    	AndroidSurface & surface = dynamic_cast<AndroidSurface&>(_surface);
     	// draw surface as image
+    	// surface.getBitmap();
     }
     
     void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
-    
+    	// _img.getWidth() _img.getHeight()
+        // static Bitmap 	createBitmap(DisplayMetrics display, int[] colors, int width, int height, Bitmap.Config config)
     }
     void clip(const Path & path, float display_scale) override {
        // restrict drawing operations to path
@@ -185,14 +310,20 @@ namespace canvas {
     void resetClip() override {
     }
     void save() override {
+    	// forget this
     }
     void restore() override {
+    	// forget this
     }
 
     jobject getBitmap() { return bitmap; }
     jobject getCanvas() { return canvas; }
 
   protected:
+    static int getAndroidColor(const Color & color, float globalAlpha = 1.0f) {
+    	return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
+    }
+
     // static jobject createPaintFromStyle(RenderMode mode, const Style & style, float globalAlpha, float lineWidth) {
     //	mPaint = new Paint();
     //		mPaint.setAntiAlias(true); // always
@@ -258,24 +389,24 @@ namespace canvas {
     Surface & getDefaultSurface() override { return default_surface; }
     const Surface & getDefaultSurface() const override { return default_surface; }
       
-    Context & drawImage(const Image & img, double x, double y, double w, double h) override {
-      return *this;
-    }
-    
-    Context & drawImage(Surface & img, double x, double y, double w, double h) override {
-      return *this;
-    }
+//    Context & drawImage(const Image & img, double x, double y, double w, double h) override {
+//      return *this;
+//    }
+//
+//    Context & drawImage(Surface & img, double x, double y, double w, double h) override {
+//      return *this;
+//    }
     
   protected:
-    Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override {
-
-    	return *this;
-    }
-    
-    Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) override {
-
-    	return *this;
-    }
+ //   Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override {
+//
+//   	return *this;
+//    }
+ //
+//    Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) override {
+//
+ //   	return *this;
+ //   }
     
   private:
     JNIEnv * env;
