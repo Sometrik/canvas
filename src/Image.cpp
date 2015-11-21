@@ -119,7 +119,7 @@ Image::convert(const ImageFormat & target_format) const {
 	if (lum >= 255) lum = 255;
 	*output_data++ = (alpha << 8) | lum;
       }
-    } else {
+    } else if (target_format.getNumChannels() == 3) {
       for (unsigned int i = 0; i < n; i++) {
 	int v = input_data[i];
 	int red = RGBA_TO_RED(v) >> 3;
@@ -131,6 +131,15 @@ Image::convert(const ImageFormat & target_format) const {
 #else
 	*output_data++ = PACK_RGB565(red, green, blue);
 #endif
+      }
+    } else {
+      for (unsigned int i = 0; i < n; i++) {
+	int v = input_data[i];
+	int red = RGBA_TO_RED(v) >> 4;
+	int green = RGBA_TO_GREEN(v) >> 4;
+	int blue = RGBA_TO_BLUE(v) >> 4;
+	int alpha = RGBA_TO_ALPHA(v) >> 4;
+	*output_data++ = (red << 12) | (green << 8) | (blue << 4) | alpha;
       }
     }
     
