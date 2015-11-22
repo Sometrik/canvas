@@ -1,7 +1,6 @@
 #ifndef _SURFACE_H_
 #define _SURFACE_H_
 
-#include "TextureRef.h"
 #include "Color.h"
 #include "FilterMode.h"
 #include "Path.h"
@@ -27,8 +26,7 @@ namespace canvas {
   public:
     friend class Context;
 
-  Surface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha)
-      : texture(_logical_width, _logical_height, _actual_width, _actual_height),
+  Surface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) :      
       logical_width(_logical_width),
       logical_height(_logical_height),
       actual_width(_actual_width),
@@ -41,10 +39,6 @@ namespace canvas {
     }
 
     virtual void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) {
-      texture.setLogicalWidth(_logical_width);
-      texture.setLogicalHeight(_logical_height);
-      texture.setActualWidth(_logical_width);
-      texture.setActualHeight(_logical_height);
       logical_width = _logical_width;
       logical_height = _logical_height;
       actual_width = _actual_width;
@@ -80,12 +74,6 @@ namespace canvas {
 
     void multiply(const Color & color);
     
-    const TextureRef & getTexture() const { return texture; }
-    const TextureRef & updateTexture();
-#if 0
-    const TextureRef & updateTexture(unsigned int x, unsigned int y, unsigned int width, unsigned int height);
-#endif
-
     std::shared_ptr<Image> createImage();
 
     unsigned int getLogicalWidth() const { return logical_width; }
@@ -102,8 +90,6 @@ namespace canvas {
     static bool isPNG(const unsigned char * buffer, size_t size);
     static bool isJPEG(const unsigned char * buffer, size_t size);
     static bool isGIF(const unsigned char * buffer, size_t size);
-
-    TextureRef texture;
 
   private:
     unsigned int logical_width, logical_height, actual_width, actual_height;
