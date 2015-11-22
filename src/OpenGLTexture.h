@@ -8,6 +8,7 @@
 
 namespace canvas {
   class TextureRef;
+  class Surface;
 
   class OpenGLTexture : public Texture {
   public:
@@ -21,6 +22,8 @@ namespace canvas {
       }
     }
 
+    OpenGLTexture(Surface & surface);
+
     unsigned int getTextureId() const { return texture_id; }
     
     void updateData(const Image & image, unsigned int x, unsigned int y);
@@ -29,6 +32,7 @@ namespace canvas {
     static const std::vector<unsigned int> & getFreedTextures() { return freed_textures; }
     static void releaseTextures();
     static TextureRef createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels = 8);
+    static TextureRef createTexture(Surface & surface);
 
   protected:
     void updateCompressedData(const Image & image, unsigned int x, unsigned int y);

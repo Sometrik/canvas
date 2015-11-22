@@ -59,6 +59,13 @@ using namespace canvas;
 size_t OpenGLTexture::total_textures = 0;
 vector<unsigned int> OpenGLTexture::freed_textures;
 
+OpenGLTexture::OpenGLTexture(Surface & surface)
+  : Texture(surface.getLogicalWidth(), surface.getLogicalHeight(), surface.getActualWidth(), surface.getActualHeight(), surface.getMinFilter(), surface.getMagFilter(), surface.getTargetFormat()) {
+  
+  auto image = surface.createImage();
+  updateData(*image, 0, 0);
+}
+
 static bool flushErrors() {
   GLenum errLast = GL_NO_ERROR;
   bool has_errors = false;
@@ -265,4 +272,14 @@ OpenGLTexture::releaseTextures() {
 TextureRef
 OpenGLTexture::createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels) {
   return TextureRef(_logical_width, _logical_height, _actual_width, _actual_height, new OpenGLTexture(_logical_width, _logical_height, _actual_width, _actual_height, min_filter, mag_filter, _internal_format, mipmap_levels));
+}
+
+TextureRef
+OpenGLTexture::createTexture(Surface & surface) {
+  return TextureRef( surface.getLogicalWidth(),
+		     surface.getLogicalHeihht(),
+		     surface.getActualWidth(),
+		     surface.getActualHeight(),
+		     new OpenGLTexture(surface)
+		     );
 }
