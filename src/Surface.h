@@ -87,6 +87,10 @@ namespace canvas {
     void setMinFilter(FilterMode mode) { min_filter = mode; }
     void setTargetFormat(InternalFormat format) { target_format = format; }
 
+    FilterMode getMagFilter() const { return mag_filter; }
+    FilterMode getMinFilter() const { return min_filter; }
+    InternalFormat getTargetFormat() const { return target_format; }
+    
   protected:
     static bool isPNG(const unsigned char * buffer, size_t size);
     static bool isJPEG(const unsigned char * buffer, size_t size);
