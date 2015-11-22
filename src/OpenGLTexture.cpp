@@ -2,6 +2,7 @@
 
 #include "TextureRef.h"
 #include "Image.h"
+#include "Surface.h"
 
 #define GL_GLEXT_PROTOTYPES
 
@@ -60,7 +61,7 @@ size_t OpenGLTexture::total_textures = 0;
 vector<unsigned int> OpenGLTexture::freed_textures;
 
 OpenGLTexture::OpenGLTexture(Surface & surface)
-  : Texture(surface.getLogicalWidth(), surface.getLogicalHeight(), surface.getActualWidth(), surface.getActualHeight(), surface.getMinFilter(), surface.getMagFilter(), surface.getTargetFormat()) {
+  : Texture(surface.getLogicalWidth(), surface.getLogicalHeight(), surface.getActualWidth(), surface.getActualHeight(), surface.getMinFilter(), surface.getMagFilter(), surface.getTargetFormat(), 1) {
   
   auto image = surface.createImage();
   updateData(*image, 0, 0);
@@ -277,7 +278,7 @@ OpenGLTexture::createTexture(unsigned int _logical_width, unsigned int _logical_
 TextureRef
 OpenGLTexture::createTexture(Surface & surface) {
   return TextureRef( surface.getLogicalWidth(),
-		     surface.getLogicalHeihht(),
+		     surface.getLogicalHeight(),
 		     surface.getActualWidth(),
 		     surface.getActualHeight(),
 		     new OpenGLTexture(surface)
