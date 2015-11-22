@@ -1,7 +1,5 @@
 #include "Surface.h"
 
-#include "OpenGLTexture.h"
-
 #include "Color.h"
 #include "Image.h"
 
@@ -256,37 +254,6 @@ Surface::multiply(const Color & color) {
   }
   releaseMemory();
 }
-
-const TextureRef &
-Surface::updateTexture() {
-  if (!texture.get()) {
-    texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter, target_format);
-  }
-
-  const unsigned char * buffer = (unsigned char *)lockMemory();
-  assert(buffer);
-  Image image(buffer, hasAlpha() ? ImageFormat::RGBA32 : ImageFormat::RGB32, getActualWidth(), getActualHeight());
-  texture.updateData(image, 0, 0);
-  releaseMemory();
-  
-  return texture;
-}
-
-#if 0
-const TextureRef &
-Surface::updateTexture(unsigned int x0, unsigned int y0, unsigned int subwidth, unsigned int subheight) {
-  if (!texture.isDefined()) {
-    texture = OpenGLTexture::createTexture(getLogicalWidth(), getLogicalHeight(), getActualWidth(), getActualHeight(), min_filter, mag_filter, RGB5);
-  }
-
-  void * buffer = lockMemoryPartial(x0, y0, subwidth, subheight);
-  texture.updateData(buffer, x0, y0, subwidth, subheight);
-  
-  releaseMemory();
-  
-  return texture;
-}
-#endif
 
 std::shared_ptr<Image>
 Surface::createImage() {
