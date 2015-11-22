@@ -188,14 +188,32 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+  cerr << "texture start" << endl;
+
   bool has_mipmaps = getMinFilter() == LINEAR_MIPMAP_LINEAR;
   if (initialize) {
+    cerr << "initialize" << endl;
     glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, getOpenGLInternalFormat(getInternalFormat()), getActualWidth(), getActualHeight());
     
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()));
+
+    if (x != 0 || y != 0 || image.getWidth() != getActualWidth() || image.getHeight() != getActualHeight()) {
+      if (getInternalFormat() == RGB_ETC1) {
+	Image img(ImageFormat::RGB_ETC1, getActualWidth(), getActualHeight(), getMipmapLevels());
+	updateCompressedData(img, 0, 0);	
+      } else if (getInternalFormat() == RGBA8) {
+	Image img(ImageFormat::RGBA32, getActualWidth(), getActualHeight(), getMipmapLevels());
+	updatePlainData(img, 0, 0);
+      } else if (getInternalFormat() == R8) {
+	Image img(ImageFormat::LA44, getActualWidth(), getActualHeight(), getMipmapLevels());
+	updatePlainData(img, 0, 0);
+      } else {
+	assert(0);
+      }
+    }
   }
 
   if (getInternalFormat() == R32F) {
@@ -245,11 +263,15 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   } else {
     updatePlainData(image, x, y);    
   }
+    
   if (has_mipmaps && getInternalFormat() != RGB_DXT1 && getInternalFormat() != RGB_ETC1 && image.getLevels() == 1) {
+    cerr << "mipmaps" << endl;
     glGenerateMipmap(GL_TEXTURE_2D);
   }
 
   glBindTexture(GL_TEXTURE_2D, 0);
+
+  cerr << "texture end" << endl;
 
   GLenum err = getLastError();
   if (err != GL_NO_ERROR) {
