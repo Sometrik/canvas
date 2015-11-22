@@ -21,11 +21,7 @@ namespace canvas {
 	memcpy(data, _data, s);
       }
     }
-#if 0
-  Image(const ImageFormat & _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1) : width(_width), height(_height), levels(_levels), format(_format) {
-      
-    }
-#endif
+    Image(const ImageFormat & _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1);
     Image(const Image & other)
       : width(other.getWidth()), height(other.getHeight()), levels(other.levels), format(other.format)     
     {

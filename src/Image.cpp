@@ -11,6 +11,37 @@ using namespace canvas;
 
 bool Image::etc1_initialized = false;
 
+Image::Image(const ImageFormat & _format, unsigned int _width, unsigned int _height, unsigned int _levels) : width(_width), height(_height), levels(_levels), format(_format) {
+  size_t s = calculateSize();
+  data = new unsigned char[s];
+  if (format.getCompression() == ImageFormat::ETC1) {
+    if (format.getCompression() == ImageFormat::ETC1 && !etc1_initialized) {
+      cerr << "initializing etc1" << endl;
+      etc1_initialized = true;
+      rg_etc1::pack_etc1_block_init();
+    }
+    unsigned char input_block[4*4*4];
+    unsigned int offset = 0;
+    for (unsigned int i = 0; i < 16; i++) {
+      input_block[offset++] = 0;
+      input_block[offset++] = 0;
+      input_block[offset++] = 0;
+      input_block[offset++] = 255;
+    }
+    unsigned char output_block[8];
+    rg_etc1::etc1_pack_params params;
+    params.m_quality = rg_etc1::cLowQuality;
+    rg_etc1::pack_etc1_block(output_block, (const unsigned int *)&(input_block[0]), params);
+    for (unsigned int i = 0; i < s; i += 8) {
+      memcpy(data + i, output_block, 8);
+    }
+  } else if (!format.getCompression()) {
+    memset(data, 0, s);      
+  } else {
+    assert(0);
+  }
+}
+
 std::shared_ptr<Image>
 Image::convert(const ImageFormat & target_format) const {
   assert(format.getBytesPerPixel() == 4);
