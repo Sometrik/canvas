@@ -3,6 +3,7 @@
 
 #include "Color.h"
 #include "FilterMode.h"
+#include "InternalFormat.h"
 #include "Path.h"
 #include "Style.h"
 #include "Font.h"
@@ -99,15 +100,6 @@ namespace canvas {
     unsigned int * scaled_buffer = 0;
     bool has_alpha;
   };
-
-#if 0
-  class NullSurface : public Surface {
-  public:
-    void fillText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) override { }
-    void strokeText(const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y) override { }
-    void drawImage(Surface & _img, double x, double y, double w, double h) override { }
-  };
-#endif
 };
 
 #endif
