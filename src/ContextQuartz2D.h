@@ -129,6 +129,8 @@ namespace canvas {
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha) override {
       initializeContext();
       CTFontRef font2 = cache->getFont(font, display_scale);
+      int font_retain = CFGetRetainCount(font2);
+      if (font_retain != 1) std::cerr << "too many retains for font (" << font_retain << ")" << std::endl;
       CGColorRef color = createCGColor(style.color, globalAlpha);
       
 #if 0
@@ -186,7 +188,8 @@ namespace canvas {
       if (CFGetRetainCount(text2) != 1) std::cerr << "leaking memory I!\n";
       CFRelease(text2);
       // CFRelease(traits2);
-      if (CFGetRetainCount(color) != 1) std::cerr << "leaking memory J!\n";
+      int color_retain = CFGetRetainCount(color);
+      if (color_retain != 1) std::cerr << "leaking memory J (" << color_retain << ")!\n";
       CGColorRelease(color);
     }
 
@@ -239,9 +242,9 @@ namespace canvas {
       CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), cache->getColorSpace(), f, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
       assert(img);
       flipY();
-      if (globalAlpha < 1.0f) CGContextSetAlpha(globalAlpha);
+      if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
       CGContextDrawImage(gc, CGRectMake(x, getActualHeight() - 1 - y - h, w, h), img);
-      if (globalAlpha < 1.0f) CGContextSetAlpha(1.0f);
+      if (globalAlpha < 1.0f) CGContextSetAlpha(gc, 1.0f);
       flipY();
 
       if (CFGetRetainCount(img) != 1) std::cerr << "leaking memory O!\n";
