@@ -31,14 +31,16 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
     initializeContext();
     flipY();
     CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
+    if (CFGetRetainCount(img) != 1) cerr << "leaking memory 1!\n";
     CGImageRelease(img);
     flipY();
   } else {
-    resize(16, 16, 16, 16, true);
+    Surface::resize(16, 16, 16, 16, true);
     unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   }
+  if (CFGetRetainCount(provider) != 1) cerr << "leaking memory 2!\n";
   CGDataProviderRelease(provider);
 }
 
@@ -58,10 +60,13 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     CFTypeRef values[] = { kCFBooleanFalse };
     CFDictionaryRef options = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     auto isrc = CGImageSourceCreateWithData(data, 0);
-    img = CGImageSourceCreateImageAtIndex(isrc, 0, 0);
-    CFRelease(data);
+    img = CGImageSourceCreateImageAtIndex(isrc, 0, options);
+    if (CFGetRetainCount(isrc) != 1) cerr << "leaking memory 3!\n";
     CFRelease(isrc);
+    if (CFGetRetainCount(options) != 1) cerr << "leaking memory 4!\n";
     CFRelease(options);
+    if (CFGetRetainCount(data) != 1) cerr << "leaking memory 5!\n";
+    CFRelease(data);    
   } else {
     cerr << "unhandled image type 1 = " << (int)buffer[0] << " 2 = " << (int)buffer[1] << " 3 = " << (int)buffer[2] << " 4 = " << (int)buffer[3] << " 5 = " << (int)buffer[4] << " 6 = " << (int)buffer[5] << endl;
     assert(0);
@@ -77,6 +82,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     flipY();    
     CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
     flipY();
+    if (CFGetRetainCount(img) != 1) cerr << "leaking memory 6!\n";
     CGImageRelease(img);
   } else {
     Surface::resize(16, 16, 16, 16, true);
@@ -103,6 +109,14 @@ Quartz2DSurface::sendPath(const Path & path, float scale) {
 void
 Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) {
   initializeContext();
+  switch (op) {
+  case SOURCE_OVER:
+    CGContextSetBlendMode(cg, kCGBlendModeNormal);
+    break;
+  case COPY:
+    CGContextSetBlendMode(cg, kCGBlendModeCopy);
+    break;
+  }
   switch (mode) {
   case STROKE:
     sendPath(path, display_scale);
@@ -140,7 +154,8 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
 	myEndPoint.y = style.y1 * display_scale;
 	CGContextDrawLinearGradient(gc, myGradient, myStartPoint, myEndPoint, 0);
 	restore();
-	
+
+	if (CFGetRetainCount(myGradient) != 1) cerr << "leaking memory 7!\n";
 	CGGradientRelease(myGradient);
       }
     } else {
@@ -151,6 +166,9 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
 			       style.color.alpha * globalAlpha);
       CGContextFillPath(gc);
     }
+  }
+  if (op != SOURCE_OVER) {
+    CGContextSetBlendMode(cg, kCGBlendModeNormal);
   }
 }
 

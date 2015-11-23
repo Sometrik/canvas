@@ -13,13 +13,13 @@
 namespace canvas {
   class Quartz2DCache {
   public:
-    Quartz2DCache() {
-      colorspace = CGColorSpaceCreateDeviceRGB();
-    }
+    Quartz2DCache() { }
     ~Quartz2DCache() {
+      if (CFGetRetainCount(colorspace) != 1) std::cerr << "leaking memory A!\n";
       CGColorSpaceRelease(colorspace);
-      for (auto it : fonts) {
-        CFRelease(it.second);
+      for (auto & fd : fonts) {
+	if (CFGetRetainCount(fd.second) != 1) std::cerr << "leaking memory B!\n";
+        CFRelease(fd.second);
       }
     }
     
@@ -48,10 +48,13 @@ namespace canvas {
       }
     }
     
-    CGColorSpaceRef & getColorSpace() { return colorspace; }
+    CGColorSpaceRef & getColorSpace() {
+      if (!colorspace) colorspace = CGColorSpaceCreateDeviceRGB();
+      return colorspace;
+    }
     
   private:
-    CGColorSpaceRef colorspace;
+    CGColorSpaceRef colorspace = 0;
     std::map<std::string, CTFontRef> fonts;    
   };
   
@@ -90,8 +93,14 @@ namespace canvas {
     Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * buffer, size_t size);
     
     ~Quartz2DSurface() {
-      if (active_shadow_color) CGColorRelease(active_shadow_color);
-      if (gc) CGContextRelease(gc);
+      if (active_shadow_color) {
+	if (CFGetRetainCount(active_shadow_color) != 1) std::cerr << "leaking memory C!\n";
+	CGColorRelease(active_shadow_color);
+      }
+      if (gc) {
+	if (CFGetRetainCount(gc) != 1) std::cerr << "leaking memory D!\n";
+	CGContextRelease(gc);
+      }
       delete[] bitmapData;
     }
 
@@ -105,6 +114,7 @@ namespace canvas {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
       
       if (gc) {
+	if (CFGetRetainCount(gc) != 1) std::cerr << "leaking memory E!\n";
         CGContextRelease(gc);
         gc = 0;
       }
@@ -167,11 +177,16 @@ namespace canvas {
       CGContextSetTextPosition(gc, x, y);
       CTLineDraw(line, gc);
 
+      if (CFGetRetainCount(line) != 1) std::cerr << "leaking memory F!\n";
       CFRelease(line);
+      if (CFGetRetainCount(attrString) != 1) std::cerr << "leaking memory G!\n";
       CFRelease(attrString);
+      if (CFGetRetainCount(attr) != 1) std::cerr << "leaking memory H!\n";
       CFRelease(attr);
+      if (CFGetRetainCount(text2) != 1) std::cerr << "leaking memory I!\n";
       CFRelease(text2);
       // CFRelease(traits2);
+      if (CFGetRetainCount(color) != 1) std::cerr << "leaking memory J!\n";
       CGColorRelease(color);
     }
 
@@ -188,19 +203,23 @@ namespace canvas {
       CGFloat ascent, descent, leading;
       double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
       
+      if (CFGetRetainCount(line) != 1) std::cerr << "leaking memory K!\n";
       CFRelease(line);
+      if (CFGetRetainCount(attrString) != 1) std::cerr << "leaking memory L!\n";
       CFRelease(attrString);
+      if (CFGetRetainCount(attr) != 1) std::cerr << "leaking memory M!\n";
       CFRelease(attr);
+      if (CFGetRetainCount(text2) != 1) std::cerr << "leaking memory N!\n";
       CFRelease(text2);
       
       return TextMetrics(width / display_scale);
     }
 
-    void drawImage(Surface & surface, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
+    void drawImage(Surface & surface, double x, double y, double w, double h, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true) override {
       initializeContext();
 #if 1
       auto img = surface.createImage();
-      drawImage(*img, x, y, w, h, alpha, imageSmoothingEnabled);
+      drawImage(*img, x, y, w, h, globalAlpha, imageSmoothingEnabled);
 #else
       _img.initializeContext();
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
@@ -210,19 +229,24 @@ namespace canvas {
       CGImageRelease(myImage);
 #endif
     }
-    void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
+    void drawImage(const Image & _img, double x, double y, double w, double h, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true) override {
       initializeContext();
-      auto format = _img.getFormat();
+      auto & format = _img.getFormat();
       // std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " a=" << format.hasAlpha() << ", bpp=" << format.getBytesPerPixel() << std::endl;
       CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), format.getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
       assert(format.getBytesPerPixel() == 4);
       auto f = (format.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
-      CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), cache->getColorSpace(), f, provider, 0, true, kCGRenderingIntentDefault);
+      CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), cache->getColorSpace(), f, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
       assert(img);
       flipY();
+      if (globalAlpha < 1.0f) CGContextSetAlpha(globalAlpha);
       CGContextDrawImage(gc, CGRectMake(x, getActualHeight() - 1 - y - h, w, h), img);
+      if (globalAlpha < 1.0f) CGContextSetAlpha(1.0f);
       flipY();
+
+      if (CFGetRetainCount(img) != 1) std::cerr << "leaking memory O!\n";
       CGImageRelease(img);
+      if (CFGetRetainCount(provider) != 1) std::cerr << "leaking memory P!\n";
       CGDataProviderRelease(provider);
     }
     void clip(const Path & path, float display_scale) override {
@@ -251,7 +275,10 @@ namespace canvas {
     void setShadow(float shadowOffsetX, float shadowOffsetY, float shadowBlur, const Color & shadowColor, float display_scale) {
       initializeContext();
       CGSize offset = CGSizeMake(display_scale * shadowOffsetX, display_scale * shadowOffsetY);
-      if (active_shadow_color) CGColorRelease(active_shadow_color);
+      if (active_shadow_color) {
+	if (CFGetRetainCount(active_shadow_color) != 1) std::cerr << "leaking memory Q!\n";
+	CGColorRelease(active_shadow_color);
+      }
       active_shadow_color = createCGColor(shadowColor);
       CGContextSetShadowWithColor(gc, offset, display_scale * shadowBlur, active_shadow_color);
     }
