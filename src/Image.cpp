@@ -35,7 +35,22 @@ Image::Image(const ImageFormat & _format, unsigned int _width, unsigned int _hei
     for (unsigned int i = 0; i < s; i += 8) {
       memcpy(data + i, output_block, 8);
     }
+  } else if (format.getCompression() == ImageFormat::DXT1) {
+    unsigned char input_block[4*4*4];
+    unsigned int offset = 0;
+    for (unsigned int i = 0; i < 16; i++) {
+      input_block[offset++] = 0;
+      input_block[offset++] = 0;
+      input_block[offset++] = 0;
+      input_block[offset++] = 255;
+    }
+    unsigned char output_block[8];
+    stb_compress_dxt1_block(output_block, &(input_block[0]), false, 0);
+    for (unsigned int i = 0; i < s; i += 8) {
+      memcpy(data + i, output_block, 8);
+    }
   } else if (!format.getCompression()) {
+    cerr << "clearing memory for " << s << " bytes\n";
     memset(data, 0, s);      
   } else {
     assert(0);
@@ -59,7 +74,7 @@ Image::convert(const ImageFormat & target_format) const {
     assert((height & 3) == 0);
     unsigned int target_width = width, target_height = height;
     unsigned int target_size = calculateSize(target_width, target_height, levels, target_format);
-    unsigned char * output_data = new unsigned char[target_size];
+    std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
     unsigned char input_block[4*4*4];
     unsigned int target_offset = 0;
     for (unsigned int level = 0; level < levels; level++) {
@@ -91,13 +106,13 @@ Image::convert(const ImageFormat & target_format) const {
 	    }
 	  }
 	  if (target_format.getCompression() == ImageFormat::ETC1) {
-	    rg_etc1::pack_etc1_block(output_data + target_offset, (const unsigned int *)&(input_block[0]), params);	  
+	    rg_etc1::pack_etc1_block(output_data.get() + target_offset, (const unsigned int *)&(input_block[0]), params);	  
 	    target_offset += 8;
 	  } else if (target_format.getCompression() == ImageFormat::DXT1) {
-	    stb_compress_dxt1_block(output_data + target_offset, &(input_block[0]), false, 0);
+	    stb_compress_dxt1_block(output_data.get() + target_offset, &(input_block[0]), false, 0);
 	    target_offset += 8;
 	  } else {
-	    stb_compress_rgtc_block(output_data + target_offset, &(input_block[0]));
+	    stb_compress_rgtc_block(output_data.get() + target_offset, &(input_block[0]));
 	    target_offset += 16;
 	  }
 	}
@@ -105,15 +120,13 @@ Image::convert(const ImageFormat & target_format) const {
       target_width = (target_width + 1) / 2;
       target_height = (target_height + 1) / 2;
     }
-    auto r = std::shared_ptr<Image>(new Image(output_data, target_format, width, height, levels));
-    delete[] output_data;
-    return r;
+    return make_shared<Image>(output_data.get(), target_format, width, height, levels);
   } else if (target_format.getNumChannels() == 2 && target_format.getBytesPerPixel() == 1) {
     assert(levels == 1);
     
     unsigned int n = width * height;
-    unsigned char * tmp = new unsigned char[target_format.getBytesPerPixel() * n];
-    unsigned char * output_data = (unsigned char *)tmp;
+    std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_format.getBytesPerPixel() * n]);
+    unsigned char * output_data = (unsigned char *)tmp.get();
     const unsigned int * input_data = (const unsigned int *)data;
     
     for (unsigned int i = 0; i < n; i++) {
@@ -127,16 +140,14 @@ Image::convert(const ImageFormat & target_format) const {
       *output_data++ = (alpha << 4) | lum;
     }
 
-    auto r = std::shared_ptr<Image>(new Image(tmp, target_format, getWidth(), getHeight()));
-    delete[] tmp;
-    return r;
+    return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight());
   } else {
     assert(levels == 1);
     assert(target_format.getBytesPerPixel() == 2);
     
     unsigned int n = width * height;
-    unsigned char * tmp = new unsigned char[target_format.getBytesPerPixel() * n];
-    unsigned short * output_data = (unsigned short *)tmp;
+    std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_format.getBytesPerPixel() * n]);
+    unsigned short * output_data = (unsigned short *)tmp.get();
     const unsigned int * input_data = (const unsigned int *)data;
 
     if (target_format.getNumChannels() == 2) {
@@ -174,9 +185,7 @@ Image::convert(const ImageFormat & target_format) const {
       }
     }
     
-    auto r = std::shared_ptr<Image>(new Image(tmp, target_format, getWidth(), getHeight()));
-    delete[] tmp;
-    return r;
+    return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight());
   }
 }
 
@@ -187,7 +196,7 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
   size_t input_size = calculateSize();
   size_t target_size = calculateOffset(target_base_width, target_base_height, target_levels, format);
   // cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
-  unsigned char * output_data = new unsigned char[target_size];
+  std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
   unsigned int target_offset = 0, target_width = target_base_width, target_height = target_base_height;
   for (int y = 0; y < int(target_height); y++) {
     for (int x = 0; x < int(target_width); x++) {
@@ -222,8 +231,8 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
     target_height /= 2;
     
     for (unsigned int level = 1; level < target_levels; level++) {
-      unsigned char * source_data = output_data + calculateOffset(target_base_width, target_base_height, level - 1, format);
-      unsigned char * target_data = output_data + calculateOffset(target_base_width, target_base_height, level, format);
+      unsigned char * source_data = output_data.get() + calculateOffset(target_base_width, target_base_height, level - 1, format);
+      unsigned char * target_data = output_data.get() + calculateOffset(target_base_width, target_base_height, level, format);
       for (int y = 0; y < target_height; y++) {               
 	for (int x = 0; x < target_width; x++) {
 	  unsigned int source_offset = (2 * y * source_width + 2 * x) * 4;
@@ -244,9 +253,7 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
       target_height /= 2;
     }
   }
-  std::shared_ptr<Image> image2(new Image(output_data, format, target_base_width, target_base_height, target_levels));
-  delete[] output_data;
-  return image2;  
+  return make_shared<Image>(output_data.get(), format, target_base_width, target_base_height, target_levels);
 }
 
 std::shared_ptr<Image>
@@ -255,13 +262,13 @@ Image::createMipmaps(unsigned int target_levels) const {
   assert(!format.getCompression());
   assert(levels == 1);
   size_t target_size = calculateOffset(target_levels);
-  unsigned char * output_data = new unsigned char[target_size];
-  memcpy(output_data, data, calculateOffset(1));
+  std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
+  memcpy(output_data.get(), data, calculateOffset(1));
   unsigned int source_width = width, source_height = height;
   unsigned int target_width = width / 2, target_height = height / 2;
   for (unsigned int level = 1; level < target_levels; level++) {
-    unsigned char * source_data = output_data + calculateOffset(level - 1);
-    unsigned char * target_data = output_data + calculateOffset(level);
+    unsigned char * source_data = output_data.get() + calculateOffset(level - 1);
+    unsigned char * target_data = output_data.get() + calculateOffset(level);
     for (int y = 0; y < target_height; y++) {               
       for (int x = 0; x < target_width; x++) {
 	unsigned int source_offset = (2 * y * source_width + 2 * x) * 4;
@@ -281,7 +288,5 @@ Image::createMipmaps(unsigned int target_levels) const {
     target_width /= 2;
     target_height /= 2;
   }
-  std::shared_ptr<Image> image2(new Image(output_data, format, width, height, target_levels));
-  delete[] output_data;
-  return image2;
+  return make_shared<Image>(output_data.get(), format, width, height, target_levels);
 }
