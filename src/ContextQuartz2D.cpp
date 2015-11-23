@@ -59,13 +59,14 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     CFStringRef keys[] = { kCGImageSourceShouldCache };
     CFTypeRef values[] = { kCFBooleanFalse };
     CFDictionaryRef options = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    auto isrc = CGImageSourceCreateWithData(data, 0);
+    auto isrc = CGImageSourceCreateWithData(data, options);
     img = CGImageSourceCreateImageAtIndex(isrc, 0, options);
     if (CFGetRetainCount(isrc) != 1) cerr << "leaking memory 3!\n";
     CFRelease(isrc);
     if (CFGetRetainCount(options) != 1) cerr << "leaking memory 4!\n";
     CFRelease(options);
-    if (CFGetRetainCount(data) != 1) cerr << "leaking memory 5!\n";
+    int data_retain = CFGetRetainCount(data);
+    if (data_retain != 1) cerr << "leaking memory 5 (" << data_retain << ")!\n";
     CFRelease(data);    
   } else {
     cerr << "unhandled image type 1 = " << (int)buffer[0] << " 2 = " << (int)buffer[1] << " 3 = " << (int)buffer[2] << " 4 = " << (int)buffer[3] << " 5 = " << (int)buffer[4] << " 6 = " << (int)buffer[5] << endl;
@@ -111,10 +112,10 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
   initializeContext();
   switch (op) {
   case SOURCE_OVER:
-    CGContextSetBlendMode(cg, kCGBlendModeNormal);
+    CGContextSetBlendMode(gc, kCGBlendModeNormal);
     break;
   case COPY:
-    CGContextSetBlendMode(cg, kCGBlendModeCopy);
+    CGContextSetBlendMode(gc, kCGBlendModeCopy);
     break;
   }
   switch (mode) {
@@ -168,7 +169,7 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
     }
   }
   if (op != SOURCE_OVER) {
-    CGContextSetBlendMode(cg, kCGBlendModeNormal);
+    CGContextSetBlendMode(gc, kCGBlendModeNormal);
   }
 }
 
