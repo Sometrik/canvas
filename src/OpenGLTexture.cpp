@@ -134,10 +134,11 @@ void
 OpenGLTexture::updateCompressedData(const Image & image, unsigned int x, unsigned int y) {
   unsigned int offset = 0;
   unsigned int current_width = image.getWidth(), current_height = image.getHeight();
+  GLenum format = getOpenGLInternalFormat(getInternalFormat());
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
     // cerr << "compressed tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", offset = " << offset << ", size = " << size << endl;
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, getOpenGLInternalFormat(getInternalFormat()), size, image.getData() + offset);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, format, size, image.getData() + offset);
     offset += size;
     current_width /= 2;
     current_height /= 2;
@@ -150,16 +151,24 @@ void
 OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int y) {
   unsigned int offset = 0;
   unsigned int current_width = image.getWidth(), current_height = image.getHeight();
+  GLenum format = getOpenGLInternalFormat(getInternalFormat());
+
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
     cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
-    
+
+    if (getInternalFormat() == RGBA8) {
 #if defined __APPLE__ || defined ANDROID 
-    glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
 #else
-    glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
-// glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image.getWidth(), height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, image.getData());
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
+      // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image.getWidth(), height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, image.getData());
 #endif
+    } else if (getInternalFormat() == LA44) {
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RED, GL_UNSIGNED_BYTE, image.getData() + offset);      
+    } else {
+      assert(0);
+    }
     
     // glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, getOpenGLInternalFormat(getInternalFormat()), size, image.getData() + offset);
     
@@ -188,11 +197,8 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-  cerr << "texture start" << endl;
-
   bool has_mipmaps = getMinFilter() == LINEAR_MIPMAP_LINEAR;
   if (initialize) {
-    cerr << "initialize" << endl;
     glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, getOpenGLInternalFormat(getInternalFormat()), getActualWidth(), getActualHeight());
     
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -204,10 +210,13 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       if (getInternalFormat() == RGB_ETC1) {
 	Image img(ImageFormat::RGB_ETC1, getActualWidth(), getActualHeight(), getMipmapLevels());
 	updateCompressedData(img, 0, 0);	
+      } else if (getInternalFormat() == RGB_DXT1) {
+	Image img(ImageFormat::RGB_DXT1, getActualWidth(), getActualHeight(), getMipmapLevels());
+	updateCompressedData(img, 0, 0);	
       } else if (getInternalFormat() == RGBA8) {
 	Image img(ImageFormat::RGBA32, getActualWidth(), getActualHeight(), getMipmapLevels());
 	updatePlainData(img, 0, 0);
-      } else if (getInternalFormat() == R8) {
+      } else if (getInternalFormat() == LA44) {
 	Image img(ImageFormat::LA44, getActualWidth(), getActualHeight(), getMipmapLevels());
 	updatePlainData(img, 0, 0);
       } else {
@@ -265,13 +274,10 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   }
     
   if (has_mipmaps && getInternalFormat() != RGB_DXT1 && getInternalFormat() != RGB_ETC1 && image.getLevels() == 1) {
-    cerr << "mipmaps" << endl;
     glGenerateMipmap(GL_TEXTURE_2D);
   }
 
   glBindTexture(GL_TEXTURE_2D, 0);
-
-  cerr << "texture end" << endl;
 
   GLenum err = getLastError();
   if (err != GL_NO_ERROR) {
