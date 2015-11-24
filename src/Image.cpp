@@ -142,14 +142,12 @@ Image::convert(const ImageFormat & target_format) const {
 
     return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight());
   } else {
-    assert(levels == 1);
     assert(target_format.getBytesPerPixel() == 2);
-    
-    unsigned int n = width * height;
-    std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_format.getBytesPerPixel() * n]);
+    unsigned int target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
+    std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_size]);
     unsigned short * output_data = (unsigned short *)tmp.get();
     const unsigned int * input_data = (const unsigned int *)data;
-
+    unsigned int n = calculateSize() / format.getBytesPerPixel();
     if (target_format.getNumChannels() == 2) {
       for (unsigned int i = 0; i < n; i++) {
 	int v = input_data[i];
@@ -166,8 +164,7 @@ Image::convert(const ImageFormat & target_format) const {
 	int v = input_data[i];
 	int red = RGBA_TO_RED(v) >> 3;
 	int green = RGBA_TO_GREEN(v) >> 2;
-	int blue = RGBA_TO_BLUE(v) >> 3;
-	
+	int blue = RGBA_TO_BLUE(v) >> 3;	
 #ifdef __APPLE__
 	*output_data++ = PACK_RGB565(blue, green, red);
 #else
@@ -218,10 +215,16 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
 	  n++;
 	}
       }
-      output_data[target_offset++] = (unsigned char)(red / n);
-      output_data[target_offset++] = (unsigned char)(green / n);
-      output_data[target_offset++] = (unsigned char)(blue / n);
-      output_data[target_offset++] = (unsigned char)(alpha / n);
+      if (n) {
+        red /= n;
+        green /= n;
+        blue /= n;
+        alpha /= n;
+      }
+      output_data[target_offset++] = (unsigned char)(red);
+      output_data[target_offset++] = (unsigned char)(green);
+      output_data[target_offset++] = (unsigned char)(blue);
+      output_data[target_offset++] = (unsigned char)(alpha);
     }
   }
 
