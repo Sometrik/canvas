@@ -59,47 +59,13 @@ using namespace canvas;
 
 size_t OpenGLTexture::total_textures = 0;
 vector<unsigned int> OpenGLTexture::freed_textures;
+bool OpenGLTexture::global_init = false;
 
 OpenGLTexture::OpenGLTexture(Surface & surface)
   : Texture(surface.getLogicalWidth(), surface.getLogicalHeight(), surface.getActualWidth(), surface.getActualHeight(), surface.getMinFilter(), surface.getMagFilter(), surface.getTargetFormat(), 1) {
   
   auto image = surface.createImage();
   updateData(*image, 0, 0);
-}
-
-static bool flushErrors() {
-  GLenum errLast = GL_NO_ERROR;
-  bool has_errors = false;
-  for ( ;; ) {
-    GLenum err = glGetError();
-    if (err == GL_NO_ERROR) {
-      break;
-    }
-    if (err == errLast) {
-      break;
-    }
-    errLast = err;
-    
-    cerr << "got error " << err << " before texture update" << endl;
-    has_errors = true;
-  }
-  
-  return has_errors;
-}
-
-static GLenum getLastError() {
-  GLenum errLast = GL_NO_ERROR;
-  for ( ;; ) {
-    GLenum err = glGetError();
-    if ( err == GL_NO_ERROR ) {
-      break;
-    }
-    if ( err == errLast ) {
-      break;
-    }   
-    errLast = err;
-  }  
-  return errLast;
 }
 
 static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
@@ -182,7 +148,10 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
 
 void
 OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
-  flushErrors();
+  if (!global_init) {
+    global_init = true;
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  }
     
   bool initialize = false;
   if (!texture_id) {
@@ -194,8 +163,6 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   assert(texture_id >= 1);
 
   glBindTexture(GL_TEXTURE_2D, texture_id);
-
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   bool has_mipmaps = getMinFilter() == LINEAR_MIPMAP_LINEAR;
   if (initialize) {
@@ -278,11 +245,6 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   }
 
   glBindTexture(GL_TEXTURE_2D, 0);
-
-  GLenum err = getLastError();
-  if (err != GL_NO_ERROR) {
-    cerr << "failed to update texture (err = " << int(err) << ", x = " << x << ", y = " << y << ", tw = " << getActualWidth() << ", th = " << getActualHeight() << ", w = " << image.getWidth() << ", h = " << image.getHeight() << ", l = " << image.getLevels() << ", c = " << int(image.getFormat().getCompression()) << ")" << endl;
-  }
 }
 
 void

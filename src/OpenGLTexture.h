@@ -43,6 +43,7 @@ namespace canvas {
 
     static size_t total_textures;
     static std::vector<unsigned int> freed_textures;
+    static bool global_init;
   };
 
   class OpenGLTextureFactory : public TextureFactory {
