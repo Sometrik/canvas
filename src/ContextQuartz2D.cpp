@@ -49,16 +49,19 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
   if (0 && isPNG(buffer, size)) {
     CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
     img = CGImageCreateWithPNGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
+    if (CFGetRetainCount(provider) != 1) cerr << "leaking memory AA!\n";
     CGDataProviderRelease(provider);
   } else if (0 && isJPEG(buffer, size)) {
     CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
     img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
+    if (CFGetRetainCount(provider) != 1) cerr << "leaking memory BB!\n";
     CGDataProviderRelease(provider);
   } else if (1) { // isGIF(buffer, size)) {
     CFDataRef data = CFDataCreate(0, buffer, size);
-    CFStringRef keys[] = { kCGImageSourceShouldCache };
-    CFTypeRef values[] = { kCFBooleanFalse };
-    CFDictionaryRef options = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, sizeof(keys) / sizeof(keys[0]), &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CFStringRef keys[3] = { kCGImageSourceShouldCache, kCGImageSourceCreateThumbnailFromImageIfAbsent, kCGImageSourceCreateThumbnailFromImageAlways };
+    CFTypeRef values[3] = { kCFBooleanFalse, kCFBooleanFalse, kCFBooleanFalse };
+    CFDictionaryRef options = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, 3, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    // sizeof(keys) / sizeof(keys[0])
     auto isrc = CGImageSourceCreateWithData(data, options);
     img = CGImageSourceCreateImageAtIndex(isrc, 0, options);
     if (CFGetRetainCount(isrc) != 1) cerr << "leaking memory 3!\n";
@@ -70,7 +73,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     CFRelease(data);    
   } else {
     cerr << "unhandled image type 1 = " << (int)buffer[0] << " 2 = " << (int)buffer[1] << " 3 = " << (int)buffer[2] << " 4 = " << (int)buffer[3] << " 5 = " << (int)buffer[4] << " 6 = " << (int)buffer[5] << endl;
-    assert(0);
+    // assert(0);
   }
   if (img) {
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
