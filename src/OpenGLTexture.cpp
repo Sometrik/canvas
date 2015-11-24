@@ -121,7 +121,7 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
 
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
-    cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
+    // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
 
     if (getInternalFormat() == RGBA8) {
 #if defined __APPLE__ || defined ANDROID 
@@ -132,6 +132,8 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
 #endif
     } else if (getInternalFormat() == LA44) {
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RED, GL_UNSIGNED_BYTE, image.getData() + offset);      
+    } else if (getInternalFormat() == RGB565) {
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, image.getData() + offset);      
     } else {
       assert(0);
     }
@@ -185,6 +187,9 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 	updatePlainData(img, 0, 0);
       } else if (getInternalFormat() == LA44) {
 	Image img(ImageFormat::LA44, getActualWidth(), getActualHeight(), getMipmapLevels());
+	updatePlainData(img, 0, 0);
+      } else if (getInternalFormat() == RGB565) {
+	Image img(ImageFormat::RGB565, getActualWidth(), getActualHeight(), getMipmapLevels());
 	updatePlainData(img, 0, 0);
       } else {
 	assert(0);
