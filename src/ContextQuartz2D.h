@@ -15,7 +15,7 @@ namespace canvas {
   public:
     Quartz2DCache() { }
     ~Quartz2DCache() {
-      if (CFGetRetainCount(colorspace) != 1) std::cerr << "leaking memory A!\n";
+      if (colorspace && CFGetRetainCount(colorspace) != 1) std::cerr << "leaking memory A!\n";
       CGColorSpaceRelease(colorspace);
       for (auto & fd : fonts) {
 	if (CFGetRetainCount(fd.second) != 1) std::cerr << "leaking memory B!\n";
@@ -128,6 +128,13 @@ namespace canvas {
     
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha) override {
       initializeContext();
+      
+      CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
+      if (!text2) {
+        std::cerr << "failed to create CString from '" << text << "'" << std::endl;
+        return;
+      }
+      
       CTFontRef font2 = cache->getFont(font, display_scale);
       int font_retain = CFGetRetainCount(font2);
       if (font_retain != 1) std::cerr << "too many retains for font (" << font_retain << ")" << std::endl;
@@ -140,11 +147,6 @@ namespace canvas {
       CFNumberRef traits2 = CFNumberCreate(NULL, kCFNumberSInt32Type, &traits);
 #endif
       
-      CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
-      if (!text2) {
-        std::cerr << "failed to create CString from '" << text << "'" << std::endl;
-        assert(0);
-      }
       CFStringRef keys[] = { kCTFontAttributeName, kCTForegroundColorAttributeName }; // kCTFontSymbolicTrait };
       CFTypeRef values[] = { font2, color }; // traits2
       
@@ -189,7 +191,7 @@ namespace canvas {
       CFRelease(text2);
       // CFRelease(traits2);
       int color_retain = CFGetRetainCount(color);
-      if (color_retain != 1) std::cerr << "leaking memory J (" << color_retain << ")!\n";
+      if (color_retain != 1) std::cerr << "leaking CGColor (" << color_retain << ")!\n";
       CGColorRelease(color);
     }
 

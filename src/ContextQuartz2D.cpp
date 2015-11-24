@@ -9,7 +9,6 @@ using namespace std;
 
 Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & filename)
   : Surface(0, 0, 0, 0, true), cache(_cache) {
-  cerr << "trying to load file " << filename << endl;
   CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
   CGImageRef img;
   if (filename.size() >= 4 && filename.compare(filename.size() - 4, 4, ".png") == 0) {
@@ -45,18 +44,15 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
 }
 
 Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, true), cache(_cache) {
-  CGImageRef img;
-  if (0 && isPNG(buffer, size)) {
-    CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
+  CGImageRef img = 0;
+  CGDataProviderRef provider = 0;
+  if (isPNG(buffer, size)) {
+    provider = CGDataProviderCreateWithData(0, buffer, size, 0);
     img = CGImageCreateWithPNGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-    if (CFGetRetainCount(provider) != 1) cerr << "leaking memory AA!\n";
-    CGDataProviderRelease(provider);
-  } else if (0 && isJPEG(buffer, size)) {
-    CGDataProviderRef provider = CGDataProviderCreateWithData(0, buffer, size, 0);
+  } else if (isJPEG(buffer, size)) {
+    provider = CGDataProviderCreateWithData(0, buffer, size, 0);
     img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-    if (CFGetRetainCount(provider) != 1) cerr << "leaking memory BB!\n";
-    CGDataProviderRelease(provider);
-  } else if (1) { // isGIF(buffer, size)) {
+  } else if (isGIF(buffer, size)) {
     CFDataRef data = CFDataCreate(0, buffer, size);
     CFStringRef keys[3] = { kCGImageSourceShouldCache, kCGImageSourceCreateThumbnailFromImageIfAbsent, kCGImageSourceCreateThumbnailFromImageAlways };
     CFTypeRef values[3] = { kCFBooleanFalse, kCFBooleanFalse, kCFBooleanFalse };
@@ -71,9 +67,12 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     int data_retain = CFGetRetainCount(data);
     if (data_retain != 1) cerr << "leaking memory 5 (" << data_retain << ")!\n";
     CFRelease(data);    
+  } else if (isXML(buffer, size)) {
+    cerr << "trying to render XML/HTML" << endl;
+    assert(0);
   } else {
     cerr << "unhandled image type 1 = " << (int)buffer[0] << " 2 = " << (int)buffer[1] << " 3 = " << (int)buffer[2] << " 4 = " << (int)buffer[3] << " 5 = " << (int)buffer[4] << " 6 = " << (int)buffer[5] << endl;
-    // assert(0);
+    assert(0);
   }
   if (img) {
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
@@ -86,13 +85,19 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     flipY();    
     CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
     flipY();
-    if (CFGetRetainCount(img) != 1) cerr << "leaking memory 6!\n";
-    CGImageRelease(img);
   } else {
     Surface::resize(16, 16, 16, 16, true);
     unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
+  }
+  if (img) {
+    if (CFGetRetainCount(img) != 1) cerr << "leaking CGImage!\n";
+    CGImageRelease(img);
+  }
+  if (provider) {
+    if (CFGetRetainCount(provider) != 1) cerr << "leaking CGDataProvider!\n";
+    CGDataProviderRelease(provider);
   }
 }
 
