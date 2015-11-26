@@ -20,6 +20,7 @@ namespace canvas {
     virtual ~Texture() { }
 
     virtual void updateData(const Image & image, unsigned int x, unsigned int y) = 0;
+    virtual void generateMipmaps() { }
     virtual unsigned int getTextureId() const { return 0; }
 
     unsigned int getLogicalWidth() const { return logical_width; }

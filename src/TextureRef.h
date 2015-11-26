@@ -58,6 +58,9 @@ namespace canvas {
     void updateData(const Image & image, unsigned int x, unsigned int y) {
       if (data) data->updateData(image, x, y);
     }
+    void generateMipmaps() {
+      if (data) data->generateMipmaps();
+    }
   
     void clear() {
       if (data && data->decRefcnt() <= 0) delete data;

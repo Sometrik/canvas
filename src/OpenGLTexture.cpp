@@ -245,11 +245,23 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     updatePlainData(image, x, y);    
   }
     
-  if (has_mipmaps && getInternalFormat() != RGB_DXT1 && getInternalFormat() != RGB_ETC1 && image.getLevels() == 1) {
-    glGenerateMipmap(GL_TEXTURE_2D);
+  if (has_mipmaps && image.getLevels() == 1) {
+    need_mipmaps = true;
   }
 
   glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void
+OpenGLTexture::generateMipmaps() {
+  if (need_mipmaps) {
+    if (getInternalFormat() != RGB_DXT1 && getInternalFormat() != RGB_ETC1 && getInternalFormat() != LA44 && getInternalFormat() != RED_RGTC1 && getInternalFormat() != RG_RGTC2) {
+      glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+      cerr << "unable to generate mipmaps for compressed texture!\n";
+    }
+    need_mipmaps = false;
+  }
 }
 
 void
