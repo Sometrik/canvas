@@ -13,19 +13,75 @@ namespace canvas {
   class AndroidCache {
   public:
   	AndroidCache(JNIEnv * _env, jobject _mgr) : env(_env), mgr(_mgr) {
-  		arcToMethod = blablah();
-  		if (arcToMethod && pathConstructor) {
-  			is_valid = true;
-  		}
+
+  		initJavaClasses();
+  		initJavaMethods();
+
+
+  		//arcToMethod = blablah();
+  		//if (arcToMethod && pathConstructor) {
+  		//	is_valid = true;
+  		//}
   	}
+
+  	void initJavaMethods(){
+
+  	managerOpenMethod = env->GetMethodID(mgrClass, "open","(Ljava/lang/String;)Ljava/io/InputStream;");
+		bitmapCreateMethod = env->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+		textAlignMethod = env->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
+		paintSetColorMethod = env->GetMethodID(paintClass, "setColor", "(I)V");
+		paintSetStyleMethod = env->GetMethodID(paintClass, "setStyle", "(Landroid/graphics/Paint$Style;)V");
+		paintSetStrokeWidthMethod = env->GetMethodID(paintClass, "setStrokeWidth", "(F)V");
+		paintSetStrokeJoinMethod = env->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V");
+		canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
+		factoryDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeStream","(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
+		bitmapCopyMethod = env->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
+		paintConstructor = env->GetMethodID(paintClass, "<init>", "()V");
+		paintSetAntiAliasMethod = env->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
+  	}
+
+    void initJavaClasses(){
+
+		canvasClass = env->FindClass("android/graphics/Canvas");
+		mgrClass = env->FindClass("android/content/res/AssetManager");
+		factoryClass = env->FindClass("android/graphics/BitmapFactory");
+		bitmapClass = env->FindClass("android/graphics/Bitmap");
+		paintClass = env->FindClass("android/graphics/Paint");
+		pathClass = env->FindClass("android/graphics/Path");
+
+      }
 
   	bool isValid() const { return is_valid; }
 
-  	JNIEnv * env;
-  	blab * mgr;
-  	Jnimethodid arcToMethod;
+  	//JNIEnv * env;
+  	//blab * mgr;
+  	//Jnimethodid arcToMethod;
+  	jmethodID paintSetStyleMethod;
+  	jmethodID paintSetStrokeWidthMethod;
+  	jmethodID paintSetStrokeJoinMethod;
+  	jmethodID textAlignMethod;
+  	jmethodID paintSetColorMethod;
+  	jmethodID bitmapCreateMethod;
+  	jmethodID canvasConstructor;
+  	jmethodID managerOpenMethod;
+  	jmethodID factoryDecodeMethod;
+  	jmethodID bitmapCopyMethod;
+  	jmethodID paintConstructor;
+  	jmethodID paintSetAntiAliasMethod;
+
+
+    jobject bitmap;
+    jobject canvas;
+    jclass canvasClass;
+    jclass paintClass;
+    jclass pathClass;
+    jclass bitmapClass;
+    jclass mgrClass;
+    jclass factoryClass;
 
   private:
+	JNIEnv * env;
+    jobject mgr;
   	bool is_valid = false;
   };
   class AndroidSurface : public Surface {
@@ -97,8 +153,8 @@ namespace canvas {
 
     }
 
-  AndroidSurface(AndroidCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const ImageFormat & _format)
-    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format.hasAlpha()), cache(_cache) {
+  AndroidSurface(AndroidCache _cache, JNIEnv * _env, jobject _mgr, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const ImageFormat & _format)
+    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format.hasAlpha()) , cache(_cache), env(_env), mgr(_mgr) {
 	  // creates an empty canvas
 
 	  // Bitmap.Config conf = Bitmap.Config.ARGB_8888;
@@ -112,49 +168,43 @@ namespace canvas {
 	  jobject STATUS_ONE = env->GetStaticObjectField(clSTATUS, fidONE);
 
 	  //Not Tested
-	  jmethodID bitmapCreate = env->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-	  bitmap = env->CallStaticObjectMethod(bitmapClass, bitmapCreate, _actual_width, _actual_height, STATUS_ONE);
+	  bitmap = env->CallStaticObjectMethod(bitmapClass, cache.bitmapCreateMethod, _actual_width, _actual_height, STATUS_ONE);
 
 	  //Create new Canvas from the mutable bitmap
-	  jmethodID canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
-	  canvas = env->NewObject(canvasClass, canvasConstructor, bitmap);
+	   canvas = env->NewObject(canvasClass, cache.canvasConstructor, bitmap);
 
 	  //testCode();
   }
   
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const Image & image)
-    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha()), env(_env), mgr(_mgr), cache(_cache) {
+  AndroidSurface(AndroidCache _cache, JNIEnv * _env, jobject _mgr, const Image & image)
+    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha()), cache(_cache), env(_env), mgr(_mgr) {
 	  // creates a surface with width, height and contents from image
     }
     
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) : Surface(0, 0, 0, 0, false), env(_env), mgr(_mgr), cache(_cache) {
+  AndroidSurface(AndroidCache _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) : Surface(0, 0, 0, 0, false), cache(_cache), env(_env), mgr(_mgr) {
 
 
 	  initJavaClasses();
 	  //Get inputStream from the picture(filename)
-	  jobject inputStream = env->CallObjectMethod(mgr, env->GetMethodID(mgrClass, "open",
-			  "(Ljava/lang/String;)Ljava/io/InputStream;"), env->NewStringUTF(filename.c_str()));
+	  jobject inputStream = env->CallObjectMethod(mgr, cache.managerOpenMethod, env->NewStringUTF(filename.c_str()));
 
 	  //Create a bitmap from the inputStream
-	  jmethodID factoryMethod = env->GetStaticMethodID(factoryClass, "decodeStream","(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
-	  jobject firstBitmap = env->CallStaticObjectMethod(factoryClass, factoryMethod, inputStream);
+	  jobject firstBitmap = env->CallStaticObjectMethod(factoryClass, cache.factoryDecodeMethod, inputStream);
 
 	  //Make bitmap mutable by calling Copy Method with setting isMutable() to true
-	  jmethodID bitmapCopyMethod = env->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
 	  jclass clSTATUS    = env->FindClass("android/graphics/Bitmap$Config");
 	  jfieldID fidONE    = env->GetStaticFieldID(clSTATUS , "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
 	  jobject STATUS_ONE = env->GetStaticObjectField(clSTATUS, fidONE);
 	  jboolean copyBoolean = JNI_TRUE;
-	  bitmap = env->CallObjectMethod(firstBitmap, bitmapCopyMethod, STATUS_ONE, copyBoolean);
+	  bitmap = env->CallObjectMethod(firstBitmap, cache.bitmapCopyMethod, STATUS_ONE, copyBoolean);
 
 	  //Create new Canvas from the mutable bitmap
-	  jmethodID canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
-	  canvas = env->NewObject(canvasClass, canvasConstructor, bitmap);
+	  canvas = env->NewObject(canvasClass, cache.canvasConstructor, bitmap);
 
 	  //testCode();
     }
     
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, false), env(_env), mgr(_mgr), cache(_cache) {
+  AndroidSurface(AndroidCache _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, false), cache(_cache), env(_env), mgr(_mgr) {
 	  // creates a surface from raw data
 	  // use this: decodeByteArray(byte[] data, int offset, int length)
 	  // make some wizardry: convert C byte array buffer to Java byte array data
@@ -202,10 +252,10 @@ namespace canvas {
 
 		//create paint
 		jboolean copyBoolean = JNI_TRUE;
-		jobject jpaint = env->NewObject(paintClass, env->GetMethodID(paintClass, "<init>", "()V"));
+		jobject jpaint = env->NewObject(paintClass, cache.paintConstructor);
 
 		//Paint.setColor;
-		env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setAntiAlias", "(Z)V"), copyBoolean);
+		env->CallVoidMethod(jpaint, cache.paintSetAntiAliasMethod, copyBoolean);
 
 		//set paint text size. Not sure if linewidth should be used for this in renderText()
 		//env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setTextSize", "(F)V"), lineWidth);
@@ -213,26 +263,28 @@ namespace canvas {
 		//Paint Set Style
 		switch (mode) {
 		case STROKE:
-			env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStyle", "(Landroid/graphics/Paint$Style;)V"),
+			env->CallVoidMethod(jpaint, cache.paintSetStyleMethod,
 					env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
 							env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
 			//Paint Set Stroke Width
-			env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStrokeWidth", "(F)V"), lineWidth);
+			env->CallVoidMethod(jpaint, cache.paintSetStrokeWidthMethod, lineWidth);
 			//Paint set StrokeJoin
-			env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V"),
+			env->CallVoidMethod(jpaint, cache.paintSetStrokeJoinMethod,
 					env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Join"),
 							env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Join"), "ROUND", "Landroid/graphics/Paint$Join;")));
 			break;
 		case FILL:
-			env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setStyle", "(Landroid/graphics/Paint$Style;)V"),
+			env->CallVoidMethod(jpaint, cache.paintSetStyleMethod,
 					env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
 							env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "FILL", "Landroid/graphics/Paint$Style;")));
 
 			break;
 		}
 		//Paint set Color
-		env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setColor", "(I)V"),
+	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+		env->CallVoidMethod(jpaint, cache.paintSetColorMethod,
 				getAndroidColor(style.color, globalAlpha));
+	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
 
 		//Set more Paint things here------<
 
@@ -244,8 +296,7 @@ namespace canvas {
 		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha);
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
-		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik",
-				"...not a problem");
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
 		//debug of renderpath-----------------------
 		// renderPath(1, , 1, 10, 1, 10, 10)
 
@@ -349,6 +400,35 @@ namespace canvas {
 
 		jclass canvasClass = env->FindClass("android/graphics/Canvas");
 
+
+		jclass alignClass    = env->FindClass("android/graphics/Paint$Align");
+		jfieldID alignEnumRight    = env->GetStaticFieldID(alignClass , "RIGHT", "Landroid/graphics/Paint$Align;");
+		jfieldID alignEnumLeft    = env->GetStaticFieldID(alignClass , "LEFT", "Landroid/graphics/Paint$Align;");
+		jfieldID alignEnumCenter    = env->GetStaticFieldID(alignClass , "CENTER", "Landroid/graphics/Paint$Align;");
+    	jobject alignRight = env->GetStaticObjectField(alignClass, alignEnumRight);
+    	jobject alignLeft = env->GetStaticObjectField(alignClass, alignEnumLeft);
+    	jobject alignCenter = env->GetStaticObjectField(alignClass, alignEnumCenter);
+
+
+		jmethodID textAlignMethod = env->GetMethodID(paintClass, "setTextAlign",
+				"(Landroid/graphics/Paint$Align;)V");
+
+
+		switch (textAlign.getType()) {
+		        case TextAlign::LEFT:
+		        	env->CallVoidMethod(jpaint, textAlignMethod, alignLeft);
+
+		        	break;
+		        case TextAlign::CENTER:
+		        	//x -= width / 2;
+		        	break;
+		        case TextAlign::RIGHT:
+		        	env->CallVoidMethod(jpaint, textAlignMethod, alignRight);
+		        	//x -= width;
+		        	break;
+		        default: break;
+		}
+
 		jmethodID canvasTextDraw = env->GetMethodID(canvasClass, "drawText", "(Ljava/lang/String;FFLandroid/graphics/Paint;)V");
 		env->CallVoidMethod(canvas, canvasTextDraw, env->NewStringUTF(text.c_str()), x, y, jpaint);
 
@@ -427,7 +507,11 @@ namespace canvas {
     }
 
   private:
-    AndroidCache * _cache;
+
+    AndroidCache cache;
+	JNIEnv * env;
+    jobject mgr;
+    //AndroidCache _cache;
     jobject bitmap;
     jobject canvas;
     jclass canvasClass;
@@ -440,20 +524,20 @@ namespace canvas {
 
   class ContextAndroid : public Context {
   public:
-  ContextAndroid(JNIEnv * _env, jobject _mgr, unsigned int _width, unsigned int _height, const ImageFormat & format, float _display_scale)
-    : Context(_display_scale), env(_env), mgr(_mgr),
-      default_surface(_env, _mgr,  _width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), format)
+  ContextAndroid(AndroidCache _cache, JNIEnv * _env, jobject _mgr, unsigned int _width, unsigned int _height, const ImageFormat & format, float _display_scale)
+    : Context(_display_scale), cache(_cache), env(_env), mgr(_mgr),
+      default_surface(_cache, _env, _mgr,  _width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), format)
       {
       }
 
     std::shared_ptr<Surface> createSurface(const Image & image) override {
-      return std::shared_ptr<Surface>(new AndroidSurface(env, mgr, image));
+      return std::shared_ptr<Surface>(new AndroidSurface(cache, env, mgr, image));
     }
     std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const ImageFormat & _format) override {
-      return std::shared_ptr<Surface>(new AndroidSurface(env, mgr, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _format));
+      return std::shared_ptr<Surface>(new AndroidSurface(cache, env, mgr, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _format));
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-      return std::shared_ptr<Surface>(new AndroidSurface(env, mgr, filename));
+      return std::shared_ptr<Surface>(new AndroidSurface(cache, env, mgr, filename));
     }
         
     Surface & getDefaultSurface() override { return default_surface; }
@@ -479,6 +563,7 @@ namespace canvas {
  //   }
     
   private:
+    AndroidCache cache;
     JNIEnv * env;
     jobject mgr;
     AndroidSurface default_surface;
@@ -488,20 +573,20 @@ namespace canvas {
   public:
     AndroidContextFactory(JNIEnv * _env, jobject _mgr, float _display_scale = 1.0f) : ContextFactory(_display_scale), cache(_env, _mgr), env(_env), mgr(_mgr) { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const ImageFormat & format, bool apply_scaling = false) override {
-      std::shared_ptr<Context> ptr(new ContextAndroid(&cache, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
+      std::shared_ptr<Context> ptr(new ContextAndroid(cache, env, mgr, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-      return std::shared_ptr<Surface>(new AndroidSurface(&cache, filename));
+      return std::shared_ptr<Surface>(new AndroidSurface(cache, env, mgr, filename));
     }
     std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const ImageFormat & format, bool apply_scaling) override {
       unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
       unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
-      std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, width, height, aw, ah, format));
+      std::shared_ptr<Surface> ptr(new AndroidSurface(cache, env, mgr, width, height, aw, ah, format));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) override {
-      std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, buffer, size));
+      std::shared_ptr<Surface> ptr(new AndroidSurface(cache, env, mgr, buffer, size));
       return ptr;
     }
     
