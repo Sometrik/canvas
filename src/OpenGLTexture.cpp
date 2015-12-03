@@ -134,6 +134,8 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RED, GL_UNSIGNED_BYTE, image.getData() + offset);      
     } else if (getInternalFormat() == RGB565) {
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, image.getData() + offset);      
+    } else if (getInternalFormat() == R32F) {
+      glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, current_width, current_height, GL_RED, GL_FLOAT, image.getData() + offset);
     } else {
       assert(0);
     }
@@ -176,20 +178,25 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getOpenGLFilterType(getMagFilter()));
 
     if (x != 0 || y != 0 || image.getWidth() != getActualWidth() || image.getHeight() != getActualHeight()) {
+      int levels = has_mipmaps ? getMipmapLevels() : 1;
       if (getInternalFormat() == RGB_ETC1) {
-	Image img(ImageFormat::RGB_ETC1, getActualWidth(), getActualHeight(), getMipmapLevels());
+	Image img(ImageFormat::RGB_ETC1, getActualWidth(), getActualHeight(), levels);
 	updateCompressedData(img, 0, 0);	
       } else if (getInternalFormat() == RGB_DXT1) {
-	Image img(ImageFormat::RGB_DXT1, getActualWidth(), getActualHeight(), getMipmapLevels());
+	Image img(ImageFormat::RGB_DXT1, getActualWidth(), getActualHeight(), levels);
 	updateCompressedData(img, 0, 0);	
       } else if (getInternalFormat() == RGBA8) {
-	Image img(ImageFormat::RGBA32, getActualWidth(), getActualHeight(), getMipmapLevels());
+	Image img(ImageFormat::RGBA32, getActualWidth(), getActualHeight(), levels);
 	updatePlainData(img, 0, 0);
       } else if (getInternalFormat() == LA44) {
-	Image img(ImageFormat::LA44, getActualWidth(), getActualHeight(), getMipmapLevels());
+	Image img(ImageFormat::LA44, getActualWidth(), getActualHeight(), levels);
 	updatePlainData(img, 0, 0);
       } else if (getInternalFormat() == RGB565) {
-	Image img(ImageFormat::RGB565, getActualWidth(), getActualHeight(), getMipmapLevels());
+	Image img(ImageFormat::RGB565, getActualWidth(), getActualHeight(), levels);
+	updatePlainData(img, 0, 0);
+      } else if (getInternalFormat() == R32F) {
+	assert(levels == 1);
+	Image img(ImageFormat::FLOAT32, getActualWidth(), getActualHeight(), levels);
 	updatePlainData(img, 0, 0);
       } else {
 	assert(0);
