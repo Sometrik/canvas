@@ -45,7 +45,7 @@ namespace canvas {
 		pathLineToMethod = env->GetMethodID(pathClass, "lineTo", "(FF)V");
 		pathCloseMethod = env->GetMethodID(pathClass, "close","()V");
 		canvasPathDrawMethod = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
-
+		rectConstructor = env->GetMethodID(rectClass, "<init>","(FFFF)V");
 
   	}
 
@@ -61,6 +61,7 @@ namespace canvas {
 		alignClass = env->FindClass("android/graphics/Paint$Align");
 		clSTATUS  = env->FindClass("android/graphics/Bitmap$Config");
 		fidONE  = env->GetStaticFieldID(clSTATUS , "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
+		rectClass  = env->FindClass("android/graphics/RectF");
 
       }
 
@@ -87,7 +88,9 @@ namespace canvas {
   	jmethodID pathLineToMethod;
   	jmethodID pathCloseMethod;
   	jmethodID canvasPathDrawMethod;
+  	jmethodID rectConstructor;
 
+  	jclass rectClass;
     jclass canvasClass;
     jclass paintClass;
     jclass pathClass;
@@ -278,15 +281,14 @@ namespace canvas {
 				float bottom = (pc.y0 * display_scale - pc.radius * display_scale) / M_PI * 180;
 				float top = (pc.y0 * display_scale + pc.radius * display_scale) / M_PI * 180;
 
-				float whatup = pc.sa / M_PI * 180;
-
-				float yo = 100;
 
 				__android_log_print(ANDROID_LOG_INFO, "Sometrik", "this is left %f", left);
 				__android_log_print(ANDROID_LOG_INFO, "Sometrik", "this is right  %f", right);
 				__android_log_print(ANDROID_LOG_INFO, "Sometrik", "this is bottom %f", bottom);
 				__android_log_print(ANDROID_LOG_INFO, "Sometrik", "this is top  %f", top);
 				__android_log_print(ANDROID_LOG_INFO, "Sometrik", "this is span  %f", span);
+				__android_log_print(ANDROID_LOG_INFO, "Sometrik", "this is startAngle  %f", pc.sa / M_PI * 180);
+				__android_log_print(ANDROID_LOG_INFO, "Sometrik", "this is statementSpan  %f", span / M_PI * 180);
 
 			//	Gdiplus::RectF rect(Gdiplus::REAL(pc.x0 * display_scale - pc.radius * display_scale), Gdiplus::REAL(pc.y0 * display_scale - pc.radius * display_scale),
 			//			Gdiplus::REAL(2 * pc.radius * display_scale), Gdiplus::REAL(2 * pc.radius * display_scale));
@@ -294,13 +296,12 @@ namespace canvas {
 			//	output.AddArc(rect, Gdiplus::REAL(pc.sa * 180.0f / M_PI), Gdiplus::REAL(span * 180.0f / M_PI));
 			//	output.GetLastPoint(&current_pos);
 
-			jmethodID pathArcToMethod = env->GetMethodID(cache.pathClass, "arcTo", "(FFFFFFZ)V");
-  	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is... id = %p, working = %p", pathArcToMethod, cache.pathConstructor);
-			env->CallVoidMethod(jpath, pathArcToMethod, left, top, right, bottom, (float)(pc.sa / M_PI * 180), (float)(span / M_PI * 180), copyBoolean);
-			//env->CallVoidMethod(jpath, pathArcToMethod, 10.0f, 50.0f, 100.0f, 200.0f, whatup, span / M_PI * 180, falseBoolean);
-  	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
+			jobject jrect = env->CallObjectMethod(cache.rectClass, cache.rectConstructor, left, top, right, bottom);
 
-  	  //pc.sa / M_PI * 180
+			jmethodID pathArcToMethod = env->GetMethodID(cache.pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
+  	  env->CallVoidMethod(jpath, pathArcToMethod, jrect, (float)(pc.sa / M_PI * 180), (float)(span / M_PI * 180));
+
+
 			}
 				break;
 			case PathComponent::CLOSE: {
