@@ -46,6 +46,8 @@ namespace canvas {
 		pathCloseMethod = env->GetMethodID(pathClass, "close","()V");
 		canvasPathDrawMethod = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
 		rectConstructor = env->GetMethodID(rectClass, "<init>","(FFFF)V");
+		paintSetShadowMethod = env->GetMethodID(paintClass, "setShadowLayer", "(FFFI)V");
+
 
   	}
 
@@ -89,6 +91,7 @@ namespace canvas {
   	jmethodID pathCloseMethod;
   	jmethodID canvasPathDrawMethod;
   	jmethodID rectConstructor;
+  	jmethodID paintSetShadowMethod;
 
   	jclass rectClass;
     jclass canvasClass;
@@ -192,7 +195,7 @@ namespace canvas {
     }
 
 
-
+    //ADD SHADOW EFFECTS
     jobject createJavaPaint(RenderMode mode, const Style & style, float lineWidth, float globalAlpha){
 
   		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWiPdth = %f", lineWidth);
@@ -234,12 +237,14 @@ namespace canvas {
 		return jpaint;
     }
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override {
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY) override {
 
 
   		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWidth = %f", lineWidth);
 
 		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha);
+
+		env-> callVoidMethod(jpaint, cache.paintSetShadowMethod, shadowblur, shadowOffsetX, shadowOffsetY);
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
@@ -429,6 +434,9 @@ namespace canvas {
 //    }
     
   protected:
+    bool hasNativeShadows() const override { return true; }
+
+
  //   Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override {
 //
 //   	return *this;
