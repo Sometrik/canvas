@@ -237,19 +237,16 @@ namespace canvas {
 		return jpaint;
     }
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY) override {
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) override {
 
 
   		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWidth = %f", lineWidth);
 
 		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha);
 
-		env-> callVoidMethod(jpaint, cache.paintSetShadowMethod, shadowblur, shadowOffsetX, shadowOffsetY);
-
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
-		//debug of renderpath-----------------------
-		// renderPath(1, , 1, 10, 1, 10, 10)
 
 		jboolean copyBoolean = JNI_TRUE;
 		jboolean falseBoolean = JNI_FALSE;
