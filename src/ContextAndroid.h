@@ -245,7 +245,7 @@ namespace canvas {
 		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha);
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
-		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
 
 		jboolean copyBoolean = JNI_TRUE;
