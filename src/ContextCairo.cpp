@@ -158,7 +158,7 @@ CairoSurface::resetClip() {
 }
 
 void
-CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) {
+CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float sadowBlur, float shadowOffsetX, float shadowOffsetY) {
   initializeContext();
 
   switch (op) {
