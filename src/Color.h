@@ -6,6 +6,8 @@
 namespace canvas {
   class Color {
   public:
+    static Color BLACK, WHITE;
+    
   Color() : red(0.0f), green(0.0f), blue(0.0f), alpha(1.0f) { }
     Color(const std::string & s)
       : red(0.0f), green(0.0f), blue(0.0f), alpha(1.0f) {
