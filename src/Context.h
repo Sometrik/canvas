@@ -136,6 +136,7 @@ namespace canvas {
   protected:
     virtual Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op = SOURCE_OVER);
     virtual Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
+    virtual bool hasNativeShadows() const { return false; }
 
     bool hasShadow() const { return shadowBlur > 0.0f || shadowOffsetX != 0 || shadowOffsetY != 0; }
     

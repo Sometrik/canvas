@@ -74,23 +74,27 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
 
 Context &
 Context::renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) {
-  if (hasShadow()) {
-    float b = shadowBlur, bs = shadowBlur * getDisplayScale();
-    float bi = int(ceil(b));
-    auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, ImageFormat::RGBA32);
-    Style shadow_style = shadowColor;
-    Path tmp_path = path;
-    tmp_path.offset(shadowOffsetX + bi, shadowOffsetY + bi);
-    
-    shadow->renderPath(mode, tmp_path, shadow_style, lineWidth, op, getDisplayScale(), globalAlpha);
+  if (hasNativeShadows()) {
+    getDefaultSurface().renderPath(mode, path, style, lineWidth, op, getDisplayScale(), globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY);
+  } else {
+    if (hasShadow()) {
+      float b = shadowBlur, bs = shadowBlur * getDisplayScale();
+      float bi = int(ceil(b));
+      auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, ImageFormat::RGBA32);
+      Style shadow_style = shadowColor;
+      Path tmp_path = path;
+      tmp_path.offset(shadowOffsetX + bi, shadowOffsetY + bi);
+      
+      shadow->renderPath(mode, tmp_path, shadow_style, lineWidth, op, getDisplayScale(), globalAlpha, 0, 0, 0);
 #if 1
-    shadow->slowBlur(bs, bs);
+      shadow->slowBlur(bs, bs);
 #else
-    shadow->blur(bs);
+      shadow->blur(bs);
 #endif
-    getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
+      getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight());
+    }
+    getDefaultSurface().renderPath(mode, path, style, lineWidth, op, getDisplayScale(), globalAlpha, 0, 0, 0);
   }
-  getDefaultSurface().renderPath(mode, path, style, getDisplayScale(), op, getDisplayScale(), globalAlpha);
   return *this;
 }
 
