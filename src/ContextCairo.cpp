@@ -198,7 +198,7 @@ CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style
 }
 
 void
-CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float alpha) {
+CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
   initializeContext();
 
   switch (op) {
@@ -283,7 +283,7 @@ CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w
 }
 
 void
-CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled) {
+CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled) {
   CairoSurface * cs_ptr = dynamic_cast<CairoSurface*>(&_img);
   if (cs_ptr) {
     drawNativeSurface(*cs_ptr, x, y, w, h, alpha, imageSmoothingEnabled);    
@@ -295,7 +295,7 @@ CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, 
 }
 
 void
-CairoSurface::drawImage(const Image & _img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled) {
+CairoSurface::drawImage(const Image & _img, double x, double y, double w, double h, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled) {
   CairoSurface img(_img);
   drawNativeSurface(img, x, y, w, h, alpha, imageSmoothingEnabled);
 }
