@@ -108,7 +108,7 @@ namespace canvas {
     
     void releaseMemory() override { }
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
+    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) override;
 
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) override {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
@@ -126,9 +126,15 @@ namespace canvas {
       memset(bitmapData, 0, bitmapByteCount);
     }
     
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha) override {
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowOffsetBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) override {
       initializeContext();
-      
+
+      bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
+      if (has_shadow) {
+	save();
+	setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
+      }
+
       CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
       if (!text2) {
         std::cerr << "failed to create CString from '" << text << "'" << std::endl;
@@ -193,6 +199,10 @@ namespace canvas {
       int color_retain = CFGetRetainCount(color);
       if (color_retain != 1) std::cerr << "leaking CGColor (" << color_retain << ")!\n";
       CGColorRelease(color);
+
+      if (has_shadow) {
+	restore();
+      }
     }
 
     TextMetrics measureText(const Font & font, const std::string & text, float display_scale) override {
@@ -220,8 +230,13 @@ namespace canvas {
       return TextMetrics(width / display_scale);
     }
 
-    void drawImage(Surface & surface, double x, double y, double w, double h, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true) override {
+    void drawImage(Surface & surface, double x, double y, double w, double h, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
       initializeContext();
+      bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
+      if (has_shadow) {
+	save();
+	setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
+      }
 #if 1
       auto img = surface.createImage();
       drawImage(*img, x, y, w, h, globalAlpha, imageSmoothingEnabled);
@@ -233,8 +248,11 @@ namespace canvas {
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), myImage);
       CGImageRelease(myImage);
 #endif
+      if (has_shadow) {
+	restore();
+      }
     }
-    void drawImage(const Image & _img, double x, double y, double w, double h, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true) override {
+    void drawImage(const Image & _img, double x, double y, double w, double h, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
       initializeContext();
       auto & format = _img.getFormat();
       // std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " a=" << format.hasAlpha() << ", bpp=" << format.getBytesPerPixel() << std::endl;
@@ -341,6 +359,7 @@ namespace canvas {
   protected:
     Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override;
     Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) override;
+    bool hasNativeShadows() const override { return false; }
     
   private:
     Quartz2DCache * cache;

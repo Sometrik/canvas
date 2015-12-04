@@ -116,8 +116,15 @@ Quartz2DSurface::sendPath(const Path & path, float scale) {
 }
 
 void
-Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) {
+Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
   initializeContext();
+
+  bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
+  if (has_shadow) {
+    save();
+    setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
+  }
+  
   switch (op) {
   case SOURCE_OVER:
     CGContextSetBlendMode(gc, kCGBlendModeNormal);
@@ -179,57 +186,7 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
   if (op != SOURCE_OVER) {
     CGContextSetBlendMode(gc, kCGBlendModeNormal);
   }
-}
-
-Context &
-ContextQuartz2D::renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) {
-  if (hasShadow()) {
-    default_surface.save();
-    default_surface.setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
-    default_surface.renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, op, getDisplayScale(), globalAlpha);
+  if (has_shadow) {
     default_surface.restore();
-  } else {
-    getDefaultSurface().renderText(mode, font, style, textBaseline, textAlign, text, x, y, lineWidth, op, getDisplayScale(), globalAlpha);
   }
-  return *this;
 }
-
-Context &
-ContextQuartz2D::renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) {
-  if (hasShadow()) {
-    default_surface.save();
-    default_surface.setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
-    default_surface.renderPath(mode, path, style, lineWidth, op, getDisplayScale(), globalAlpha);
-    default_surface.restore();
-  } else {
-    getDefaultSurface().renderPath(mode, path, style, lineWidth, op, getDisplayScale(), globalAlpha);
-  }
-  return *this;
-}
-
-Context &
-ContextQuartz2D::drawImage(const Image & img, double x, double y, double w, double h) {
-  if (hasShadow()) {
-    default_surface.save();
-    default_surface.setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
-    default_surface.drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
-    default_surface.restore();
-  } else {
-    default_surface.drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
-  }
-  return *this;
-}
-
-Context &
-ContextQuartz2D::drawImage(Surface & img, double x, double y, double w, double h) {
-  if (hasShadow()) {
-    default_surface.save();
-    default_surface.setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
-    default_surface.drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
-    default_surface.restore();
-  } else {
-    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), globalAlpha, imageSmoothingEnabled);
-  }
-  return *this;
-}
-
