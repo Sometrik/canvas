@@ -220,7 +220,8 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     }
   } else if (getInternalFormat() == RGB565) {
     auto tmp_image = image.convert(ImageFormat::RGB565);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image->getData());
+    updatePlainData(*tmp_image, x, y);    
+    // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image->getData());
   } else if (getInternalFormat() == RGBA4) {
     auto tmp_image = image.convert(ImageFormat::RGBA4);
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, tmp_image->getData());
@@ -261,7 +262,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
 void
 OpenGLTexture::generateMipmaps() {
-  if (need_mipmaps) {
+  if (1) { // need_mipmaps) {
     if (getInternalFormat() != RGB_DXT1 && getInternalFormat() != RGB_ETC1 && getInternalFormat() != LA44 && getInternalFormat() != RED_RGTC1 && getInternalFormat() != RG_RGTC2) {
       glGenerateMipmap(GL_TEXTURE_2D);
     } else {
