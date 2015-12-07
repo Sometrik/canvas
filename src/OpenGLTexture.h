@@ -27,7 +27,7 @@ namespace canvas {
     unsigned int getTextureId() const override { return texture_id; }
     
     void updateData(const Image & image, unsigned int x, unsigned int y) override;
-    void generateMipmaps();
+    void generateMipmaps() override;
 
     static size_t getNumTextures() { return total_textures; }
     static const std::vector<unsigned int> & getFreedTextures() { return freed_textures; }
