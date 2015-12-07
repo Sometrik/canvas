@@ -126,13 +126,13 @@ namespace canvas {
       memset(bitmapData, 0, bitmapByteCount);
     }
     
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowOffsetBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) override {
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) override {
       initializeContext();
 
       bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
       if (has_shadow) {
 	save();
-	setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
+	setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, display_scale);
       }
 
       CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
@@ -230,16 +230,16 @@ namespace canvas {
       return TextMetrics(width / display_scale);
     }
 
-    void drawImage(Surface & surface, double x, double y, double w, double h, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
+    void drawImage(Surface & surface, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
       initializeContext();
       bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
       if (has_shadow) {
 	save();
-	setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
+	setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, display_scale);
       }
 #if 1
       auto img = surface.createImage();
-      drawImage(*img, x, y, w, h, globalAlpha, imageSmoothingEnabled);
+      drawImage(*img, x, y, w, h, display_scale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, imageSmoothingEnabled);
 #else
       _img.initializeContext();
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
@@ -252,7 +252,7 @@ namespace canvas {
 	restore();
       }
     }
-    void drawImage(const Image & _img, double x, double y, double w, double h, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
+    void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
       initializeContext();
       auto & format = _img.getFormat();
       // std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " a=" << format.hasAlpha() << ", bpp=" << format.getBytesPerPixel() << std::endl;
@@ -352,14 +352,18 @@ namespace canvas {
         
     Surface & getDefaultSurface() override { return default_surface; }
     const Surface & getDefaultSurface() const override { return default_surface; }
-      
+
+#if 0      
     Context & drawImage(const Image & img, double x, double y, double w, double h) override;
     Context & drawImage(Surface & img, double x, double y, double w, double h) override;
+#endif
     
   protected:
+#if 0
     Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override;
     Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) override;
-    bool hasNativeShadows() const override { return false; }
+#endif
+    bool hasNativeShadows() const override { return true; }
     
   private:
     Quartz2DCache * cache;

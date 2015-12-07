@@ -122,7 +122,7 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
   bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
   if (has_shadow) {
     save();
-    setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, getDisplayScale());
+    setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, display_scale);
   }
   
   switch (op) {
@@ -187,6 +187,6 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
     CGContextSetBlendMode(gc, kCGBlendModeNormal);
   }
   if (has_shadow) {
-    default_surface.restore();
+    restore();
   }
 }
