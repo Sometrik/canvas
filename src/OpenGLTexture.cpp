@@ -262,7 +262,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
 void
 OpenGLTexture::generateMipmaps() {
-  if (1) { // need_mipmaps) {
+  if (need_mipmaps) {
     if (getInternalFormat() != RGB_DXT1 && getInternalFormat() != RGB_ETC1 && getInternalFormat() != LA44 && getInternalFormat() != RED_RGTC1 && getInternalFormat() != RG_RGTC2) {
       glGenerateMipmap(GL_TEXTURE_2D);
     } else {
