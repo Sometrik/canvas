@@ -47,7 +47,10 @@ namespace canvas {
 		canvasPathDrawMethod = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
 		rectConstructor = env->GetMethodID(rectClass, "<init>","(FFFF)V");
 		paintSetShadowMethod = env->GetMethodID(paintClass, "setShadowLayer", "(FFFI)V");
+		canvasBitmapDrawMethod = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;FFLandroid/graphics/Paint;)V");
+		factoryDecodeByteMethod = env->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
 
+		//drawBitmap(Bitmap bitmap, float left, float top, Paint paint)
 
   	}
 
@@ -92,6 +95,8 @@ namespace canvas {
   	jmethodID canvasPathDrawMethod;
   	jmethodID rectConstructor;
   	jmethodID paintSetShadowMethod;
+  	jmethodID canvasBitmapDrawMethod;
+  	jmethodID factoryDecodeByteMethod;
 
   	jclass rectClass;
     jclass canvasClass;
@@ -143,6 +148,9 @@ namespace canvas {
     
   AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) : Surface(0, 0, 0, 0, false), cache(_cache), env(_env), mgr(_mgr) {
 
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...Surface filename constructor");
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
 
 	  //Get inputStream from the picture(filename)
 	  jobject inputStream = env->CallObjectMethod(mgr, cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
@@ -157,6 +165,26 @@ namespace canvas {
 
 	  //Create new Canvas from the mutable bitmap
 	  canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
+
+
+
+	  //---------------------DEBUG
+
+			jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
+
+			//Paint.setColor;
+			env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, copyBoolean);
+				env->CallVoidMethod(jpaint, cache->paintSetStyleMethod,
+						env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
+								env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
+
+
+
+	  //env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, firstBitmap, 200.0f, 200.0f, jpaint);
+
+	  jclass testClass = env->FindClass("com/example/work/MyGLSurfaceView");
+	  jmethodID testMethod = env->GetStaticMethodID(testClass, "pleaseDebug", "(Landroid/graphics/Bitmap;)V");
+	  env->CallStaticVoidMethod(testClass, testMethod, bitmap);
 
 	  //testCode();
     }
@@ -264,8 +292,6 @@ namespace canvas {
 			}
 				break;
 			case PathComponent::ARC: {
-	  	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
-	  	  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
 
 	  	  float span = 0;
 
@@ -321,9 +347,12 @@ namespace canvas {
       // do resize the surface and discard the old data
     }
     
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha) override {
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign,
+    		const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha,
+				float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) override {
 
 		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha);
+		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
 
 
 		jfieldID alignEnumRight    = env->GetStaticFieldID(cache->alignClass , "RIGHT", "Landroid/graphics/Paint$Align;");
@@ -361,16 +390,74 @@ namespace canvas {
       return TextMetrics(0);
     }
 
-    void drawImage(Surface & _surface, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
-    	AndroidSurface & surface = dynamic_cast<AndroidSurface&>(_surface);
+    //void drawImage(Surface & _surface, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
+    	//AndroidSurface & surface = dynamic_cast<AndroidSurface&>(_surface);
     	// draw surface as image
     	// surface.getBitmap();
+
+    void drawImage(Surface & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur,
+    		float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
+
+
+  		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+  		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+  		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is.dartwimage..");
+  		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+
+
+  		//std:shared_ptr<canvas::Image>
+
+  		auto kuva = _img.createImage();
+
+  		const unsigned char* buf = kuva->getData();
+  		int length = kuva->calculateSize();
+  		jint jlength = kuva->calculateSize();
+
+  		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
+  		//__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", jlength);
+
+  	  jbyteArray array = env->NewByteArray(4000);
+  	   env->SetByteArrayRegion (array, 0, 4000, (jbyte*)(buf));
+
+   		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+  	   jobject myPic = env->CallObjectMethod(cache->factoryClass, cache->factoryDecodeByteMethod, array, 0, 4000);
+    		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
+
+
+  				jboolean copyBoolean = JNI_TRUE;
+  				jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
+
+  				env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, copyBoolean);
+
+  					env->CallVoidMethod(jpaint, cache->paintSetStyleMethod,
+  							env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
+  									env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
+
+  			//	env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
+
+
+  			env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, bitmap, 200.0f, 200.0f, jpaint);
+
+
     }
     
-    void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) override {
-    	// _img.getWidth() _img.getHeight()
+
+
+    void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur,
+    		float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
+    	 //_img.getWidth() _img.getHeight()
         // static Bitmap 	createBitmap(DisplayMetrics display, int[] colors, int width, int height, Bitmap.Config config)
-    }
+
+  		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+  		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+  		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+  		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+  		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+  		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
+   }
+
+
+
     void clip(const Path & path, float display_scale) override {
        // restrict drawing operations to path
     }
@@ -398,7 +485,6 @@ namespace canvas {
     AndroidCache * cache;
 	JNIEnv * env;
     jobject mgr;
-    //AndroidCache _cache;
   };
 
   class ContextAndroid : public Context {
