@@ -232,11 +232,6 @@ namespace canvas {
 
     void drawImage(Surface & surface, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
       initializeContext();
-      bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
-      if (has_shadow) {
-	save();
-	setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, display_scale);
-      }
 #if 1
       auto img = surface.createImage();
       drawImage(*img, x, y, w, h, display_scale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, imageSmoothingEnabled);
@@ -248,9 +243,6 @@ namespace canvas {
       CGContextDrawImage(gc, CGRectMake(x, y, w, h), myImage);
       CGImageRelease(myImage);
 #endif
-      if (has_shadow) {
-	restore();
-      }
     }
     void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
       initializeContext();
