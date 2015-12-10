@@ -87,14 +87,7 @@ namespace canvas {
     Context & drawImage(Context & other, double x, double y, double w, double h) {
       return drawImage(other.getDefaultSurface(), x, y, w, h);
     }
-    virtual Context & drawImage(const Image & img, double x, double y, double w, double h) {
-      if (img.getData()) {
-	auto surface = createSurface(img);
-	return drawImage(*surface, x, y, w, h);
-      } else {
-	return *this;
-      }
-    }
+    virtual Context & drawImage(const Image & img, double x, double y, double w, double h);
     virtual Context & drawImage(Surface & img, double x, double y, double w, double h);
         
     Style & createLinearGradient(double x0, double y0, double x1, double y1) {

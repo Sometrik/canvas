@@ -128,6 +128,31 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
 }
 
 Context &
+Context::drawImage(const Image & img, double x, double y, double w, double h) {
+  if (hasNativeShadows()) {
+    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, imageSmoothingEnabled);
+  } else {
+    if (hasShadow()) {
+      float b = shadowBlur, bs = shadowBlur * getDisplayScale();
+      float bi = int(ceil(b));
+      auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, ImageFormat::RGBA32);
+    
+      shadow->drawImage(img, (x + bi + shadowOffsetX) * getDisplayScale(), (y + bi + shadowOffsetY) * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha, 0.0f, 0.0f, 0.0f, shadowColor, imageSmoothingEnabled);
+      shadow->colorFill(shadowColor);
+#if 1
+      shadow->slowBlur(bs, bs);
+#else
+      shadow->blur(bs);
+#endif
+    
+      getDefaultSurface().drawImage(*shadow, -bi, -bi, shadow->getActualWidth(), shadow->getActualHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor);
+    }
+    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha, 0.0f, 0.0f, 0.0f, shadowColor, imageSmoothingEnabled);
+  }
+  return *this;
+}
+
+Context &
 Context::save() {
   restore_stack.push_back(SavedContext(*this));
   getDefaultSurface().save();
