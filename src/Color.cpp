@@ -6,6 +6,7 @@ using namespace canvas;
 
 Color Color::BLACK(0.0f, 0.0f, 0.0f, 1.0f);
 Color Color::WHITE(1.0f, 1.0f, 1.0f, 1.0f);
+Color Color::RED(1.0f, 0.0f, 0.0f, 1.0f);
 
 static int get_xdigit(char c) {
   if (c >= '0' && c <= '9') {
