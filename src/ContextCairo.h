@@ -35,8 +35,8 @@ namespace canvas {
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor);
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor);
     TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
-    void drawImage(Surface & _img, double x, double y, double w, double h, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true);
-    void drawImage(const Image & _img, double x, double y, double w, double h, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true);
+    void drawImage(Surface & _img, double x, double y, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true);
+    void drawImage(const Image & _img, double x, double y, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true);
     void clip(const Path & path, float display_scale);
     void resetClip();
     void save();
