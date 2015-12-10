@@ -182,7 +182,7 @@ Image::convert(const ImageFormat & target_format) const {
       }
     }
     
-    return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight());
+    return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight(), getLevels());
   }
 }
 
