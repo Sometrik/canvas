@@ -15,39 +15,14 @@ Image::Image(const ImageFormat & _format, unsigned int _width, unsigned int _hei
   size_t s = calculateSize();
   data = new unsigned char[s];
   if (format.getCompression() == ImageFormat::ETC1) {
-    if (format.getCompression() == ImageFormat::ETC1 && !etc1_initialized) {
-      cerr << "initializing etc1" << endl;
-      etc1_initialized = true;
-      rg_etc1::pack_etc1_block_init();
-    }
-    unsigned char input_block[4*4*4];
-    unsigned int offset = 0;
-    for (unsigned int i = 0; i < 16; i++) {
-      input_block[offset++] = 0;
-      input_block[offset++] = 0;
-      input_block[offset++] = 0;
-      input_block[offset++] = 255;
-    }
-    unsigned char output_block[8];
-    rg_etc1::etc1_pack_params params;
-    params.m_quality = rg_etc1::cLowQuality;
-    rg_etc1::pack_etc1_block(output_block, (const unsigned int *)&(input_block[0]), params);
     for (unsigned int i = 0; i < s; i += 8) {
-      memcpy(data + i, output_block, 8);
+      *(unsigned int *)(data + i + 0) = 0x00000000;
+      *(unsigned int *)(data + i + 4) = 0xffffffff;
     }
   } else if (format.getCompression() == ImageFormat::DXT1) {
-    unsigned char input_block[4*4*4];
-    unsigned int offset = 0;
-    for (unsigned int i = 0; i < 16; i++) {
-      input_block[offset++] = 0;
-      input_block[offset++] = 0;
-      input_block[offset++] = 0;
-      input_block[offset++] = 255;
-    }
-    unsigned char output_block[8];
-    stb_compress_dxt1_block(output_block, &(input_block[0]), false, 0);
     for (unsigned int i = 0; i < s; i += 8) {
-      memcpy(data + i, output_block, 8);
+      *(unsigned int *)(data + i + 0) = 0x00000000;
+      *(unsigned int *)(data + i + 4) = 0xaaaaaaaa;
     }
   } else if (!format.getCompression()) {
     cerr << "clearing memory for " << s << " bytes\n";
