@@ -28,8 +28,8 @@ SavedContext::SavedContext(const Context & context) :
 
 void
 Context::resize(unsigned int _width, unsigned int _height) {
-   getDefaultSurface().resize(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), getDefaultSurface().hasAlpha());
-   hit_regions.clear();
+  getDefaultSurface().resize(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), getDefaultSurface().getFormat());
+  hit_regions.clear();
 }
 
 Context &
@@ -59,7 +59,7 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
     if (hasShadow()) {
       float b = shadowBlur, bs = shadowBlur * getDisplayScale();
       int bi = int(ceil(b));
-      auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, ImageFormat::RGBA32);
+      auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
       Style shadow_style = shadowColor;
       float shadow_alpha = shadowColor.alpha;
       shadow_style.color.alpha = 1.0f;
@@ -84,7 +84,7 @@ Context::renderPath(RenderMode mode, const Path & path, const Style & style, Ope
     if (hasShadow()) {
       float b = shadowBlur, bs = shadowBlur * getDisplayScale();
       float bi = int(ceil(b));
-      auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, ImageFormat::RGBA32);
+      auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
       Style shadow_style = shadowColor;
       Path tmp_path = path;
       tmp_path.offset(shadowOffsetX + bi, shadowOffsetY + bi);
@@ -110,10 +110,10 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
     if (hasShadow()) {
       float b = shadowBlur, bs = shadowBlur * getDisplayScale();
       float bi = int(ceil(b));
-      auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, ImageFormat::RGBA32);
+      auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
     
       shadow->drawImage(img, (x + bi + shadowOffsetX) * getDisplayScale(), (y + bi + shadowOffsetY) * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha, 0.0f, 0.0f, 0.0f, shadowColor, imageSmoothingEnabled);
-      shadow->colorFill(shadowColor);
+      // shadow->colorFill(shadowColor);
 #if 1
       shadow->slowBlur(bs, bs);
 #else
@@ -135,10 +135,10 @@ Context::drawImage(const Image & img, double x, double y, double w, double h) {
     if (hasShadow()) {
       float b = shadowBlur, bs = shadowBlur * getDisplayScale();
       float bi = int(ceil(b));
-      auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, ImageFormat::RGBA32);
+      auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
     
       shadow->drawImage(img, (x + bi + shadowOffsetX) * getDisplayScale(), (y + bi + shadowOffsetY) * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha, 0.0f, 0.0f, 0.0f, shadowColor, imageSmoothingEnabled);
-      shadow->colorFill(shadowColor);
+      // shadow->colorFill(shadowColor);
 #if 1
       shadow->slowBlur(bs, bs);
 #else
