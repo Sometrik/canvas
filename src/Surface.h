@@ -27,24 +27,26 @@ namespace canvas {
   public:
     friend class Context;
 
-  Surface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) :      
-      logical_width(_logical_width),
+  Surface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) :      
+    logical_width(_logical_width),
       logical_height(_logical_height),
       actual_width(_actual_width),
       actual_height(_actual_height),
-      has_alpha(_has_alpha) { }
+      format(_format) {
+      }
+    
     Surface(const Surface & other) = delete;
     Surface & operator=(const Surface & other) = delete;
     virtual ~Surface() {
       delete[] scaled_buffer;
     }
 
-    virtual void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) {
+    virtual void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) {
       logical_width = _logical_width;
       logical_height = _logical_height;
       actual_width = _actual_width;
       actual_height = _actual_height;
-      has_alpha = _has_alpha;
+      format = _format;
     }
 
     virtual void flush() { }
@@ -81,7 +83,8 @@ namespace canvas {
     unsigned int getLogicalHeight() const { return logical_height; }
     unsigned int getActualWidth() const { return actual_width; }
     unsigned int getActualHeight() const { return actual_height; }
-    bool hasAlpha() const { return has_alpha; }
+    InternalFormat getFormat() const { return format; }
+    // bool hasAlpha() const { return format == RGBA8 || format == RGBA4; }
 
     void setMagFilter(FilterMode mode) { mag_filter = mode; }
     void setMinFilter(FilterMode mode) { min_filter = mode; }
@@ -101,9 +104,9 @@ namespace canvas {
     unsigned int logical_width, logical_height, actual_width, actual_height;
     FilterMode mag_filter = LINEAR;
     FilterMode min_filter = LINEAR;
+    InternalFormat format;
     InternalFormat target_format = RGBA8;
     unsigned int * scaled_buffer = 0;
-    bool has_alpha;
   };
 };
 
