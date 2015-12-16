@@ -146,68 +146,119 @@ Surface::slowBlur(float hradius, float vradius, float alpha) {
   unsigned char * buffer = (unsigned char *)lockMemory(true);
   assert(buffer);
 
-  unsigned char * tmp = new unsigned char[actual_width * actual_height * 4];
-  if (hradius > 0.0f) {
-    vector<int> hkernel = make_kernel(hradius);
-    unsigned short hsize = hkernel.size();
-    int htotal = 0;
-    for (vector<int>::iterator it = hkernel.begin(); it != hkernel.end(); it++) {
-      htotal += *it;
-    }
-    htotal = int(htotal / alpha);
-    memset(tmp, 0, actual_width * actual_height * 4);
-    for (unsigned int row = 0; row < actual_height; row++) {
-      for (unsigned int col = 0; col + hsize < actual_width; col++) {
-	int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-	for (unsigned int i = 0; i < hsize; i++) {
-	  unsigned char * ptr = buffer + (row * actual_width + col + i) * 4;
-	  c0 += *ptr++ * hkernel[i];
-	  c1 += *ptr++ * hkernel[i];
-	  c2 += *ptr++ * hkernel[i];
-	  c3 += *ptr++ * hkernel[i];
-	}
-	unsigned char * ptr = tmp + (row * actual_width + col + hsize / 2) * 4;
-	*ptr++ = (unsigned char)(c0 / htotal);
-	*ptr++ = (unsigned char)(c1 / htotal);
-	*ptr++ = (unsigned char)(c2 / htotal);
-	*ptr++ = (unsigned char)(c3 / htotal);
+  if (format == RGBA8) {
+    unsigned char * tmp = new unsigned char[actual_width * actual_height * 4];
+    if (hradius > 0.0f) {
+      vector<int> hkernel = make_kernel(hradius);
+      unsigned short hsize = hkernel.size();
+      int htotal = 0;
+      for (vector<int>::iterator it = hkernel.begin(); it != hkernel.end(); it++) {
+	htotal += *it;
       }
-    }
-  } else {
-    memcpy(tmp, buffer, actual_width * actual_height * 4);
-  }
-  if (vradius > 0) {
-    vector<int> vkernel = make_kernel(vradius);
-    unsigned short vsize = vkernel.size();
-    int vtotal = 0;
-    for (vector<int>::iterator it = vkernel.begin(); it != vkernel.end(); it++) {
-      vtotal += *it;
-    }
-    vtotal = int(vtotal / alpha);
-
-    memset(buffer, 0, actual_width * actual_height * 4);
-    for (unsigned int col = 0; col < actual_width; col++) {
-      for (unsigned int row = 0; row + vsize < actual_height; row++) {
-	int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
-	for (unsigned int i = 0; i < vsize; i++) {
-	  unsigned char * ptr = tmp + ((row + i) * actual_width + col) * 4;
-	  c0 += *ptr++ * vkernel[i];
-	  c1 += *ptr++ * vkernel[i];
-	  c2 += *ptr++ * vkernel[i];
-	  c3 += *ptr++ * vkernel[i];
+      htotal = int(htotal / alpha);
+      memset(tmp, 0, actual_width * actual_height * 4);
+      for (unsigned int row = 0; row < actual_height; row++) {
+	for (unsigned int col = 0; col + hsize < actual_width; col++) {
+	  int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
+	  for (unsigned int i = 0; i < hsize; i++) {
+	    unsigned char * ptr = buffer + (row * actual_width + col + i) * 4;
+	    c0 += *ptr++ * hkernel[i];
+	    c1 += *ptr++ * hkernel[i];
+	    c2 += *ptr++ * hkernel[i];
+	    c3 += *ptr++ * hkernel[i];
+	  }
+	  unsigned char * ptr = tmp + (row * actual_width + col + hsize / 2) * 4;
+	  *ptr++ = (unsigned char)(c0 / htotal);
+	  *ptr++ = (unsigned char)(c1 / htotal);
+	  *ptr++ = (unsigned char)(c2 / htotal);
+	  *ptr++ = (unsigned char)(c3 / htotal);
 	}
-	unsigned char * ptr = buffer + ((row + vsize / 2) * actual_width + col) * 4;
-	*ptr++ = (unsigned char)(c0 / vtotal);
-	*ptr++ = (unsigned char)(c1 / vtotal);
-	*ptr++ = (unsigned char)(c2 / vtotal);
-	*ptr++ = (unsigned char)(c3 / vtotal);
       }
+    } else {
+      memcpy(tmp, buffer, actual_width * actual_height * 4);
     }
-  } else {
-    memcpy(buffer, tmp, actual_width * actual_height * 4);
+    if (vradius > 0) {
+      vector<int> vkernel = make_kernel(vradius);
+      unsigned short vsize = vkernel.size();
+      int vtotal = 0;
+      for (vector<int>::iterator it = vkernel.begin(); it != vkernel.end(); it++) {
+	vtotal += *it;
+      }
+      vtotal = int(vtotal / alpha);
+      
+      memset(buffer, 0, actual_width * actual_height * 4);
+      for (unsigned int col = 0; col < actual_width; col++) {
+	for (unsigned int row = 0; row + vsize < actual_height; row++) {
+	  int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
+	  for (unsigned int i = 0; i < vsize; i++) {
+	    unsigned char * ptr = tmp + ((row + i) * actual_width + col) * 4;
+	    c0 += *ptr++ * vkernel[i];
+	    c1 += *ptr++ * vkernel[i];
+	    c2 += *ptr++ * vkernel[i];
+	    c3 += *ptr++ * vkernel[i];
+	  }
+	  unsigned char * ptr = buffer + ((row + vsize / 2) * actual_width + col) * 4;
+	  *ptr++ = (unsigned char)(c0 / vtotal);
+	  *ptr++ = (unsigned char)(c1 / vtotal);
+	  *ptr++ = (unsigned char)(c2 / vtotal);
+	  *ptr++ = (unsigned char)(c3 / vtotal);
+	}
+      }
+    } else {
+      memcpy(buffer, tmp, actual_width * actual_height * 4);
+    }
+    delete[] tmp;
+  } else if (format == R8) {
+    unsigned char * tmp = new unsigned char[actual_width * actual_height];
+    if (hradius > 0.0f) {
+      vector<int> hkernel = make_kernel(hradius);
+      unsigned short hsize = hkernel.size();
+      int htotal = 0;
+      for (vector<int>::iterator it = hkernel.begin(); it != hkernel.end(); it++) {
+	htotal += *it;
+      }
+      htotal = int(htotal / alpha);
+      memset(tmp, 0, actual_width * actual_height);
+      for (unsigned int row = 0; row < actual_height; row++) {
+	for (unsigned int col = 0; col + hsize < actual_width; col++) {
+	  int c0 = 0;
+	  for (unsigned int i = 0; i < hsize; i++) {
+	    unsigned char * ptr = buffer + (row * actual_width + col + i);
+	    c0 += *ptr * hkernel[i];	    
+	  }
+	  unsigned char * ptr = tmp + (row * actual_width + col + hsize / 2);
+	  *ptr = (unsigned char)(c0 / htotal);	  
+	}
+      }
+    } else {
+      memcpy(tmp, buffer, actual_width * actual_height);
+    }
+    if (vradius > 0) {
+      vector<int> vkernel = make_kernel(vradius);
+      unsigned short vsize = vkernel.size();
+      int vtotal = 0;
+      for (vector<int>::iterator it = vkernel.begin(); it != vkernel.end(); it++) {
+	vtotal += *it;
+      }
+      vtotal = int(vtotal / alpha);
+      
+      memset(buffer, 0, actual_width * actual_height);
+      for (unsigned int col = 0; col < actual_width; col++) {
+	for (unsigned int row = 0; row + vsize < actual_height; row++) {
+	  int c0 = 0;
+	  for (unsigned int i = 0; i < vsize; i++) {
+	    unsigned char * ptr = tmp + ((row + i) * actual_width + col);
+	    c0 += *ptr++ * vkernel[i];
+	  }
+	  unsigned char * ptr = buffer + ((row + vsize / 2) * actual_width + col);
+	  *ptr = (unsigned char)(c0 / vtotal);
+	}
+      }
+    } else {
+      memcpy(buffer, tmp, actual_width * actual_height);
+    }
+    delete[] tmp;    
   }
-  delete[] tmp;
-
   releaseMemory();
 }
 
@@ -220,6 +271,7 @@ static inline unsigned char toByte(float f) {
 
 void
 Surface::colorFill(const Color & color) {
+  assert(getFormat() == RGBA8);
   unsigned char * buffer = (unsigned char *)lockMemory(true);
   assert(buffer);
   unsigned int red = toByte(color.red * color.alpha);
@@ -239,6 +291,7 @@ Surface::colorFill(const Color & color) {
 
 void
 Surface::multiply(const Color & color) {
+  assert(getFormat() == RGBA8);
   unsigned char * buffer = (unsigned char *)lockMemory(true);
   assert(buffer);
   unsigned int red = toByte(color.red);
@@ -255,11 +308,22 @@ Surface::multiply(const Color & color) {
   releaseMemory();
 }
 
+static ImageFormat getImageFormat(InternalFormat format) {
+  switch (format) {
+  case RGBA8: return ImageFormat::RGBA32;
+  case RGB8: return ImageFormat::RGB32;
+  case R8: return ImageFormat::LUM8;
+  default:
+    assert(0);
+  }
+}
+
 std::shared_ptr<Image>
 Surface::createImage() {
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
-  shared_ptr<Image> image(new Image(buffer, hasAlpha() ? ImageFormat::RGBA32 : ImageFormat::RGB32, getActualWidth(), getActualHeight()));
+  
+  shared_ptr<Image> image(new Image(buffer, getImageFormat(getFormat()), getActualWidth(), getActualHeight()));
   releaseMemory();
   
   return image;
