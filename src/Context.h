@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 
+#include "InternalFormat.h"
 #include "Color.h"
 #include "Surface.h"
 #include "Image.h"
@@ -39,7 +40,7 @@ namespace canvas {
     virtual ~Context() { }
 
     virtual std::shared_ptr<Surface> createSurface(const Image & image) = 0;
-    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const ImageFormat & _format) = 0;
+    virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const InternalFormat & _format) = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
     virtual void resize(unsigned int _width, unsigned int _height);
         
@@ -156,13 +157,13 @@ namespace canvas {
   public:
     ContextFactory(float _display_scale = 1.0f) : display_scale(_display_scale) { }
     virtual ~ContextFactory() { }
-    virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const ImageFormat & format, bool apply_scaling) = 0;
+    virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const InternalFormat & format, bool apply_scaling) = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
-    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const ImageFormat & format, bool apply_scaling) = 0;
+    virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const InternalFormat & format, bool apply_scaling) = 0;
     virtual std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) = 0;
 
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling) {
-      return createContext(width, height, ImageFormat::RGBA32, apply_scaling);
+      return createContext(width, height, RGBA8, apply_scaling);
     }
 
     std::shared_ptr<Image> createImage(const std::string & filename) {
