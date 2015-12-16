@@ -63,7 +63,7 @@ bool OpenGLTexture::global_init = false;
 
 OpenGLTexture::OpenGLTexture(Surface & surface)
   : Texture(surface.getLogicalWidth(), surface.getLogicalHeight(), surface.getActualWidth(), surface.getActualHeight(), surface.getMinFilter(), surface.getMagFilter(), surface.getTargetFormat(), 1) {
-  
+  assert(getInternalFormat());
   auto image = surface.createImage();
   updateData(*image, 0, 0);
 }
@@ -75,6 +75,8 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case RGB565: return GL_RGB565;
   case RGBA4: return GL_RGBA4;
   case RGBA8: return GL_RGBA8;
+  case RGB8: return GL_RGB8;
+  case RGB8_24: return GL_RGBA8;
   case RED_RGTC1: return GL_COMPRESSED_RED_RGTC1;
   case RG_RGTC2: return GL_COMPRESSED_RG_RGTC2;
   case RGB_ETC1: return GL_COMPRESSED_RGB8_ETC2;
@@ -83,7 +85,9 @@ static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   case LUMINANCE_ALPHA: return GL_RG8;
   case LA44: return GL_R8; // pack luminance and alpha to single byte
   case R32F: return GL_R32F;
+    
   }
+  assert(0);
   return 0;
 }
 
@@ -137,6 +141,7 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     } else if (getInternalFormat() == R32F) {
       glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, current_width, current_height, GL_RED, GL_FLOAT, image.getData() + offset);
     } else {
+      cerr << "unhandled format " << int(getInternalFormat()) << endl;
       assert(0);
     }
     
@@ -287,6 +292,7 @@ OpenGLTexture::releaseTextures() {
 
 TextureRef
 OpenGLTexture::createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels) {
+  assert(_internal_format);
   return TextureRef(_logical_width, _logical_height, _actual_width, _actual_height, new OpenGLTexture(_logical_width, _logical_height, _actual_width, _actual_height, min_filter, mag_filter, _internal_format, mipmap_levels));
 }
 
