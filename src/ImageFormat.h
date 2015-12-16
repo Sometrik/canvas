@@ -45,7 +45,9 @@ namespace canvas {
       DXT1,
       DXT5,
       RGTC1,
-      RGTC2
+      RGTC2,
+      EAC,
+      EAC_SIGNED
     };
     
     ImageFormat(unsigned short _channels, unsigned short _bytes_per_pixel, bool _force_alpha = false, Compression _compression = NO_COMPRESSION)
@@ -77,6 +79,15 @@ namespace canvas {
     unsigned short bytes_per_pixel;
     bool force_alpha;
     Compression compression;
+  };
+
+  class ImageFormatRegistry {
+  public:
+    
+  private:
+    ImageFormatRegistry() {
+
+    }
   };
 };
 
