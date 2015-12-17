@@ -49,6 +49,7 @@ namespace canvas {
 		paintSetShadowMethod = env->GetMethodID(paintClass, "setShadowLayer", "(FFFI)V");
 		canvasBitmapDrawMethod = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;FFLandroid/graphics/Paint;)V");
 		factoryDecodeByteMethod = env->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
+		bitmapCreateScaledMethod = env->GetStaticMethodID(bitmapClass, "createScaledBitmap", "(Landroid/graphics/Bitmap;IIZ)Landroid/graphics/Bitmap;");
 
 		//drawBitmap(Bitmap bitmap, float left, float top, Paint paint)
 
@@ -97,6 +98,7 @@ namespace canvas {
   	jmethodID paintSetShadowMethod;
   	jmethodID canvasBitmapDrawMethod;
   	jmethodID factoryDecodeByteMethod;
+  	jmethodID bitmapCreateScaledMethod;
 
   	jclass rectClass;
     jclass canvasClass;
@@ -122,8 +124,8 @@ namespace canvas {
 
 
 
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const ImageFormat & _format)
-    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format.hasAlpha()) , cache(_cache), env(_env), mgr(_mgr) {
+  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const InternalFormat & _format)
+    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format) , cache(_cache), env(_env), mgr(_mgr) {
 	  // creates an empty canvas
 
 	  // Bitmap.Config conf = Bitmap.Config.ARGB_8888;
@@ -142,11 +144,11 @@ namespace canvas {
   }
   
   AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const Image & image)
-    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha()), cache(_cache), env(_env), mgr(_mgr) {
+    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), InternalFormat::RGBA8), cache(_cache), env(_env), mgr(_mgr) {
 	  // creates a surface with width, height and contents from image
     }
     
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) : Surface(0, 0, 0, 0, false), cache(_cache), env(_env), mgr(_mgr) {
+  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) : Surface(0, 0, 0, 0, InternalFormat::RGBA8), cache(_cache), env(_env), mgr(_mgr) {
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...Surface filename constructor");
@@ -164,32 +166,14 @@ namespace canvas {
 	  bitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, STATUS_ONE, copyBoolean);
 
 	  //Create new Canvas from the mutable bitmap
-	  canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas making is...");
+	  jobject canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
 
 
-
-	  //---------------------DEBUG
-
-			jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
-
-			//Paint.setColor;
-			env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, copyBoolean);
-				env->CallVoidMethod(jpaint, cache->paintSetStyleMethod,
-						env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
-								env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
-
-
-
-	  //env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, firstBitmap, 200.0f, 200.0f, jpaint);
-
-	  jclass testClass = env->FindClass("com/example/work/MyGLSurfaceView");
-	  jmethodID testMethod = env->GetStaticMethodID(testClass, "pleaseDebug", "(Landroid/graphics/Bitmap;)V");
-	  env->CallStaticVoidMethod(testClass, testMethod, bitmap);
-
-	  //testCode();
     }
     
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, false), cache(_cache), env(_env), mgr(_mgr) {
+  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, InternalFormat::RGBA8), cache(_cache), env(_env), mgr(_mgr) {
 	  // creates a surface from raw data
 	  // use this: decodeByteArray(byte[] data, int offset, int length)
 	  // make some wizardry: convert C byte array buffer to Java byte array data
@@ -212,9 +196,11 @@ namespace canvas {
 
     void * lockMemory(bool write_access = false) override {
 
+			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas making is...");
 		uint32_t *pixels;
     	AndroidBitmap_lockPixels(env, bitmap, reinterpret_cast<void **>(&pixels));
 
+    	__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "pixels = %p", pixels);
       return pixels;
     }
     
@@ -342,9 +328,22 @@ namespace canvas {
 
     }
 
-    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) override {
-      Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
+    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat format) override {
+      Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, format);
       // do resize the surface and discard the old data
+
+
+  	//	__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Rezise called");
+  	//	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "logical width = %i", _logical_width);
+  	//	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "logical heigth = %i", _logical_heigth);
+  	//	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "actual width = %i", _actual_width);
+  	//	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "actual heigth = %i", _actual_height);
+
+
+    //  jboolean falseBoolean = JNI_FALSE;
+      bitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, bitmap, _logical_width, _logical_height, JNI_FALSE);
+
+
     }
     
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign,
@@ -416,12 +415,11 @@ namespace canvas {
   		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
   		//__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", jlength);
 
-  	  jbyteArray array = env->NewByteArray(4000);
-  	   env->SetByteArrayRegion (array, 0, 4000, (jbyte*)(buf));
+  	  jbyteArray jarray = env->NewByteArray(length);
+  	   env->SetByteArrayRegion (jarray, 0, length, (jbyte*)(buf));
 
-   		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
-  	   jobject myPic = env->CallObjectMethod(cache->factoryClass, cache->factoryDecodeByteMethod, array, 0, 4000);
-    		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
+
+  	   jobject myPic = env->CallObjectMethod(cache->factoryClass, cache->factoryDecodeByteMethod, jarray, 0, length);
 
 
   				jboolean copyBoolean = JNI_TRUE;
@@ -436,7 +434,14 @@ namespace canvas {
   			//	env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
 
 
-  			env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, bitmap, 200.0f, 200.0f, jpaint);
+  			//env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, myPic, 200.0f, 200.0f, jpaint);
+
+
+  					//DEBUG
+  				  jclass testClass = env->FindClass("com/example/work/MyGLSurfaceView");
+  				  jmethodID testMethod = env->GetStaticMethodID(testClass, "pleaseDebug", "(Landroid/graphics/Bitmap;[BI)V");
+  				  env->CallStaticVoidMethod(testClass, testMethod, myPic, jarray, length);
+
 
 
     }
@@ -489,7 +494,7 @@ namespace canvas {
 
   class ContextAndroid : public Context {
   public:
-  ContextAndroid(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, unsigned int _width, unsigned int _height, const ImageFormat & format, float _display_scale)
+  ContextAndroid(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, unsigned int _width, unsigned int _height, const InternalFormat & format, float _display_scale)
     : Context(_display_scale), cache(_cache), env(_env), mgr(_mgr),
       default_surface(_cache, _env, _mgr,  _width, _height, (unsigned int)(_width * _display_scale), (unsigned int)(_height * _display_scale), format)
       {
@@ -498,7 +503,7 @@ namespace canvas {
     std::shared_ptr<Surface> createSurface(const Image & image) override {
       return std::shared_ptr<Surface>(new AndroidSurface(cache, env, mgr, image));
     }
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const ImageFormat & _format) override {
+    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const InternalFormat & _format) override {
       return std::shared_ptr<Surface>(new AndroidSurface(cache, env, mgr, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _format));
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) override {
@@ -540,14 +545,14 @@ namespace canvas {
   class AndroidContextFactory : public ContextFactory {
   public:
     AndroidContextFactory(JNIEnv * _env, jobject _mgr, float _display_scale = 1.0f) : ContextFactory(_display_scale), cache(_env, _mgr), env(_env), mgr(_mgr) { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const ImageFormat & format, bool apply_scaling = false) override {
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const InternalFormat & format, bool apply_scaling = false) override {
       std::shared_ptr<Context> ptr(new ContextAndroid(&cache, env, mgr, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
       return ptr;
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) override {
       return std::shared_ptr<Surface>(new AndroidSurface(&cache, env, mgr, filename));
     }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const ImageFormat & format, bool apply_scaling) override {
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const InternalFormat & format, bool apply_scaling) override {
       unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
       unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
       std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, env, mgr, width, height, aw, ah, format));
