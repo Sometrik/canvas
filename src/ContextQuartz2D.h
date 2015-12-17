@@ -62,8 +62,8 @@ namespace canvas {
   public:
     friend class ContextQuartz2D;
         
-  Quartz2DSurface(Quartz2DCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const InternalFormat & _format)
-    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format.hasAlpha()), cache(_cache) {
+  Quartz2DSurface(Quartz2DCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format)
+    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format), cache(_cache) {
       if (_actual_width && _actual_height) {
         unsigned int bitmapBytesPerRow = _actual_width * 4;
         unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
@@ -73,7 +73,7 @@ namespace canvas {
   }
   
   Quartz2DSurface(Quartz2DCache * _cache, const Image & image)
-    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha()), cache(_cache) {
+    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha() ? RGBA8 : RGB8), cache(_cache) {
       assert(getActualWidth() && getActualHeight());
       size_t bitmapByteCount = 4 * getActualWidth() * getActualHeight();
       bitmapData = new unsigned char[bitmapByteCount];
@@ -110,8 +110,8 @@ namespace canvas {
 
     void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) override;
 
-    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) override {
-      Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
+    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) override {
+      Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _format);
       
       if (gc) {
 	if (CFGetRetainCount(gc) != 1) std::cerr << "leaking memory E!\n";
@@ -119,7 +119,7 @@ namespace canvas {
         gc = 0;
       }
       delete[] bitmapData;
-
+          
       assert(getActualWidth() && getActualHeight());
       unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
       bitmapData = new unsigned char[bitmapByteCount];
@@ -303,7 +303,7 @@ namespace canvas {
         assert(bitmapData);
         unsigned int bitmapBytesPerRow = getActualWidth() * 4;
         gc = CGBitmapContextCreate(bitmapData, getActualWidth(), getActualHeight(), 8, bitmapBytesPerRow, cache->getColorSpace(),
-                                   (hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
+                                   (getFormat() == RGBA8 ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
         CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
         CGContextSetShouldAntialias(gc, true);
 	flipY();
