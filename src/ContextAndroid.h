@@ -375,8 +375,9 @@ public:
 
 		auto image = _img.createImage();
 		const unsigned char* buf = image->getData();
-			int length = image->calculateSize();
-			jint jlength = image->calculateSize();
+			//int length = image->calculateSize();
+			int length = 100000;
+			//jint jlength = image->calculateSize();
 
 			__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
 			//__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", jlength);
@@ -384,18 +385,21 @@ public:
 			jbyteArray jarray = env->NewByteArray(length);
 			env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
 
-			jobject myPic = env->CallObjectMethod(cache->factoryClass, cache->factoryDecodeByteMethod, jarray, 0, length);
+			jobject STATUS_ONE = env->GetStaticObjectField(cache->clSTATUS, cache->fidONE);
+			jmethodID yoyo = env->GetStaticMethodID(cache->bitmapClass, "createBitmap", "([IIILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
 
-			jboolean copyBoolean = JNI_TRUE;
+			jobject bitmap2 = env->CallObjectMethod(cache->bitmapClass, yoyo, jarray, 100, 100, STATUS_ONE);
+
 			jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
 
-			env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, copyBoolean);
+			env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, JNI_TRUE);
+			env->CallVoidMethod(jpaint, cache->paintSetStyleMethod,
+					env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
+							env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
 
-			env->CallVoidMethod(jpaint, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
 
-
-		//drawImage(_img.createImage(), x, y, w, h, display_scale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, imageSmoothingEnabled);
-
+			env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, bitmap2, 0.0f, 0.0f, jpaint);
+			//drawBitmap(Bitmap bitmap, float left, float top, Paint paint)
 
 	}
 
