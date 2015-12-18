@@ -166,19 +166,13 @@ CairoSurface::sendPath(const Path & path) {
 }
 
 void
-CairoSurface::clip(const Path & path, float display_scale) {
-  sendPath(path);
-  cairo_clip(cr);
-}
-
-void
-CairoSurface::resetClip() {
-  if (cr) cairo_reset_clip(cr);
-}
-
-void
-CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float sadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
+CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float sadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath) {
   initializeContext();
+
+  if (!clipPath.empty()) {
+    sendPath(clipPath);
+    cairo_clip(cr);
+  }
 
   switch (op) {
   case SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
@@ -214,11 +208,19 @@ CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style
     cairo_pattern_destroy(pat);
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
   }
+  if (!clipPath.empty()) {
+    cairo_reset_clip(cr);
+  }
 }
 
 void
-CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
+CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath) {
   initializeContext();
+
+  if (!clipPath.empty()) {
+    sendPath(clipPath);
+    cairo_clip(cr);
+  }
 
   switch (op) {
   case SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
@@ -270,6 +272,10 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
     cairo_show_text(cr, text.c_str());
     break;
   }
+
+  if (!clipPath.empty()) {
+    cairo_reset_clip(cr);
+  }
 }
 
 TextMetrics
@@ -285,8 +291,14 @@ CairoSurface::measureText(const Font & font, const std::string & text, float dis
 }
 
 void
-CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float globalAlpha, bool imageSmoothingEnabled) {
+CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float globalAlpha, const Path & clipPath, bool imageSmoothingEnabled) {
   initializeContext();
+
+  if (!clipPath.empty()) {
+    sendPath(clipPath);
+    cairo_clip(cr);
+  }
+
   double sx = w / img.getActualWidth(), sy = h / img.getActualHeight();
   cairo_save(cr);
   cairo_scale(cr, sx, sy);
@@ -299,34 +311,26 @@ CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w
   }
   cairo_set_source_rgb(cr, 0.0f, 0.0f, 0.0f); // is this needed?
   cairo_restore(cr);
-}
 
-void
-CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled) {
-  CairoSurface * cs_ptr = dynamic_cast<CairoSurface*>(&_img);
-  if (cs_ptr) {
-    drawNativeSurface(*cs_ptr, x, y, w, h, globalAlpha, imageSmoothingEnabled);    
-  } else {
-    auto img = _img.createImage();
-    CairoSurface cs(*img);
-    drawNativeSurface(cs, x, y, w, h, globalAlpha, imageSmoothingEnabled);
+  if (!clipPath.empty()) {
+    cairo_reset_clip(cr);
   }
 }
 
 void
-CairoSurface::drawImage(const Image & _img, double x, double y, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled) {
+CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled) {
+  CairoSurface * cs_ptr = dynamic_cast<CairoSurface*>(&_img);
+  if (cs_ptr) {
+    drawNativeSurface(*cs_ptr, x, y, w, h, globalAlpha, clipPath, imageSmoothingEnabled);    
+  } else {
+    auto img = _img.createImage();
+    CairoSurface cs(*img);
+    drawNativeSurface(cs, x, y, w, h, globalAlpha, clipPath, imageSmoothingEnabled);
+  }
+}
+
+void
+CairoSurface::drawImage(const Image & _img, double x, double y, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled) {
   CairoSurface img(_img);
-  drawNativeSurface(img, x, y, w, h, globalAlpha, imageSmoothingEnabled);
-}
-
-void
-CairoSurface::save() {
-  initializeContext();
-  cairo_save(cr);
-}
-
-void
-CairoSurface::restore() {
-  initializeContext();
-  cairo_restore(cr);
+  drawNativeSurface(img, x, y, w, h, globalAlpha, clipPath, imageSmoothingEnabled);
 }
