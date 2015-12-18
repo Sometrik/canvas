@@ -69,8 +69,8 @@ public:
 		pathClass = env->FindClass("android/graphics/Path");
 		paintStyleClass = env->FindClass("android/graphics/Paint$Style");
 		alignClass = env->FindClass("android/graphics/Paint$Align");
-		clSTATUS = env->FindClass("android/graphics/Bitmap$Config");
-		fidONE = env->GetStaticFieldID(clSTATUS, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
+		bitmapConfigClass = env->FindClass("android/graphics/Bitmap$Config");
+		field_argb_8888 = env->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
 		rectClass = env->FindClass("android/graphics/RectF");
 
 	}
@@ -118,8 +118,8 @@ public:
 	jclass factoryClass;
 	jclass paintStyleClass;
 	jclass alignClass;
-	jclass clSTATUS;
-	jfieldID fidONE;
+	jclass bitmapConfigClass;
+	jfieldID field_argb_8888;
 
 private:
 	JNIEnv * env;
@@ -138,10 +138,10 @@ public:
 		// Bitmap bmp = Bitmap.createBitmap(w, h, conf);
 		// Canvas canvas = new Canvas(bmp);
 
-		jobject STATUS_ONE = env->GetStaticObjectField(cache->clSTATUS, cache->fidONE);
+		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
 
 		//Not Tested
-		bitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, STATUS_ONE);
+		bitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
 
 		//Create new Canvas from the mutable bitmap
 		canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
@@ -166,9 +166,9 @@ public:
 		jobject firstBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod, inputStream);
 
 		//Make bitmap mutable by calling Copy Method with setting isMutable() to true
-		jobject STATUS_ONE = env->GetStaticObjectField(cache->clSTATUS, cache->fidONE);
+		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
 		jboolean copyBoolean = JNI_TRUE;
-		bitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, STATUS_ONE, copyBoolean);
+		bitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, copyBoolean);
 
 		//Create new Canvas from the mutable bitmap
 		jobject canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
@@ -404,8 +404,8 @@ public:
 			jbyteArray jarray = env->NewByteArray(length);
 			env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
 
-			jobject STATUS_ONE = env->GetStaticObjectField(cache->clSTATUS, cache->fidONE);
-			jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), STATUS_ONE);
+			jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+			jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
 
 			// make this paint through createJavaPaint() function
 			jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
@@ -415,7 +415,7 @@ public:
 					env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
 							env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
 
-			env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(Color::BLACK, globalAlpha));
+			//env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(Color::BLACK, globalAlpha));
 
 
 
