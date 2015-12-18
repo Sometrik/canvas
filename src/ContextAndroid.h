@@ -28,6 +28,7 @@ public:
 
 		managerOpenMethod = env->GetMethodID(mgrClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
 		bitmapCreateMethod = env->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+		bitmapCreateMethod2 = env->GetStaticMethodID(bitmapClass, "createBitmap", "([IIILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
 		textAlignMethod = env->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
 		paintSetColorMethod = env->GetMethodID(paintClass, "setColor", "(I)V");
 		paintSetStyleMethod = env->GetMethodID(paintClass, "setStyle", "(Landroid/graphics/Paint$Style;)V");
@@ -84,6 +85,7 @@ public:
 	jmethodID textAlignMethod;
 	jmethodID paintSetColorMethod;
 	jmethodID bitmapCreateMethod;
+	jmethodID bitmapCreateMethod2;
 	jmethodID canvasConstructor;
 	jmethodID managerOpenMethod;
 	jmethodID factoryDecodeMethod;
@@ -373,10 +375,14 @@ public:
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (surface) called");
 
+
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "width = %d", w);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "height = %d", h);
+
 		auto image = _img.createImage();
 		const unsigned char* buf = image->getData();
 			//int length = image->calculateSize();
-			int length = 100000;
+			int length = 10000;
 			//jint jlength = image->calculateSize();
 
 			__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
@@ -386,10 +392,10 @@ public:
 			env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
 
 			jobject STATUS_ONE = env->GetStaticObjectField(cache->clSTATUS, cache->fidONE);
-			jmethodID yoyo = env->GetStaticMethodID(cache->bitmapClass, "createBitmap", "([IIILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+			jobject bitmap2 = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, 100, 100, STATUS_ONE);
 
-			jobject bitmap2 = env->CallObjectMethod(cache->bitmapClass, yoyo, jarray, 100, 100, STATUS_ONE);
 
+			// make this paint through createJavaPaint() function
 			jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
 
 			env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, JNI_TRUE);
