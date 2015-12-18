@@ -54,7 +54,6 @@ public:
 		bitmapGetWidthMethod = env->GetMethodID(bitmapClass, "getWidth", "()I");
 		bitmapGetHeightMethod = env->GetMethodID(bitmapClass, "getHeight", "()I");
 
-
 		//drawBitmap(Bitmap bitmap, float left, float top, Paint paint)
 
 	}
@@ -174,7 +173,7 @@ public:
 		jobject canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
 
 		int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
-		int bitmapHeigth =  env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
+		int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
 		Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
 
 	}
@@ -190,16 +189,13 @@ public:
 		//Create a bitmap from bytearray
 		//Will propably fatal error 11, size probaly needs to be converted for java.
 
-
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
 		int arraySize = size;
 
 		jbyteArray array = env->NewByteArray(arraySize);
 		env->SetByteArrayRegion(array, 0, arraySize, reinterpret_cast<jbyte*>(*buffer));
-		bitmap = env->CallStaticObjectMethod(env->FindClass("android/graphics/BitmapFactory"),
-				env->GetStaticMethodID(env->FindClass("android/graphics/BitmapFactory"), "decodeByteArray", "([BII)Landroid/graphics/Bitmap;"), array, 0, arraySize);
-
+		bitmap = env->CallStaticObjectMethod(env->FindClass("android/graphics/BitmapFactory"), env->GetStaticMethodID(env->FindClass("android/graphics/BitmapFactory"), "decodeByteArray", "([BII)Landroid/graphics/Bitmap;"), array, 0, arraySize);
 
 	}
 
@@ -375,16 +371,14 @@ public:
 
 	void drawImage(Surface & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled = true) override {
 
-
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (surface) called");
 
 		auto image = _img.createImage();
 		drawImage(*image, x, y, w, h, display_scale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, true);
 
-
 	}
 
-	void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor,  const Path & clipPath, bool imageSmoothingEnabled = true) override {
+	void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled = true) override {
 		//_img.getWidth() _img.getHeight()
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (Image) called");
@@ -394,36 +388,30 @@ public:
 
 		const unsigned char* buf = _img.getData();
 
-			//int length = _img->calculateSize();
-			//int length = 10000;
+		//int length = _img->calculateSize();
+		//int length = 10000;
 
-			int length = _img.getWidth() * _img.getHeight() * 4;
+		int length = _img.getWidth() * _img.getHeight() * 4;
 
-			__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
 
-			jbyteArray jarray = env->NewByteArray(length);
-			env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
+		jbyteArray jarray = env->NewByteArray(length);
+		env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
 
-			jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-			jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
+		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+		jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
 
-			// make this paint through createJavaPaint() function
-			jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
+		// make this paint through createJavaPaint() function
+		jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
 
-			env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, JNI_TRUE);
-			env->CallVoidMethod(jpaint, cache->paintSetStyleMethod,
-					env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
-							env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
+		env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, JNI_TRUE);
+		env->CallVoidMethod(jpaint, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
 
-			//env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(Color::BLACK, globalAlpha));
+		//env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(Color::BLACK, globalAlpha));
 
-
-
-			env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, drawableBitmap, 0.0f, 0.0f, jpaint);
+		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, drawableBitmap, 0.0f, 0.0f, jpaint);
 
 	}
-
-
 
 	jobject getBitmap() {
 		return bitmap;
@@ -468,7 +456,6 @@ public:
 	const Surface & getDefaultSurface() const override {
 		return default_surface;
 	}
-
 
 protected:
 	bool hasNativeShadows() const override {
