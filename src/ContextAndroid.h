@@ -51,6 +51,9 @@ public:
 		canvasBitmapDrawMethod = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;FFLandroid/graphics/Paint;)V");
 		factoryDecodeByteMethod = env->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
 		bitmapCreateScaledMethod = env->GetStaticMethodID(bitmapClass, "createScaledBitmap", "(Landroid/graphics/Bitmap;IIZ)Landroid/graphics/Bitmap;");
+		bitmapGetWidthMethod = env->GetMethodID(bitmapClass, "getWidth", "()I");
+		bitmapGetHeightMethod = env->GetMethodID(bitmapClass, "getHeight", "()I");
+
 
 		//drawBitmap(Bitmap bitmap, float left, float top, Paint paint)
 
@@ -103,6 +106,8 @@ public:
 	jmethodID canvasBitmapDrawMethod;
 	jmethodID factoryDecodeByteMethod;
 	jmethodID bitmapCreateScaledMethod;
+	jmethodID bitmapGetWidthMethod;
+	jmethodID bitmapGetHeightMethod;
 
 	jclass rectClass;
 	jclass canvasClass;
@@ -167,6 +172,10 @@ public:
 
 		//Create new Canvas from the mutable bitmap
 		jobject canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
+
+		int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
+		int bitmapHeigth =  env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
+		Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
 
 	}
 
@@ -380,12 +389,15 @@ public:
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (Image) called");
 
-		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "width = %d", w);
-		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "height = %d", h);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "width = %f", w);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "height = %f", h);
 
 		const unsigned char* buf = _img.getData();
+
 			//int length = _img->calculateSize();
-			int length = 10000;
+			//int length = 10000;
+
+			int length = _img.getWidth() * _img.getHeight() * 4;
 
 			__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
 
@@ -393,7 +405,7 @@ public:
 			env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
 
 			jobject STATUS_ONE = env->GetStaticObjectField(cache->clSTATUS, cache->fidONE);
-			jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, 100, 100, STATUS_ONE);
+			jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), STATUS_ONE);
 
 			// make this paint through createJavaPaint() function
 			jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
