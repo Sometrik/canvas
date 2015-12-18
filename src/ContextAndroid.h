@@ -395,7 +395,6 @@ public:
 			jobject STATUS_ONE = env->GetStaticObjectField(cache->clSTATUS, cache->fidONE);
 			jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, 100, 100, STATUS_ONE);
 
-
 			// make this paint through createJavaPaint() function
 			jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
 
@@ -403,6 +402,9 @@ public:
 			env->CallVoidMethod(jpaint, cache->paintSetStyleMethod,
 					env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"),
 							env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
+
+			env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(Color::BLACK, globalAlpha));
+
 
 
 			env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, drawableBitmap, 0.0f, 0.0f, jpaint);
@@ -465,28 +467,11 @@ public:
 		return default_surface;
 	}
 
-//    Context & drawImage(const Image & img, double x, double y, double w, double h) override {
-//      return *this;
-//    }
-//
-//    Context & drawImage(Surface & img, double x, double y, double w, double h) override {
-//      return *this;
-//    }
 
 protected:
 	bool hasNativeShadows() const override {
 		return true;
 	}
-
-	//   Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override {
-//
-//   	return *this;
-//    }
-	//
-//    Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) override {
-//
-	//   	return *this;
-	//   }
 
 private:
 	AndroidCache * cache;
