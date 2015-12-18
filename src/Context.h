@@ -13,10 +13,10 @@
 namespace canvas {
   class Context;
   
-  class SavedContext {
+  class GraphicsState {
   public:
     friend class Context;
-    SavedContext(const Context & context);
+    GraphicsState(const Context & context);
  
   private:
     float globalAlpha;
@@ -24,7 +24,7 @@ namespace canvas {
     float shadowBlur;
     Color shadowColor;
     float shadowOffsetX, shadowOffsetY;
-    Path currentPath;
+    Path currentPath, clipPath;
     float lineWidth;
     Style fillStyle, strokeStyle;
     Font font;
@@ -51,7 +51,6 @@ namespace canvas {
     Context & lineTo(double x, double y) { currentPath.lineTo(x, y); return *this; }
     Context & arcTo(double x1, double y1, double x2, double y2, double radius) { currentPath.arcTo(x1, y1, x2, y2, radius); return *this; }
     Context & rect(double x, double y, double w, double h) { currentPath.rect(x, y, w, h); return *this; }
-    Context & resetClip() { getDefaultSurface().resetClip(); return *this; }
     Context & stroke() { return renderPath(STROKE, currentPath, strokeStyle); }
     Context & stroke(const Path & path) { return renderPath(STROKE, path, strokeStyle); }
     Context & fill() { return renderPath(FILL, currentPath, fillStyle); }
@@ -60,8 +59,12 @@ namespace canvas {
     Context & restore();
 
     Context & clip() {
-      getDefaultSurface().clip(currentPath, getDisplayScale());
+      clipPath = currentPath;
       currentPath.clear();
+      return *this;
+    }
+    Context & resetClip() {
+      clipPath.clear();
       return *this;
     }
     
@@ -125,18 +128,18 @@ namespace canvas {
     TextBaseline textBaseline;
     TextAlign textAlign;
     bool imageSmoothingEnabled = true;
-    Path currentPath;
+    Path currentPath, clipPath;
     
   protected:
-    virtual Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op = SOURCE_OVER);
-    virtual Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
+    Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op = SOURCE_OVER);
+    Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
     virtual bool hasNativeShadows() const { return false; }
 
     bool hasShadow() const { return shadowBlur > 0.0f || shadowOffsetX != 0 || shadowOffsetY != 0; }
     
   private:
     Style current_linear_gradient;
-    std::vector<SavedContext> restore_stack;
+    std::vector<GraphicsState> restore_stack;
     float display_scale;
     std::vector<HitRegion> hit_regions;
   };
