@@ -8,7 +8,7 @@ using namespace canvas;
 using namespace std;
 
 Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & filename)
-  : Surface(0, 0, 0, 0, true), cache(_cache) {
+  : Surface(0, 0, 0, 0, RGBA8), cache(_cache) {
   CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
   CGImageRef img;
   if (filename.size() >= 4 && filename.compare(filename.size() - 4, 4, ".png") == 0) {
@@ -22,7 +22,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
   }
   if (img) {
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
-    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha);
+    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha ? RGBA8 : RGB8);
     unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
@@ -34,7 +34,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
     CGImageRelease(img);
     flipY();
   } else {
-    Surface::resize(16, 16, 16, 16, true);
+    Surface::resize(16, 16, 16, 16, RGBA8);
     unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
@@ -43,7 +43,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
   CGDataProviderRelease(provider);
 }
 
-Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, true), cache(_cache) {
+Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, RGBA8), cache(_cache) {
   CGImageRef img = 0;
   CGDataProviderRef provider = 0;
   if (isPNG(buffer, size)) {
@@ -76,7 +76,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
   }
   if (img) {
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
-    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha);
+    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha ? RGBA8 : RGB8);
     unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
@@ -86,7 +86,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
     flipY();
   } else {
-    Surface::resize(16, 16, 16, 16, true);
+    Surface::resize(16, 16, 16, 16, RGBA8);
     unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
