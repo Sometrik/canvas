@@ -128,6 +128,7 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
 
     if (getInternalFormat() == RGBA8) {
+      assert(image.getData());
 #if defined __APPLE__ || defined ANDROID 
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
 #else
