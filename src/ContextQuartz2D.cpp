@@ -52,7 +52,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
   } else if (isJPEG(buffer, size)) {
     provider = CGDataProviderCreateWithData(0, buffer, size, 0);
     img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-  } else if (isGIF(buffer, size)) {
+  } else if (isGIF(buffer, size) || isBMP(buffer, size)) {
     CFDataRef data = CFDataCreate(0, buffer, size);
     CFStringRef keys[3] = { kCGImageSourceShouldCache, kCGImageSourceCreateThumbnailFromImageIfAbsent, kCGImageSourceCreateThumbnailFromImageAlways };
     CFTypeRef values[3] = { kCFBooleanFalse, kCFBooleanFalse, kCFBooleanFalse };
@@ -64,9 +64,9 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     CFRelease(isrc);
     if (CFGetRetainCount(options) != 1) cerr << "leaking memory 4!\n";
     CFRelease(options);
-    int data_retain = CFGetRetainCount(data);
+    long data_retain = CFGetRetainCount(data);
     if (data_retain != 1) cerr << "leaking memory 5 (" << data_retain << ")!\n";
-    CFRelease(data);    
+    CFRelease(data);
   } else if (isXML(buffer, size)) {
     cerr << "trying to render XML/HTML" << endl;
     assert(0);
@@ -116,12 +116,18 @@ Quartz2DSurface::sendPath(const Path & path, float scale) {
 }
 
 void
-Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
+Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath) {
   initializeContext();
 
   bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
+  if (has_shadow || !clipPath.empty()) {
+    CGContextSaveGState(gc);
+  }
+  if (!clipPath.empty()) {
+    sendPath(clipPath, display_scale);
+    CGContextClip(gc);
+  }
   if (has_shadow) {
-    save();
     setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, display_scale);
   }
   
@@ -160,8 +166,9 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
 	
 	CGGradientRef myGradient = CGGradientCreateWithColorComponents(cache->getColorSpace(), components, locations, num_locations);
 	
-	save();
-	clip(path, display_scale);
+        CGContextSaveGState(gc);
+        sendPath(path, display_scale);
+        CGContextClip(gc);
 	
 	CGPoint myStartPoint, myEndPoint;
 	myStartPoint.x = style.x0 * display_scale;
@@ -169,7 +176,8 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
 	myEndPoint.x = style.x1 * display_scale;
 	myEndPoint.y = style.y1 * display_scale;
 	CGContextDrawLinearGradient(gc, myGradient, myStartPoint, myEndPoint, 0);
-	restore();
+	
+        CGContextRestoreGState(gc);
 
 	if (CFGetRetainCount(myGradient) != 1) cerr << "leaking memory 7!\n";
 	CGGradientRelease(myGradient);
@@ -186,7 +194,7 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & st
   if (op != SOURCE_OVER) {
     CGContextSetBlendMode(gc, kCGBlendModeNormal);
   }
-  if (has_shadow) {
-    restore();
+  if (has_shadow || !clipPath.empty()) {
+    CGContextRestoreGState(gc);
   }
 }
