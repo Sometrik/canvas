@@ -94,6 +94,7 @@ namespace canvas {
     static bool isPNG(const unsigned char * buffer, size_t size);
     static bool isJPEG(const unsigned char * buffer, size_t size);
     static bool isGIF(const unsigned char * buffer, size_t size);
+    static bool isBMP(const unsigned char * buffer, size_t size);
     static bool isXML(const unsigned char * buffer, size_t size);
 
   private:

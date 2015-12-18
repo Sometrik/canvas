@@ -363,6 +363,11 @@ Surface::isGIF(const unsigned char * buffer, size_t size) {
 }
 
 bool
+Surface::isBMP(const unsigned char * buffer, size_t size) {
+  return size > 2 && buffer[0] == 0x42 && buffer[1] == 0x4d;
+}
+
+bool
 Surface::isXML(const unsigned char * buffer, size_t size) {
   return size >= 6 && buffer[0] == '<' && buffer[1] == '!' && buffer[2] == 'D' && buffer[3] == 'O' && buffer[4] == 'C' && buffer[5] == 'T';
 }
