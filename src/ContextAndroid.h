@@ -373,17 +373,28 @@ public:
 
 	void drawImage(Surface & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
 
+
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (surface) called");
 
+		auto image = _img.createImage();
+		drawImage(*image, x, y, w, h, display_scale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, true);
+
+
+	}
+
+	void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
+		//_img.getWidth() _img.getHeight()
+		// static Bitmap 	createBitmap(DisplayMetrics display, int[] colors, int width, int height, Bitmap.Config config)
+
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (Image) called");
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "width = %d", w);
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "height = %d", h);
 
-		auto image = _img.createImage();
-		const unsigned char* buf = image->getData();
-			//int length = image->calculateSize();
+		const unsigned char* buf = _img.getData();
+			//int length = _img->calculateSize();
 			int length = 10000;
-			//jint jlength = image->calculateSize();
+			//jint jlength = _img->calculateSize();
 
 			__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
 			//__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", jlength);
@@ -406,43 +417,6 @@ public:
 
 			env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, bitmap2, 0.0f, 0.0f, jpaint);
 			//drawBitmap(Bitmap bitmap, float left, float top, Paint paint)
-
-	}
-
-	void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, bool imageSmoothingEnabled = true) override {
-		//_img.getWidth() _img.getHeight()
-		// static Bitmap 	createBitmap(DisplayMetrics display, int[] colors, int width, int height, Bitmap.Config config)
-
-		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (Image) called");
-
-
-		const unsigned char* buf = _img.getData();
-		int length = _img.calculateSize();
-		jint jlength = _img.calculateSize();
-
-		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
-		//__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", jlength);
-
-		jbyteArray jarray = env->NewByteArray(length);
-		env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
-
-		jobject myPic = env->CallObjectMethod(cache->factoryClass, cache->factoryDecodeByteMethod, jarray, 0, length);
-
-		jboolean copyBoolean = JNI_TRUE;
-		jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
-
-		env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, copyBoolean);
-
-		env->CallVoidMethod(jpaint, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
-
-		//	env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
-
-		//env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, myPic, 200.0f, 200.0f, jpaint);
-
-		//DEBUG
-		//jclass testClass = env->FindClass("com/example/work/MyGLSurfaceView");
-		//jmethodID testMethod = env->GetStaticMethodID(testClass, "pleaseDebug", "(Landroid/graphics/Bitmap;[BI)V");
-		//env->CallStaticVoidMethod(testClass, testMethod, myPic, jarray, length);
 
 	}
 
