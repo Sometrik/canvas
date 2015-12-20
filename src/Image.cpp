@@ -13,6 +13,7 @@ bool Image::etc1_initialized = false;
 
 Image::Image(const ImageFormat & _format, unsigned int _width, unsigned int _height, unsigned int _levels) : width(_width), height(_height), levels(_levels), format(_format) {
   size_t s = calculateSize();
+  
   data = new unsigned char[s];
   if (format.getCompression() == ImageFormat::ETC1) {
     for (unsigned int i = 0; i < s; i += 8) {
@@ -23,6 +24,18 @@ Image::Image(const ImageFormat & _format, unsigned int _width, unsigned int _hei
     for (unsigned int i = 0; i < s; i += 8) {
       *(unsigned int *)(data + i + 0) = 0x00000000;
       *(unsigned int *)(data + i + 4) = 0xaaaaaaaa;
+    }
+  } else if (format.getCompression() == ImageFormat::RGTC1) {
+    for (unsigned int i = 0; i < s; i += 8) {
+      *(unsigned int *)(data + i + 0) = 0x00000003; // doesn't work on big endian
+      *(unsigned int *)(data + i + 4) = 0x00000000;
+    }
+  } else if (format.getCompression() == ImageFormat::RGTC2) {
+    for (unsigned int i = 0; i < s; i += 16) {
+      *(unsigned int *)(data + i + 0) = 0x00000003;
+      *(unsigned int *)(data + i + 4) = 0x00000000;
+      *(unsigned int *)(data + i + 4) = 0x00000003;
+      *(unsigned int *)(data + i + 8) = 0x00000000;
     }
   } else if (!format.getCompression()) {
     cerr << "clearing memory for " << s << " bytes\n";
@@ -37,7 +50,7 @@ Image::convert(const ImageFormat & target_format) const {
   assert(format.getBytesPerPixel() == 4);
   assert(!format.getCompression());
 
-  if (target_format.getCompression() == ImageFormat::DXT1 || target_format.getCompression() == ImageFormat::ETC1 || target_format.getCompression() == ImageFormat::RGTC2) {
+  if (target_format.getCompression() == ImageFormat::DXT1 || target_format.getCompression() == ImageFormat::ETC1 || target_format.getCompression() == ImageFormat::RGTC1 || target_format.getCompression() == ImageFormat::RGTC2) {
     rg_etc1::etc1_pack_params params;
     params.m_quality = rg_etc1::cLowQuality;
     if (target_format.getCompression() == ImageFormat::ETC1 && !etc1_initialized) {
@@ -50,7 +63,7 @@ Image::convert(const ImageFormat & target_format) const {
     unsigned int target_width = width, target_height = height;
     unsigned int target_size = calculateSize(target_width, target_height, levels, target_format);
     std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
-    unsigned char input_block[4*4*4];
+    unsigned char input_block[4*4*8];
     unsigned int target_offset = 0;
     for (unsigned int level = 0; level < levels; level++) {
       unsigned int rows = (target_height + 3) / 4, cols = (target_width + 3) / 4;
@@ -73,10 +86,13 @@ Image::convert(const ImageFormat & target_format) const {
 		input_block[offset++] = data[source_offset + 1];
 		input_block[offset++] = data[source_offset + 0];
 		input_block[offset++] = 255; // data[source_offset++];
+	      } else if (target_format.getCompression() == ImageFormat::RGTC1) {
+		int offset = y * 4 + x;
+		input_block[offset] = data[source_offset + 0];		
 	      } else {
-		int offset = (y * 4 + x) * 2;
-		input_block[offset++] = data[source_offset + 0];
-		input_block[offset++] = data[source_offset + 3];
+		int offset = y * 4 + x;
+		input_block[offset] = data[source_offset + 0];
+		input_block[offset + 16] = data[source_offset + 3];
 	      }
 	    }
 	  }
@@ -86,8 +102,11 @@ Image::convert(const ImageFormat & target_format) const {
 	  } else if (target_format.getCompression() == ImageFormat::DXT1) {
 	    stb_compress_dxt1_block(output_data.get() + target_offset, &(input_block[0]), false, 0);
 	    target_offset += 8;
+	  } else if (target_format.getCompression() == ImageFormat::RGTC1) {
+	    stb_compress_rgtc1_block(output_data.get() + target_offset, &(input_block[0]));
+	    target_offset += 8;
 	  } else {
-	    stb_compress_rgtc_block(output_data.get() + target_offset, &(input_block[0]));
+	    stb_compress_rgtc2_block(output_data.get() + target_offset, &(input_block[0]));
 	    target_offset += 16;
 	  }
 	}
