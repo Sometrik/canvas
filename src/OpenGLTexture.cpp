@@ -191,6 +191,9 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       } else if (getInternalFormat() == RGB_DXT1) {
 	Image img(ImageFormat::RGB_DXT1, getActualWidth(), getActualHeight(), levels);
 	updateCompressedData(img, 0, 0);	
+      } else if (getInternalFormat() == RED_RGTC1) {
+	Image img(ImageFormat::RED_RGTC1, getActualWidth(), getActualHeight(), levels);
+	updateCompressedData(img, 0, 0);
       } else if (getInternalFormat() == RGBA8) {
 	Image img(ImageFormat::RGBA32, getActualWidth(), getActualHeight(), levels);
 	updatePlainData(img, 0, 0);
@@ -245,6 +248,14 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     } else {
       cerr << "WARNING: compression should be done in thread\n";
       auto tmp_image = image.convert(ImageFormat::RGB_DXT1);
+      updateCompressedData(*tmp_image, x, y);
+    }    
+  } else if (getInternalFormat() == RED_RGTC1) {
+    if (image.getFormat().getCompression() == ImageFormat::RGTC1) {
+      updateCompressedData(image, x, y);
+    } else {
+      cerr << "WARNING: compression should be done in thread\n";
+      auto tmp_image = image.convert(ImageFormat::RED_RGTC1);
       updateCompressedData(*tmp_image, x, y);
     }    
   } else if (getInternalFormat() == RG_RGTC2) {
