@@ -36,6 +36,7 @@ namespace canvas {
     static ImageFormat RGB_ETC1;
     static ImageFormat RGB_DXT1;
     static ImageFormat RGBA_DXT5;
+    static ImageFormat RED_RGTC1;
     static ImageFormat RG_RGTC2;
     static ImageFormat FLOAT32;
 
