@@ -543,152 +543,106 @@ static inline void stb__CompressAlphaBlock(unsigned char *dest,unsigned char *sr
 }
 
 // Red block compression (this is easy for a change)
-static inline void stb__CompressRedBlock(unsigned char *dest,unsigned char *src) {
-   int i,dist,bias,dist4,dist2,bits,mask;
-
-   // find min/max color
-   int mn,mx;
-   mn = mx = src[0];
-
-   for (i=1;i<16;i++)
-   {
-      if (src[i*2+0] < mn) mn = src[i*2+0];
-      else if (src[i*2+0] > mx) mx = src[i*2+0];
-   }
-
-   // encode them
-   ((unsigned char *)dest)[0] = mx;
-   ((unsigned char *)dest)[1] = mn;
-   dest += 2;
-
-   // determine bias and emit color indices
-   // given the choice of mx/mn, these indices are optimal:
-   // http://fgiesen.wordpress.com/2009/12/15/dxt5-alpha-block-index-determination/
-   dist = mx-mn;
-   dist4 = dist*4;
-   dist2 = dist*2;
-   bias = (dist < 8) ? (dist - 1) : (dist/2 + 2);
-   bias -= mn * 7;
-   bits = 0,mask=0;
-   
-   for (i=0;i<16;i++) {
-      int a = src[i*2+0]*7 + bias;
-      int ind,t;
-
-      // select index. this is a "linear scale" lerp factor between 0 (val=min) and 7 (val=max).
-      t = (a >= dist4) ? -1 : 0; ind =  t & 4; a -= dist4 & t;
-      t = (a >= dist2) ? -1 : 0; ind += t & 2; a -= dist2 & t;
-      ind += (a >= dist);
-      
-      // turn linear scale into DXT index (0/1 are extremal pts)
-      ind = -ind & 7;
-      ind ^= (2 > ind);
-
-      // write index
-      mask |= ind << bits;
-      if((bits += 3) >= 8) {
-         *dest++ = mask;
-         mask >>= 8;
-         bits -= 8;
-      }
-   }
-}
-
-// Red block compression (this is easy for a change)
-static inline void stb__CompressGreenBlock(unsigned char *dest,unsigned char *src) {
-   int i,dist,bias,dist4,dist2,bits,mask;
-
-   // find min/max color
-   int mn,mx;
-   mn = mx = src[1];
-
-   for (i=1;i<16;i++)
-   {
-      if (src[i*2+1] < mn) mn = src[i*2+1];
-      else if (src[i*2+1] > mx) mx = src[i*2+1];
-   }
-
-   // encode them
-   ((unsigned char *)dest)[0] = mx;
-   ((unsigned char *)dest)[1] = mn;
-   dest += 2;
-
-   // determine bias and emit color indices
-   // given the choice of mx/mn, these indices are optimal:
-   // http://fgiesen.wordpress.com/2009/12/15/dxt5-alpha-block-index-determination/
-   dist = mx-mn;
-   dist4 = dist*4;
-   dist2 = dist*2;
-   bias = (dist < 8) ? (dist - 1) : (dist/2 + 2);
-   bias -= mn * 7;
-   bits = 0,mask=0;
-   
-   for (i=0;i<16;i++) {
-      int a = src[i*2+1]*7 + bias;
-      int ind,t;
-
-      // select index. this is a "linear scale" lerp factor between 0 (val=min) and 7 (val=max).
-      t = (a >= dist4) ? -1 : 0; ind =  t & 4; a -= dist4 & t;
-      t = (a >= dist2) ? -1 : 0; ind += t & 2; a -= dist2 & t;
-      ind += (a >= dist);
-      
-      // turn linear scale into DXT index (0/1 are extremal pts)
-      ind = -ind & 7;
-      ind ^= (2 > ind);
-
-      // write index
-      mask |= ind << bits;
-      if((bits += 3) >= 8) {
-         *dest++ = mask;
-         mask >>= 8;
-         bits -= 8;
-      }
-   }
+static inline void stb__CompressRGTCBlock(unsigned char *dest, unsigned char *src) {
+  int i,dist,bias,dist4,dist2,bits,mask;
+  
+  // find min/max color
+  int mn,mx;
+  mn = mx = src[0];
+  
+  for (i=1;i<16;i++) {
+    if (src[i] < mn) mn = src[i];
+    else if (src[i] > mx) mx = src[i];
+  }
+  
+  // encode them
+  ((unsigned char *)dest)[0] = mx;
+  ((unsigned char *)dest)[1] = mn;
+  dest += 2;
+  
+  // determine bias and emit color indices
+  // given the choice of mx/mn, these indices are optimal:
+  // http://fgiesen.wordpress.com/2009/12/15/dxt5-alpha-block-index-determination/
+  dist = mx-mn;
+  dist4 = dist*4;
+  dist2 = dist*2;
+  bias = (dist < 8) ? (dist - 1) : (dist/2 + 2);
+  bias -= mn * 7;
+  bits = 0,mask=0;
+  
+  for (i=0;i<16;i++) {
+    int a = src[i*2+0]*7 + bias;
+    int ind,t;
+    
+    // select index. this is a "linear scale" lerp factor between 0 (val=min) and 7 (val=max).
+    t = (a >= dist4) ? -1 : 0; ind =  t & 4; a -= dist4 & t;
+    t = (a >= dist2) ? -1 : 0; ind += t & 2; a -= dist2 & t;
+    ind += (a >= dist);
+    
+    // turn linear scale into DXT index (0/1 are extremal pts)
+    ind = -ind & 7;
+    ind ^= (2 > ind);
+    
+    // write index
+    mask |= ind << bits;
+    if((bits += 3) >= 8) {
+      *dest++ = mask;
+      mask >>= 8;
+      bits -= 8;
+    }
+  }
 }
 
 static void stb__InitDXT() {
-   int i;
-   for(i=0;i<32;i++)
-      stb__Expand5[i] = (i<<3)|(i>>2);
-
-   for(i=0;i<64;i++)
-      stb__Expand6[i] = (i<<2)|(i>>4);
-
-   for(i=0;i<256+16;i++)
-   {
-      int v = i-8 < 0 ? 0 : i-8 > 255 ? 255 : i-8;
-      stb__QuantRBTab[i] = stb__Expand5[stb__Mul8Bit(v,31)];
-      stb__QuantGTab[i] = stb__Expand6[stb__Mul8Bit(v,63)];
-   }
-
-   stb__PrepareOptTable(&stb__OMatch5[0][0],stb__Expand5,32);
-   stb__PrepareOptTable(&stb__OMatch6[0][0],stb__Expand6,64);
+  int i;
+  for(i=0;i<32;i++)
+    stb__Expand5[i] = (i<<3)|(i>>2);
+  
+  for(i=0;i<64;i++)
+    stb__Expand6[i] = (i<<2)|(i>>4);
+  
+  for(i=0;i<256+16;i++) {
+    int v = i-8 < 0 ? 0 : i-8 > 255 ? 255 : i-8;
+    stb__QuantRBTab[i] = stb__Expand5[stb__Mul8Bit(v,31)];
+    stb__QuantGTab[i] = stb__Expand6[stb__Mul8Bit(v,63)];
+  }
+  
+  stb__PrepareOptTable(&stb__OMatch5[0][0],stb__Expand5,32);
+  stb__PrepareOptTable(&stb__OMatch6[0][0],stb__Expand6,64);
 }
 
 static int init=1;
 
 void stb_compress_dxt1_block(unsigned char *dest, const unsigned char *src, bool alpha, int mode) {
-   if (init) {
-      stb__InitDXT();
-      init=0;
-   }
-
-   if (alpha) {
-      stb__CompressAlphaBlock(dest,(unsigned char*) src,mode);
-      dest += 8;
-   }
-
-   stb__CompressColorBlock(dest,(unsigned char*) src,mode);
-}
-
-void stb_compress_rgtc_block(unsigned char *dest, const unsigned char *src) {
   if (init) {
     stb__InitDXT();
     init=0;
   }
   
-  stb__CompressRedBlock(dest, (unsigned char*) src);
+  if (alpha) {
+    stb__CompressAlphaBlock(dest,(unsigned char*) src,mode);
+    dest += 8;
+  }
+  
+  stb__CompressColorBlock(dest,(unsigned char*) src,mode);
+}
+
+void stb_compress_rgtc1_block(unsigned char *dest, const unsigned char *src) {
+  if (init) {
+    stb__InitDXT();
+    init = 0;
+  } 
+  stb__CompressRGTCBlock(dest, (unsigned char*) src);
+}
+
+void stb_compress_rgtc2_block(unsigned char *dest, const unsigned char *src) {
+  if (init) {
+    stb__InitDXT();
+    init=0;
+  }
+
+  stb__CompressRGTCBlock(dest, (unsigned char*) src);
   dest += 8;
-  stb__CompressGreenBlock(dest, (unsigned char*) src);
+  stb__CompressRGTCBlock(dest, (unsigned char*) src + 256);
   dest += 8;   
 }
