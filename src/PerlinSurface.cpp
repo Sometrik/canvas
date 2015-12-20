@@ -1,4 +1,4 @@
-#include "PerlinSurface.h"
+#include <PerlinSurface.h>
 
 using namespace std;
 using namespace canvas;

@@ -1,8 +1,8 @@
-#include "OpenGLTexture.h"
+#include <OpenGLTexture.h>
 
-#include "TextureRef.h"
-#include "Image.h"
-#include "Surface.h"
+#include <TextureRef.h>
+#include <Image.h>
+#include <Surface.h>
 
 #define GL_GLEXT_PROTOTYPES
 
