@@ -79,6 +79,7 @@ namespace canvas {
     }
 
     bool empty() const { return data.empty(); }
+    bool isInside(float x, float y) const;
     
   private:
     std::vector<PathComponent> data;

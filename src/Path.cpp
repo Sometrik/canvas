@@ -1,6 +1,7 @@
 #include <Path.h>
 
 #include <cmath>
+#include <glm/glm.hpp>
 
 using namespace canvas;
 
@@ -93,4 +94,54 @@ Path::rect(double x, double y, double w, double h) {
   lineTo(x + w, y + h);
   lineTo(x, y + h); 
   closePath();
+}
+
+static inline float determinant(float x1, float y1, float x2, float y2) {
+  return x1 * y2 - x2 * y1;
+}
+
+// returns vector cross product of vectors p1p2 and p1p3 using Cramer's rule
+static inline float crossProduct(const glm::vec2 & p1, const glm::vec2 & p2, const glm::vec2 & p3) {
+  float det_p2p3 = determinant(p2.x, p2.y, p3.x, p3.y);
+  float det_p1p3 = determinant(p1.x, p1.y, p3.x, p3.y);
+  float det_p1p2 = determinant(p1.x, p1.y, p2.x, p2.y);
+  return det_p2p3 - det_p1p3 + det_p1p2;
+}
+
+// The winding number method has been used here. It counts the number
+// of times a polygon winds around the point.  If the result is 0, the
+// points is outside the polygon.
+bool
+Path::isInside(float x, float y) const {
+  glm::vec2 point(x, y);
+  int wn = 0;
+  for (unsigned int i = 0; i < data.size(); i++) {
+    glm::vec2 v1;
+    if (i == 0) {
+      v1 = glm::vec2( (float)data.back().x0, (float)data.back().y0 );	  
+    } else {
+      v1 = glm::vec2( (float)data[i - 1].x0, (float)data[i - 1].y0 );	  
+    }
+    glm::vec2 v2( (float)data[i].x0, (float)data[i].y0 );
+    if (v1.y <= point.y) { // start y <= P.y
+      if (v2.y > point.y) { // an upward crossing
+	if (crossProduct(v1, v2, point) > 0) {
+	  // point left of edge
+	  wn++; // have a valid up intersect
+	}
+      }
+    } else { // start y > P.y (no test needed)
+      if (v2.y <= point.y) { // a downward crossing
+	if (crossProduct(v1, v2, point) < 0) {
+	  // point right of edge
+	  wn--; // have a valid down intersect
+	}
+      }
+    }
+  }
+  
+  bool is_inside = wn != 0 ? true : false;
+  
+  // fprintf(stderr, "inside test for polygon %Ld: %s\n", id, is_inside ? "true" : "false" );
+  return is_inside;
 }
