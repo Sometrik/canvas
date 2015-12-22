@@ -36,6 +36,7 @@ public:
 		paintSetStrokeJoinMethod = env->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V");
 		canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
 		factoryDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
+		//factoryDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory/Options;)Landroid/graphics$Bitmap;");
 		bitmapCopyMethod = env->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
 		paintConstructor = env->GetMethodID(paintClass, "<init>", "()V");
 		paintSetAntiAliasMethod = env->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
@@ -169,6 +170,11 @@ public:
 		//Get inputStream from the picture(filename)
 		jobject inputStream = env->CallObjectMethod(mgr, cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
 
+		//Create BitmapFactory options to make the created bitmap mutable straight away
+		//jobject factoryOptions = env->NewObject(cache->bitmapOptionsClass, cache->bitmapOptionsConstructor);
+		//jboolean inMutable = env->GetBooleanField(factoryOptions, cache->optionsMutableField);
+		//inMutable = JNI_TRUE;
+
 		//Create a bitmap from the inputStream
 		jobject firstBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod, inputStream);
 
@@ -182,7 +188,6 @@ public:
 		int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
 		int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
 		Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
-
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) :
