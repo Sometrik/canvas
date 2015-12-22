@@ -108,7 +108,14 @@ namespace canvas {
       }
       return *this;
     }
-
+    const HitRegion & getHitRegion(float x, float y) const {
+      for (auto & r : hit_regions) {
+	if (r.isInside(x, y)) return r;
+      }
+      return null_region;
+    }
+    const std::vector<HitRegion> & getHitRegions() const { return hit_regions; }
+    
 #if 0
     Style & createPattern(const Image & image, const char * repeat) {
       
@@ -142,6 +149,7 @@ namespace canvas {
     std::vector<GraphicsState> restore_stack;
     float display_scale;
     std::vector<HitRegion> hit_regions;
+    HitRegion null_region;
   };
   
   class FilenameConverter {
