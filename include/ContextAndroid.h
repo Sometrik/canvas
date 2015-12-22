@@ -36,6 +36,7 @@ public:
 		paintSetStrokeJoinMethod = env->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V");
 		canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
 		factoryDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
+		//factoryDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory/Options;)Landroid/graphics$Bitmap;");
 		bitmapCopyMethod = env->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
 		paintConstructor = env->GetMethodID(paintClass, "<init>", "()V");
 		paintSetAntiAliasMethod = env->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
@@ -53,6 +54,9 @@ public:
 		bitmapCreateScaledMethod = env->GetStaticMethodID(bitmapClass, "createScaledBitmap", "(Landroid/graphics/Bitmap;IIZ)Landroid/graphics/Bitmap;");
 		bitmapGetWidthMethod = env->GetMethodID(bitmapClass, "getWidth", "()I");
 		bitmapGetHeightMethod = env->GetMethodID(bitmapClass, "getHeight", "()I");
+		bitmapOptionsConstructor = env->GetMethodID(bitmapOptionsClass, "<init>", "()V");
+
+		optionsMutableField = env->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
 
 		//drawBitmap(Bitmap bitmap, float left, float top, Paint paint)
 
@@ -71,6 +75,7 @@ public:
 		bitmapConfigClass = env->FindClass("android/graphics/Bitmap$Config");
 		field_argb_8888 = env->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
 		rectClass = env->FindClass("android/graphics/RectF");
+		bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
 
 	}
 
@@ -107,6 +112,7 @@ public:
 	jmethodID bitmapCreateScaledMethod;
 	jmethodID bitmapGetWidthMethod;
 	jmethodID bitmapGetHeightMethod;
+	jmethodID bitmapOptionsConstructor;
 
 	jclass rectClass;
 	jclass canvasClass;
@@ -118,7 +124,10 @@ public:
 	jclass paintStyleClass;
 	jclass alignClass;
 	jclass bitmapConfigClass;
+	jclass bitmapOptionsClass;
+
 	jfieldID field_argb_8888;
+	jfieldID optionsMutableField;
 
 private:
 	JNIEnv * env;
@@ -161,13 +170,17 @@ public:
 		//Get inputStream from the picture(filename)
 		jobject inputStream = env->CallObjectMethod(mgr, cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
 
+		//Create BitmapFactory options to make the created bitmap mutable straight away
+		//jobject factoryOptions = env->NewObject(cache->bitmapOptionsClass, cache->bitmapOptionsConstructor);
+		//jboolean inMutable = env->GetBooleanField(factoryOptions, cache->optionsMutableField);
+		//inMutable = JNI_TRUE;
+
 		//Create a bitmap from the inputStream
 		jobject firstBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod, inputStream);
 
 		//Make bitmap mutable by calling Copy Method with setting isMutable() to true
 		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-		jboolean copyBoolean = JNI_TRUE;
-		bitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, copyBoolean);
+		bitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE);
 
 		//Create new Canvas from the mutable bitmap
 		jobject canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
@@ -175,7 +188,6 @@ public:
 		int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
 		int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
 		Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
-
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) :
