@@ -9,30 +9,10 @@
 #include "Surface.h"
 #include "Image.h"
 #include "HitRegion.h"
+#include "GraphicsState.h"
 
 namespace canvas {
-  class Context;
-  
-  class GraphicsState {
-  public:
-    friend class Context;
-    GraphicsState(const Context & context);
- 
-  private:
-    float globalAlpha;
-    bool imageSmoothingEnabled;
-    float shadowBlur;
-    Color shadowColor;
-    float shadowOffsetX, shadowOffsetY;
-    Path currentPath, clipPath;
-    float lineWidth;
-    Style fillStyle, strokeStyle;
-    Font font;
-    TextAlign textAlign;
-    TextBaseline textBaseline;
-  };
-  
-  class Context {
+  class Context : public GraphicsState {
   public:
     Context(float _display_scale = 1.0f) : display_scale(_display_scale) { }
     Context(const Context & other) = delete;
@@ -123,19 +103,6 @@ namespace canvas {
     Style & createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1) {
      }
 #endif
-
-    float lineWidth = 1.0f;
-    Style fillStyle;
-    Style strokeStyle;
-    float shadowBlur = 0.0f;
-    Color shadowColor;
-    float shadowOffsetX = 0.0f, shadowOffsetY = 0.0f;
-    float globalAlpha = 1.0f;
-    Font font;
-    TextBaseline textBaseline;
-    TextAlign textAlign;
-    bool imageSmoothingEnabled = true;
-    Path currentPath, clipPath;
     
   protected:
     Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op = SOURCE_OVER);

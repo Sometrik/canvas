@@ -3,29 +3,8 @@
 #include <cmath>
 #include <iostream>
 
-#ifdef OPENGL
-#include <glm/glm.hpp>
-#endif
-
 using namespace std;
 using namespace canvas;
-
-GraphicsState::GraphicsState(const Context & context) :
-  globalAlpha(context.globalAlpha),
-  imageSmoothingEnabled(context.imageSmoothingEnabled),
-  shadowBlur(context.shadowBlur),
-  shadowColor(context.shadowColor),
-  shadowOffsetX(context.shadowOffsetX),
-  shadowOffsetY(context.shadowOffsetY),
-  currentPath(context.currentPath),
-  clipPath(context.clipPath),
-  lineWidth(context.lineWidth),
-  fillStyle(context.fillStyle),
-  strokeStyle(context.strokeStyle),
-  font(context.font),
-  textAlign(context.textAlign),
-  textBaseline(context.textBaseline)
-{ }
 
 void
 Context::resize(unsigned int _width, unsigned int _height) {
@@ -156,28 +135,15 @@ Context::drawImage(const Image & img, double x, double y, double w, double h) {
 
 Context &
 Context::save() {
-  restore_stack.push_back(GraphicsState(*this));
+  restore_stack.push_back(*this);
   return *this;
 }
 
 Context &
 Context::restore() {
   if (!restore_stack.empty()) {
-    auto & data = restore_stack.back();
-    globalAlpha = data.globalAlpha;
-    imageSmoothingEnabled = data.imageSmoothingEnabled;
-    shadowBlur = data.shadowBlur;
-    shadowColor = data.shadowColor;
-    shadowOffsetX = data.shadowOffsetX;
-    shadowOffsetY = data.shadowOffsetY;
-    currentPath = data.currentPath;
-    clipPath = data.clipPath;
-    lineWidth = data.lineWidth;
-    fillStyle = data.fillStyle;
-    strokeStyle = data.strokeStyle;
-    font = data.font;
-    textAlign = data.textAlign;
-    textBaseline = data.textBaseline;
+    *this = restore_stack.back();
+    restore_stack.pop_back();    
   }
   return *this;
 }
