@@ -20,11 +20,22 @@ namespace canvas {
       PATTERN,
       FILTER
     };
-    Style() { }
+    Style(GraphicsState * _context) : Attribute(_context) { }
+    Style(GraphicsState * _context, const Style & other)
+      : Attribute(_context),
+      type(other.type),
+      colors(other.colors),
+      filter(other.filter) { }
+    Style(const Style & other) = delete;
+#if 0
     Style(const std::string & s);
     Style(const Color & _color);
+#endif
     Style & operator=(const std::string & s);
     Style & operator=(const Color & _color);
+
+    GraphicsState & operator()(const std::string & s);
+    GraphicsState & operator()(const Color & _color);
 
     StyleType getType() const { return type; }
     void setType(StyleType _type) { type = _type; }
