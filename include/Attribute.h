@@ -4,12 +4,18 @@
 #include <string>
 
 namespace canvas {
+  class GraphicsState;
+  
   class Attribute {
   public:
-    Attribute() { }
+  Attribute(GraphicsState * _context) : context(_context) { }
+    Attribute(const Attribute & other) = delete;
     virtual ~Attribute() { }
+
+    Attribute & operator=(const Attribute & other) { return *this; }
     
-  private:
+  protected:
+    GraphicsState * context;
   };
 };
 
