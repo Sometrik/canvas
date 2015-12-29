@@ -26,7 +26,8 @@ Context &
 Context::clearRect(double x, double y, double w, double h) {
   Path path;
   path.rect(x, y, w, h);
-  Style style(Color(0.0f, 0.0f, 0.0f, 0.0f));
+  Style style(this);
+  style = Color(0.0f, 0.0f, 0.0f, 0.0f);
   renderPath(FILL, path, style, COPY);
   return *this;
 }
@@ -40,7 +41,8 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
       float b = shadowBlur, bs = shadowBlur * getDisplayScale();
       int bi = int(ceil(b));
       auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
-      Style shadow_style = shadowColor;
+      Style shadow_style(this);
+      shadow_style = shadowColor;
       float shadow_alpha = shadowColor.alpha;
       shadow_style.color.alpha = 1.0f;
       shadow->renderText(mode, font, shadow_style, textBaseline, textAlign, text, x + shadowOffsetX + bi, y + shadowOffsetY + bi, lineWidth, op, getDisplayScale(), globalAlpha, 0.0f, 0.0f, 0.0f, shadowColor, clipPath);
@@ -65,7 +67,8 @@ Context::renderPath(RenderMode mode, const Path & path, const Style & style, Ope
       float b = shadowBlur, bs = shadowBlur * getDisplayScale();
       float bi = int(ceil(b));
       auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
-      Style shadow_style = shadowColor;
+      Style shadow_style(this);
+      shadow_style = shadowColor;
       Path tmp_path = path, tmp_clipPath = clipPath;
       tmp_path.offset(shadowOffsetX + bi, shadowOffsetY + bi);
       tmp_clipPath.offset(shadowOffsetX + bi, shadowOffsetY + bi);
