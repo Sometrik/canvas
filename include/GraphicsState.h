@@ -1,42 +1,54 @@
-#ifndef _GRAPHICSSTATE_H_
-#define _GRAPHICSSTATE_H_
+#ifndef _CANVAS_GRAPHICSSTATE_H_
+#define _CANVAS_GRAPHICSSTATE_H_
+
+#include <Style.h>
+#include <Font.h>
+#include <TextBaseline.h>
+#include <TextAlign.h>
+#include <Path.h>
 
 namespace canvas {
   class GraphicsState {
   public:
-    GraphicsState() { }
-    GraphicsState(const GraphicsState & other) :
-    lineWidth(context.lineWidth),
-      fillStyle(context.fillStyle),
-      strokeStyle(context.strokeStyle),
-      shadowBlur(context.shadowBlur),
-      shadowColor(context.shadowColor),
-      shadowOffsetX(context.shadowOffsetX),
-      shadowOffsetY(context.shadowOffsetY),    
-      globalAlpha(context.globalAlpha),
-      font(context.font),
-      textBaseline(context.textBaseline),
-      textAlign(context.textAlign),     
-      imageSmoothingEnabled(context.imageSmoothingEnabled),
-      currentPath(context.currentPath),
-      clipPath(context.clipPath) { }
+    GraphicsState()
+      : fillStyle(this),
+      strokeStyle(this),
+      font(this)
+      { }
+    GraphicsState(const GraphicsState & other)
+      : lineWidth(other.lineWidth),
+      fillStyle(this, other.fillStyle),
+      strokeStyle(this, other.strokeStyle),
+      shadowBlur(other.shadowBlur),
+      shadowColor(other.shadowColor),
+      shadowOffsetX(other.shadowOffsetX),
+      shadowOffsetY(other.shadowOffsetY),    
+      globalAlpha(other.globalAlpha),
+      font(this, other.font),
+      textBaseline(other.textBaseline),
+      textAlign(other.textAlign),     
+      imageSmoothingEnabled(other.imageSmoothingEnabled),
+      currentPath(other.currentPath),
+      clipPath(other.clipPath) {
+
+    }
       
     GraphicsState & operator=(const GraphicsState & other) {
       if (this != &other) {
-	lineWidth = data.lineWidth;
-	fillStyle = data.fillStyle;
-	strokeStyle = data.strokeStyle;
-	shadowBlur = data.shadowBlur;
-	shadowColor = data.shadowColor;
-	shadowOffsetX = data.shadowOffsetX;
-	shadowOffsetY = data.shadowOffsetY;
-	globalAlpha = data.globalAlpha;
-	font = data.font;
-	textBaseline = data.textBaseline;
-	textAlign = data.textAlign;
-	imageSmoothingEnabled = data.imageSmoothingEnabled;
-	currentPath = data.currentPath;
-	clipPath = data.clipPath;	
+	lineWidth = other.lineWidth;
+	fillStyle = other.fillStyle;
+	strokeStyle = other.strokeStyle;
+	shadowBlur = other.shadowBlur;
+	shadowColor = other.shadowColor;
+	shadowOffsetX = other.shadowOffsetX;
+	shadowOffsetY = other.shadowOffsetY;
+	globalAlpha = other.globalAlpha;
+	font = other.font;
+	textBaseline = other.textBaseline;
+	textAlign = other.textAlign;
+	imageSmoothingEnabled = other.imageSmoothingEnabled;
+	currentPath = other.currentPath;
+	clipPath = other.clipPath;	
       }
       return *this;
     }
@@ -55,3 +67,6 @@ namespace canvas {
     Path currentPath, clipPath;
   };
 };
+
+#endif
+
