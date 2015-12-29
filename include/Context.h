@@ -14,9 +14,16 @@
 namespace canvas {
   class Context : public GraphicsState {
   public:
-    Context(float _display_scale = 1.0f) : display_scale(_display_scale) { }
+    Context(float _display_scale = 1.0f)
+      : display_scale(_display_scale),
+      current_linear_gradient(this)
+      { }
     Context(const Context & other) = delete;
     Context & operator=(const Context & other) = delete;
+    Context & operator=(const GraphicsState & other) {
+      GraphicsState::operator=(other);
+      return *this;
+    }
     virtual ~Context() { }
 
     virtual std::shared_ptr<Surface> createSurface(const Image & image) = 0;
@@ -112,9 +119,9 @@ namespace canvas {
     bool hasShadow() const { return shadowBlur > 0.0f || shadowOffsetX != 0 || shadowOffsetY != 0; }
     
   private:
+    float display_scale;
     Style current_linear_gradient;
     std::vector<GraphicsState> restore_stack;
-    float display_scale;
     std::vector<HitRegion> hit_regions;
     HitRegion null_region;
   };
