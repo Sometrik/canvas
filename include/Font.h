@@ -1,7 +1,7 @@
-#ifndef _FONT_H_
-#define _FONT_H_
+#ifndef _CANVAS_FONT_H_
+#define _CANVAS_FONT_H_
 
-#include "Attribute.h"
+#include <Attribute.h>
 
 namespace canvas {
   class Font : public Attribute {
@@ -32,9 +32,22 @@ namespace canvas {
       NO_DECORATION,
       UNDERLINE
     };
-    Font() { }
+  Font(GraphicsState * _context) : Attribute(_context) { }
+  Font(GraphicsState * _context, const Font & other)
+    : Attribute(_context),
+      family(other.family),
+      size(other.size),
+      slant(other.slant),
+      weight(other.weight),
+      decoration(other.decoration),
+      antialiasing(other.antialiasing),
+      hinting(other.hinting),
+      cleartype(other.cleartype) { }
+      
+#if 0
     Font(const std::string & s) { }
-
+#endif
+    
     std::string family = "sans-serif";
     float size = 10.0f;
     Slant slant = NORMAL_SLANT;
