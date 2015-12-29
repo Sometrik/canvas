@@ -1,10 +1,8 @@
 #ifndef _CANVAS_TEXTALIGN_H_
 #define _CANVAS_TEXTALIGN_H_
 
-#include "Attribute.h"
-
 namespace canvas {
-  class TextAlign : public Attribute {
+  class TextAlign {
   public:
     enum TextAlignType {
       START = 1,
