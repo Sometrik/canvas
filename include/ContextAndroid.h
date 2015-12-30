@@ -47,11 +47,13 @@ public:
 		pathLineToMethod = env->GetMethodID(pathClass, "lineTo", "(FF)V");
 		pathCloseMethod = env->GetMethodID(pathClass, "close", "()V");
 		canvasPathDrawMethod = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
-		rectConstructor = env->GetMethodID(rectClass, "<init>", "(FFFF)V");
+		rectFConstructor = env->GetMethodID(rectFClass, "<init>", "(FFFF)V");
+		rectConstructor = env->GetMethodID(rectClass, "<init>", "(IIII)V");
 		paintSetShadowMethod = env->GetMethodID(paintClass, "setShadowLayer", "(FFFI)V");
 		canvasBitmapDrawMethod = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;FFLandroid/graphics/Paint;)V");
+		canvasBitmapDrawMethod2 = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;Landroid/graphics/Rect;Landroid/graphics/RectF;Landroid/graphics/Paint;)V");
 		factoryDecodeByteMethod = env->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
-		bitmapCreateScaledMethod = env->GetStaticMethodID(bitmapClass, "createScaledBitmap", "(Landroid/graphics/Bitmap;IIZ)Landroid/graphics/Bitmap;");
+		//bitmapCreateScaledMethod = env->GetStaticMethodID(bitmapClass, "createScaledBitmap", "(Landroid/graphics/Bitmap;FFZ)Landroid/graphics/Bitmap;");
 		bitmapGetWidthMethod = env->GetMethodID(bitmapClass, "getWidth", "()I");
 		bitmapGetHeightMethod = env->GetMethodID(bitmapClass, "getHeight", "()I");
 		bitmapOptionsConstructor = env->GetMethodID(bitmapOptionsClass, "<init>", "()V");
@@ -76,7 +78,8 @@ public:
 		field_argb_8888 = env->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
 		field_rgb_565 = env->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
 		field_alpha_8 = env->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
-		rectClass = env->FindClass("android/graphics/RectF");
+		rectFClass = env->FindClass("android/graphics/RectF");
+		rectClass = env->FindClass("android/graphics/Rect");
 		bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
 
 	}
@@ -107,15 +110,18 @@ public:
 	jmethodID pathLineToMethod;
 	jmethodID pathCloseMethod;
 	jmethodID canvasPathDrawMethod;
+	jmethodID rectFConstructor;
 	jmethodID rectConstructor;
 	jmethodID paintSetShadowMethod;
 	jmethodID canvasBitmapDrawMethod;
+	jmethodID canvasBitmapDrawMethod2;
 	jmethodID factoryDecodeByteMethod;
 	jmethodID bitmapCreateScaledMethod;
 	jmethodID bitmapGetWidthMethod;
 	jmethodID bitmapGetHeightMethod;
 	jmethodID bitmapOptionsConstructor;
 
+	jclass rectFClass;
 	jclass rectClass;
 	jclass canvasClass;
 	jclass paintClass;
@@ -343,7 +349,7 @@ public:
 				float bottom = pc.y0 * display_scale + pc.radius * display_scale;
 				float top = pc.y0 * display_scale - pc.radius * display_scale;
 
-				jobject jrect = env->NewObject(cache->rectClass, cache->rectConstructor, left, top, right, bottom);
+				jobject jrect = env->NewObject(cache->rectFClass, cache->rectFConstructor, left, top, right, bottom);
 
 				jmethodID pathArcToMethod = env->GetMethodID(cache->pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
 
@@ -436,8 +442,6 @@ public:
 
 		const unsigned char* buf = _img.getData();
 
-		//int length = _img->calculateSize();
-		//int length = 10000;
 
 		int length = _img.getWidth() * _img.getHeight() * 4;
 
@@ -446,6 +450,7 @@ public:
 		jbyteArray jarray = env->NewByteArray(length);
 		env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
 
+		//change field_argb_8888 to use
 		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
 		jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
 
@@ -458,7 +463,8 @@ public:
 		//env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(Color::BLACK, globalAlpha));
 
 		//Create new Canvas from the mutable bitmap
-		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, drawableBitmap, 0.0f, 0.0f, jpaint);
+		jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, x, y, x + w, y + h);
+		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, NULL, dstRect, jpaint);
 
 	}
 
