@@ -179,9 +179,6 @@ public:
 
 		bitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
 
-		//Create new Canvas from the mutable bitmap
-		canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
-
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const Image & image) :
@@ -303,6 +300,9 @@ public:
 
 	void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath) override {
 
+
+		checkForCanvas();
+
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWidth = %f", lineWidth);
 
 		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha);
@@ -318,7 +318,6 @@ public:
 		jobject jpath = env->NewObject(cache->pathClass, cache->pathConstructor);
 
 
-		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "dadada");
 		for (auto pc : path.getData()) {
 			switch (pc.type) {
 			case PathComponent::MOVE_TO: {
@@ -366,7 +365,6 @@ public:
 			}
 		}
 
-		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "dadada");
 		//Draw path to canvas
 		env->CallVoidMethod(canvas, cache->canvasPathDrawMethod, jpath, jpaint);
 
@@ -383,6 +381,9 @@ public:
 	}
 
 	void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath) override {
+
+
+		checkForCanvas();
 
 		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha);
 		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
@@ -431,6 +432,8 @@ public:
 	void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled = true) override {
 		//_img.getWidth() _img.getHeight()
 
+		checkForCanvas();
+
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (Image) called");
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "width = %f", w);
@@ -459,8 +462,17 @@ public:
 
 		//env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(Color::BLACK, globalAlpha));
 
+		//Create new Canvas from the mutable bitmap
 		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod, drawableBitmap, 0.0f, 0.0f, jpaint);
 
+	}
+
+	void checkForCanvas(){
+		if (!canvasCreated){
+				//Create new Canvas from the mutable bitmap
+				canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
+				canvasCreated = true;
+			}
 	}
 
 	jobject getBitmap() {
@@ -478,6 +490,8 @@ protected:
 private:
 	jobject bitmap;
 	jobject canvas;
+
+	bool canvasCreated = false;
 
 	AndroidCache * cache;
 	JNIEnv * env;
