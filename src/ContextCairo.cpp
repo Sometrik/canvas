@@ -124,11 +124,13 @@ CairoSurface::~CairoSurface() {
 
 void
 CairoSurface::flush() {
+  assert(surface);
   cairo_surface_flush(surface);
 }
 
 void
 CairoSurface::markDirty() {
+  assert(surface);
   cairo_surface_mark_dirty(surface);
 }
 
