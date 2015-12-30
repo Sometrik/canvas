@@ -74,6 +74,8 @@ public:
 		alignClass = env->FindClass("android/graphics/Paint$Align");
 		bitmapConfigClass = env->FindClass("android/graphics/Bitmap$Config");
 		field_argb_8888 = env->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
+		field_rgb_565 = env->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
+		field_alpha_8 = env->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
 		rectClass = env->FindClass("android/graphics/RectF");
 		bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
 
@@ -127,7 +129,9 @@ public:
 	jclass bitmapOptionsClass;
 
 	jfieldID field_argb_8888;
+	jfieldID field_rgb_565;
 	jfieldID optionsMutableField;
+	jfieldID field_alpha_8;
 
 private:
 	JNIEnv * env;
@@ -142,19 +146,42 @@ public:
 			Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format), cache(_cache), env(_env), mgr(_mgr) {
 		// creates an empty canvas
 
-		// Bitmap.Config conf = Bitmap.Config.ARGB_8888;
-		// Bitmap bmp = Bitmap.createBitmap(w, h, conf);
-		// Canvas canvas = new Canvas(bmp);
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidSurface widthheight constructor called");
 
-		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+		//set bitmap config according to internalformat
+		jobject argbObject;
+		switch (_format){
+		case LUMINANCE_ALPHA:
+			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to alpha 8");
+			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_alpha_8);
+			break;
+		case RGB565:
+				__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb565");
+			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_rgb_565);
+		break;
+		case R8:
+		case RG8:
+		case RGBA4:
+		case RGBA8:
+		case RGB8:
+		case RGB8_24:
+		case RED_RGTC1:
+		case RG_RGTC2:
+		case RGB_DXT1:
+		case RGBA_DXT5:
+		case RGB_ETC1:
+		case LA44:
+		case R32F:
+				__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
+			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+		break;
+		}
 
-		//Not Tested
 		bitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
 
 		//Create new Canvas from the mutable bitmap
 		canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
 
-		//testCode();
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const Image & image) :
@@ -192,22 +219,31 @@ public:
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) :
 			Surface(0, 0, 0, 0, InternalFormat::RGBA8), cache(_cache), env(_env), mgr(_mgr) {
-		// creates a surface from raw data
-		// use this: decodeByteArray(byte[] data, int offset, int length)
-		// make some wizardry: convert C byte array buffer to Java byte array data
-		// BitmapFactory.decoreByteArray
-		// create canvas
-
 		//Create a bitmap from bytearray
-		//Will propably fatal error 11, size probaly needs to be converted for java.
-
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
 		int arraySize = size;
 
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "size = %i", size);
+
 		jbyteArray array = env->NewByteArray(arraySize);
-		env->SetByteArrayRegion(array, 0, arraySize, reinterpret_cast<jbyte*>(*buffer));
-		bitmap = env->CallStaticObjectMethod(env->FindClass("android/graphics/BitmapFactory"), env->GetStaticMethodID(env->FindClass("android/graphics/BitmapFactory"), "decodeByteArray", "([BII)Landroid/graphics/Bitmap;"), array, 0, arraySize);
+	//	env->SetByteArrayRegion(array, 0, arraySize, reinterpret_cast<jbyte*>(*buffer));
+		env->SetByteArrayRegion(array, 0, arraySize, (const jbyte*)buffer);
+		jclass thisClass = env->FindClass("android/graphics/BitmapFactory");
+		jmethodID thisMethod = env->GetStaticMethodID(env->FindClass("android/graphics/BitmapFactory"), "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
+		jobject firstBitmap = env->CallStaticObjectMethod(thisClass, thisMethod, array, 0, arraySize);
+
+		//make this with factory options instead
+		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+		bitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE);
+
+		jobject canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
+
+		int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
+		int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
+		Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
+
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
 	}
 
@@ -278,8 +314,11 @@ public:
 		jboolean copyBoolean = JNI_TRUE;
 		jboolean falseBoolean = JNI_FALSE;
 
+
 		jobject jpath = env->NewObject(cache->pathClass, cache->pathConstructor);
 
+
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "dadada");
 		for (auto pc : path.getData()) {
 			switch (pc.type) {
 			case PathComponent::MOVE_TO: {
@@ -301,6 +340,7 @@ public:
 					span -= 2 * M_PI;
 				}
 
+
 				//public void arcTo (float left, float top, float right, float bottom, float startAngle, float sweepAngle, boolean forceMoveTo)
 
 				span += pc.ea - pc.sa;
@@ -313,7 +353,9 @@ public:
 
 				jmethodID pathArcToMethod = env->GetMethodID(cache->pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
 
+
 				env->CallVoidMethod(jpath, pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
+
 
 			}
 				break;
@@ -324,13 +366,9 @@ public:
 			}
 		}
 
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "dadada");
 		//Draw path to canvas
 		env->CallVoidMethod(canvas, cache->canvasPathDrawMethod, jpath, jpaint);
-
-		// debug for prints. Will be removed later
-		jclass debugClass = env->FindClass("com/example/work/MyGLSurfaceView");
-		jmethodID debugMethod = env->GetStaticMethodID(debugClass, "pathDebug", "(Landroid/graphics/Path;Landroid/graphics/Paint;Landroid/graphics/Canvas;)V");
-		env->CallStaticVoidMethod(debugClass, debugMethod, jpath, jpaint, canvas);
 
 	}
 
