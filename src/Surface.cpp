@@ -138,7 +138,7 @@ Surface::blur(float r) {
 }
 
 void
-Surface::slowBlur(float hradius, float vradius, float alpha) {
+Surface::slowBlur(float hradius, float vradius) {
   if (!(hradius > 0 || vradius > 0)) {
     return;
   }
@@ -155,7 +155,6 @@ Surface::slowBlur(float hradius, float vradius, float alpha) {
       for (vector<int>::iterator it = hkernel.begin(); it != hkernel.end(); it++) {
 	htotal += *it;
       }
-      htotal = int(htotal / alpha);
       memset(tmp, 0, actual_width * actual_height * 4);
       for (unsigned int row = 0; row < actual_height; row++) {
 	for (unsigned int col = 0; col + hsize < actual_width; col++) {
@@ -184,7 +183,6 @@ Surface::slowBlur(float hradius, float vradius, float alpha) {
       for (vector<int>::iterator it = vkernel.begin(); it != vkernel.end(); it++) {
 	vtotal += *it;
       }
-      vtotal = int(vtotal / alpha);
       
       memset(buffer, 0, actual_width * actual_height * 4);
       for (unsigned int col = 0; col < actual_width; col++) {
@@ -217,7 +215,6 @@ Surface::slowBlur(float hradius, float vradius, float alpha) {
       for (vector<int>::iterator it = hkernel.begin(); it != hkernel.end(); it++) {
 	htotal += *it;
       }
-      htotal = int(htotal / alpha);
       memset(tmp, 0, actual_width * actual_height);
       for (unsigned int row = 0; row < actual_height; row++) {
 	for (unsigned int col = 0; col + hsize < actual_width; col++) {
@@ -240,7 +237,6 @@ Surface::slowBlur(float hradius, float vradius, float alpha) {
       for (vector<int>::iterator it = vkernel.begin(); it != vkernel.end(); it++) {
 	vtotal += *it;
       }
-      vtotal = int(vtotal / alpha);
       
       memset(buffer, 0, actual_width * actual_height);
       for (unsigned int col = 0; col < actual_width; col++) {
@@ -269,6 +265,7 @@ static inline unsigned char toByte(float f) {
   return (unsigned char)a;
 }
 
+#if 0
 void
 Surface::colorFill(const Color & color) {
   assert(getFormat() == RGBA8);
@@ -288,6 +285,7 @@ Surface::colorFill(const Color & color) {
   }
   releaseMemory();
 }
+#endif
 
 void
 Surface::colorize(const Color & input_color, Surface & target) {
@@ -313,6 +311,7 @@ Surface::colorize(const Color & input_color, Surface & target) {
   target.releaseMemory();
 }
 
+#if 0
 void
 Surface::multiply(const Color & color) {
   assert(getFormat() == RGBA8);
@@ -331,6 +330,7 @@ Surface::multiply(const Color & color) {
   }
   releaseMemory();
 }
+#endif
 
 static ImageFormat getImageFormat(InternalFormat format) {
   switch (format) {

@@ -67,12 +67,12 @@ namespace canvas {
     virtual void drawImage(Surface & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled = true) = 0;
     virtual void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled = true) = 0;
     
-    void colorFill(const Color & color);
-    void slowBlur(float hradius, float vradius, float alpha = 1.0f);
+    // void colorFill(const Color & color);
+    void slowBlur(float hradius, float vradius);
     void blur(float r);
     void colorize(const Color & color, Surface & target);
 
-    void multiply(const Color & color);
+    // void multiply(const Color & color);
     
     std::shared_ptr<Image> createImage();
 
