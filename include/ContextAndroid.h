@@ -206,9 +206,6 @@ public:
 		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
 		bitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE);
 
-		//Create new Canvas from the mutable bitmap
-		jobject canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
-
 		int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
 		int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
 		Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
@@ -233,8 +230,6 @@ public:
 		//make this with factory options instead
 		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
 		bitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE);
-
-		jobject canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
 
 		int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
 		int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
