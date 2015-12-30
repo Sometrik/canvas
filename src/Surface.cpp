@@ -290,6 +290,30 @@ Surface::colorFill(const Color & color) {
 }
 
 void
+Surface::colorize(const Color & input_color, Surface & target) {
+  Color color = input_color;
+  color.red *= color.alpha;
+  color.green *= color.alpha;
+  color.blue *= color.alpha;
+  
+  assert(getFormat() == R8 && target.getFormat() == RGBA8);
+  assert(getActualWidth() == target.getActualWidth() && getActualHeight() == target.getActualHeight());
+  unsigned char * buffer = (unsigned char *)lockMemory(false);
+  unsigned char * target_buffer = (unsigned char *)target.lockMemory(true);
+
+  for (unsigned int i = 0; i < actual_width * actual_height; i++) {
+    float input_alpha = buffer[i] / 255.0f;
+    target_buffer[4 * i + 0] = (unsigned char)(color.red * input_alpha * 255);
+    target_buffer[4 * i + 1] = (unsigned char)(color.green * input_alpha * 255);
+    target_buffer[4 * i + 2] = (unsigned char)(color.blue * input_alpha * 255);
+    target_buffer[4 * i + 3] = (unsigned char)(color.alpha * input_alpha * 255);
+  }
+  
+  releaseMemory();
+  target.releaseMemory();
+}
+
+void
 Surface::multiply(const Color & color) {
   assert(getFormat() == RGBA8);
   unsigned char * buffer = (unsigned char *)lockMemory(true);

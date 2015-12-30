@@ -70,6 +70,7 @@ namespace canvas {
     void colorFill(const Color & color);
     void slowBlur(float hradius, float vradius, float alpha = 1.0f);
     void blur(float r);
+    void colorize(const Color & color, Surface & target);
 
     void multiply(const Color & color);
     
