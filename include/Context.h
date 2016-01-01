@@ -116,7 +116,7 @@ namespace canvas {
     Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
     virtual bool hasNativeShadows() const { return false; }
 
-    bool hasShadow() const { return shadowBlur > 0.0f || shadowOffsetX != 0 || shadowOffsetY != 0; }
+    bool hasShadow() const { return shadowBlur.getValue() > 0.0f || shadowOffsetX.getValue() != 0 || shadowOffsetY.getValue() != 0; }
     
   private:
     float display_scale;

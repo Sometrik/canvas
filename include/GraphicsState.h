@@ -7,27 +7,32 @@
 #include <TextAlign.h>
 #include <Path.h>
 #include <ColorAttribute.h>
+#include <FloatAttribute.h>
 
 namespace canvas {
   class GraphicsState {
   public:
     GraphicsState()
-      : fillStyle(this),
+      : lineWidth(this, 1.0f),
+      fillStyle(this),
       strokeStyle(this),
+      shadowBlur(this),
       shadowColor(this),
+      shadowOffsetX(this), shadowOffsetY(this),
+      globalAlpha(this, 1.0f),
       font(this),
       textBaseline(this),
       textAlign(this)
       { }
     GraphicsState(const GraphicsState & other)
-      : lineWidth(other.lineWidth),
+      : lineWidth(this, other.lineWidth),
       fillStyle(this, other.fillStyle),
       strokeStyle(this, other.strokeStyle),
-      shadowBlur(other.shadowBlur),
+      shadowBlur(this, other.shadowBlur),
       shadowColor(this, other.shadowColor),
-      shadowOffsetX(other.shadowOffsetX),
-      shadowOffsetY(other.shadowOffsetY),    
-      globalAlpha(other.globalAlpha),
+      shadowOffsetX(this, other.shadowOffsetX),
+      shadowOffsetY(this, other.shadowOffsetY),    
+      globalAlpha(this, other.globalAlpha),
       font(this, other.font),
       textBaseline(this, other.textBaseline),
       textAlign(this, other.textAlign),     
@@ -75,13 +80,13 @@ namespace canvas {
     // void setTransform(optional DOMMatrixInit matrix);
     // void resetTransform();
     
-    float lineWidth = 1.0f;
+    FloatAttribute lineWidth;
     Style fillStyle;
     Style strokeStyle;
-    float shadowBlur = 0.0f;
+    FloatAttribute shadowBlur;
     ColorAttribute shadowColor;
-    float shadowOffsetX = 0.0f, shadowOffsetY = 0.0f;
-    float globalAlpha = 1.0f;
+    FloatAttribute shadowOffsetX, shadowOffsetY;
+    FloatAttribute globalAlpha;
     Font font;
     TextBaselineAttribute textBaseline;
     TextAlignAttribute textAlign;
