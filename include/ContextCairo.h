@@ -45,7 +45,6 @@ namespace canvas {
 	  surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 4, 4);
 	}
 	cr = cairo_create(surface);	
-	assert(cr);
 	cairo_set_antialias(cr, CAIRO_ANTIALIAS_BEST);
       }
     }
