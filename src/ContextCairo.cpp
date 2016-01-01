@@ -238,26 +238,26 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   x *= display_scale;
   y *= display_scale;
 
-  if (textBaseline.getType() == TextBaseline::MIDDLE || textBaseline.getType() == TextBaseline::TOP) {
+  if (textBaseline == MIDDLE || textBaseline == TOP) {
     cairo_font_extents_t font_extents;
     cairo_font_extents(cr, &font_extents);
     
-    switch (textBaseline.getType()) {
+    switch (textBaseline) {
       // case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
-    case TextBaseline::MIDDLE: y += -font_extents.descent + (font_extents.ascent + font_extents.descent) / 2.0; break;
-    case TextBaseline::TOP: y += font_extents.ascent; break;
+    case MIDDLE: y += -font_extents.descent + (font_extents.ascent + font_extents.descent) / 2.0; break;
+    case TOP: y += font_extents.ascent; break;
     default: break;
     }
   }
 
-  if (textAlign.getType() != TextAlign::LEFT) {
+  if (textAlign != ALIGN_LEFT) {
     cairo_text_extents_t text_extents;
     cairo_text_extents(cr, text.c_str(), &text_extents);
     
-    switch (textAlign.getType()) {
-    case TextAlign::LEFT: break;
-    case TextAlign::CENTER: x -= text_extents.width / 2; break;
-    case TextAlign::RIGHT: x -= text_extents.width; break;
+    switch (textAlign) {
+    case ALIGN_LEFT: break;
+    case ALIGN_CENTER: x -= text_extents.width / 2; break;
+    case ALIGN_RIGHT: x -= text_extents.width; break;
     default: break;
     }
   }
