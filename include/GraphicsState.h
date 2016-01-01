@@ -6,6 +6,7 @@
 #include <TextBaseline.h>
 #include <TextAlign.h>
 #include <Path.h>
+#include <ColorAttribute.h>
 
 namespace canvas {
   class GraphicsState {
@@ -13,20 +14,23 @@ namespace canvas {
     GraphicsState()
       : fillStyle(this),
       strokeStyle(this),
-      font(this)
+      shadowColor(this),
+      font(this),
+      textBaseline(this),
+      textAlign(this)
       { }
     GraphicsState(const GraphicsState & other)
       : lineWidth(other.lineWidth),
       fillStyle(this, other.fillStyle),
       strokeStyle(this, other.strokeStyle),
       shadowBlur(other.shadowBlur),
-      shadowColor(other.shadowColor),
+      shadowColor(this, other.shadowColor),
       shadowOffsetX(other.shadowOffsetX),
       shadowOffsetY(other.shadowOffsetY),    
       globalAlpha(other.globalAlpha),
       font(this, other.font),
-      textBaseline(other.textBaseline),
-      textAlign(other.textAlign),     
+      textBaseline(this, other.textBaseline),
+      textAlign(this, other.textAlign),     
       imageSmoothingEnabled(other.imageSmoothingEnabled),
       currentPath(other.currentPath),
       clipPath(other.clipPath) {
@@ -52,17 +56,35 @@ namespace canvas {
       }
       return *this;
     }
+
+    void scale(double x, double y) {
+
+    }
+    void rotate(double angle) {
+
+    }
+    void translate(double x, double y) {
+
+    }
+    void transform(double a, double b, double c, double d, double e, double f) {
+
+    }
+    
+    // DOMMatrix getTransform();
+    // void setTransform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
+    // void setTransform(optional DOMMatrixInit matrix);
+    // void resetTransform();
     
     float lineWidth = 1.0f;
     Style fillStyle;
     Style strokeStyle;
     float shadowBlur = 0.0f;
-    Color shadowColor;
+    ColorAttribute shadowColor;
     float shadowOffsetX = 0.0f, shadowOffsetY = 0.0f;
     float globalAlpha = 1.0f;
     Font font;
-    TextBaseline textBaseline;
-    TextAlign textAlign;
+    TextBaselineAttribute textBaseline;
+    TextAlignAttribute textAlign;
     bool imageSmoothingEnabled = true;
     Path currentPath, clipPath;
   };
