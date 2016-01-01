@@ -396,15 +396,15 @@ public:
 		jobject alignLeft = env->GetStaticObjectField(cache->alignClass, alignEnumLeft);
 		jobject alignCenter = env->GetStaticObjectField(cache->alignClass, alignEnumCenter);
 
-		switch (textAlign.getType()) {
-		case TextAlign::LEFT:
+		switch (textAlign) {
+		case ALIGN_LEFT:
 			env->CallVoidMethod(jpaint, cache->textAlignMethod, alignLeft);
 
 			break;
-		case TextAlign::CENTER:
+		case ALIGN_CENTER:
 			//x -= width / 2;
 			break;
-		case TextAlign::RIGHT:
+		case ALIGN_RIGHT:
 			env->CallVoidMethod(jpaint, cache->textAlignMethod, alignRight);
 			//x -= width;
 			break;
