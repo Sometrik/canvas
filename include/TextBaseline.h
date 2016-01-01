@@ -1,43 +1,48 @@
 #ifndef _CANVAS_TEXTBASELINE_H_
 #define _CANVAS_TEXTBASELINE_H_
 
+#include "Attribute.h"
+
 #include <cstring>
-#include <cassert>
 
 namespace canvas {
-  class TextBaseline {
+  enum TextBaseline {
+    TOP = 1,
+    HANGING,
+    MIDDLE,
+    ALPHABETIC,
+    IDEOGRAPHIC,
+    BOTTOM
+  };
+  
+  class TextBaselineAttribute : public Attribute {
   public:
-    enum TextBaselineType {
-      TOP = 1,
-      HANGING,
-      MIDDLE,
-      ALPHABETIC,
-      IDEOGRAPHIC,
-      BOTTOM
-    };
-    TextBaseline(TextBaselineType _type = ALPHABETIC) : type(_type) { }
-    TextBaseline(const std::string & _type) { setType(_type.c_str()); }
-    TextBaseline(const char * _type) { setType(_type); }
-    TextBaseline & operator=(const std::string & _type) { setType(_type.c_str()); return *this; }
-    TextBaseline & operator=(const char * _type) { setType(_type); return *this; }
+    TextBaselineAttribute(GraphicsState * _context, TextBaseline _value = ALPHABETIC) : Attribute(_context), value(_value) { }
+    TextBaselineAttribute(GraphicsState * _context, const TextBaselineAttribute & other) : Attribute(_context), value(other.value) { }
+  TextBaselineAttribute(GraphicsState * _context, const std::string & _value) : Attribute(_context) { setValue(_value.c_str()); }
+  TextBaselineAttribute(GraphicsState * _context, const char * _value) : Attribute(_context) { setValue(_value); }
 
-    TextBaselineType getType() const { return type; }
+    TextBaselineAttribute & operator=(const TextBaselineAttribute & other) { value = other.value; return *this; }
+    TextBaselineAttribute & operator=(const TextBaseline & _value) { value = _value; return *this; }
+    TextBaselineAttribute & operator=(const std::string & _value) { setValue(_value.c_str()); return *this; }
+    TextBaselineAttribute & operator=(const char * _value) { setValue(_value); return *this; }
+
+    TextBaseline getValue() const { return value; }
 
   private:
-    void setType(const char * _type) {
-      if (strcmp(_type, "top") == 0) type = TOP;
-      else if (strcmp(_type, "hanging") == 0) type = HANGING;
-      else if (strcmp(_type, "middle") == 0) type = MIDDLE;
-      else if (strcmp(_type, "alphabetic") == 0) type = ALPHABETIC;
-      else if (strcmp(_type, "ideographic") == 0) type = IDEOGRAPHIC;
-      else if (strcmp(_type, "bottom") == 0) type = BOTTOM;
+    void setValue(const char * _value) {
+      if (strcmp(_value, "top") == 0) value = TOP;
+      else if (strcmp(_value, "hanging") == 0) value = HANGING;
+      else if (strcmp(_value, "middle") == 0) value = MIDDLE;
+      else if (strcmp(_value, "alphabetic") == 0) value = ALPHABETIC;
+      else if (strcmp(_value, "ideographic") == 0) value = IDEOGRAPHIC;
+      else if (strcmp(_value, "bottom") == 0) value = BOTTOM;
       else {
-	assert(0);
-	type = TOP;
+	value = TOP;
       }
     };
 
-    TextBaselineType type;
+    TextBaseline value;
   };
 };
 
