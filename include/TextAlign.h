@@ -1,39 +1,44 @@
 #ifndef _CANVAS_TEXTALIGN_H_
 #define _CANVAS_TEXTALIGN_H_
 
-namespace canvas {
-  class TextAlign {
-  public:
-    enum TextAlignType {
-      START = 1,
-      END,
-      LEFT,
-      CENTER,
-      RIGHT
-    };
-    
-    TextAlign(TextAlignType _type = LEFT) : type(_type) { }
-    TextAlign(const std::string & _type) { setType(_type.c_str()); }
-    TextAlign(const char * _type) { setType(_type); }
-    TextAlign & operator=(const std::string & _type) { setType(_type.c_str()); return *this; }
-    TextAlign & operator=(const char * _type) { setType(_type); return *this; }
+#include "Attribute.h"
 
-    TextAlignType getType() const { return type; }
+namespace canvas {
+  enum TextAlign {
+    ALIGN_START = 1,
+    ALIGN_END,
+    ALIGN_LEFT,
+    ALIGN_CENTER,
+    ALIGN_RIGHT
+  };
+
+  class TextAlignAttribute : public Attribute {
+  public:
+  TextAlignAttribute(GraphicsState * _context, TextAlign _value = ALIGN_LEFT) : Attribute(_context), value(_value) { }
+  TextAlignAttribute(GraphicsState * _context, const TextAlignAttribute & other) : Attribute(_context), value(other.value) { }
+  TextAlignAttribute(GraphicsState * _context, const std::string & _value) : Attribute(_context) { setValue(_value.c_str()); }
+  TextAlignAttribute(GraphicsState * _context, const char * _value) : Attribute(_context) { setValue(_value); }
+
+    TextAlignAttribute & operator=(const TextAlignAttribute & other) { value = other.value; return *this; }
+    TextAlignAttribute & operator=(const TextAlign & other) { value = other; return *this; }
+    TextAlignAttribute & operator=(const std::string & _value) { setValue(_value.c_str()); return *this; }
+    TextAlignAttribute & operator=(const char * _value) { setValue(_value); return *this; }
+
+    TextAlign getValue() const { return value; }
     
   private:
-    void setType(const char * _type) {
-      if (strcmp(_type, "start") == 0) type = START;
-      else if (strcmp(_type, "end") == 0) type = END;
-      else if (strcmp(_type, "left") == 0) type = LEFT;
-      else if (strcmp(_type, "center") == 0) type = CENTER;
-      else if (strcmp(_type, "right") == 0) type = RIGHT;
+    void setValue(const char * _value) {
+      if (strcmp(_value, "start") == 0) value = ALIGN_START;
+      else if (strcmp(_value, "end") == 0) value = ALIGN_END;
+      else if (strcmp(_value, "left") == 0) value = ALIGN_LEFT;
+      else if (strcmp(_value, "center") == 0) value = ALIGN_CENTER;
+      else if (strcmp(_value, "right") == 0) value = ALIGN_RIGHT;
       else {
-	assert(0);
-	type = START;
+	value = ALIGN_START;
       }
     };
 
-    TextAlignType type;
+    TextAlign value;
   };
 };
 
