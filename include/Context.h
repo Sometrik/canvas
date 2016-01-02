@@ -31,29 +31,12 @@ namespace canvas {
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
     virtual void resize(unsigned int _width, unsigned int _height);
         
-    Context & beginPath() { currentPath.clear(); return *this; }
-    Context & closePath() { currentPath.closePath(); return *this; }
-    Context & arc(double x, double y, double r, double a0, double a1, bool t = false) { currentPath.arc(x, y, r, a0, a1, t); return *this; }
-    Context & moveTo(double x, double y) { currentPath.moveTo(x, y); return *this; }
-    Context & lineTo(double x, double y) { currentPath.lineTo(x, y); return *this; }
-    Context & arcTo(double x1, double y1, double x2, double y2, double radius) { currentPath.arcTo(x1, y1, x2, y2, radius); return *this; }
-    Context & rect(double x, double y, double w, double h) { currentPath.rect(x, y, w, h); return *this; }
     Context & stroke() { return renderPath(STROKE, currentPath, strokeStyle); }
     Context & stroke(const Path & path) { return renderPath(STROKE, path, strokeStyle); }
     Context & fill() { return renderPath(FILL, currentPath, fillStyle); }
     Context & fill(const Path & path) { return renderPath(FILL, path, fillStyle); }
     Context & save();
     Context & restore();
-
-    Context & clip() {
-      clipPath = currentPath;
-      currentPath.clear();
-      return *this;
-    }
-    Context & resetClip() {
-      clipPath.clear();
-      return *this;
-    }
     
     bool isPointInPath(const Path & path, double x, double y) { return false; }
     

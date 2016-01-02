@@ -62,6 +62,24 @@ namespace canvas {
       return *this;
     }
 
+    GraphicsState & arc(double x, double y, double r, double a0, double a1, bool t = false) { currentPath.arc(x, y, r, a0, a1, t); return *this; }
+    GraphicsState & moveTo(double x, double y) { currentPath.moveTo(x, y); return *this; }
+    GraphicsState & lineTo(double x, double y) { currentPath.lineTo(x, y); return *this; }
+    GraphicsState & arcTo(double x1, double y1, double x2, double y2, double radius) { currentPath.arcTo(x1, y1, x2, y2, radius); return *this; }
+
+    GraphicsState & clip() {
+      clipPath = currentPath;
+      currentPath.clear();
+      return *this;
+    }
+    GraphicsState & resetClip() { clipPath.clear(); return *this; }
+    GraphicsState & beginPath() { currentPath.clear(); return *this; }
+    GraphicsState & closePath() { currentPath.closePath(); return *this; }
+    GraphicsState & rect(double x, double y, double w, double h) {
+      currentPath.rect(x, y, w, h);
+      return *this;
+    }
+
     void scale(double x, double y) {
 
     }
