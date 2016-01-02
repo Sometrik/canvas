@@ -14,12 +14,14 @@ Context::resize(unsigned int _width, unsigned int _height) {
 
 Context &
 Context::fillRect(double x, double y, double w, double h) {
-  return beginPath().rect(x, y, w, h).fill();
+  beginPath().rect(x, y, w, h);
+  return fill();
 } 
 
 Context &
 Context::strokeRect(double x, double y, double w, double h) {
-  return beginPath().rect(x, y, w, h).stroke();
+  beginPath().rect(x, y, w, h);
+  return stroke();
 }
 
 Context &
@@ -28,8 +30,7 @@ Context::clearRect(double x, double y, double w, double h) {
   path.rect(x, y, w, h);
   Style style(this);
   style = Color(0.0f, 0.0f, 0.0f, 0.0f);
-  renderPath(FILL, path, style, COPY);
-  return *this;
+  return renderPath(FILL, path, style, COPY);
 }
 
 Context &
