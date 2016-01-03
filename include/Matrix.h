@@ -8,15 +8,25 @@ class Matrix {
     : a(_a), b(_b), c(_c), d(_d), e(_e), f(_f) { }
 
   Matrix operator* (const Matrix & other) {
-    Matrix r;
-    return r;
+    return multiply(*this, other);    
   }
 
   const Matrix & operator*= (const Matrix & other) {
+    *this = multiply(*this, other);
     return *this;
   }
   
  private:
+  static Matrix multiply(const Matrix & A, const Matrix & B) {
+    return Matrix( A.a * B.a + A.c * B.b,
+		   A.b * B.a + A.d * B.b,
+		   A.a * B.c + A.c * B.d,
+		   A.b * B.c + A.d * B.d,
+		   A.a * B.e + A.c * B.f + A.e,
+		   A.b * B.e + A.d * B.f + A.f
+		   );
+  }
+  
   double a, b, c, d, e, f;
 };
 
