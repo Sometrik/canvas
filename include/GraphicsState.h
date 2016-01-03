@@ -23,7 +23,8 @@ namespace canvas {
       globalAlpha(this, 1.0f),
       font(this),
       textBaseline(this),
-      textAlign(this)
+      textAlign(this),
+      imageSmoothingEnabled(this, true)
       { }
     GraphicsState(const GraphicsState & other)
       : lineWidth(this, other.lineWidth),
@@ -37,7 +38,7 @@ namespace canvas {
       font(this, other.font),
       textBaseline(this, other.textBaseline),
       textAlign(this, other.textAlign),     
-      imageSmoothingEnabled(other.imageSmoothingEnabled),
+      imageSmoothingEnabled(this, other.imageSmoothingEnabled),
       currentPath(other.currentPath),
       clipPath(other.clipPath) {
 
@@ -118,7 +119,7 @@ namespace canvas {
     Font font;
     TextBaselineAttribute textBaseline;
     TextAlignAttribute textAlign;
-    bool imageSmoothingEnabled = true;
+    BoolAttribute imageSmoothingEnabled;
     Path currentPath, clipPath;
 
   protected:
