@@ -2,6 +2,7 @@
 #define _CANVAS_MATRIX_H_
 
 #include <Point.h>
+#include <cmath>
 
 namespace canvas {
   class Matrix {
