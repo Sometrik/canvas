@@ -1,4 +1,4 @@
-#include <Path.h>
+#include <Path2D.h>
 
 #include <cmath>
 #include <glm/glm.hpp>
@@ -6,7 +6,7 @@
 using namespace canvas;
 
 void
-Path::arc(double x, double y, double radius, double sa, double ea, bool anticlockwise) {
+Path2D::arc(double x, double y, double radius, double sa, double ea, bool anticlockwise) {
   data.push_back(PathComponent(PathComponent::ARC, x, y, radius, sa, ea, anticlockwise));
   current_point = Point(x + radius * cos(ea), y + radius * sin(ea));
 }
@@ -14,7 +14,7 @@ Path::arc(double x, double y, double radius, double sa, double ea, bool anticloc
 // Implementation by node-canvas (Node canvas is a Cairo backed Canvas implementation for NodeJS)
 // Original implementation influenced by WebKit.
 void
-Path::arcTo(double x1, double y1, double x2, double y2, double radius) {
+Path2D::arcTo(double x1, double y1, double x2, double y2, double radius) {
   Point p0 = current_point; // current point may be modified so make a copy
   Point p1(x1, y1);
   Point p2(x2, y2);
@@ -88,7 +88,7 @@ Path::arcTo(double x1, double y1, double x2, double y2, double radius) {
 }
 
 void
-Path::rect(double x, double y, double w, double h) {
+Path2D::rect(double x, double y, double w, double h) {
   moveTo(x, y);
   lineTo(x + w, y);
   lineTo(x + w, y + h);
@@ -112,7 +112,7 @@ static inline float crossProduct(const glm::vec2 & p1, const glm::vec2 & p2, con
 // of times a polygon winds around the point.  If the result is 0, the
 // points is outside the polygon.
 bool
-Path::isInside(float x, float y) const {
+Path2D::isInside(float x, float y) const {
   glm::vec2 point(x, y);
   int wn = 0;
   for (unsigned int i = 0; i < data.size(); i++) {

@@ -21,7 +21,7 @@ static std::wstring convert_to_wstring(const std::string & input) {
   return output;
 }
 
-static void toGDIPath(const Path & path, Gdiplus::GraphicsPath & output, float display_scale) {  
+static void toGDIPath(const Path2D & path, Gdiplus::GraphicsPath & output, float display_scale) {  
   output.StartFigure();
   Gdiplus::PointF current_pos;
 
@@ -124,7 +124,7 @@ GDIPlusSurface::GDIPlusSurface(const unsigned char * buffer, size_t size) : Surf
 
 
 void
-GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) {
+GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) {
   initializeContext();
   
   switch (op) {
@@ -167,7 +167,7 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path & input_path, const Style
 }
 
 void
-GDIPlusSurface::clip(const Path & input_path, float display_scale) {
+GDIPlusSurface::clip(const Path2D & input_path, float display_scale) {
   initializeContext();
   
   Gdiplus::GraphicsPath path;

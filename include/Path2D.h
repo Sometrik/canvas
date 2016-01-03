@@ -1,5 +1,5 @@
-#ifndef _PATH_H_
-#define _PATH_H_
+#ifndef _CANVAS_PATH2D_H_
+#define _CANVAS_PATH2D_H_
 
 #include <vector>
 
@@ -23,9 +23,9 @@ namespace canvas {
     bool anticlockwise;
   };
   
-  class Path {
+  class Path2D {
   public:
-    Path() : current_point(0, 0) { }
+    Path2D() : current_point(0, 0) { }
     
     void moveTo(double x, double y) {
       data.push_back(PathComponent(PathComponent::MOVE_TO, x, y));

@@ -102,7 +102,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
 }
 
 void
-Quartz2DSurface::sendPath(const Path & path, float scale) {
+Quartz2DSurface::sendPath(const Path2D & path, float scale) {
   initializeContext();
   CGContextBeginPath(gc);
   for (auto pc : path.getData()) {
@@ -116,7 +116,7 @@ Quartz2DSurface::sendPath(const Path & path, float scale) {
 }
 
 void
-Quartz2DSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath) {
+Quartz2DSurface::renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
   initializeContext();
 
   bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;

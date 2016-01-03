@@ -98,14 +98,14 @@ namespace canvas {
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
     TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
+    void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
     
     void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
     void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
       GDIPlusSurface cs(_img);
       drawNativeSurface(cs, x, y, w, h, alpha, imageSmoothingEnabled);
     }
-    void clip(const Path & path, float display_scale);
+    void clip(const Path2D & path, float display_scale);
     void resetClip() override { }
     void save() {
       initializeContext();

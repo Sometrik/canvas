@@ -147,7 +147,7 @@ CairoSurface::resize(unsigned int _logical_width, unsigned int _logical_height, 
 } 
 
 void
-CairoSurface::sendPath(const Path & path) {
+CairoSurface::sendPath(const Path2D & path) {
   initializeContext();
 
   cairo_new_path(cr);
@@ -168,7 +168,7 @@ CairoSurface::sendPath(const Path & path) {
 }
 
 void
-CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float sadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath) {
+CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float sadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
   initializeContext();
 
   if (!clipPath.empty()) {
@@ -216,7 +216,7 @@ CairoSurface::renderPath(RenderMode mode, const Path & path, const Style & style
 }
 
 void
-CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath) {
+CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
   initializeContext();
 
   if (!clipPath.empty()) {
@@ -293,7 +293,7 @@ CairoSurface::measureText(const Font & font, const std::string & text, float dis
 }
 
 void
-CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float globalAlpha, const Path & clipPath, bool imageSmoothingEnabled) {
+CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w, double h, float globalAlpha, const Path2D & clipPath, bool imageSmoothingEnabled) {
   initializeContext();
 
   if (!clipPath.empty()) {
@@ -320,7 +320,7 @@ CairoSurface::drawNativeSurface(CairoSurface & img, double x, double y, double w
 }
 
 void
-CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled) {
+CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
   CairoSurface * cs_ptr = dynamic_cast<CairoSurface*>(&_img);
   if (cs_ptr) {
     drawNativeSurface(*cs_ptr, x, y, w, h, globalAlpha, clipPath, imageSmoothingEnabled);    
@@ -332,7 +332,7 @@ CairoSurface::drawImage(Surface & _img, double x, double y, double w, double h, 
 }
 
 void
-CairoSurface::drawImage(const Image & _img, double x, double y, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled) {
+CairoSurface::drawImage(const Image & _img, double x, double y, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
   CairoSurface img(_img);
   drawNativeSurface(img, x, y, w, h, globalAlpha, clipPath, imageSmoothingEnabled);
 }

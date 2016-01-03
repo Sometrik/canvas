@@ -108,7 +108,7 @@ namespace canvas {
     
     void releaseMemory() override { }
 
-    void renderPath(RenderMode mode, const Path & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath) override;
+    void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override;
 
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) override {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _format);
@@ -126,7 +126,7 @@ namespace canvas {
       memset(bitmapData, 0, bitmapByteCount);
     }
     
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath) override {
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
       initializeContext();
       bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
       if (has_shadow || !clipPath.empty()) {
@@ -235,7 +235,7 @@ namespace canvas {
       return TextMetrics(width / display_scale);
     }
 
-    void drawImage(Surface & surface, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled = true) override {
+    void drawImage(Surface & surface, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
       initializeContext();
 #if 1
       auto img = surface.createImage();
@@ -249,7 +249,7 @@ namespace canvas {
       CGImageRelease(myImage);
 #endif
     }
-    void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path & clipPath, bool imageSmoothingEnabled = true) override {
+    void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
       initializeContext();
       bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
       if (has_shadow || !clipPath.empty()) {
@@ -285,7 +285,7 @@ namespace canvas {
     }
    
   protected:
-    void sendPath(const Path & path, float display_scale);
+    void sendPath(const Path2D & path, float display_scale);
     CGColorRef createCGColor(const Color & color, float globalAlpha = 1.0f) {
       CGFloat cv[] = { color.red, color.green, color.blue, color.alpha * globalAlpha};
       return CGColorCreate(cache->getColorSpace(), cv);
@@ -357,7 +357,7 @@ namespace canvas {
   protected:
 #if 0
     Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override;
-    Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op) override;
+    Context & renderPath(RenderMode mode, const Path2D & path, const Style & style, Operator op) override;
 #endif
     bool hasNativeShadows() const override { return true; }
     

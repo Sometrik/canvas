@@ -5,7 +5,7 @@
 #include <Font.h>
 #include <TextBaseline.h>
 #include <TextAlign.h>
-#include <Path.h>
+#include <Path2D.h>
 #include <ColorAttribute.h>
 #include <FloatAttribute.h>
 #include <BoolAttribute.h>
@@ -121,7 +121,7 @@ namespace canvas {
     TextBaselineAttribute textBaseline;
     TextAlignAttribute textAlign;
     BoolAttribute imageSmoothingEnabled;
-    Path currentPath, clipPath;
+    Path2D currentPath, clipPath;
 
   protected:
     Matrix currentTransform;

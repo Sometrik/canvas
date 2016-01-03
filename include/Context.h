@@ -32,13 +32,13 @@ namespace canvas {
     virtual void resize(unsigned int _width, unsigned int _height);
         
     Context & stroke() { return renderPath(STROKE, currentPath, strokeStyle); }
-    Context & stroke(const Path & path) { return renderPath(STROKE, path, strokeStyle); }
+    Context & stroke(const Path2D & path) { return renderPath(STROKE, path, strokeStyle); }
     Context & fill() { return renderPath(FILL, currentPath, fillStyle); }
-    Context & fill(const Path & path) { return renderPath(FILL, path, fillStyle); }
+    Context & fill(const Path2D & path) { return renderPath(FILL, path, fillStyle); }
     Context & save();
     Context & restore();
     
-    bool isPointInPath(const Path & path, double x, double y) { return false; }
+    bool isPointInPath(const Path2D & path, double x, double y) { return false; }
     
     TextMetrics measureText(const std::string & text) {
       return getDefaultSurface().measureText(font, text, getDisplayScale());
@@ -95,7 +95,7 @@ namespace canvas {
 #endif
     
   protected:
-    Context & renderPath(RenderMode mode, const Path & path, const Style & style, Operator op = SOURCE_OVER);
+    Context & renderPath(RenderMode mode, const Path2D & path, const Style & style, Operator op = SOURCE_OVER);
     Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
     virtual bool hasNativeShadows() const { return false; }
 
