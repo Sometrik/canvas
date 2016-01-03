@@ -8,6 +8,7 @@
 #include <Path.h>
 #include <ColorAttribute.h>
 #include <FloatAttribute.h>
+#include <Matrix.h>
 
 namespace canvas {
   class GraphicsState {
@@ -89,14 +90,23 @@ namespace canvas {
     void translate(double x, double y) {
 
     }
-    void transform(double a, double b, double c, double d, double e, double f) {
-
+    GraphicsState & transform(double a, double b, double c, double d, double e, double f) {
+      currentTransform *= Matrix(a, b, c, d, e, f);
+      return *this;
     }
-    
-    // DOMMatrix getTransform();
-    // void setTransform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
-    // void setTransform(optional DOMMatrixInit matrix);
-    // void resetTransform();
+    GraphicsState & setTransform(double a, double b, double c, double d, double e, double f) {
+      currentTransform = Matrix(a, b, c, d, e, f);
+      return *this;
+    }
+    GraphicsState & setTransform(const Matrix & m) {
+      currentTransform = m;
+      return *this;
+    }
+    GraphicsState & resetTransform() {
+      currentTransform = Matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+      return *this;
+    }
+    const Matrix & getTransform() { return currentTransform; }
     
     FloatAttribute lineWidth;
     Style fillStyle;
@@ -110,6 +120,9 @@ namespace canvas {
     TextAlignAttribute textAlign;
     bool imageSmoothingEnabled = true;
     Path currentPath, clipPath;
+
+  protected:
+    Matrix currentTransform;
   };
 };
 
