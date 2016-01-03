@@ -27,7 +27,11 @@ Context::strokeRect(double x, double y, double w, double h) {
 Context &
 Context::clearRect(double x, double y, double w, double h) {
   Path2D path;
-  path.rect(x, y, w, h);
+  path.moveTo(currentTransform.multiply(x, y));
+  path.lineTo(currentTransform.multiply(x + w, y));
+  path.lineTo(currentTransform.multiply(x + w, y + h));
+  path.lineTo(currentTransform.multiply(x, y + h));
+  path.closePath();
   Style style(this);
   style = Color(0.0f, 0.0f, 0.0f, 0.0f);
   return renderPath(FILL, path, style, COPY);
