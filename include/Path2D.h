@@ -22,13 +22,13 @@ namespace canvas {
   public:
     Path2D() : current_point(0, 0) { }
     
-    void moveTo(double x, double y) {
-      data.push_back(PathComponent(PathComponent::MOVE_TO, x, y));
-      current_point = Point(x, y);
+    void moveTo(const Point & p) {
+      data.push_back(PathComponent(PathComponent::MOVE_TO, p.x, p.y));
+      current_point = p;
     }
-    void lineTo(double x, double y) {
-      data.push_back(PathComponent(PathComponent::LINE_TO, x, y));
-      current_point = Point(x, y);
+    void lineTo(const Point & p) {
+      data.push_back(PathComponent(PathComponent::LINE_TO, p.x, p.y));
+      current_point = p;
     }
     void closePath() {
       if (!data.empty()) {
@@ -36,8 +36,8 @@ namespace canvas {
 	current_point = Point(data.front().x0, data.front().y0);
       }
     }
-    void arc(double x, double y, double radius, double sa, double ea, bool anticlockwise);
-    void arcTo(double x1, double y1, double x2, double y2, double radius);
+    void arc(const Point & p, double radius, double sa, double ea, bool anticlockwise);
+    void arcTo(const Point & p1, const Point & p2, double radius);
 
     void rect(double x, double y, double w, double h);
 
