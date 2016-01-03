@@ -85,15 +85,6 @@ Path2D::arcTo(const Point & p1, const Point & p2, double radius) {
   // current_point = p2;
 }
 
-void
-Path2D::rect(double x, double y, double w, double h) {
-  moveTo(x, y);
-  lineTo(x + w, y);
-  lineTo(x + w, y + h);
-  lineTo(x, y + h); 
-  closePath();
-}
-
 static inline float determinant(float x1, float y1, float x2, float y2) {
   return x1 * y2 - x2 * y1;
 }

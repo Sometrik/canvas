@@ -39,8 +39,6 @@ namespace canvas {
     void arc(const Point & p, double radius, double sa, double ea, bool anticlockwise);
     void arcTo(const Point & p1, const Point & p2, double radius);
 
-    void rect(double x, double y, double w, double h);
-
     const std::vector<PathComponent> & getData() const { return data; }
 
     void clear() {
