@@ -1,6 +1,8 @@
 #ifndef _CANVAS_MATRIX_H_
 #define _CANVAS_MATRIX_H_
 
+#include <Point.h>
+
 class Matrix {
  public:
  Matrix() : a(1.0), b(0.0), c(0.0), d(1.0), e(0.0), f(0.0) { }
@@ -14,6 +16,16 @@ class Matrix {
   const Matrix & operator*= (const Matrix & other) {
     *this = multiply(*this, other);
     return *this;
+  }
+
+  Point multiply(double x, double y) const {
+    return Point( x * A.a + y * A.c + A.e,
+		  x * A.b + y * A.d + A.f
+		  );    
+  }
+
+  Point multiply(const Point & p) const {
+    return multiply(p.x, p.y);
   }
   
  private:
