@@ -94,7 +94,7 @@ Context::renderPath(RenderMode mode, const Path & path, const Style & style, Ope
 Context &
 Context::drawImage(Surface & img, double x, double y, double w, double h) {
   if (hasNativeShadows()) {
-    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), shadowBlur.getValue(), shadowOffsetX.getValue(), shadowOffsetY.getValue(), shadowColor.getValue(), clipPath, imageSmoothingEnabled);
+    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), shadowBlur.getValue(), shadowOffsetX.getValue(), shadowOffsetY.getValue(), shadowColor.getValue(), clipPath, imageSmoothingEnabled.getValue());
   } else {
     if (hasShadow()) {
       float b = shadowBlur.getValue(), bs = shadowBlur.getValue() * getDisplayScale();
@@ -102,7 +102,7 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
       auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
       auto shadow2 = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, RGBA8);
 
-      shadow->drawImage(img, (x + bi + shadowOffsetX.getValue()) * getDisplayScale(), (y + bi + shadowOffsetY.getValue()) * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), 0.0f, 0.0f, 0.0f, shadowColor.getValue(), clipPath, imageSmoothingEnabled);
+      shadow->drawImage(img, (x + bi + shadowOffsetX.getValue()) * getDisplayScale(), (y + bi + shadowOffsetY.getValue()) * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), 0.0f, 0.0f, 0.0f, shadowColor.getValue(), clipPath, imageSmoothingEnabled.getValue());
       // shadow->colorFill(shadowColor.getValue());
 #if 1
       shadow->slowBlur(bs, bs);
@@ -112,7 +112,7 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
       shadow->colorize(shadowColor.getValue(), *shadow2);
       getDefaultSurface().drawImage(*shadow2, -bi, -bi, shadow2->getActualWidth(), shadow2->getActualHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.getValue(), Path(), false);
     }
-    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), 0.0f, 0.0f, 0.0f, shadowColor.getValue(), clipPath, imageSmoothingEnabled);
+    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), 0.0f, 0.0f, 0.0f, shadowColor.getValue(), clipPath, imageSmoothingEnabled.getValue());
   }
   return *this;
 }
@@ -120,7 +120,7 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
 Context &
 Context::drawImage(const Image & img, double x, double y, double w, double h) {
   if (hasNativeShadows()) {
-    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), shadowBlur.getValue(), shadowOffsetX.getValue(), shadowOffsetY.getValue(), shadowColor.getValue(), clipPath, imageSmoothingEnabled);
+    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), shadowBlur.getValue(), shadowOffsetX.getValue(), shadowOffsetY.getValue(), shadowColor.getValue(), clipPath, imageSmoothingEnabled.getValue());
   } else {
     if (hasShadow()) {
       float b = shadowBlur.getValue(), bs = shadowBlur.getValue() * getDisplayScale();
@@ -128,7 +128,7 @@ Context::drawImage(const Image & img, double x, double y, double w, double h) {
       auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
       auto shadow2 = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, RGBA8);
 
-      shadow->drawImage(img, (x + bi + shadowOffsetX.getValue()) * getDisplayScale(), (y + bi + shadowOffsetY.getValue()) * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), 0.0f, 0.0f, 0.0f, shadowColor.getValue(), clipPath, imageSmoothingEnabled);
+      shadow->drawImage(img, (x + bi + shadowOffsetX.getValue()) * getDisplayScale(), (y + bi + shadowOffsetY.getValue()) * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), 0.0f, 0.0f, 0.0f, shadowColor.getValue(), clipPath, imageSmoothingEnabled.getValue());
       // shadow->colorFill(shadowColor.getValue());
 #if 1
       shadow->slowBlur(bs, bs);
@@ -138,7 +138,7 @@ Context::drawImage(const Image & img, double x, double y, double w, double h) {
       shadow->colorize(shadowColor.getValue(), *shadow2);
       getDefaultSurface().drawImage(*shadow2, -bi, -bi, shadow2->getActualWidth(), shadow2->getActualHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.getValue(), Path(), false);
     }
-    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), 0.0f, 0.0f, 0.0f, shadowColor.getValue(), clipPath, imageSmoothingEnabled);
+    getDefaultSurface().drawImage(img, x * getDisplayScale(), y * getDisplayScale(), w * getDisplayScale(), h * getDisplayScale(), getDisplayScale(), globalAlpha.getValue(), 0.0f, 0.0f, 0.0f, shadowColor.getValue(), clipPath, imageSmoothingEnabled.getValue());
   }
   return *this;
 }
