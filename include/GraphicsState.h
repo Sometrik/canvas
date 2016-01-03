@@ -8,6 +8,7 @@
 #include <Path.h>
 #include <ColorAttribute.h>
 #include <FloatAttribute.h>
+#include <BoolAttribute.h>
 #include <Matrix.h>
 
 namespace canvas {
