@@ -83,14 +83,14 @@ namespace canvas {
       return *this;
     }
 
-    void scale(double x, double y) {
-
+    GraphicsState & scale(double x, double y) {
+      return *this;
     }
-    void rotate(double angle) {
-
+    GraphicsState & rotate(double angle) {
+      return *this;
     }
-    void translate(double x, double y) {
-
+    GraphicsState & translate(double x, double y) {
+      return *this;
     }
     GraphicsState & transform(double a, double b, double c, double d, double e, double f) {
       currentTransform *= Matrix(a, b, c, d, e, f);
