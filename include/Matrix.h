@@ -20,8 +20,8 @@ namespace canvas {
     }
     
     Point multiply(double x, double y) const {
-      return Point( x * A.a + y * A.c + A.e,
-		    x * A.b + y * A.d + A.f
+      return Point( x * a + y * c + e,
+		    x * b + y * d + f
 		    );    
     }
     
