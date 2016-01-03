@@ -3,43 +3,45 @@
 
 #include <Point.h>
 
-class Matrix {
- public:
- Matrix() : a(1.0), b(0.0), c(0.0), d(1.0), e(0.0), f(0.0) { }
+namespace canvas {
+  class Matrix {
+  public:
+  Matrix() : a(1.0), b(0.0), c(0.0), d(1.0), e(0.0), f(0.0) { }
   Matrix(double _a, double _b, double _c, double _d, double _e, double _f)
     : a(_a), b(_b), c(_c), d(_d), e(_e), f(_f) { }
-
-  Matrix operator* (const Matrix & other) {
-    return multiply(*this, other);    
-  }
-
-  const Matrix & operator*= (const Matrix & other) {
-    *this = multiply(*this, other);
-    return *this;
-  }
-
-  Point multiply(double x, double y) const {
-    return Point( x * A.a + y * A.c + A.e,
-		  x * A.b + y * A.d + A.f
-		  );    
-  }
-
-  Point multiply(const Point & p) const {
-    return multiply(p.x, p.y);
-  }
-  
- private:
-  static Matrix multiply(const Matrix & A, const Matrix & B) {
-    return Matrix( A.a * B.a + A.c * B.b,
-		   A.b * B.a + A.d * B.b,
-		   A.a * B.c + A.c * B.d,
-		   A.b * B.c + A.d * B.d,
-		   A.a * B.e + A.c * B.f + A.e,
-		   A.b * B.e + A.d * B.f + A.f
-		   );
-  }
-  
-  double a, b, c, d, e, f;
+    
+    Matrix operator* (const Matrix & other) {
+      return multiply(*this, other);    
+    }
+    
+    const Matrix & operator*= (const Matrix & other) {
+      *this = multiply(*this, other);
+      return *this;
+    }
+    
+    Point multiply(double x, double y) const {
+      return Point( x * A.a + y * A.c + A.e,
+		    x * A.b + y * A.d + A.f
+		    );    
+    }
+    
+    Point multiply(const Point & p) const {
+      return multiply(p.x, p.y);
+    }
+    
+  private:
+    static Matrix multiply(const Matrix & A, const Matrix & B) {
+      return Matrix( A.a * B.a + A.c * B.b,
+		     A.b * B.a + A.d * B.b,
+		     A.a * B.c + A.c * B.d,
+		     A.b * B.c + A.d * B.d,
+		     A.a * B.e + A.c * B.f + A.e,
+		     A.b * B.e + A.d * B.f + A.f
+		     );
+    }
+    
+    double a, b, c, d, e, f;
+  };
 };
 
 #endif
