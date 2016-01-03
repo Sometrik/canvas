@@ -15,10 +15,10 @@ namespace canvas {
     
     FloatAttribute & operator=(const FloatAttribute & other) { value = other.value; return *this; }
     FloatAttribute & operator=(const std::string & s) { value = stof(s); return *this; }
-    FloatAttribute & operator=(const float & _value) { value = _value; return *this; }
+    FloatAttribute & operator=(float _value) { value = _value; return *this; }
 
     GraphicsState & operator()(const std::string & s) { value = stof(s); return *context; }
-    GraphicsState & operator()(const float & _value) { value = _value; return *context; }
+    GraphicsState & operator()(float _value) { value = _value; return *context; }
 
     float getValue() const { return value; }
     
