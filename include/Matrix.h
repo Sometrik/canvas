@@ -29,6 +29,11 @@ namespace canvas {
       return multiply(p.x, p.y);
     }
     
+    double transformAngle(double alpha) {
+      double x = cos(alpha), y = sin(alpha);
+      return atan2(x * b + y * d, x * a + y * c);
+    }
+    
   private:
     static Matrix multiply(const Matrix & A, const Matrix & B) {
       return Matrix( A.a * B.a + A.c * B.b,
