@@ -11,6 +11,8 @@
 #include <BoolAttribute.h>
 #include <Matrix.h>
 
+#include <cmath>
+
 namespace canvas {
   class GraphicsState {
   public:
@@ -83,17 +85,17 @@ namespace canvas {
       return *this;
     }
 
-    GraphicsState & scale(double x, double y) {
-      return *this;
-    }
+    GraphicsState & scale(double x, double y) { return transform(Matrix(x, 0.0, 0.0, y, 0.0, 0.0)); }
     GraphicsState & rotate(double angle) {
-      return *this;
+      double cos_angle = cos(angle), sin_angle = sin(angle);
+      return transform(Matrix(cos_angle, sin_angle, -sin_angle, cos_angle, 0.0, 0.0));
     }
     GraphicsState & translate(double x, double y) {
-      return *this;
+      return transform(Matrix(1.0, 0.0, 0.0, 1.0, x, y));
     }
-    GraphicsState & transform(double a, double b, double c, double d, double e, double f) {
-      currentTransform *= Matrix(a, b, c, d, e, f);
+    GraphicsState & transform(double a, double b, double c, double d, double e, double f) { return transform(Matrix(a, b, c, d, e, f)); }
+    GraphicsState & transform(const Matrix & m) {
+      currentTransform *= m;
       return *this;
     }
     GraphicsState & setTransform(double a, double b, double c, double d, double e, double f) {
