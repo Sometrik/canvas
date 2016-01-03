@@ -43,7 +43,8 @@ namespace canvas {
       textAlign(this, other.textAlign),     
       imageSmoothingEnabled(this, other.imageSmoothingEnabled),
       currentPath(other.currentPath),
-      clipPath(other.clipPath) {
+      clipPath(other.clipPath),
+      currentTransform(other.currentTransform) {
 
     }
       
@@ -62,7 +63,8 @@ namespace canvas {
 	textAlign = other.textAlign;
 	imageSmoothingEnabled = other.imageSmoothingEnabled;
 	currentPath = other.currentPath;
-	clipPath = other.clipPath;	
+	clipPath = other.clipPath;
+	currentTransform = other.currentTransform;
       }
       return *this;
     }
@@ -124,8 +126,6 @@ namespace canvas {
     TextAlignAttribute textAlign;
     BoolAttribute imageSmoothingEnabled;
     Path2D currentPath, clipPath;
-
-  protected:
     Matrix currentTransform;
   };
 };
