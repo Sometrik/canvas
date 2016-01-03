@@ -1,15 +1,10 @@
 #ifndef _CANVAS_PATH2D_H_
 #define _CANVAS_PATH2D_H_
 
+#include <Point.h>
 #include <vector>
 
 namespace canvas {
-  class Point {
-  public:
-  Point(double _x, double _y) : x(_x), y(_y) { }
-    double x, y;
-  };
-
   class PathComponent {
   public:
     enum Type { MOVE_TO = 1, LINE_TO, ARC, CLOSE };
