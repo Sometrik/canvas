@@ -95,7 +95,7 @@ namespace canvas {
       markDirty();
     }
 
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p,, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
     TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
 
     void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override;

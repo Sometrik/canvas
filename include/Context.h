@@ -47,8 +47,8 @@ namespace canvas {
     Context & fillRect(double x, double y, double w, double h);
     Context & strokeRect(double x, double y, double w, double h);
     Context & clearRect(double x, double y, double w, double h);
-    Context & fillText(const std::string & text, double x, double y) { return renderText(FILL, fillStyle, text, x, y); }
-    Context & strokeText(const std::string & text, double x, double y) { return renderText(STROKE, strokeStyle, text, x, y); }
+    Context & fillText(const std::string & text, double x, double y) { return renderText(FILL, fillStyle, text, currentTransform.multiply(x, y)); }
+    Context & strokeText(const std::string & text, double x, double y) { return renderText(STROKE, strokeStyle, text, currentTransform.multiply(x, y)); }
     
     virtual Surface & getDefaultSurface() = 0;
     virtual const Surface & getDefaultSurface() const = 0;
@@ -96,7 +96,7 @@ namespace canvas {
     
   protected:
     Context & renderPath(RenderMode mode, const Path2D & path, const Style & style, Operator op = SOURCE_OVER);
-    Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op = SOURCE_OVER);
+    Context & renderText(RenderMode mode, const Style & style, const std::string & text, const Point & p, Operator op = SOURCE_OVER);
     virtual bool hasNativeShadows() const { return false; }
 
     bool hasShadow() const { return shadowBlur.getValue() > 0.0f || shadowOffsetX.getValue() != 0 || shadowOffsetY.getValue() != 0; }

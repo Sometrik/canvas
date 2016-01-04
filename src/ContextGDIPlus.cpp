@@ -230,11 +230,11 @@ GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h
 }
 
 void
-GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha) {
+GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float globalAlpha) {
   initializeContext();
 
-  x = round(x);
-  y = round(y);
+  double x = round(p.x);
+  double y = round(p.y);
   
   switch (op) {
   case SOURCE_OVER:

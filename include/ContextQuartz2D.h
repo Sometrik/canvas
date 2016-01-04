@@ -126,7 +126,7 @@ namespace canvas {
       memset(bitmapData, 0, bitmapByteCount);
     }
     
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
       initializeContext();
       bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
       if (has_shadow || !clipPath.empty()) {
@@ -166,8 +166,8 @@ namespace canvas {
       CFAttributedStringRef attrString = CFAttributedStringCreate(NULL, text2, attr);
       CTLineRef line = CTLineCreateWithAttributedString(attrString);
       
-      x *= display_scale;
-      y *= display_scale;
+      double x = p.x * display_scale;
+      double y = p.y * display_scale;
 
       if (textAlign.getType() != TextAlign::LEFT || textBaseline.getType() == TextBaseline::MIDDLE || textBaseline.getType() == TextBaseline::TOP) {
 	CGFloat ascent, descent, leading;

@@ -216,7 +216,7 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
 }
 
 void
-CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, double x, double y, float lineWidth, Operator op, float display_scale, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
+CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
   initializeContext();
 
   if (!clipPath.empty()) {
@@ -235,8 +235,8 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
 			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
   cairo_set_font_size(cr, font.size * display_scale);
   
-  x *= display_scale;
-  y *= display_scale;
+  double x = p.x * display_scale;
+  double y = p.y * display_scale;
 
   if (textBaseline == MIDDLE || textBaseline == TOP) {
     cairo_font_extents_t font_extents;
