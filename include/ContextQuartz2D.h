@@ -235,11 +235,11 @@ namespace canvas {
       return TextMetrics(width / display_scale);
     }
 
-    void drawImage(Surface & surface, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
+    void drawImage(Surface & surface, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
       initializeContext();
 #if 1
       auto img = surface.createImage();
-      drawImage(*img, x, y, w, h, display_scale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, imageSmoothingEnabled);
+      drawImage(*img, p, w, h, displayScale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, imageSmoothingEnabled);
 #else
       _img.initializeContext();
       Quartz2DSurface & img = dynamic_cast<Quartz2DSurface &>(_img);
@@ -249,7 +249,7 @@ namespace canvas {
       CGImageRelease(myImage);
 #endif
     }
-    void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
+    void drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
       initializeContext();
       bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
       if (has_shadow || !clipPath.empty()) {
@@ -260,10 +260,9 @@ namespace canvas {
         CGContextClip(gc);
       }
       if (has_shadow) {
-        setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, display_scale);
+        setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, displayScale);
       }
       auto & format = _img.getFormat();
-      // std::cerr << "trying to draw image " << _img.getWidth() << " " << _img.getHeight() << " a=" << format.hasAlpha() << ", bpp=" << format.getBytesPerPixel() << std::endl;
       CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), format.getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
       assert(format.getBytesPerPixel() == 4);
       auto f = (format.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
@@ -271,7 +270,7 @@ namespace canvas {
       assert(img);
       flipY();
       if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
-      CGContextDrawImage(gc, CGRectMake(x, getActualHeight() - 1 - y - h, w, h), img);
+      CGContextDrawImage(gc, CGRectMake(displayScale * x, getActualHeight() - 1 - displayScale * (y - h), displayScale * w, displayScale * h), img);
       if (globalAlpha < 1.0f) CGContextSetAlpha(gc, 1.0f);
       flipY();
 
@@ -291,15 +290,15 @@ namespace canvas {
       return CGColorCreate(cache->getColorSpace(), cv);
     }
     
-    void setShadow(float shadowOffsetX, float shadowOffsetY, float shadowBlur, const Color & shadowColor, float display_scale) {
+    void setShadow(float shadowOffsetX, float shadowOffsetY, float shadowBlur, const Color & shadowColor, float displayScale) {
       initializeContext();
-      CGSize offset = CGSizeMake(display_scale * shadowOffsetX, display_scale * shadowOffsetY);
+      CGSize offset = CGSizeMake(displayScale * shadowOffsetX, displayScale * shadowOffsetY);
       if (active_shadow_color) {
 	if (CFGetRetainCount(active_shadow_color) != 1) std::cerr << "leaking memory Q!\n";
 	CGColorRelease(active_shadow_color);
       }
       active_shadow_color = createCGColor(shadowColor);
-      CGContextSetShadowWithColor(gc, offset, display_scale * shadowBlur, active_shadow_color);
+      CGContextSetShadowWithColor(gc, offset, displayScale * shadowBlur, active_shadow_color);
     }
     
     void initializeContext() {
@@ -348,17 +347,8 @@ namespace canvas {
         
     Surface & getDefaultSurface() override { return default_surface; }
     const Surface & getDefaultSurface() const override { return default_surface; }
-
-#if 0      
-    Context & drawImage(const Image & img, double x, double y, double w, double h) override;
-    Context & drawImage(Surface & img, double x, double y, double w, double h) override;
-#endif
     
   protected:
-#if 0
-    Context & renderText(RenderMode mode, const Style & style, const std::string & text, double x, double y, Operator op) override;
-    Context & renderPath(RenderMode mode, const Path2D & path, const Style & style, Operator op) override;
-#endif
     bool hasNativeShadows() const override { return true; }
     
   private:
