@@ -51,7 +51,7 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
       Style shadow_style(this);
       shadow_style = shadowColor.getValue();
       shadow_style.color.alpha = 1.0f;
-      shadow->renderText(mode, font, shadow_style, textBaseline.getValue(), textAlign.getValue(), text, Point(x + shadowOffsetX.getValue() + bi, y + shadowOffsetY.getValue() + bi), lineWidth.getValue(), op, getDisplayScale(), globalAlpha.getValue(), 0.0f, 0.0f, 0.0f, shadowColor.getValue(), clipPath);
+      shadow->renderText(mode, font, shadow_style, textBaseline.getValue(), textAlign.getValue(), text, Point(p.x + shadowOffsetX.getValue() + bi, p.y + shadowOffsetY.getValue() + bi), lineWidth.getValue(), op, getDisplayScale(), globalAlpha.getValue(), 0.0f, 0.0f, 0.0f, shadowColor.getValue(), clipPath);
 #if 1
       shadow->slowBlur(bs, bs);
 #else
