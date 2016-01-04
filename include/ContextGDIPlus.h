@@ -100,10 +100,10 @@ namespace canvas {
 
     void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
     
-    void drawImage(Surface & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true);
-    void drawImage(const Image & _img, double x, double y, double w, double h, float alpha = 1.0f, bool imageSmoothingEnabled = true) {
+    void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale = 1.0f, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true);
+    void drawImage(const Image & _img, const Point & p, double w, double h, float displayScale = 1.0f, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true) {
       GDIPlusSurface cs(_img);
-      drawNativeSurface(cs, x, y, w, h, alpha, imageSmoothingEnabled);
+      drawNativeSurface(cs, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
     }
     void clip(const Path2D & path, float display_scale);
     void resetClip() override { }
@@ -134,7 +134,7 @@ namespace canvas {
 	g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
       }
     }
-    void drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha, bool imageSmoothingEnabled);
+    void drawNativeSurface(GDIPlusSurface & img, const Point & p, double w, double h, float displayScale, float globalAlpha, bool imageSmoothingEnabled);
 
   private:
     std::shared_ptr<Gdiplus::Bitmap> bitmap;

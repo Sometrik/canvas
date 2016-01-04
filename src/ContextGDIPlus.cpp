@@ -178,7 +178,7 @@ GDIPlusSurface::clip(const Path2D & input_path, float display_scale) {
 }
 
 void
-GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, double w, double h, double alpha, bool imageSmoothingEnabled) {
+GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, const Point & p, double w, double h, float displayScale, float globalAlpha, bool imageSmoothingEnabled) {
   initializeContext();
 
   g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
@@ -189,7 +189,7 @@ GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, doub
   } else {
     g->SetInterpolationMode( Gdiplus::InterpolationModeNearestNeighbor );
   }
-  if (alpha < 1.0f && 0) {
+  if (globalAlpha < 1.0f && 0) {
 #if 0
     ImageAttributes  imageAttributes;
     ColorMatrix colorMatrix = {
@@ -203,7 +203,7 @@ GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, doub
 				    ColorMatrixFlagsDefault,
 				    ColorAdjustTypeBitmap);
     graphics.DrawImage( &(*(img.bitmap)),
-			Gdiplus::Rect(x, y, w, h),  // destination rectangle 
+			Gdiplus::Rect(p.x, p.y, w, h), // destination rectangle 
 			0, 0,        // upper-left corner of source rectangle 
 			getWidth(),       // width of source rectangle
 			getHeight(),      // height of source rectangle
@@ -211,21 +211,21 @@ GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, double x, double y, doub
 			&imageAttributes);
 #endif
   } else if (img.getActualWidth() == (unsigned int)w && img.getActualHeight() == (unsigned int)h && 0) { // this scales image weirdly
-    g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y));
+    g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(p.x), Gdiplus::REAL(p.y));
   } else {
-    g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(x), Gdiplus::REAL(y), Gdiplus::REAL(w), Gdiplus::REAL(h));
+    g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(p.x), Gdiplus::REAL(p.y), Gdiplus::REAL(w), Gdiplus::REAL(h));
   }
 }
 
 void
-GDIPlusSurface::drawImage(Surface & _img, double x, double y, double w, double h, float alpha, bool imageSmoothingEnabled) {
+GDIPlusSurface::drawImage(Surface & _img, const Point & p, double w, double h, gfloat displayScale, float globalAlpha, bool imageSmoothingEnabled) {
   GDIPlusSurface * img = dynamic_cast<GDIPlusSurface*>(&_img);
   if (img) {
-    drawNativeSurface(*img, x, y, w, h, alpha, imageSmoothingEnabled);
+    drawNativeSurface(*img, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
   } else {
     auto img = _img.createImage();
     GDIPlusSurface cs(*img);
-    drawNativeSurface(cs, x, y, w, h, alpha, imageSmoothingEnabled);
+    drawNativeSurface(cs, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
   }
 }
 
