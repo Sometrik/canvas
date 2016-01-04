@@ -421,16 +421,16 @@ public:
 		return TextMetrics(0);
 	}
 
-	void drawImage(Surface & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
+	void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (surface) called");
 
 		auto image = _img.createImage();
-		drawImage(*image, x, y, w, h, display_scale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, true);
+		drawImage(*image, p, w, h, displayScale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, true);
 
 	}
 
-	void drawImage(const Image & _img, double x, double y, double w, double h, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
+	void drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
 		//_img.getWidth() _img.getHeight()
 
 		checkForCanvas();
@@ -463,7 +463,7 @@ public:
 		//env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(Color::BLACK, globalAlpha));
 
 		//Create new Canvas from the mutable bitmap
-		jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, x, y, x + w, y + h);
+		jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
 		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, NULL, dstRect, jpaint);
 
 	}
