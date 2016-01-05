@@ -169,20 +169,20 @@ namespace canvas {
       double x = p.x * display_scale;
       double y = p.y * display_scale;
 
-      if (textAlign.getType() != TextAlign::LEFT || textBaseline.getType() == TextBaseline::MIDDLE || textBaseline.getType() == TextBaseline::TOP) {
+      if (textAlign != ALIGN_LEFT || textBaseline == MIDDLE || textBaseline == TOP) {
 	CGFloat ascent, descent, leading;
 	double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
 	
-	switch (textBaseline.getType()) {
-	case TextBaseline::MIDDLE: y += -descent + (ascent + descent) / 2.0; break;
-	case TextBaseline::TOP: y += ascent; break;
+	switch (textBaseline) {
+	case MIDDLE: y += -descent + (ascent + descent) / 2.0; break;
+	case TOP: y += ascent; break;
 	default: break;
 	}
 	
-	switch (textAlign.getType()) {
-        case TextAlign::LEFT: break;
-        case TextAlign::CENTER: x -= width / 2; break;
-        case TextAlign::RIGHT: x -= width; break;
+	switch (textAlign) {
+        case ALIGN_LEFT: break;
+        case ALIGN_CENTER: x -= width / 2; break;
+        case ALIGN_RIGHT: x -= width; break;
         default: break;
 	}
       }
@@ -256,7 +256,7 @@ namespace canvas {
         CGContextSaveGState(gc);
       }
       if (!clipPath.empty()) {
-        sendPath(clipPath, display_scale);
+        sendPath(clipPath, displayScale);
         CGContextClip(gc);
       }
       if (has_shadow) {
@@ -270,7 +270,7 @@ namespace canvas {
       assert(img);
       flipY();
       if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
-      CGContextDrawImage(gc, CGRectMake(displayScale * x, getActualHeight() - 1 - displayScale * (y - h), displayScale * w, displayScale * h), img);
+      CGContextDrawImage(gc, CGRectMake(displayScale * p.x, getActualHeight() - 1 - displayScale * (p.y - h), displayScale * w, displayScale * h), img);
       if (globalAlpha < 1.0f) CGContextSetAlpha(gc, 1.0f);
       flipY();
 
