@@ -238,7 +238,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     if (image.getFormat().getCompression() == ImageFormat::ETC1) {
       updateCompressedData(image, x, y);
     } else {
-      cerr << "WARNING: compression should be done in thread\n";
+      cerr << "WARNING: compression should be done in thread (bpp = " << image.getFormat().getBytesPerPixel() << ", c = " << int(image.getFormat().getCompression()) << ", ch = " << image.getFormat().getNumChannels() << ")\n";
       auto tmp_image = image.convert(ImageFormat::RGB_ETC1);
       updateCompressedData(*tmp_image, x, y);
     }
