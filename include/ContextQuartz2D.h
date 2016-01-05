@@ -270,7 +270,7 @@ namespace canvas {
       assert(img);
       flipY();
       if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
-      CGContextDrawImage(gc, CGRectMake(displayScale * p.x, getActualHeight() - 1 - displayScale * (p.y - h), displayScale * w, displayScale * h), img);
+      CGContextDrawImage(gc, CGRectMake(displayScale * p.x, getActualHeight() - 1 - displayScale * (p.y + h), displayScale * w, displayScale * h), img);
       if (globalAlpha < 1.0f) CGContextSetAlpha(gc, 1.0f);
       flipY();
 
