@@ -14,10 +14,10 @@ namespace canvas {
     BoolAttribute(const BoolAttribute & other) = delete;
     
     BoolAttribute & operator=(const BoolAttribute & other) { value = other.value; return *this; }
-    BoolAttribute & operator=(const std::string & s) { value = stof(s); return *this; }
+    BoolAttribute & operator=(const std::string & s) { value = s == "true" ? true : false; return *this; }
     BoolAttribute & operator=(bool _value) { value = _value; return *this; }
 
-    GraphicsState & operator()(const std::string & s) { value = stof(s); return *context; }
+    GraphicsState & operator()(const std::string & s) { value = s == "true" ? true : false; return *context; }
     GraphicsState & operator()(bool _value) { value = _value; return *context; }
 
     bool getValue() const { return value; }
