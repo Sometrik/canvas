@@ -4,6 +4,7 @@
 #include "Attribute.h"
 
 #include <string>
+#include <cstdlib>
 
 namespace canvas {
   class FloatAttribute : public Attribute {
@@ -14,10 +15,10 @@ namespace canvas {
     FloatAttribute(const FloatAttribute & other) = delete;
     
     FloatAttribute & operator=(const FloatAttribute & other) { value = other.value; return *this; }
-    FloatAttribute & operator=(const std::string & s) { value = std::stof(s); return *this; }
+    FloatAttribute & operator=(const std::string & s) { value = atof(s.c_str()); return *this; }
     FloatAttribute & operator=(float _value) { value = _value; return *this; }
 
-    GraphicsState & operator()(const std::string & s) { value = std::stof(s); return *context; }
+    GraphicsState & operator()(const std::string & s) { value = atof(s.c_str()); return *context; }
     GraphicsState & operator()(float _value) { value = _value; return *context; }
 
     float getValue() const { return value; }
