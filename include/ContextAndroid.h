@@ -36,7 +36,7 @@ public:
 		paintSetStrokeJoinMethod = env->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V");
 		canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
 		factoryDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
-		//factoryDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory/Options;)Landroid/graphics$Bitmap;");
+		factoryDecodeMethod2 = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory$Options;)Landroid/graphics/Bitmap;");
 		bitmapCopyMethod = env->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
 		paintConstructor = env->GetMethodID(paintClass, "<init>", "()V");
 		paintSetAntiAliasMethod = env->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
@@ -101,6 +101,7 @@ public:
 	jmethodID canvasConstructor;
 	jmethodID managerOpenMethod;
 	jmethodID factoryDecodeMethod;
+	jmethodID factoryDecodeMethod2;
 	jmethodID bitmapCopyMethod;
 	jmethodID paintConstructor;
 	jmethodID paintSetAntiAliasMethod;
@@ -184,22 +185,17 @@ public:
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) :
 			Surface(0, 0, 0, 0, InternalFormat::RGBA8), cache(_cache), env(_env), mgr(_mgr) {
 
-		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...Surface filename constructor");
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
 		//Get inputStream from the picture(filename)
 		jobject inputStream = env->CallObjectMethod(mgr, cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
 
 		//Create BitmapFactory options to make the created bitmap mutable straight away
-		//jobject factoryOptions = env->NewObject(cache->bitmapOptionsClass, cache->bitmapOptionsConstructor);
-		//jboolean inMutable = env->GetBooleanField(factoryOptions, cache->optionsMutableField);
-		//inMutable = JNI_TRUE;
+		jobject factoryOptions = env->NewObject(cache->bitmapOptionsClass, cache->bitmapOptionsConstructor);
+		env->SetBooleanField(factoryOptions, cache->optionsMutableField, JNI_TRUE);
 
 		//Create a bitmap from the inputStream
-		jobject firstBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod, inputStream);
-
-		//Make bitmap mutable by calling Copy Method with setting isMutable() to true
-		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-		bitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE);
+		bitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, factoryOptions);
 
 		int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
 		int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
