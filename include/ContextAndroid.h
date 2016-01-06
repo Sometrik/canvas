@@ -446,21 +446,13 @@ public:
 
 		jobject drawableBitmap = imageToBitmap(_img);
 
-		// make this paint through createJavaPaint() function
-		jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
-
-		env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, JNI_TRUE);
-		env->CallVoidMethod(jpaint, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
-
-		//env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(Color::BLACK, globalAlpha));
-
 		//Create new Canvas from the mutable bitmap
 		jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
-		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, NULL, dstRect, jpaint);
+		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, NULL, dstRect, NULL);
 
 	}
 
-	jobject imageToBitmap(const Image & _img){
+	jobject imageToBitmap(const Image & _img) {
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", " ImageToBitmap called");
 
