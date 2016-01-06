@@ -189,7 +189,11 @@ public:
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const Image & image) :
 			Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), InternalFormat::RGBA8), cache(_cache), env(_env), mgr(_mgr) {
+
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
+
 		// creates a surface with width, height and contents from image
+		bitmap = imageToBitmap(image);
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) :
@@ -440,19 +444,7 @@ public:
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "width = %f", w);
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "height = %f", h);
 
-		const unsigned char* buf = _img.getData();
-
-
-		int length = _img.getWidth() * _img.getHeight() * 4;
-
-		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
-
-		jbyteArray jarray = env->NewByteArray(length);
-		env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
-
-		//change field_argb_8888 to use
-		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-		jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
+		jobject drawableBitmap = imageToBitmap(_img);
 
 		// make this paint through createJavaPaint() function
 		jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
@@ -466,6 +458,26 @@ public:
 		jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
 		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, NULL, dstRect, jpaint);
 
+	}
+
+	jobject imageToBitmap(const Image & _img){
+
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", " ImageToBitmap called");
+
+		const unsigned char* buf = _img.getData();
+
+		int length = _img.getWidth() * _img.getHeight() * 4;
+
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
+
+		jbyteArray jarray = env->NewByteArray(length);
+		env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
+
+		//change field_argb_8888 to use
+		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+		jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
+
+		return drawableBitmap;
 	}
 
 	void checkForCanvas(){
