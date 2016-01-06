@@ -156,31 +156,16 @@ public:
 
 		//set bitmap config according to internalformat
 		jobject argbObject;
-		switch (_format){
-		case LUMINANCE_ALPHA:
+
+		if (_format == LUMINANCE_ALPHA) {
 			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to alpha 8");
 			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_alpha_8);
-			break;
-		case RGB565:
-				__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb565");
+		} else if (_format == RGB565) {
+			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb565");
 			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_rgb_565);
-		break;
-		case R8:
-		case RG8:
-		case RGBA4:
-		case RGBA8:
-		case RGB8:
-		case RGB8_24:
-		case RED_RGTC1:
-		case RG_RGTC2:
-		case RGB_DXT1:
-		case RGBA_DXT5:
-		case RGB_ETC1:
-		case LA44:
-		case R32F:
-				__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
+		} else {
+			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
 			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-		break;
 		}
 
 		bitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
