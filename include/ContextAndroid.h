@@ -427,10 +427,10 @@ public:
 
 	void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
 
-		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (surface) called");
+		checkForCanvas();
 
-		auto image = _img.createImage();
-		drawImage(*image, p, w, h, displayScale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, true);
+		jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
+		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, (dynamic_cast<canvas::AndroidSurface&>(_img)).getBitmap(), NULL, dstRect, NULL);
 
 	}
 
