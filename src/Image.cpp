@@ -323,6 +323,7 @@ Image::getInternalFormat() const {
   } else if (format == ImageFormat::FLOAT32) {
     return R32F;
   } else {
+    cerr << "unhandled ImageFormat: bpp = " << format.getBytesPerPixel() << ", c = " << format.getNumChannels() << endl;
     assert(0);
     return UNKNOWN_FORMAT;
   }
