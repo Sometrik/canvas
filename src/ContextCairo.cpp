@@ -47,11 +47,12 @@ CairoSurface::CairoSurface(const Image & image)
   size_t numPixels = getActualWidth() * getActualHeight();
   storage = new unsigned int[numPixels];
   const unsigned char * data = image.getData();
-  if (image.getFormat().getBytesPerPixel() == 4) {
+  ImageFormat fd = image.getImageFormat();
+  if (fd.getBytesPerPixel() == 4) {
     memcpy(storage, data, numPixels * 4);
-  } else if (image.getFormat().getBytesPerPixel() == 1) {
+  } else if (fd.getBytesPerPixel() == 1) {
     memcpy(storage, data, numPixels);    
-  } else if (image.getFormat().hasAlpha()) {
+  } else if (fd.hasAlpha()) {
     for (unsigned int i = 0; i < numPixels; i++) {
       storage[i] = (data[4 * i + 0]) + (data[4 * i + 1] << 8) + (data[4 * i + 2] << 16) + (data[4 * i + 3] << 24);
     }
