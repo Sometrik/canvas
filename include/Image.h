@@ -29,7 +29,7 @@ namespace canvas {
 
   class Image {
   public:
-  Image() : width(0), height(0), data(0), format(ImageFormat::UNDEF) { }
+  Image() : width(0), height(0), data(0), format(UNKNOWN_FORMAT) { }
   Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1)
     : width(_width), height(_height), levels(_levels), format(_format)
     {
