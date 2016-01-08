@@ -149,7 +149,7 @@ class AndroidSurface: public Surface {
 public:
 	friend class ContextAndroid;
 
-	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const InternalFormat & _format) :
+	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) :
 			Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format), cache(_cache), env(_env), mgr(_mgr) {
 		// creates an empty canvas
 
@@ -174,7 +174,7 @@ public:
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const Image & image) :
-			Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), InternalFormat::RGBA8), cache(_cache), env(_env), mgr(_mgr) {
+			Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), RGBA8), cache(_cache), env(_env), mgr(_mgr) {
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
 
@@ -183,7 +183,7 @@ public:
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) :
-			Surface(0, 0, 0, 0, InternalFormat::RGBA8), cache(_cache), env(_env), mgr(_mgr) {
+			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr) {
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
@@ -203,7 +203,7 @@ public:
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) :
-			Surface(0, 0, 0, 0, InternalFormat::RGBA8), cache(_cache), env(_env), mgr(_mgr) {
+			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr) {
 		//Create a bitmap from bytearray
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
@@ -486,14 +486,14 @@ private:
 
 class ContextAndroid: public Context {
 public:
-	ContextAndroid(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, unsigned int _width, unsigned int _height, const InternalFormat & format, float _display_scale) :
+	ContextAndroid(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, unsigned int _width, unsigned int _height, InternalFormat format, float _display_scale) :
 			Context(_display_scale), cache(_cache), env(_env), mgr(_mgr), default_surface(_cache, _env, _mgr, _width, _height, (unsigned int) (_width * _display_scale), (unsigned int) (_height * _display_scale), format) {
 	}
 
 	std::shared_ptr<Surface> createSurface(const Image & image) override {
 		return std::shared_ptr < Surface > (new AndroidSurface(cache, env, mgr, image));
 	}
-	std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const InternalFormat & _format) override {
+	std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {
 		return std::shared_ptr < Surface > (new AndroidSurface(cache, env, mgr, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _format));
 	}
 	std::shared_ptr<Surface> createSurface(const std::string & filename) override {
@@ -524,14 +524,14 @@ public:
 	AndroidContextFactory(JNIEnv * _env, jobject _mgr, float _display_scale = 1.0f) :
 			ContextFactory(_display_scale), cache(_env, _mgr), env(_env), mgr(_mgr) {
 	}
-	std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const InternalFormat & format, bool apply_scaling = false) override {
+	std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling = false) override {
 		std::shared_ptr<Context> ptr(new ContextAndroid(&cache, env, mgr, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
 		return ptr;
 	}
 	std::shared_ptr<Surface> createSurface(const std::string & filename) override {
 		return std::shared_ptr < Surface > (new AndroidSurface(&cache, env, mgr, filename));
 	}
-	std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const InternalFormat & format, bool apply_scaling) override {
+	std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) override {
 		unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
 		unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
 		std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, env, mgr, width, height, aw, ah, format));
