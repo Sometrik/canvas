@@ -19,20 +19,6 @@ static cairo_format_t getCairoFormat(InternalFormat format) {
   }
 }
 
-static InternalFormat getInternalFormat(const ImageFormat & f) {
-  if (f == ImageFormat::LUM8) {
-    return R8;
-  } else if (f == ImageFormat::RGB32 || f == ImageFormat::RGB24) {
-    return RGB8;
-  } else if (f == ImageFormat::RGBA32) {
-    return RGBA8;
-  } else {
-    cerr << "unhandled ImageFormat: bpp = " << f.getBytesPerPixel() << ", c = " << f.getNumChannels() << endl;
-    assert(0);
-    return RGBA8;
-  }
-}
-
 CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const InternalFormat & _image_format)
   : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _image_format) {
   if (_actual_width && _actual_height) {
@@ -44,7 +30,7 @@ CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_he
 }
  
 CairoSurface::CairoSurface(const Image & image)
-  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), getInternalFormat(image.getFormat()))
+  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getInternalFormat())
 {
   cairo_format_t format = getCairoFormat(getFormat());
   unsigned int stride = cairo_format_stride_for_width(format, getActualWidth());

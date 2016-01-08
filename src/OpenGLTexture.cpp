@@ -209,7 +209,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     auto tmp_image = image.convert(LA44);
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RED, GL_UNSIGNED_BYTE, tmp_image->getData());
   } else if (getInternalFormat() == LUMINANCE_ALPHA) {
-    if (image.getFormat() == ImageFormat::LA88) {
+    if (image.getInternalFormat() == LUMINANCE_ALPHA) {
       glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RG, GL_UNSIGNED_BYTE, image.getData());
     } else {
       auto tmp_image = image.convert(LUMINANCE_ALPHA);
@@ -223,7 +223,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     auto tmp_image = image.convert(RGBA4);
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, tmp_image->getData());
   } else if (getInternalFormat() == RGB_ETC1) {
-    if (image.getFormat().getCompression() == ImageFormat::ETC1) {
+    if (image.getInternalFormat() == RGB_ETC1) {
       updateCompressedData(image, x, y);
     } else {
       cerr << "WARNING: compression should be done in thread (bpp = " << image.getFormat().getBytesPerPixel() << ", c = " << int(image.getFormat().getCompression()) << ", ch = " << image.getFormat().getNumChannels() << ")\n";
@@ -231,7 +231,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       updateCompressedData(*tmp_image, x, y);
     }
   } else if (getInternalFormat() == RGB_DXT1) {
-    if (image.getFormat().getCompression() == ImageFormat::DXT1) {
+    if (image.getInternalFormat() == RGB_DXT1) {
       updateCompressedData(image, x, y);
     } else {
       cerr << "WARNING: compression should be done in thread\n";
@@ -239,7 +239,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       updateCompressedData(*tmp_image, x, y);
     }    
   } else if (getInternalFormat() == RED_RGTC1) {
-    if (image.getFormat().getCompression() == ImageFormat::RGTC1) {
+    if (image.getInternalFormat() == RED_RGTC1) {
       updateCompressedData(image, x, y);
     } else {
       cerr << "WARNING: compression should be done in thread\n";
@@ -247,7 +247,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       updateCompressedData(*tmp_image, x, y);
     }    
   } else if (getInternalFormat() == RG_RGTC2) {
-    if (image.getFormat().getCompression() == ImageFormat::RGTC2) {
+    if (image.getInternalFormat() == RG_RGTC2) {
       updateCompressedData(image, x, y);
     } else {
       cerr << "WARNING: compression should be done in thread\n";

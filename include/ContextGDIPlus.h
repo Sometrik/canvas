@@ -23,8 +23,8 @@ namespace canvas {
   public:
     friend class ContextGDIPlus;
 
-  GDIPlusSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, const ImageFormat & image_format)
-    : Surface(_actual_width, _actual_height, _logical_width, _logical_height, image_format.hasAlpha()) {
+  GDIPlusSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat image_format)
+    : Surface(_actual_width, _actual_height, _logical_width, _logical_height, image_format) {
       if (_actual_width && _actual_height) {
 	bitmap = std::shared_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, image_format.hasAlpha() ? PixelFormat32bppPARGB : PixelFormat32bppRGB));
       }
@@ -146,9 +146,9 @@ namespace canvas {
   
   class ContextGDIPlus : public Context {
   public:
-    ContextGDIPlus(unsigned int _width, unsigned int _height, const ImageFormat & image_format, float _display_scale = 1.0f)
+    ContextGDIPlus(unsigned int _width, unsigned int _height, InternalFormat _image_format, float _display_scale = 1.0f)
       : Context(_display_scale),
-	default_surface(_width, _height, (unsigned int)(_display_scale * _width), (unsigned int)(_display_scale * _height), image_format)
+	default_surface(_width, _height, (unsigned int)(_display_scale * _width), (unsigned int)(_display_scale * _height), _image_format)
     {
     
     }
@@ -165,7 +165,7 @@ namespace canvas {
     std::shared_ptr<Surface> createSurface(const Image & image) {
       return std::shared_ptr<Surface>(new GDIPlusSurface(image));
     }
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const ImageFormat & image_format) {
+    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat image_format) {
 		return std::shared_ptr<Surface>(new GDIPlusSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), image_format));
     }
     std::shared_ptr<Surface> createSurface(const std::string & filename) {
@@ -184,11 +184,11 @@ namespace canvas {
   class GDIPlusContextFactory : public ContextFactory  {
   public:
     GDIPlusContextFactory() { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const ImageFormat & image_format, bool apply_scaling) override {
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format, bool apply_scaling) override {
 		return std::shared_ptr<Context>(new ContextGDIPlus(width, height, image_format, getDisplayScale()));
 	}
     std::shared_ptr<Surface> createSurface(const std::string & filename) override { return std::shared_ptr<Surface>(new GDIPlusSurface(filename)); }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const ImageFormat & image_format, bool apply_scaling) override {
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format, bool apply_scaling) override {
 		unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
 		unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
 		return std::shared_ptr<Surface>(new GDIPlusSurface(width, height, aw, ah, image_format));
