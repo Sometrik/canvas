@@ -48,17 +48,17 @@ Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, 
 }
 
 std::shared_ptr<Image>
-Image::convert(InternalFormat _target_format) const {
+Image::convert(InternalFormat target_format) const {
   ImageFormat fd = getImageFormat(format);
-  ImageFormat target_format = getImageFormat(_target_format);
+  ImageFormat target_fd = getImageFormat(target_format);
   
   assert(fd.getBytesPerPixel() == 4);
   assert(!fd.getCompression());
 
-  if (target_format.getCompression() == ImageFormat::DXT1 || target_format.getCompression() == ImageFormat::ETC1 || target_format.getCompression() == ImageFormat::RGTC1 || target_format.getCompression() == ImageFormat::RGTC2) {
+  if (target_fd.getCompression() == ImageFormat::DXT1 || target_fd.getCompression() == ImageFormat::ETC1 || target_fd.getCompression() == ImageFormat::RGTC1 || target_fd.getCompression() == ImageFormat::RGTC2) {
     rg_etc1::etc1_pack_params params;
     params.m_quality = rg_etc1::cLowQuality;
-    if (target_format.getCompression() == ImageFormat::ETC1 && !etc1_initialized) {
+    if (target_fd.getCompression() == ImageFormat::ETC1 && !etc1_initialized) {
       cerr << "initializing etc1" << endl;
       etc1_initialized = true;
       rg_etc1::pack_etc1_block_init();
@@ -79,19 +79,19 @@ Image::convert(InternalFormat _target_format) const {
 	  for (unsigned int y = 0; y < 4; y++) {
 	    for (unsigned int x = 0; x < 4; x++) {
 	      int source_offset = base_source_offset + ((row * 4 + y) * target_width + col * 4 + x) * 4;
-	      if (target_format.getCompression() == ImageFormat::ETC1) {
+	      if (target_fd.getCompression() == ImageFormat::ETC1) {
 		int offset = (y * 4 + x) * 4;
 		input_block[offset++] = data[source_offset++];
 		input_block[offset++] = data[source_offset++];
 		input_block[offset++] = data[source_offset++];
 		input_block[offset++] = 255; // data[source_offset++];
-	      } else if (target_format.getCompression() == ImageFormat::DXT1) {
+	      } else if (target_fd.getCompression() == ImageFormat::DXT1) {
 		int offset = (y * 4 + x) * 4;
 		input_block[offset++] = data[source_offset + 2];
 		input_block[offset++] = data[source_offset + 1];
 		input_block[offset++] = data[source_offset + 0];
 		input_block[offset++] = 255; // data[source_offset++];
-	      } else if (target_format.getCompression() == ImageFormat::RGTC1) {
+	      } else if (target_fd.getCompression() == ImageFormat::RGTC1) {
 		int offset = y * 4 + x;
 		input_block[offset] = data[source_offset + 0];		
 	      } else {
@@ -101,13 +101,13 @@ Image::convert(InternalFormat _target_format) const {
 	      }
 	    }
 	  }
-	  if (target_format.getCompression() == ImageFormat::ETC1) {
+	  if (target_fd.getCompression() == ImageFormat::ETC1) {
 	    rg_etc1::pack_etc1_block(output_data.get() + target_offset, (const unsigned int *)&(input_block[0]), params);	  
 	    target_offset += 8;
-	  } else if (target_format.getCompression() == ImageFormat::DXT1) {
+	  } else if (target_fd.getCompression() == ImageFormat::DXT1) {
 	    stb_compress_dxt1_block(output_data.get() + target_offset, &(input_block[0]), false, 0);
 	    target_offset += 8;
-	  } else if (target_format.getCompression() == ImageFormat::RGTC1) {
+	  } else if (target_fd.getCompression() == ImageFormat::RGTC1) {
 	    stb_compress_rgtc1_block(output_data.get() + target_offset, &(input_block[0]));
 	    target_offset += 8;
 	  } else {
@@ -119,12 +119,12 @@ Image::convert(InternalFormat _target_format) const {
       target_width = (target_width + 1) / 2;
       target_height = (target_height + 1) / 2;
     }
-    return make_shared<Image>(output_data.get(), _target_format, width, height, levels);
-  } else if (target_format.getNumChannels() == 2 && target_format.getBytesPerPixel() == 1) {
+    return make_shared<Image>(output_data.get(), target_format, width, height, levels);
+  } else if (target_fd.getNumChannels() == 2 && target_fd.getBytesPerPixel() == 1) {
     assert(levels == 1);
     
     unsigned int n = width * height;
-    std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_format.getBytesPerPixel() * n]);
+    std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_fd.getBytesPerPixel() * n]);
     unsigned char * output_data = (unsigned char *)tmp.get();
     const unsigned int * input_data = (const unsigned int *)data;
     
@@ -139,15 +139,15 @@ Image::convert(InternalFormat _target_format) const {
       *output_data++ = (alpha << 4) | lum;
     }
 
-    return make_shared<Image>(tmp.get(), _target_format, getWidth(), getHeight());
+    return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight());
   } else {
-    assert(target_format.getBytesPerPixel() == 2);
+    assert(target_fd.getBytesPerPixel() == 2);
     unsigned int target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
     std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_size]);
     unsigned short * output_data = (unsigned short *)tmp.get();
     const unsigned int * input_data = (const unsigned int *)data;
     unsigned int n = calculateSize() / fd.getBytesPerPixel();
-    if (target_format.getNumChannels() == 2) {
+    if (target_fd.getNumChannels() == 2) {
       for (unsigned int i = 0; i < n; i++) {
 	int v = input_data[i];
 	int red = RGBA_TO_RED(v);
@@ -158,7 +158,7 @@ Image::convert(InternalFormat _target_format) const {
 	if (lum >= 255) lum = 255;
 	*output_data++ = (alpha << 8) | lum;
       }
-    } else if (target_format.getNumChannels() == 3) {
+    } else if (target_fd.getNumChannels() == 3) {
       for (unsigned int i = 0; i < n; i++) {
 	int v = input_data[i];
 	int red = RGBA_TO_RED(v) >> 3;
@@ -181,7 +181,7 @@ Image::convert(InternalFormat _target_format) const {
       }
     }
     
-    return make_shared<Image>(tmp.get(), _target_format, getWidth(), getHeight(), getLevels());
+    return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight(), getLevels());
   }
 }
 
@@ -295,6 +295,7 @@ Image::createMipmaps(unsigned int target_levels) const {
   return make_shared<Image>(output_data.get(), getInternalFormat(), width, height, target_levels);
 }
 
+#if 0
 InternalFormat
 Image::getInternalFormat() const {
   if (format == ImageFormat::RGB24) {
@@ -328,8 +329,10 @@ Image::getInternalFormat() const {
   } else if (format == ImageFormat::FLOAT32) {
     return R32F;
   } else {
+    ImageFormat fd = getImageFormat(format);
     cerr << "unhandled ImageFormat: bpp = " << fd.getBytesPerPixel() << ", c = " << fd.getNumChannels() << endl;
     assert(0);
     return UNKNOWN_FORMAT;
   }
 }
+#endif
