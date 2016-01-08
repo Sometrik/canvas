@@ -9,26 +9,26 @@
 #include "InternalFormat.h"
 
 namespace canvas {
-  static inline ImageFormat getImageFormat(InternalFormat format) {
-    switch (format) {
-    case RGB8_24: return ImageFormat::RGB24;
-    case RGB_ETC1: return ImageFormat::RGB_ETC1;
-    case RGB_DXT1: return ImageFormat::RGB_DXT1;
-    case RED_RGTC1: return ImageFormat::RED_RGTC1;
-    case RG_RGTC2: return ImageFormat::RG_RGTC2;
-    case RGBA8: return ImageFormat::RGBA32;
-    case RGB8: return ImageFormat::RGB32;
-    case R8: return ImageFormat::LUM8;
-    case LA44: return ImageFormat::LA44;
-    case R32F: return ImageFormat::FLOAT32;
-    case RGB565: return ImageFormat::RGB565;
-    default:
-      assert(0);
-    }
-  }
-
   class Image {
   public:
+    static inline ImageFormat getImageFormat(InternalFormat format) {
+      switch (format) {
+      case RGB8_24: return ImageFormat::RGB24;
+      case RGB_ETC1: return ImageFormat::RGB_ETC1;
+      case RGB_DXT1: return ImageFormat::RGB_DXT1;
+      case RED_RGTC1: return ImageFormat::RED_RGTC1;
+      case RG_RGTC2: return ImageFormat::RG_RGTC2;
+      case RGBA8: return ImageFormat::RGBA32;
+      case RGB8: return ImageFormat::RGB32;
+      case R8: return ImageFormat::LUM8;
+      case LA44: return ImageFormat::LA44;
+      case R32F: return ImageFormat::FLOAT32;
+      case RGB565: return ImageFormat::RGB565;
+      default:
+      assert(0);
+      }
+    }
+
   Image() : width(0), height(0), data(0), format(UNKNOWN_FORMAT) { }
   Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1)
     : width(_width), height(_height), levels(_levels), format(_format)
@@ -83,8 +83,8 @@ namespace canvas {
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
     unsigned int getLevels() const { return levels; }
-    InternalFormat getInternalFormat() const;
-    ImageFormat getFormat() const { return getImageFormat(format); }
+    InternalFormat getInternalFormat() const { return format; }
+    ImageFormat getImageFormat() const { return getImageFormat(format); }
     const unsigned char * getData() const { return data; }
     const unsigned char * getDataForLevel(unsigned int level) {
       return data + calculateOffset(level);
