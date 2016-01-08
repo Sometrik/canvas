@@ -8,7 +8,6 @@ ImageFormat ImageFormat::RGB32(3, 4);
 ImageFormat ImageFormat::RGBA32(4, 4);
 ImageFormat ImageFormat::RGBA4(4, 2);
 ImageFormat ImageFormat::RGB565(3, 2);
-ImageFormat ImageFormat::PAL8(3, 1);
 ImageFormat ImageFormat::LUM8(1, 1);
 ImageFormat ImageFormat::ALPHA8(1, 1, true);
 ImageFormat ImageFormat::LA88(2, 2, true);
