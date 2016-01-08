@@ -11,33 +11,35 @@ using namespace canvas;
 
 bool Image::etc1_initialized = false;
 
-Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels) : width(_width), height(_height), levels(_levels), format(getImageFormat(_format)) {
+Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels) : width(_width), height(_height), levels(_levels), format(_format) {
   size_t s = calculateSize();
+
+  ImageFormat fd = getImageFormat(format);
   
   data = new unsigned char[s];
-  if (format.getCompression() == ImageFormat::ETC1) {
+  if (fd.getCompression() == ImageFormat::ETC1) {
     for (unsigned int i = 0; i < s; i += 8) {
       *(unsigned int *)(data + i + 0) = 0x00000000;
       *(unsigned int *)(data + i + 4) = 0xffffffff;
     }
-  } else if (format.getCompression() == ImageFormat::DXT1) {
+  } else if (fd.getCompression() == ImageFormat::DXT1) {
     for (unsigned int i = 0; i < s; i += 8) {
       *(unsigned int *)(data + i + 0) = 0x00000000;
       *(unsigned int *)(data + i + 4) = 0xaaaaaaaa;
     }
-  } else if (format.getCompression() == ImageFormat::RGTC1) {
+  } else if (fd.getCompression() == ImageFormat::RGTC1) {
     for (unsigned int i = 0; i < s; i += 8) {
       *(unsigned int *)(data + i + 0) = 0x00000003; // doesn't work on big endian
       *(unsigned int *)(data + i + 4) = 0x00000000;
     }
-  } else if (format.getCompression() == ImageFormat::RGTC2) {
+  } else if (fd.getCompression() == ImageFormat::RGTC2) {
     for (unsigned int i = 0; i < s; i += 16) {
       *(unsigned int *)(data + i + 0) = 0x00000003;
       *(unsigned int *)(data + i + 4) = 0x00000000;
       *(unsigned int *)(data + i + 4) = 0x00000003;
       *(unsigned int *)(data + i + 8) = 0x00000000;
     }
-  } else if (!format.getCompression()) {
+  } else if (!fd.getCompression()) {
     cerr << "clearing memory for " << s << " bytes\n";
     memset(data, 0, s);      
   } else {
@@ -47,10 +49,11 @@ Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, 
 
 std::shared_ptr<Image>
 Image::convert(InternalFormat _target_format) const {
+  ImageFormat fd = getImageFormat(format);
   ImageFormat target_format = getImageFormat(_target_format);
   
-  assert(format.getBytesPerPixel() == 4);
-  assert(!format.getCompression());
+  assert(fd.getBytesPerPixel() == 4);
+  assert(!fd.getCompression());
 
   if (target_format.getCompression() == ImageFormat::DXT1 || target_format.getCompression() == ImageFormat::ETC1 || target_format.getCompression() == ImageFormat::RGTC1 || target_format.getCompression() == ImageFormat::RGTC2) {
     rg_etc1::etc1_pack_params params;
@@ -143,7 +146,7 @@ Image::convert(InternalFormat _target_format) const {
     std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_size]);
     unsigned short * output_data = (unsigned short *)tmp.get();
     const unsigned int * input_data = (const unsigned int *)data;
-    unsigned int n = calculateSize() / format.getBytesPerPixel();
+    unsigned int n = calculateSize() / fd.getBytesPerPixel();
     if (target_format.getNumChannels() == 2) {
       for (unsigned int i = 0; i < n; i++) {
 	int v = input_data[i];
@@ -184,8 +187,9 @@ Image::convert(InternalFormat _target_format) const {
 
 std::shared_ptr<Image>
 Image::scale(unsigned int target_base_width, unsigned int target_base_height, unsigned int target_levels) const {
-  assert(format.getBytesPerPixel() == 4);
-  assert(!format.getCompression());
+  ImageFormat fd = getImageFormat(format);
+  assert(fd.getBytesPerPixel() == 4);
+  assert(!fd.getCompression());
   size_t input_size = calculateSize();
   size_t target_size = calculateOffset(target_base_width, target_base_height, target_levels, format);
   // cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
@@ -257,8 +261,9 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
 
 std::shared_ptr<Image>
 Image::createMipmaps(unsigned int target_levels) const {
-  assert(format.getBytesPerPixel() == 4);
-  assert(!format.getCompression());
+  ImageFormat fd = getImageFormat(format);
+  assert(fd.getBytesPerPixel() == 4);
+  assert(!fd.getCompression());
   assert(levels == 1);
   size_t target_size = calculateOffset(target_levels);
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
@@ -323,7 +328,7 @@ Image::getInternalFormat() const {
   } else if (format == ImageFormat::FLOAT32) {
     return R32F;
   } else {
-    cerr << "unhandled ImageFormat: bpp = " << format.getBytesPerPixel() << ", c = " << format.getNumChannels() << endl;
+    cerr << "unhandled ImageFormat: bpp = " << fd.getBytesPerPixel() << ", c = " << fd.getNumChannels() << endl;
     assert(0);
     return UNKNOWN_FORMAT;
   }

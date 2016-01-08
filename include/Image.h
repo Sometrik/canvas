@@ -31,7 +31,7 @@ namespace canvas {
   public:
   Image() : width(0), height(0), data(0), format(ImageFormat::UNDEF) { }
   Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1)
-    : width(_width), height(_height), levels(_levels), format(getImageFormat(_format))
+    : width(_width), height(_height), levels(_levels), format(_format)
     {
       size_t s = calculateSize();
       data = new unsigned char[s];
@@ -83,14 +83,15 @@ namespace canvas {
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
     unsigned int getLevels() const { return levels; }
-    const ImageFormat & getFormat() const { return format; }
+    InternalFormat getInternalFormat() const;
+    ImageFormat getFormat() const { return getImageFormat(format); }
     const unsigned char * getData() const { return data; }
     const unsigned char * getDataForLevel(unsigned int level) {
       return data + calculateOffset(level);
     }
-    InternalFormat getInternalFormat() const;
 
-    static size_t calculateOffset(unsigned int width, unsigned int height, unsigned int level, const ImageFormat & format) {
+    static size_t calculateOffset(unsigned int width, unsigned int height, unsigned int level, InternalFormat input_format) {
+      ImageFormat format = getImageFormat(input_format);
       size_t s = 0;
       if (format.getCompression() == ImageFormat::ETC1 || format.getCompression() == ImageFormat::DXT1 || format.getCompression() == ImageFormat::RGTC1) {
 	for (unsigned int l = 0; l < level; l++) {
@@ -116,7 +117,7 @@ namespace canvas {
     size_t calculateOffset(unsigned int level) const {
       return calculateOffset(width, height, level, format);
     }
-    static size_t calculateSize(unsigned int width, unsigned int height, unsigned int levels, const ImageFormat & format) { return calculateOffset(width, height, levels, format); }
+    static size_t calculateSize(unsigned int width, unsigned int height, unsigned int levels, InternalFormat format) { return calculateOffset(width, height, levels, format); }
     size_t calculateSize() const { return calculateOffset(width, height, levels, format); }
 
   protected:
@@ -124,7 +125,7 @@ namespace canvas {
   private:
     unsigned int width, height, levels;
     unsigned char * data = 0;
-    ImageFormat format;
+    InternalFormat format;
     static bool etc1_initialized;
   };
 };
