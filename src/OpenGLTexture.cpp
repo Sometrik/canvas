@@ -70,6 +70,7 @@ OpenGLTexture::OpenGLTexture(Surface & surface)
 
 static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   switch (internal_format) {
+  case UNKNOWN_FORMAT: return 0;
   case R8: return GL_R8;
   case RG8: return GL_RG8;
   case RGB565: return GL_RGB565;
@@ -185,27 +186,14 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
     if (x != 0 || y != 0 || image.getWidth() != getActualWidth() || image.getHeight() != getActualHeight()) {
       int levels = has_mipmaps ? getMipmapLevels() : 1;
-      if (getInternalFormat() == RGB_ETC1) {
-	Image img(ImageFormat::RGB_ETC1, getActualWidth(), getActualHeight(), levels);
+      if (getInternalFormat() == RGB_ETC1 || getInternalFormat() == RGB_DXT1 ||
+	  getInternalFormat() == RED_RGTC1
+	  ) {
+	Image img(getInternalFormat(), getActualWidth(), getActualHeight(), levels);
 	updateCompressedData(img, 0, 0);	
-      } else if (getInternalFormat() == RGB_DXT1) {
-	Image img(ImageFormat::RGB_DXT1, getActualWidth(), getActualHeight(), levels);
-	updateCompressedData(img, 0, 0);	
-      } else if (getInternalFormat() == RED_RGTC1) {
-	Image img(ImageFormat::RED_RGTC1, getActualWidth(), getActualHeight(), levels);
-	updateCompressedData(img, 0, 0);
-      } else if (getInternalFormat() == RGBA8) {
-	Image img(ImageFormat::RGBA32, getActualWidth(), getActualHeight(), levels);
-	updatePlainData(img, 0, 0);
-      } else if (getInternalFormat() == LA44) {
-	Image img(ImageFormat::LA44, getActualWidth(), getActualHeight(), levels);
-	updatePlainData(img, 0, 0);
-      } else if (getInternalFormat() == RGB565) {
-	Image img(ImageFormat::RGB565, getActualWidth(), getActualHeight(), levels);
-	updatePlainData(img, 0, 0);
-      } else if (getInternalFormat() == R32F) {
-	assert(levels == 1);
-	Image img(ImageFormat::FLOAT32, getActualWidth(), getActualHeight(), levels);
+      } else if (getInternalFormat() == RGBA8 || getInternalFormat() == LA44 ||
+		 getInternalFormat() == RGB565 || getInternalFormat() == R32F) {
+	Image img(getInternalFormat(), getActualWidth(), getActualHeight(), levels);
 	updatePlainData(img, 0, 0);
       } else {
 	assert(0);
@@ -218,28 +206,28 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   } else if (getInternalFormat() == R8) {
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RED, GL_UNSIGNED_BYTE, image.getData());
   } else if (getInternalFormat() == LA44) {
-    auto tmp_image = image.convert(ImageFormat::LA44);
+    auto tmp_image = image.convert(LA44);
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RED, GL_UNSIGNED_BYTE, tmp_image->getData());
   } else if (getInternalFormat() == LUMINANCE_ALPHA) {
     if (image.getFormat() == ImageFormat::LA88) {
       glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RG, GL_UNSIGNED_BYTE, image.getData());
     } else {
-      auto tmp_image = image.convert(ImageFormat::LA88);
+      auto tmp_image = image.convert(LUMINANCE_ALPHA);
       glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RG, GL_UNSIGNED_BYTE, tmp_image->getData()); 
     }
   } else if (getInternalFormat() == RGB565) {
-    auto tmp_image = image.convert(ImageFormat::RGB565);
+    auto tmp_image = image.convert(RGB565);
     updatePlainData(*tmp_image, x, y);    
     // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image->getData());
   } else if (getInternalFormat() == RGBA4) {
-    auto tmp_image = image.convert(ImageFormat::RGBA4);
+    auto tmp_image = image.convert(RGBA4);
     glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, tmp_image->getData());
   } else if (getInternalFormat() == RGB_ETC1) {
     if (image.getFormat().getCompression() == ImageFormat::ETC1) {
       updateCompressedData(image, x, y);
     } else {
       cerr << "WARNING: compression should be done in thread (bpp = " << image.getFormat().getBytesPerPixel() << ", c = " << int(image.getFormat().getCompression()) << ", ch = " << image.getFormat().getNumChannels() << ")\n";
-      auto tmp_image = image.convert(ImageFormat::RGB_ETC1);
+      auto tmp_image = image.convert(RGB_ETC1);
       updateCompressedData(*tmp_image, x, y);
     }
   } else if (getInternalFormat() == RGB_DXT1) {
@@ -247,7 +235,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       updateCompressedData(image, x, y);
     } else {
       cerr << "WARNING: compression should be done in thread\n";
-      auto tmp_image = image.convert(ImageFormat::RGB_DXT1);
+      auto tmp_image = image.convert(RGB_DXT1);
       updateCompressedData(*tmp_image, x, y);
     }    
   } else if (getInternalFormat() == RED_RGTC1) {
@@ -255,7 +243,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       updateCompressedData(image, x, y);
     } else {
       cerr << "WARNING: compression should be done in thread\n";
-      auto tmp_image = image.convert(ImageFormat::RED_RGTC1);
+      auto tmp_image = image.convert(RED_RGTC1);
       updateCompressedData(*tmp_image, x, y);
     }    
   } else if (getInternalFormat() == RG_RGTC2) {
@@ -263,7 +251,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       updateCompressedData(image, x, y);
     } else {
       cerr << "WARNING: compression should be done in thread\n";
-      auto tmp_image = image.convert(ImageFormat::RG_RGTC2);
+      auto tmp_image = image.convert(RG_RGTC2);
       updateCompressedData(*tmp_image, x, y);
     }    
   } else {

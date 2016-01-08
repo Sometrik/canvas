@@ -331,23 +331,13 @@ Surface::multiply(const Color & color) {
   releaseMemory();
 }
 #endif
-
-static ImageFormat getImageFormat(InternalFormat format) {
-  switch (format) {
-  case RGBA8: return ImageFormat::RGBA32;
-  case RGB8: return ImageFormat::RGB32;
-  case R8: return ImageFormat::LUM8;
-  default:
-    assert(0);
-  }
-}
-
+	       
 std::shared_ptr<Image>
 Surface::createImage() {
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
   
-  shared_ptr<Image> image(new Image(buffer, getImageFormat(getFormat()), getActualWidth(), getActualHeight()));
+  shared_ptr<Image> image(new Image(buffer, getFormat(), getActualWidth(), getActualHeight()));
   releaseMemory();
   
   return image;

@@ -11,7 +11,7 @@ using namespace canvas;
 
 bool Image::etc1_initialized = false;
 
-Image::Image(const ImageFormat & _format, unsigned int _width, unsigned int _height, unsigned int _levels) : width(_width), height(_height), levels(_levels), format(_format) {
+Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels) : width(_width), height(_height), levels(_levels), format(getImageFormat(_format)) {
   size_t s = calculateSize();
   
   data = new unsigned char[s];
@@ -46,7 +46,9 @@ Image::Image(const ImageFormat & _format, unsigned int _width, unsigned int _hei
 }
 
 std::shared_ptr<Image>
-Image::convert(const ImageFormat & target_format) const {
+Image::convert(InternalFormat _target_format) const {
+  ImageFormat target_format = getImageFormat(_target_format);
+  
   assert(format.getBytesPerPixel() == 4);
   assert(!format.getCompression());
 
@@ -114,7 +116,7 @@ Image::convert(const ImageFormat & target_format) const {
       target_width = (target_width + 1) / 2;
       target_height = (target_height + 1) / 2;
     }
-    return make_shared<Image>(output_data.get(), target_format, width, height, levels);
+    return make_shared<Image>(output_data.get(), _target_format, width, height, levels);
   } else if (target_format.getNumChannels() == 2 && target_format.getBytesPerPixel() == 1) {
     assert(levels == 1);
     
@@ -134,7 +136,7 @@ Image::convert(const ImageFormat & target_format) const {
       *output_data++ = (alpha << 4) | lum;
     }
 
-    return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight());
+    return make_shared<Image>(tmp.get(), _target_format, getWidth(), getHeight());
   } else {
     assert(target_format.getBytesPerPixel() == 2);
     unsigned int target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
@@ -176,7 +178,7 @@ Image::convert(const ImageFormat & target_format) const {
       }
     }
     
-    return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight(), getLevels());
+    return make_shared<Image>(tmp.get(), _target_format, getWidth(), getHeight(), getLevels());
   }
 }
 
@@ -250,7 +252,7 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
       target_height /= 2;
     }
   }
-  return make_shared<Image>(output_data.get(), format, target_base_width, target_base_height, target_levels);
+  return make_shared<Image>(output_data.get(), getInternalFormat(), target_base_width, target_base_height, target_levels);
 }
 
 std::shared_ptr<Image>
@@ -285,5 +287,43 @@ Image::createMipmaps(unsigned int target_levels) const {
     target_width /= 2;
     target_height /= 2;
   }
-  return make_shared<Image>(output_data.get(), format, width, height, target_levels);
+  return make_shared<Image>(output_data.get(), getInternalFormat(), width, height, target_levels);
+}
+
+InternalFormat
+Image::getInternalFormat() const {
+  if (format == ImageFormat::RGB24) {
+    return RGB8_24;
+  } else if (format == ImageFormat::RGB32) {
+    return RGB8;
+  } else if (format == ImageFormat::RGBA32) {
+    return RGBA8;
+  } else if (format == ImageFormat::RGBA4) {
+    return RGBA4;
+  } else if (format == ImageFormat::RGB565) {
+    return RGB565;
+  } else if (format == ImageFormat::LUM8) {
+    return R8;
+  } else if (format == ImageFormat::ALPHA8) {
+    return R8;
+  } else if (format == ImageFormat::LA88) {
+    return LUMINANCE_ALPHA;
+  } else if (format == ImageFormat::LA44) {
+    return LA44;
+  } else if (format == ImageFormat::RGB_ETC1) {
+    return RGB_ETC1;
+  } else if (format == ImageFormat::RGB_DXT1) {
+    return RGB_DXT1;
+  } else if (format == ImageFormat::RGBA_DXT5) {
+    return RGBA_DXT5;
+  } else if (format == ImageFormat::RED_RGTC1) {
+    return RED_RGTC1;
+  } else if (format == ImageFormat::RG_RGTC2) {
+    return RG_RGTC2;
+  } else if (format == ImageFormat::FLOAT32) {
+    return R32F;
+  } else {
+    assert(0);
+    return UNKNOWN_FORMAT;
+  }
 }

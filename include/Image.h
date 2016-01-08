@@ -3,15 +3,35 @@
 
 #include <cstring>
 #include <memory>
+#include <cassert>
 
 #include "ImageFormat.h"
+#include "InternalFormat.h"
 
 namespace canvas {
+  static inline ImageFormat getImageFormat(InternalFormat format) {
+    switch (format) {
+    case RGB8_24: return ImageFormat::RGB24;
+    case RGB_ETC1: return ImageFormat::RGB_ETC1;
+    case RGB_DXT1: return ImageFormat::RGB_DXT1;
+    case RED_RGTC1: return ImageFormat::RED_RGTC1;
+    case RG_RGTC2: return ImageFormat::RG_RGTC2;
+    case RGBA8: return ImageFormat::RGBA32;
+    case RGB8: return ImageFormat::RGB32;
+    case R8: return ImageFormat::LUM8;
+    case LA44: return ImageFormat::LA44;
+    case R32F: return ImageFormat::FLOAT32;
+    case RGB565: return ImageFormat::RGB565;
+    default:
+      assert(0);
+    }
+  }
+
   class Image {
   public:
   Image() : width(0), height(0), data(0), format(ImageFormat::UNDEF) { }
-  Image(const unsigned char * _data, const ImageFormat & _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1)
-    : width(_width), height(_height), levels(_levels), format(_format)
+  Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1)
+    : width(_width), height(_height), levels(_levels), format(getImageFormat(_format))
     {
       size_t s = calculateSize();
       data = new unsigned char[s];
@@ -21,7 +41,7 @@ namespace canvas {
 	memcpy(data, _data, s);
       }
     }
-    Image(const ImageFormat & _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1);
+    Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1);
     Image(const Image & other)
       : width(other.getWidth()), height(other.getHeight()), levels(other.levels), format(other.format)     
     {
@@ -55,7 +75,7 @@ namespace canvas {
       return *this;
     }
 
-    std::shared_ptr<Image> convert(const ImageFormat & target_format) const;
+    std::shared_ptr<Image> convert(InternalFormat target_format) const;
     std::shared_ptr<Image> scale(unsigned int target_width, unsigned int target_height, unsigned int target_levels = 1) const;
     std::shared_ptr<Image> createMipmaps(unsigned int levels) const;
 
@@ -68,6 +88,7 @@ namespace canvas {
     const unsigned char * getDataForLevel(unsigned int level) {
       return data + calculateOffset(level);
     }
+    InternalFormat getInternalFormat() const;
 
     static size_t calculateOffset(unsigned int width, unsigned int height, unsigned int level, const ImageFormat & format) {
       size_t s = 0;
