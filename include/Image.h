@@ -81,7 +81,7 @@ namespace canvas {
     std::shared_ptr<Image> createMipmaps(unsigned int levels) const;
 
     void setQuality(short _quality) { quality = _quality; }
-    bool isValid() const { return width != 0 && height != 0 && target_format != UNKNOWN_FORMAT; }
+    bool isValid() const { return width != 0 && height != 0 && format != UNKNOWN_FORMAT; }
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
     unsigned int getLevels() const { return levels; }
