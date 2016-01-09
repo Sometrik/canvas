@@ -30,8 +30,8 @@ namespace canvas {
     }
 
   Image() : width(0), height(0), data(0), format(UNKNOWN_FORMAT) { }
-  Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1)
-    : width(_width), height(_height), levels(_levels), format(_format)
+  Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0)
+    : width(_width), height(_height), levels(_levels), format(_format), quality(_quality)
     {
       size_t s = calculateSize();
       data = new unsigned char[s];
@@ -41,9 +41,9 @@ namespace canvas {
 	memcpy(data, _data, s);
       }
     }
-    Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1);
+    Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0);
     Image(const Image & other)
-      : width(other.getWidth()), height(other.getHeight()), levels(other.levels), format(other.format)     
+      : width(other.getWidth()), height(other.getHeight()), levels(other.levels), format(other.format), quality(other.getQuality())
     {
       size_t s = calculateSize();
       data = new unsigned char[s];
@@ -64,6 +64,7 @@ namespace canvas {
 	height = other.height;
 	levels = other.levels;
 	format = other.format;
+	quality = other.quality;
 	size_t s = calculateSize();	
 	data = new unsigned char[s];
 	if (other.data) {
@@ -79,12 +80,14 @@ namespace canvas {
     std::shared_ptr<Image> scale(unsigned int target_width, unsigned int target_height, unsigned int target_levels = 1) const;
     std::shared_ptr<Image> createMipmaps(unsigned int levels) const;
 
-    bool isValid() const { return width != 0 && height != 0; }
+    void setQuality(short _quality) { quality = _quality; }
+    bool isValid() const { return width != 0 && height != 0 && target_format != UNKNOWN_FORMAT; }
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
     unsigned int getLevels() const { return levels; }
     InternalFormat getInternalFormat() const { return format; }
     ImageFormat getImageFormat() const { return getImageFormat(format); }
+    short getQuality() const { return quality; }
     const unsigned char * getData() const { return data; }
     const unsigned char * getDataForLevel(unsigned int level) {
       return data + calculateOffset(level);
@@ -118,7 +121,7 @@ namespace canvas {
       return calculateOffset(width, height, level, format);
     }
     static size_t calculateSize(unsigned int width, unsigned int height, unsigned int levels, InternalFormat format) { return calculateOffset(width, height, levels, format); }
-    size_t calculateSize() const { return calculateOffset(width, height, levels, format); }
+    size_t calculateSize() const { return calculateOffset(width, height, levels, format); }    
 
   protected:
     
@@ -126,6 +129,7 @@ namespace canvas {
     unsigned int width, height, levels;
     unsigned char * data = 0;
     InternalFormat format;
+    short quality = 0;
     static bool etc1_initialized;
   };
 };
