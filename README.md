@@ -5,9 +5,7 @@ A C++ canvas implementation.
 
 Currently this library is used to create OpenGL textures with an interface which is based on HTML5 Canvas.
 
-On Windows, rendering is done using GDI+, Cairo is used on Linux and Quartz2D is used on iOS.
-
-Development of an Android version is in progress.
+On Windows, rendering is done using GDI+, Cairo is used on Linux, Quartz2D is used on iOS and Android Canvas is used on Android.
 
 Fluent Style
 ============
@@ -24,3 +22,8 @@ Example
     context->lineTo(20, 20);
     context->strokeStyle = "#ff0000";
     context->stroke();
+
+Android
+=======
+
+On Android the canvas is implemented using JNI, which is used to call Java methods. Due to this, performance might not be optimal.
