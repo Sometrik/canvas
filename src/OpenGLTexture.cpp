@@ -70,7 +70,7 @@ OpenGLTexture::OpenGLTexture(Surface & surface)
 
 static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
   switch (internal_format) {
-  case UNKNOWN_FORMAT: return 0;
+  case NO_FORMAT: return 0;
   case R8: return GL_R8;
   case RG8: return GL_RG8;
   case RGB565: return GL_RGB565;
@@ -168,7 +168,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   if (!texture_id) {
     initialize = true;
     glGenTextures(1, &texture_id);
-    cerr << "created texture id " << texture_id << " (total = " << total_textures << ")" << endl;
+    // cerr << "created texture id " << texture_id << " (total = " << total_textures << ")" << endl;
     if (texture_id >= 1) total_textures++;    
   }
   assert(texture_id >= 1);
@@ -281,7 +281,7 @@ OpenGLTexture::generateMipmaps() {
 void
 OpenGLTexture::releaseTextures() {
   if (!freed_textures.empty()) {
-    cerr << "DELETING TEXTURES: " << OpenGLTexture::getFreedTextures().size() << "/" << OpenGLTexture::getNumTextures() << endl;
+    // cerr << "DELETING TEXTURES: " << OpenGLTexture::getFreedTextures().size() << "/" << OpenGLTexture::getNumTextures() << endl;
     
     for (vector<unsigned int>::const_iterator it = freed_textures.begin(); it != freed_textures.end(); it++) {
       GLuint texid = *it;
