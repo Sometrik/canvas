@@ -3,7 +3,6 @@
 
 #include <cstring>
 #include <memory>
-#include <cassert>
 
 #include "ImageFormat.h"
 #include "InternalFormat.h"
@@ -11,7 +10,7 @@
 namespace canvas {
   class Image {
   public:
-    static inline ImageFormat getImageFormat(InternalFormat format) {
+    static inline const ImageFormat & getImageFormat(InternalFormat format) {
       switch (format) {
       case RGB8_24: return ImageFormat::RGB24;
       case RGB_ETC1: return ImageFormat::RGB_ETC1;
@@ -22,14 +21,17 @@ namespace canvas {
       case RGB8: return ImageFormat::RGB32;
       case R8: return ImageFormat::LUM8;
       case LA44: return ImageFormat::LA44;
+      case RG8: case LUMINANCE_ALPHA: return ImageFormat::LA88;
       case R32F: return ImageFormat::FLOAT32;
       case RGB565: return ImageFormat::RGB565;
-      default:
-      assert(0);
+      case RGBA4: return ImageFormat::RGBA4;
+      case RGBA_DXT5: return ImageFormat::RGBA_DXT5;
+      case NO_FORMAT: return ImageFormat::UNDEF;
       }
+      return ImageFormat::UNDEF;
     }
 
-  Image() : width(0), height(0), data(0), format(UNKNOWN_FORMAT) { }
+  Image() : width(0), height(0), data(0), format(NO_FORMAT) { }
   Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0)
     : width(_width), height(_height), levels(_levels), format(_format), quality(_quality)
     {
@@ -81,7 +83,7 @@ namespace canvas {
     std::shared_ptr<Image> createMipmaps(unsigned int levels) const;
 
     void setQuality(short _quality) { quality = _quality; }
-    bool isValid() const { return width != 0 && height != 0 && format != UNKNOWN_FORMAT; }
+    bool isValid() const { return width != 0 && height != 0 && format != NO_FORMAT; }
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
     unsigned int getLevels() const { return levels; }
