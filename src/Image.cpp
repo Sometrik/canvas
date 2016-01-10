@@ -11,10 +11,10 @@ using namespace canvas;
 
 bool Image::etc1_initialized = false;
 
-Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels) : width(_width), height(_height), levels(_levels), format(_format) {
+Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) : width(_width), height(_height), levels(_levels), format(_format), quality(_quality) {
   size_t s = calculateSize();
 
-  ImageFormat fd = getImageFormat(format);
+  auto & fd = getImageFormat(format);
   
   data = new unsigned char[s];
   if (fd.getCompression() == ImageFormat::ETC1) {
@@ -49,8 +49,8 @@ Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, 
 
 std::shared_ptr<Image>
 Image::convert(InternalFormat target_format) const {
-  ImageFormat fd = getImageFormat(format);
-  ImageFormat target_fd = getImageFormat(target_format);
+  auto & fd = getImageFormat(format);
+  auto & target_fd = getImageFormat(target_format);
   
   assert(fd.getBytesPerPixel() == 4);
   assert(!fd.getCompression());
@@ -187,7 +187,7 @@ Image::convert(InternalFormat target_format) const {
 
 std::shared_ptr<Image>
 Image::scale(unsigned int target_base_width, unsigned int target_base_height, unsigned int target_levels) const {
-  ImageFormat fd = getImageFormat(format);
+  auto & fd = getImageFormat(format);
   assert(fd.getBytesPerPixel() == 4);
   assert(!fd.getCompression());
   size_t input_size = calculateSize();
@@ -261,7 +261,7 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
 
 std::shared_ptr<Image>
 Image::createMipmaps(unsigned int target_levels) const {
-  ImageFormat fd = getImageFormat(format);
+  auto & fd = getImageFormat(format);
   assert(fd.getBytesPerPixel() == 4);
   assert(!fd.getCompression());
   assert(levels == 1);
@@ -329,7 +329,7 @@ Image::getInternalFormat() const {
   } else if (format == ImageFormat::FLOAT32) {
     return R32F;
   } else {
-    ImageFormat fd = getImageFormat(format);
+    auto & fd = getImageFormat(format);
     cerr << "unhandled ImageFormat: bpp = " << fd.getBytesPerPixel() << ", c = " << fd.getNumChannels() << endl;
     assert(0);
     return UNKNOWN_FORMAT;
