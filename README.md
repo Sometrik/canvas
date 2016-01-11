@@ -23,6 +23,16 @@ Example
     context->strokeStyle = "#ff0000";
     context->stroke();
 
+Linux
+=====
+
+For input images, only PNG-files are supported.
+
+Windows
+=======
+
+Quality of clipping is very bad since it's done per pixel with no anti-aliasing.
+
 Android
 =======
 
