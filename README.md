@@ -31,5 +31,5 @@ On Android the canvas is implemented using JNI, which is used to call Java metho
 Credits
 =======
 
-Mikael Rekola
-Mikko Suni (for Android support)
+* Mikael Rekola
+* Mikko Suni (for Android support)
