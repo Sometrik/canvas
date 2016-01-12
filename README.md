@@ -23,7 +23,23 @@ Example
     context->strokeStyle = "#ff0000";
     context->stroke();
 
+Linux
+=====
+
+For input images, only PNG-files are supported.
+
+Windows
+=======
+
+Quality of clipping is very bad since it's done per pixel with no anti-aliasing.
+
 Android
 =======
 
 On Android the canvas is implemented using JNI, which is used to call Java methods. Due to this, performance might not be optimal.
+
+Credits
+=======
+
+* Mikael Rekola
+* Mikko Suni (for Android support)

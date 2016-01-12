@@ -15,8 +15,9 @@ public:
 	AndroidCache(JNIEnv * _env, jobject _mgr) :
 			env(_env), mgr(_mgr) {
 
-		initJavaClasses();
-		initJavaMethods();
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache created");
+
+	//	javaInitialized = false;
 
 		//arcToMethod = blablah();
 		//if (arcToMethod && pathConstructor) {
@@ -24,7 +25,31 @@ public:
 		//}
 	}
 
-	void initJavaMethods() {
+	void initJava() {
+
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache initJava called");
+
+		if (!javaInitialized){
+			javaInitialized = true;
+
+			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java is being initialized");
+
+		canvasClass = env->FindClass("android/graphics/Canvas");
+			mgrClass = env->FindClass("android/content/res/AssetManager");
+			factoryClass = env->FindClass("android/graphics/BitmapFactory");
+			bitmapClass = env->FindClass("android/graphics/Bitmap");
+			paintClass = env->FindClass("android/graphics/Paint");
+			pathClass = env->FindClass("android/graphics/Path");
+			paintStyleClass = env->FindClass("android/graphics/Paint$Style");
+			alignClass = env->FindClass("android/graphics/Paint$Align");
+			bitmapConfigClass = env->FindClass("android/graphics/Bitmap$Config");
+			field_argb_8888 = env->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
+			field_rgb_565 = env->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
+			field_alpha_8 = env->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
+			rectFClass = env->FindClass("android/graphics/RectF");
+			rectClass = env->FindClass("android/graphics/Rect");
+			bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
+
 
 		managerOpenMethod = env->GetMethodID(mgrClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
 		bitmapCreateMethod = env->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
@@ -53,34 +78,12 @@ public:
 		canvasBitmapDrawMethod = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;FFLandroid/graphics/Paint;)V");
 		canvasBitmapDrawMethod2 = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;Landroid/graphics/Rect;Landroid/graphics/RectF;Landroid/graphics/Paint;)V");
 		factoryDecodeByteMethod = env->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
-		//bitmapCreateScaledMethod = env->GetStaticMethodID(bitmapClass, "createScaledBitmap", "(Landroid/graphics/Bitmap;FFZ)Landroid/graphics/Bitmap;");
 		bitmapGetWidthMethod = env->GetMethodID(bitmapClass, "getWidth", "()I");
 		bitmapGetHeightMethod = env->GetMethodID(bitmapClass, "getHeight", "()I");
 		bitmapOptionsConstructor = env->GetMethodID(bitmapOptionsClass, "<init>", "()V");
 
 		optionsMutableField = env->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
-
-		//drawBitmap(Bitmap bitmap, float left, float top, Paint paint)
-
-	}
-
-	void initJavaClasses() {
-
-		canvasClass = env->FindClass("android/graphics/Canvas");
-		mgrClass = env->FindClass("android/content/res/AssetManager");
-		factoryClass = env->FindClass("android/graphics/BitmapFactory");
-		bitmapClass = env->FindClass("android/graphics/Bitmap");
-		paintClass = env->FindClass("android/graphics/Paint");
-		pathClass = env->FindClass("android/graphics/Path");
-		paintStyleClass = env->FindClass("android/graphics/Paint$Style");
-		alignClass = env->FindClass("android/graphics/Paint$Align");
-		bitmapConfigClass = env->FindClass("android/graphics/Bitmap$Config");
-		field_argb_8888 = env->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
-		field_rgb_565 = env->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
-		field_alpha_8 = env->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
-		rectFClass = env->FindClass("android/graphics/RectF");
-		rectClass = env->FindClass("android/graphics/Rect");
-		bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
+		}
 
 	}
 
@@ -144,6 +147,7 @@ private:
 	JNIEnv * env;
 	jobject mgr;
 	bool is_valid = false;
+	bool javaInitialized = false;
 };
 class AndroidSurface: public Surface {
 public:
@@ -154,6 +158,8 @@ public:
 		// creates an empty canvas
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidSurface widthheight constructor called");
+
+		cache->initJava();
 
 		//set bitmap config according to internalformat
 		jobject argbObject;
@@ -187,6 +193,8 @@ public:
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
+		cache->initJava();
+
 		//Get inputStream from the picture(filename)
 		jobject inputStream = env->CallObjectMethod(mgr, cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
 
@@ -205,7 +213,10 @@ public:
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) :
 			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr) {
 		//Create a bitmap from bytearray
+
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
+
+		cache->initJava();
 
 		int arraySize = size;
 
@@ -455,6 +466,7 @@ public:
 
 	void checkForCanvas(){
 		if (!canvasCreated){
+			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
 				//Create new Canvas from the mutable bitmap
 				canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
 				canvasCreated = true;
