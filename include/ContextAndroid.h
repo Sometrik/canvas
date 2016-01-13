@@ -409,7 +409,11 @@ public:
 
 	void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
 
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (Surface) called");
+
 		checkForCanvas();
+
+		createJavaPaint(RenderMode::STROKE, NULL, NULL, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 
 		jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
 		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, (dynamic_cast<canvas::AndroidSurface&>(_img)).getBitmap(), NULL, dstRect, NULL);
@@ -417,11 +421,12 @@ public:
 	}
 
 	void drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
-		//_img.getWidth() _img.getHeight()
+
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (Image) called");
 
 		checkForCanvas();
 
-		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (Image) called");
+		createJavaPaint(RenderMode::STROKE, NULL, NULL, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "width = %f", w);
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "height = %f", h);
