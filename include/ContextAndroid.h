@@ -369,11 +369,9 @@ public:
 
 	void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
 
-
 		checkForCanvas();
 
 		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
-		//env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
 
 		jfieldID alignEnumRight = env->GetStaticFieldID(cache->alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
 		jfieldID alignEnumLeft = env->GetStaticFieldID(cache->alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
@@ -459,8 +457,8 @@ public:
 		return drawableBitmap;
 	}
 
-	void checkForCanvas(){
-		if (!canvasCreated){
+	void checkForCanvas() {
+		if (!canvasCreated) {
 			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
 				//Create new Canvas from the mutable bitmap
 				canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
