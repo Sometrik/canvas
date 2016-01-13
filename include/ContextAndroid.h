@@ -418,12 +418,15 @@ public:
 	}
 
 	void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
-
-		checkForCanvas();
-
+		AndroidSurface * native_surface = dynamic_cast<canvas::AndroidSurface *>(&_img))
+	  if (native_surface) {
+	    checkForCanvas();
 		jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
-		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, (dynamic_cast<canvas::AndroidSurface&>(_img)).getBitmap(), NULL, dstRect, NULL);
-
+		env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_canvas->getBitmap(), NULL, dstRect, NULL);
+	  } else {
+	    auto img = native_surface->createImage();
+	    drawImage(img, p, w, h, displayScale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadoColor, clipPath, imageSmoothingEnabled);
+	  }
 	}
 
 	void drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
