@@ -260,7 +260,7 @@ public:
 	}
 
 	//ADD SHADOW EFFECTS
-	jobject createJavaPaint(RenderMode mode, const Style & style, float lineWidth, float globalAlpha) {
+	jobject createJavaPaint(RenderMode mode, const Style & style, float lineWidth, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWiPdth = %f", lineWidth);
 		//create paint
@@ -290,6 +290,9 @@ public:
 		//Paint set Color
 		env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
 
+		//Set shadow
+		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
+
 		//Set more Paint things here------<
 
 		return jpaint;
@@ -297,23 +300,16 @@ public:
 
 	void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
 
-
 		checkForCanvas();
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWidth = %f", lineWidth);
 
-		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha);
-
-		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "This is...");
-		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
-		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "...not a problem");
+		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 
 		jboolean copyBoolean = JNI_TRUE;
 		jboolean falseBoolean = JNI_FALSE;
 
-
 		jobject jpath = env->NewObject(cache->pathClass, cache->pathConstructor);
-
 
 		for (auto pc : path.getData()) {
 			switch (pc.type) {
@@ -336,9 +332,6 @@ public:
 					span -= 2 * M_PI;
 				}
 
-
-				//public void arcTo (float left, float top, float right, float bottom, float startAngle, float sweepAngle, boolean forceMoveTo)
-
 				span += pc.ea - pc.sa;
 				float left = pc.x0 * display_scale - pc.radius * display_scale;
 				float right = pc.x0 * display_scale + pc.radius * display_scale;
@@ -349,10 +342,7 @@ public:
 
 				jmethodID pathArcToMethod = env->GetMethodID(cache->pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
 
-
 				env->CallVoidMethod(jpath, pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
-
-
 			}
 				break;
 			case PathComponent::CLOSE: {
@@ -382,8 +372,8 @@ public:
 
 		checkForCanvas();
 
-		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha);
-		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
+		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+		//env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
 
 		jfieldID alignEnumRight = env->GetStaticFieldID(cache->alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
 		jfieldID alignEnumLeft = env->GetStaticFieldID(cache->alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
