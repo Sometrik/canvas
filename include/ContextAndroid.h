@@ -34,7 +34,8 @@ public:
 
 			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java is being initialized");
 
-		canvasClass = env->FindClass("android/graphics/Canvas");
+			typefaceClass = env->FindClass("android/graphics/Typeface");
+		  canvasClass = env->FindClass("android/graphics/Canvas");
 			mgrClass = env->FindClass("android/content/res/AssetManager");
 			factoryClass = env->FindClass("android/graphics/BitmapFactory");
 			bitmapClass = env->FindClass("android/graphics/Bitmap");
@@ -50,7 +51,8 @@ public:
 			rectClass = env->FindClass("android/graphics/Rect");
 			bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
 
-
+		setTypefaceMethod = env->GetMethodID(paintClass, "setTypeface", "(Landroid/graphics/Typeface;)Landroid/graphics/Typeface;");
+		typefaceCreator = env->GetStaticMethodID(typefaceClass, "create", "(Ljava/lang/String;I)Landroid/graphics/Typeface;");
 		managerOpenMethod = env->GetMethodID(mgrClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
 		bitmapCreateMethod = env->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
 		bitmapCreateMethod2 = env->GetStaticMethodID(bitmapClass, "createBitmap", "([IIILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
@@ -124,7 +126,10 @@ public:
 	jmethodID bitmapGetWidthMethod;
 	jmethodID bitmapGetHeightMethod;
 	jmethodID bitmapOptionsConstructor;
+	jmethodID typefaceCreator;
+	jmethodID setTypefaceMethod;
 
+	jclass typefaceClass;
 	jclass rectFClass;
 	jclass rectClass;
 	jclass canvasClass;
@@ -293,6 +298,8 @@ public:
 		//Set shadow
 		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
 
+		//Set Text Font
+
 		//Set more Paint things here------<
 
 		return jpaint;
@@ -305,6 +312,9 @@ public:
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWidth = %f", lineWidth);
 
 		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+
+		//set font
+		jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, NULL, 0);
 
 		jboolean copyBoolean = JNI_TRUE;
 		jboolean falseBoolean = JNI_FALSE;
