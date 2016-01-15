@@ -295,6 +295,18 @@ public:
 		//set paint text size.
 		env->CallVoidMethod(jpaint, env->GetMethodID(cache->paintClass, "setTextSize", "(F)V"), font.size);
 
+		//Set Text Font and properties
+		int textProperty = 0;
+		if (font.slant == Font::Slant::ITALIC)
+			textProperty = 2;
+		if (font.weight == Font::Weight::BOLD)
+			textProperty = 1;
+		if (font.weight == Font::Weight::BOLD && font.slant == Font::Slant::ITALIC)
+			textProperty = 3;
+		//NULL on this will be name of the font
+		jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, NULL, textProperty);
+		env->CallObjectMethod(jpaint, cache->setTypefaceMethod, typef);
+
 		return jpaint;
 	}
 
