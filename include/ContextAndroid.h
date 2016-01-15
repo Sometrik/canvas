@@ -51,6 +51,7 @@ public:
 			rectClass = env->FindClass("android/graphics/Rect");
 			bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
 
+		setAlphaMethod = env->GetMethodID(paintClass, "setAlpha", "(I)V");
 		setTypefaceMethod = env->GetMethodID(paintClass, "setTypeface", "(Landroid/graphics/Typeface;)Landroid/graphics/Typeface;");
 		typefaceCreator = env->GetStaticMethodID(typefaceClass, "create", "(Ljava/lang/String;I)Landroid/graphics/Typeface;");
 		managerOpenMethod = env->GetMethodID(mgrClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
@@ -128,6 +129,7 @@ public:
 	jmethodID bitmapOptionsConstructor;
 	jmethodID typefaceCreator;
 	jmethodID setTypefaceMethod;
+	jmethodID setAlphaMethod;
 
 	jclass typefaceClass;
 	jclass rectFClass;
@@ -290,6 +292,12 @@ public:
 		}
 		//Paint set Color
 		env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
+
+		//Set alpha
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "Globalalhpa = %f", globalAlpha);
+		//env->CallVoidMethod(jpaint, cache->setAlphaMethod, (int)(255*globalAlpha));
+		env->CallVoidMethod(jpaint, cache->setAlphaMethod, 50);
+
 		//Set shadow
 		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
 		//set paint text size.
@@ -424,9 +432,9 @@ public:
 	  AndroidSurface * native_surface = dynamic_cast<canvas::AndroidSurface *>(&_img);
 	  if (native_surface) {
 	    checkForCanvas();
-	    createJavaPaint(RenderMode::STROKE, NULL, NULL, NULL, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+	    jobject jpaint = createJavaPaint(RenderMode::STROKE, NULL, NULL, NULL, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 	    jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
-	    env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, NULL);
+	    env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, jpaint);
 	  } else {
 	    auto img = native_surface->createImage();
 	    drawImage(*img, p, w, h, displayScale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, imageSmoothingEnabled);
@@ -490,6 +498,7 @@ public:
 
 protected:
 	static int getAndroidColor(const Color & color, float globalAlpha = 1.0f) {
+		return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
 		return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
 	}
 
