@@ -303,8 +303,7 @@ public:
 			textProperty = 1;
 		if (font.weight == Font::Weight::BOLD && font.slant == Font::Slant::ITALIC)
 			textProperty = 3;
-		//NULL on this will be name of the font
-		jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, NULL, textProperty);
+		jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
 		env->CallObjectMethod(jpaint, cache->setTypefaceMethod, typef);
 
 		return jpaint;
