@@ -317,7 +317,7 @@ public:
 		return jpaint;
 	}
 
-	void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
+	void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
 
 		checkForCanvas();
 
@@ -355,10 +355,10 @@ public:
 				}
 
 				span += pc.ea - pc.sa;
-				float left = pc.x0 * display_scale - pc.radius * display_scale;
-				float right = pc.x0 * display_scale + pc.radius * display_scale;
-				float bottom = pc.y0 * display_scale + pc.radius * display_scale;
-				float top = pc.y0 * display_scale - pc.radius * display_scale;
+				float left = pc.x0 * displayScale - pc.radius * displayScale;
+				float right = pc.x0 * displayScale + pc.radius * displayScale;
+				float bottom = pc.y0 * displayScale + pc.radius * displayScale;
+				float top = pc.y0 * displayScale - pc.radius * displayScale;
 
 				jobject jrect = env->NewObject(cache->rectFClass, cache->rectFConstructor, left, top, right, bottom);
 
@@ -389,7 +389,7 @@ public:
 
 	}
 
-	void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
+	void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
 
 		checkForCanvas();
 
@@ -422,7 +422,7 @@ public:
 
 	}
 
-	TextMetrics measureText(const Font & font, const std::string & text, float display_scale) override {
+	TextMetrics measureText(const Font & font, const std::string & text, float displayScale) override {
 		// measure width of text
 		return TextMetrics(0);
 	}
@@ -515,18 +515,18 @@ private:
 
 class ContextAndroid: public Context {
 public:
-	ContextAndroid(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, unsigned int _width, unsigned int _height, InternalFormat format, float _display_scale) :
-			Context(_display_scale), cache(_cache), env(_env), mgr(_mgr), default_surface(_cache, _env, _mgr, _width, _height, (unsigned int) (_width * _display_scale), (unsigned int) (_height * _display_scale), format) {
+	ContextAndroid(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, unsigned int _width, unsigned int _height, InternalFormat format, float _displayScale) :
+			Context(_displayScale), cache(_cache), env(_env), mgr(_mgr), default_surface(_cache, _env, _mgr, _width, _height, (unsigned int) (_width * _displayScale), (unsigned int) (_height * _displayScale), format) {
 	}
 
 	std::shared_ptr<Surface> createSurface(const Image & image) override {
-		return std::shared_ptr < Surface > (new AndroidSurface(cache, env, mgr, image));
+		return std::shared_ptr<Surface>(new AndroidSurface(cache, env, mgr, image));
 	}
 	std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {
-		return std::shared_ptr < Surface > (new AndroidSurface(cache, env, mgr, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _format));
+		return std::shared_ptr<Surface>(new AndroidSurface(cache, env, mgr, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _format));
 	}
 	std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-		return std::shared_ptr < Surface > (new AndroidSurface(cache, env, mgr, filename));
+		return std::shared_ptr<Surface>(new AndroidSurface(cache, env, mgr, filename));
 	}
 
 	Surface & getDefaultSurface() override {
@@ -550,15 +550,15 @@ private:
 
 class AndroidContextFactory: public ContextFactory {
 public:
-	AndroidContextFactory(JNIEnv * _env, jobject _mgr, float _display_scale = 1.0f) :
-			ContextFactory(_display_scale), cache(_env, _mgr), env(_env), mgr(_mgr) {
+	AndroidContextFactory(JNIEnv * _env, jobject _mgr, float _displayScale = 1.0f) :
+			ContextFactory(_displayScale), cache(_env, _mgr), env(_env), mgr(_mgr) {
 	}
 	std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling = false) override {
 		std::shared_ptr<Context> ptr(new ContextAndroid(&cache, env, mgr, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
 		return ptr;
 	}
 	std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-		return std::shared_ptr < Surface > (new AndroidSurface(&cache, env, mgr, filename));
+		return std::shared_ptr<Surface>(new AndroidSurface(&cache, env, mgr, filename));
 	}
 	std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) override {
 		unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
