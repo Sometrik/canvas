@@ -264,8 +264,7 @@ public:
 		// is there AndroidBitmap_releasePixels?
 	}
 
-	//ADD SHADOW EFFECTS
-	jobject createJavaPaint(RenderMode mode, const Style & style, float lineWidth, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
+	jobject createJavaPaint(RenderMode mode, const Font & font, const Style & style, float lineWidth, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWiPdth = %f", lineWidth);
 		//create paint
@@ -273,10 +272,7 @@ public:
 		jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
 
 		//Paint.setColor;
-		env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, copyBoolean);
-
-		//set paint text size. Not sure if linewidth should be used for this in renderText()
-		//env->CallVoidMethod(jpaint, env->GetMethodID(paintClass, "setTextSize", "(F)V"), lineWidth);
+		env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, copyBoolean);;
 
 		//Paint Set Style
 		switch (mode) {
@@ -294,13 +290,10 @@ public:
 		}
 		//Paint set Color
 		env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
-
 		//Set shadow
 		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
-
-		//Set Text Font
-
-		//Set more Paint things here------<
+		//set paint text size.
+		env->CallVoidMethod(jpaint, env->GetMethodID(cache->paintClass, "setTextSize", "(F)V"), font.size);
 
 		return jpaint;
 	}
@@ -311,7 +304,7 @@ public:
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWidth = %f", lineWidth);
 
-		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+		jobject jpaint = createJavaPaint(mode, NULL, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 
 		//set font
 		jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, NULL, 0);
@@ -381,7 +374,7 @@ public:
 
 		checkForCanvas();
 
-		jobject jpaint = createJavaPaint(mode, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+		jobject jpaint = createJavaPaint(mode, font, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 
 		jfieldID alignEnumRight = env->GetStaticFieldID(cache->alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
 		jfieldID alignEnumLeft = env->GetStaticFieldID(cache->alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
@@ -420,7 +413,7 @@ public:
 	  AndroidSurface * native_surface = dynamic_cast<canvas::AndroidSurface *>(&_img);
 	  if (native_surface) {
 	    checkForCanvas();
-	    createJavaPaint(RenderMode::STROKE, NULL, NULL, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+	    createJavaPaint(RenderMode::STROKE, NULL, NULL, NULL, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 	    jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
 	    env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, NULL);
 	  } else {
@@ -435,7 +428,7 @@ public:
 
 		checkForCanvas();
 
-		createJavaPaint(RenderMode::STROKE, NULL, NULL, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+		createJavaPaint(RenderMode::STROKE, NULL, NULL, NULL, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "width = %f", w);
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "height = %f", h);
