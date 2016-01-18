@@ -273,11 +273,10 @@ public:
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWiPdth = %f", lineWidth);
 		//create paint
-		jboolean copyBoolean = JNI_TRUE;
 		jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
 
 		//Paint.setColor;
-		env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, copyBoolean);;
+		env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, JNI_TRUE);;
 
 		//Paint Set Style
 		switch (mode) {
@@ -426,7 +425,13 @@ public:
 
 	TextMetrics measureText(const Font & font, const std::string & text, float displayScale) override {
 
-		return TextMetrics(0);
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Measuring text");
+		jobject jpaint = createJavaPaint(RenderMode::STROKE, font, NULL, NULL, 1.0f, 0.0f, 0.0f, 0.0f, Color::BLACK);
+
+		float textWidth = env->CallFloatMethod(jpaint, cache->measureTextMethod, env->NewStringUTF(text.c_str()));
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "Measured text width = %f", textWidth);
+
+		return TextMetrics(textWidth);
 	}
 
 	void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
