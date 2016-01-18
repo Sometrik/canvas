@@ -85,7 +85,11 @@ public:
 		bitmapGetWidthMethod = env->GetMethodID(bitmapClass, "getWidth", "()I");
 		bitmapGetHeightMethod = env->GetMethodID(bitmapClass, "getHeight", "()I");
 		bitmapOptionsConstructor = env->GetMethodID(bitmapOptionsClass, "<init>", "()V");
+
 		optionsMutableField = env->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
+		alignEnumRight = env->GetStaticFieldID(alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
+		alignEnumLeft = env->GetStaticFieldID(alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
+		alignEnumCenter = env->GetStaticFieldID(alignClass, "CENTER", "Landroid/graphics/Paint$Align;");
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java successfully initialized");
 		}
@@ -152,6 +156,9 @@ public:
 	jfieldID field_rgb_565;
 	jfieldID optionsMutableField;
 	jfieldID field_alpha_8;
+	jfieldID alignEnumRight;
+	jfieldID alignEnumLeft;
+	jfieldID alignEnumCenter;
 
 private:
 	JNIEnv * env;
@@ -396,27 +403,15 @@ public:
 
 		jobject jpaint = createJavaPaint(mode, font, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 
-		jfieldID alignEnumRight = env->GetStaticFieldID(cache->alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
-		jfieldID alignEnumLeft = env->GetStaticFieldID(cache->alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
-		jfieldID alignEnumCenter = env->GetStaticFieldID(cache->alignClass, "CENTER", "Landroid/graphics/Paint$Align;");
-		jobject alignRight = env->GetStaticObjectField(cache->alignClass, alignEnumRight);
-		jobject alignLeft = env->GetStaticObjectField(cache->alignClass, alignEnumLeft);
-		jobject alignCenter = env->GetStaticObjectField(cache->alignClass, alignEnumCenter);
-
 		switch (textAlign) {
 		case ALIGN_LEFT:
-			env->CallVoidMethod(jpaint, cache->textAlignMethod, alignLeft);
-
-			break;
-		case ALIGN_CENTER:
-			//x -= width / 2;
+			env->CallVoidMethod(jpaint, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
 			break;
 		case ALIGN_RIGHT:
-			env->CallVoidMethod(jpaint, cache->textAlignMethod, alignRight);
-			//x -= width;
+			env->CallVoidMethod(jpaint, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
 			break;
 		case ALIGN_CENTER:
-			env->CallVoidMethod(jpaint, cache->textAlignMethod, alignCenter);
+			env->CallVoidMethod(jpaint, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
 		default:
 			break;
 		}
