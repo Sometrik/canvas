@@ -298,8 +298,7 @@ public:
 
 		//Set alpha
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "Globalalhpa = %f", globalAlpha);
-		//env->CallVoidMethod(jpaint, cache->setAlphaMethod, (int)(255*globalAlpha));
-		env->CallVoidMethod(jpaint, cache->setAlphaMethod, 50);
+		env->CallVoidMethod(jpaint, cache->setAlphaMethod, (int)(255*globalAlpha));
 
 		//Set shadow
 		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
