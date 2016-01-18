@@ -415,6 +415,8 @@ public:
 			env->CallVoidMethod(jpaint, cache->textAlignMethod, alignRight);
 			//x -= width;
 			break;
+		case ALIGN_CENTER:
+			env->CallVoidMethod(jpaint, cache->textAlignMethod, alignCenter);
 		default:
 			break;
 		}
