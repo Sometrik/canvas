@@ -51,6 +51,7 @@ public:
 			rectClass = env->FindClass("android/graphics/Rect");
 			bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
 
+		measureTextMethod = env->GetMethodID(paintClass, "measureText", "(Ljava/lang/String;)F");
 		setAlphaMethod = env->GetMethodID(paintClass, "setAlpha", "(I)V");
 		setTypefaceMethod = env->GetMethodID(paintClass, "setTypeface", "(Landroid/graphics/Typeface;)Landroid/graphics/Typeface;");
 		typefaceCreator = env->GetStaticMethodID(typefaceClass, "create", "(Ljava/lang/String;I)Landroid/graphics/Typeface;");
@@ -131,6 +132,7 @@ public:
 	jmethodID typefaceCreator;
 	jmethodID setTypefaceMethod;
 	jmethodID setAlphaMethod;
+	jmethodID measureTextMethod;
 
 	jclass typefaceClass;
 	jclass rectFClass;
@@ -423,8 +425,6 @@ public:
 	}
 
 	TextMetrics measureText(const Font & font, const std::string & text, float displayScale) override {
-
-		jobject jpaint = createJavaPaint(NULL, font, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 		return TextMetrics(0);
 	}
