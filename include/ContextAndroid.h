@@ -48,7 +48,6 @@ public:
 			field_rgb_565 = env->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
 			field_alpha_8 = env->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
 			rectFClass = env->FindClass("android/graphics/RectF");
-			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java is being initialized");
 			rectClass = env->FindClass("android/graphics/Rect");
 			bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
 
@@ -69,7 +68,6 @@ public:
 		bitmapCopyMethod = env->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
 		paintConstructor = env->GetMethodID(paintClass, "<init>", "()V");
 		paintSetAntiAliasMethod = env->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
-		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java is being initialized");
 		pathMoveToMethod = env->GetMethodID(pathClass, "moveTo", "(FF)V");
 		pathConstructor = env->GetMethodID(pathClass, "<init>", "()V");
 		textAlignMethod = env->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
@@ -425,7 +423,9 @@ public:
 	}
 
 	TextMetrics measureText(const Font & font, const std::string & text, float displayScale) override {
-		// measure width of text
+
+		jobject jpaint = createJavaPaint(NULL, font, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
 		return TextMetrics(0);
 	}
 
