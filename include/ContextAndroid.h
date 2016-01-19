@@ -51,6 +51,8 @@ public:
 			rectClass = env->FindClass("android/graphics/Rect");
 			bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
 
+		measureAscentMethod = env->GetMethodID(paintClass, "ascent", "()F");
+		measureDescentMethod = env->GetMethodID(paintClass, "descent", "()F");
 		measureTextMethod = env->GetMethodID(paintClass, "measureText", "(Ljava/lang/String;)F");
 		setAlphaMethod = env->GetMethodID(paintClass, "setAlpha", "(I)V");
 		setTypefaceMethod = env->GetMethodID(paintClass, "setTypeface", "(Landroid/graphics/Typeface;)Landroid/graphics/Typeface;");
@@ -137,6 +139,8 @@ public:
 	jmethodID setTypefaceMethod;
 	jmethodID setAlphaMethod;
 	jmethodID measureTextMethod;
+	jmethodID measureDescentMethod;
+	jmethodID measureAscentMethod;
 
 	jclass typefaceClass;
 	jclass rectFClass;
