@@ -431,6 +431,10 @@ public:
 
 		float textWidth = env->CallFloatMethod(jpaint, cache->measureTextMethod, env->NewStringUTF(text.c_str()));
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "Measured text width = %f", textWidth);
+		float descent = env->CallFloatMethod(jpaint, cache->measureDescentMethod);
+		float ascent = env->CallFloatMethod(jpaint, cache->measureAscentMethod);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Descent = %f", descent);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Ascent = %f", ascent);
 
 		return TextMetrics(textWidth);
 	}
