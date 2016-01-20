@@ -6,8 +6,12 @@ namespace canvas {
   public:
   TextMetrics() : width(0) { }
   TextMetrics(float _width) : width(_width) { }
+  TextMetrics(float _width, float fontBoundingBoxDescent, float _fontBoundingBoxAscent) :
+  	width(_width) fontBoundingBoxDescent(_fontBoundingBoxDescent) fontBoundingBoxAscent(_fontBoundingBoxAscent)  { }
     
     float width;
+    float fontBoundingBoxDescent;
+    float fontBoundingBoxAscent;
 
 #if 0
     float ideographicBaseline;
@@ -17,8 +21,6 @@ namespace canvas {
     float emHeightAscent;
     float actualBoundingBoxDescent;
     float actualBoundingBoxAscent;
-    float fontBoundingBoxDescent;
-    float fontBoundingBoxAscent;
     float actualBoundingBoxRight;
     float actualBoundingBoxLeft;
 #endif
