@@ -277,7 +277,7 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
 }
 
 TextMetrics
-CairoSurface::measureText(const Font & font, const std::string & text, float displayScale) {
+CairoSurface::measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float displayScale) {
   initializeContext();
   cairo_select_font_face(cr, font.family.c_str(),
 			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),

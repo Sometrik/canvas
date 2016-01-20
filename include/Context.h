@@ -41,7 +41,7 @@ namespace canvas {
     bool isPointInPath(const Path2D & path, double x, double y) { return false; }
     
     TextMetrics measureText(const std::string & text) {
-      return getDefaultSurface().measureText(font, text, getDisplayScale());
+      return getDefaultSurface().measureText(font, text, textBaseline, getDisplayScale());
     }
     
     Context & fillRect(double x, double y, double w, double h);
