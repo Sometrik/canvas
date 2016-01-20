@@ -105,7 +105,7 @@ Image::convert(InternalFormat target_format) const {
 	    rg_etc1::pack_etc1_block(output_data.get() + target_offset, (const unsigned int *)&(input_block[0]), params);	  
 	    target_offset += 8;
 	  } else if (target_fd.getCompression() == ImageFormat::DXT1) {
-	    stb_compress_dxt1_block(output_data.get() + target_offset, &(input_block[0]), false, 0);
+	    stb_compress_dxt1_block(output_data.get() + target_offset, &(input_block[0]), false, 2);
 	    target_offset += 8;
 	  } else if (target_fd.getCompression() == ImageFormat::RGTC1) {
 	    stb_compress_rgtc1_block(output_data.get() + target_offset, &(input_block[0]));
