@@ -436,7 +436,7 @@ public:
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Descent = %f", descent);
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Ascent = %f", ascent);
 
-		return TextMetrics(textWidth);
+		return TextMetrics(textWidth, descent, ascent);
 	}
 
 	void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
