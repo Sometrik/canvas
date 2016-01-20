@@ -51,6 +51,9 @@ public:
 			rectClass = env->FindClass("android/graphics/Rect");
 			bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
 
+		measureAscentMethod = env->GetMethodID(paintClass, "ascent", "()F");
+		measureDescentMethod = env->GetMethodID(paintClass, "descent", "()F");
+		measureTextMethod = env->GetMethodID(paintClass, "measureText", "(Ljava/lang/String;)F");
 		setAlphaMethod = env->GetMethodID(paintClass, "setAlpha", "(I)V");
 		setTypefaceMethod = env->GetMethodID(paintClass, "setTypeface", "(Landroid/graphics/Typeface;)Landroid/graphics/Typeface;");
 		typefaceCreator = env->GetStaticMethodID(typefaceClass, "create", "(Ljava/lang/String;I)Landroid/graphics/Typeface;");
@@ -86,6 +89,11 @@ public:
 		bitmapOptionsConstructor = env->GetMethodID(bitmapOptionsClass, "<init>", "()V");
 
 		optionsMutableField = env->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
+		alignEnumRight = env->GetStaticFieldID(alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
+		alignEnumLeft = env->GetStaticFieldID(alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
+		alignEnumCenter = env->GetStaticFieldID(alignClass, "CENTER", "Landroid/graphics/Paint$Align;");
+
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java successfully initialized");
 		}
 
 	}
@@ -130,6 +138,9 @@ public:
 	jmethodID typefaceCreator;
 	jmethodID setTypefaceMethod;
 	jmethodID setAlphaMethod;
+	jmethodID measureTextMethod;
+	jmethodID measureDescentMethod;
+	jmethodID measureAscentMethod;
 
 	jclass typefaceClass;
 	jclass rectFClass;
@@ -149,6 +160,9 @@ public:
 	jfieldID field_rgb_565;
 	jfieldID optionsMutableField;
 	jfieldID field_alpha_8;
+	jfieldID alignEnumRight;
+	jfieldID alignEnumLeft;
+	jfieldID alignEnumCenter;
 
 private:
 	JNIEnv * env;
@@ -270,11 +284,10 @@ public:
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWiPdth = %f", lineWidth);
 		//create paint
-		jboolean copyBoolean = JNI_TRUE;
 		jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
 
 		//Paint.setColor;
-		env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, copyBoolean);;
+		env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, JNI_TRUE);;
 
 		//Paint Set Style
 		switch (mode) {
@@ -295,8 +308,7 @@ public:
 
 		//Set alpha
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "Globalalhpa = %f", globalAlpha);
-		//env->CallVoidMethod(jpaint, cache->setAlphaMethod, (int)(255*globalAlpha));
-		env->CallVoidMethod(jpaint, cache->setAlphaMethod, 50);
+		env->CallVoidMethod(jpaint, cache->setAlphaMethod, (int)(255*globalAlpha));
 
 		//Set shadow
 		env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
@@ -395,25 +407,15 @@ public:
 
 		jobject jpaint = createJavaPaint(mode, font, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
 
-		jfieldID alignEnumRight = env->GetStaticFieldID(cache->alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
-		jfieldID alignEnumLeft = env->GetStaticFieldID(cache->alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
-		jfieldID alignEnumCenter = env->GetStaticFieldID(cache->alignClass, "CENTER", "Landroid/graphics/Paint$Align;");
-		jobject alignRight = env->GetStaticObjectField(cache->alignClass, alignEnumRight);
-		jobject alignLeft = env->GetStaticObjectField(cache->alignClass, alignEnumLeft);
-		jobject alignCenter = env->GetStaticObjectField(cache->alignClass, alignEnumCenter);
-
 		switch (textAlign) {
 		case ALIGN_LEFT:
-			env->CallVoidMethod(jpaint, cache->textAlignMethod, alignLeft);
-
-			break;
-		case ALIGN_CENTER:
-			//x -= width / 2;
+			env->CallVoidMethod(jpaint, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
 			break;
 		case ALIGN_RIGHT:
-			env->CallVoidMethod(jpaint, cache->textAlignMethod, alignRight);
-			//x -= width;
+			env->CallVoidMethod(jpaint, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
 			break;
+		case ALIGN_CENTER:
+			env->CallVoidMethod(jpaint, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
 		default:
 			break;
 		}
@@ -423,8 +425,18 @@ public:
 	}
 
 	TextMetrics measureText(const Font & font, const std::string & text, float displayScale) override {
-		// measure width of text
-		return TextMetrics(0);
+
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Measuring text");
+		jobject jpaint = createJavaPaint(RenderMode::STROKE, font, NULL, NULL, 1.0f, 0.0f, 0.0f, 0.0f, Color::BLACK);
+
+		float textWidth = env->CallFloatMethod(jpaint, cache->measureTextMethod, env->NewStringUTF(text.c_str()));
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "Measured text width = %f", textWidth);
+		float descent = env->CallFloatMethod(jpaint, cache->measureDescentMethod);
+		float ascent = env->CallFloatMethod(jpaint, cache->measureAscentMethod);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Descent = %f", descent);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Ascent = %f", ascent);
+
+		return TextMetrics(textWidth, descent, ascent);
 	}
 
 	void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
