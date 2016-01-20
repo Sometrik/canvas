@@ -6,7 +6,7 @@
 namespace canvas {
   class Font : public Attribute {
   public:
-    enum Slant {
+    enum Style {
       NORMAL_SLANT = 1,
       ITALIC,
       OBLIQUE
@@ -32,6 +32,10 @@ namespace canvas {
       NO_DECORATION,
       UNDERLINE
     };
+    enum Variant {
+      NORMAL_VARIANT,
+      SMALL_CAPS
+    };
   Font(GraphicsState * _context) : Attribute(_context) { }
   Font(GraphicsState * _context, const Font & other)
     : Attribute(_context),
@@ -50,9 +54,10 @@ namespace canvas {
     
     std::string family = "sans-serif";
     float size = 10.0f;
-    Slant slant = NORMAL_SLANT;
+    Style style = NORMAL_SLANT;
     Weight weight = NORMAL;
     TextDecoration decoration = NO_DECORATION;
+    Variant variant = NORMAL_VARIANT;
     bool antialiasing = true;
     bool hinting = true;
     bool cleartype = false;
