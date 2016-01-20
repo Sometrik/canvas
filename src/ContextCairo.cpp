@@ -164,7 +164,7 @@ CairoSurface::sendPath(const Path2D & path) {
 }
 
 void
-CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float sadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
+CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float sadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
   initializeContext();
 
   if (!clipPath.empty()) {
@@ -179,7 +179,7 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
   
   cairo_pattern_t * pat = 0;
   if (style.getType() == Style::LINEAR_GRADIENT) {
-    pat = cairo_pattern_create_linear(style.x0 * display_scale, style.y0 * display_scale, style.x1 * display_scale, style.y1 * display_scale);
+    pat = cairo_pattern_create_linear(style.x0 * displayScale, style.y0 * displayScale, style.x1 * displayScale, style.y1 * displayScale);
     for (map<float, Color>::const_iterator it = style.getColors().begin(); it != style.getColors().end(); it++) {
       cairo_pattern_add_color_stop_rgba(pat, it->first, it->second.red, it->second.green, it->second.blue, it->second.alpha * globalAlpha);
     }
@@ -193,7 +193,7 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
   sendPath(path);
   switch (mode) {
   case STROKE:
-    cairo_set_line_width(cr, lineWidth * display_scale);
+    cairo_set_line_width(cr, lineWidth * displayScale);
     // cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
     cairo_stroke(cr);  
     break;
@@ -212,7 +212,7 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
 }
 
 void
-CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
+CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float displayScale, float alpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
   initializeContext();
 
   if (!clipPath.empty()) {
@@ -229,10 +229,10 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   cairo_select_font_face(cr, font.family.c_str(),
 			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
 			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
-  cairo_set_font_size(cr, font.size * display_scale);
+  cairo_set_font_size(cr, font.size * displayScale);
   
-  double x = p.x * display_scale;
-  double y = p.y * display_scale;
+  double x = p.x * displayScale;
+  double y = p.y * displayScale;
 
   if (textBaseline == MIDDLE || textBaseline == TOP) {
     cairo_font_extents_t font_extents;
@@ -277,15 +277,15 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
 }
 
 TextMetrics
-CairoSurface::measureText(const Font & font, const std::string & text, float display_scale) {
+CairoSurface::measureText(const Font & font, const std::string & text, float displayScale) {
   initializeContext();
   cairo_select_font_face(cr, font.family.c_str(),
 			 font.slant == Font::NORMAL_SLANT ? CAIRO_FONT_SLANT_NORMAL : (font.slant == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
 			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
-  cairo_set_font_size(cr, font.size * display_scale);
+  cairo_set_font_size(cr, font.size * displayScale);
   cairo_text_extents_t te;
   cairo_text_extents(cr, text.c_str(), &te);
-  return TextMetrics((float)te.width / display_scale); //, (float)te.height);
+  return TextMetrics((float)te.width / displayScale); //, (float)te.height);
 }
 
 void
