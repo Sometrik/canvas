@@ -102,9 +102,6 @@ public:
 		return is_valid;
 	}
 
-	//JNIEnv * env;
-	//blab * mgr;
-	//Jnimethodid arcToMethod;
 	jmethodID paintSetStyleMethod;
 	jmethodID paintSetStrokeWidthMethod;
 	jmethodID paintSetStrokeJoinMethod;
@@ -244,7 +241,6 @@ public:
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "size = %i", size);
 
 		jbyteArray array = env->NewByteArray(arraySize);
-	//	env->SetByteArrayRegion(array, 0, arraySize, reinterpret_cast<jbyte*>(*buffer));
 		env->SetByteArrayRegion(array, 0, arraySize, (const jbyte*)buffer);
 		jclass thisClass = env->FindClass("android/graphics/BitmapFactory");
 		jmethodID thisMethod = env->GetStaticMethodID(env->FindClass("android/graphics/BitmapFactory"), "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
@@ -317,13 +313,12 @@ public:
 
 		//Set Text Font and properties
 		int textProperty = 0;
-		if (font.slant == Font::Slant::ITALIC)
-			textProperty = 2;
-		if (font.weight == Font::Weight::BOLD)
-			textProperty = 1;
-		if (font.weight == Font::Weight::BOLD && font.slant == Font::Slant::ITALIC)
-			textProperty = 3;
-		jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
+		if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) textProperty = 2;
+		if (font.weight == Font::Weight::BOLD) {
+			if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) textProperty = 3;
+			else textProperty = 1;
+		}
+			jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
 		env->CallObjectMethod(jpaint, cache->setTypefaceMethod, typef);
 
 		return jpaint;
@@ -424,7 +419,7 @@ public:
 
 	}
 
-	TextMetrics measureText(const Font & font, const std::string & text, float displayScale) override {
+	TextMetrics measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float displayScale) override {
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Measuring text");
 		jobject jpaint = createJavaPaint(RenderMode::STROKE, font, NULL, NULL, 1.0f, 0.0f, 0.0f, 0.0f, Color::BLACK);
@@ -485,7 +480,6 @@ public:
 		jbyteArray jarray = env->NewByteArray(length);
 		env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
 
-		//change field_argb_8888 to use
 		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
 		jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
 
