@@ -438,12 +438,26 @@ public:
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Measuring text");
 		jobject jpaint = createJavaPaint(RenderMode::STROKE, font, NULL, NULL, 1.0f, 0.0f, 0.0f, 0.0f, Color::BLACK);
 
+
 		float textWidth = env->CallFloatMethod(jpaint, cache->measureTextMethod, env->NewStringUTF(text.c_str()));
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "Measured text width = %f", textWidth);
 		float descent = env->CallFloatMethod(jpaint, cache->measureDescentMethod);
 		float ascent = env->CallFloatMethod(jpaint, cache->measureAscentMethod);
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Descent = %f", descent);
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Ascent = %f", ascent);
+
+		//Change ascent and descent according to baseline
+		float baseline = 0;
+		if (textBaseline == TextBaseline::MIDDLE){
+			baseline = (ascent + descent)/2;
+			__android_log_print(ANDROID_LOG_INFO, "Sometrik", "measure text baseline - middle = %f", baseline);
+		} else if (textBaseline == TextBaseline::TOP){
+			baseline = (ascent + descent);
+			__android_log_print(ANDROID_LOG_INFO, "Sometrik", "measure text baseline - top = %f", baseline);
+		}
+
+		ascent = ascent + baseline;
+		descent = descent + baseline;
 
 		return TextMetrics(textWidth, descent, ascent);
 	}
