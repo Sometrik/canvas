@@ -415,7 +415,21 @@ public:
 			break;
 		}
 
-		env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y, jpaint);
+		if (textBaseline == TextBaseline::BOTTOM) {
+			env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y, jpaint);
+		} else {
+
+			float descent = env->CallFloatMethod(jpaint, cache->measureDescentMethod);
+			float ascent = env->CallFloatMethod(jpaint, cache->measureAscentMethod);
+
+			if (textBaseline == TextBaseline::MIDDLE) {
+				env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent) / 2, jpaint);
+			} else if (textBaseline == TextBaseline::TOP) {
+				env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent), jpaint);
+			}
+
+		}
+
 
 	}
 
