@@ -501,7 +501,14 @@ public:
 
 		const unsigned char* buf = _img.getData();
 
-		int length = _img.getWidth() * _img.getHeight() * 4;
+		int length;
+		if (_img.getImageFormat() == ImageFormat::RGB24 || _img.getImageFormat() == ImageFormat::RGB32
+				|| _img.getImageFormat() == ImageFormat::RGB565) {
+			length = _img.getWidth() * _img.getHeight() * 3;
+		} else {
+			length = _img.getWidth() * _img.getHeight() * 4;
+		}
+
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
 
