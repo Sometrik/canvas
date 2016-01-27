@@ -13,8 +13,8 @@ namespace canvas {
 class AndroidCache {
 public:
 	AndroidCache(JNIEnv * _env, jobject _mgr) :
-			env(_env), mgr(_mgr) {
-
+			env(_env) {
+		mgr = env->NewGlobalRef(_mgr);
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache created");
 
 	//	javaInitialized = false;
@@ -101,6 +101,10 @@ public:
 	bool isValid() const {
 		return is_valid;
 	}
+
+	JNIEnv * getJNIEnv() { return env; }
+	jobject & getMgr() { return mgr; }
+
 
 	jmethodID paintSetStyleMethod;
 	jmethodID paintSetStrokeWidthMethod;
@@ -190,7 +194,8 @@ public:
 			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_rgb_565);
 		} else {
 			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
-			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass,
+					env->GetStaticFieldID(cache->bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;"));
 		}
 
 		bitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
@@ -207,9 +212,7 @@ public:
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) :
-			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env) {
-		mgr = env->NewGlobalRef(_mgr);
-
+			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr){
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
 		cache->initJava();
@@ -232,7 +235,6 @@ public:
 	//Create a bitmap from bytearray
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) :
 			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr) {
-		mgr = env->NewGlobalRef(_mgr);
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
@@ -594,30 +596,28 @@ private:
 class AndroidContextFactory: public ContextFactory {
 public:
 	AndroidContextFactory(JNIEnv * _env, jobject _mgr, float _displayScale = 1.0f) :
-			ContextFactory(_displayScale), cache(_env, _mgr), env(_env), mgr(_mgr) {
+			ContextFactory(_displayScale), cache(_env, _mgr) {
 	}
 	std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling = false) override {
-		std::shared_ptr<Context> ptr(new ContextAndroid(&cache, env, mgr, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
+		std::shared_ptr<Context> ptr(new ContextAndroid(&cache, cache.getJNIEnv(), cache.getMgr(), width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
 		return ptr;
 	}
 	std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-		return std::shared_ptr<Surface>(new AndroidSurface(&cache, env, mgr, filename));
+		return std::shared_ptr<Surface>(new AndroidSurface(&cache, cache.getJNIEnv(), cache.getMgr(), filename));
 	}
 	std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) override {
 		unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
 		unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
-		std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, env, mgr, width, height, aw, ah, format));
+		std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, cache.getJNIEnv(), cache.getMgr(), width, height, aw, ah, format));
 		return ptr;
 	}
 	std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) override {
-		std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, env, mgr, buffer, size));
+		std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, cache.getJNIEnv(), cache.getMgr(), buffer, size));
 		return ptr;
 	}
 
 private:
 	AndroidCache cache;
-	JNIEnv * env;
-	jobject mgr;
 };
 }
 ;
