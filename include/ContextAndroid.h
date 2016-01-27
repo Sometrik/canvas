@@ -34,22 +34,22 @@ public:
 
 			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java is being initialized");
 
-			typefaceClass = env->FindClass("android/graphics/Typeface");
-		  canvasClass = env->FindClass("android/graphics/Canvas");
-			mgrClass = env->FindClass("android/content/res/AssetManager");
-			factoryClass = env->FindClass("android/graphics/BitmapFactory");
-			bitmapClass = env->FindClass("android/graphics/Bitmap");
-			paintClass = env->FindClass("android/graphics/Paint");
-			pathClass = env->FindClass("android/graphics/Path");
-			paintStyleClass = env->FindClass("android/graphics/Paint$Style");
-			alignClass = env->FindClass("android/graphics/Paint$Align");
-			bitmapConfigClass = env->FindClass("android/graphics/Bitmap$Config");
+			typefaceClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Typeface"));
+		  canvasClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Canvas"));
+			mgrClass = (jclass)env->NewGlobalRef(env->FindClass("android/content/res/AssetManager"));
+			factoryClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/BitmapFactory"));
+			bitmapClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Bitmap"));
+			paintClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Paint"));
+			pathClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Path"));
+			paintStyleClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Paint$Style"));
+			alignClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Paint$Align"));
+			bitmapConfigClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Bitmap$Config"));
 			field_argb_8888 = env->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
 			field_rgb_565 = env->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
 			field_alpha_8 = env->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
-			rectFClass = env->FindClass("android/graphics/RectF");
-			rectClass = env->FindClass("android/graphics/Rect");
-			bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
+			rectFClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/RectF"));
+			rectClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Rect"));
+			bitmapOptionsClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/BitmapFactory$Options"));
 
 		measureAscentMethod = env->GetMethodID(paintClass, "ascent", "()F");
 		measureDescentMethod = env->GetMethodID(paintClass, "descent", "()F");
