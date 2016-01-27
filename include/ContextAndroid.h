@@ -207,7 +207,8 @@ public:
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) :
-			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr) {
+			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env) {
+		mgr = env->NewGlobalRef(_mgr);
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
@@ -228,9 +229,10 @@ public:
 		Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
 	}
 
+	//Create a bitmap from bytearray
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) :
 			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr) {
-		//Create a bitmap from bytearray
+		mgr = env->NewGlobalRef(_mgr);
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
