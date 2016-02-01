@@ -13,7 +13,6 @@ namespace Gdiplus
 #include <gdiplus.h>
 
 #include <iostream>
-#include <cassert>
 #include <vector>
 
 #pragma comment (lib, "gdiplus.lib")
@@ -113,7 +112,6 @@ namespace canvas {
     }
     void restore() {
       initializeContext();
-      assert(!save_stack.empty());
       if (!save_stack.empty()) {
 	g->Restore(save_stack.back());
 	save_stack.pop_back();
