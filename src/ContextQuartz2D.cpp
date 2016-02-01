@@ -1,11 +1,29 @@
 #include <ContextQuartz2D.h>
 
 #include <iostream>
+#include <cassert>
 
 #include <ImageIO/ImageIO.h>
 
 using namespace canvas;
 using namespace std;
+
+Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const Image & image)
+  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha() ? RGBA8 : RGB8), cache(_cache) {
+  assert(getActualWidth() && getActualHeight());
+  size_t bitmapByteCount = 4 * getActualWidth() * getActualHeight();
+  bitmapData = new unsigned char[bitmapByteCount];
+  if (image.getFormat().getBytesPerPixel() == 4) {
+    memcpy(bitmapData, image.getData(), bitmapByteCount);
+  } else {
+    for (unsigned int i = 0; i < getActualWidth() * getActualHeight(); i++) {
+      bitmapData[4 * i + 0] = image.getData()[3 * i + 2];
+      bitmapData[4 * i + 1] = image.getData()[3 * i + 1];
+      bitmapData[4 * i + 2] = image.getData()[3 * i + 0];
+      bitmapData[4 * i + 3] = 255;
+    }
+  }
+}
 
 Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & filename)
   : Surface(0, 0, 0, 0, RGBA8), cache(_cache) {
@@ -194,6 +212,58 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path2D & path, const Style & 
   if (op != SOURCE_OVER) {
     CGContextSetBlendMode(gc, kCGBlendModeNormal);
   }
+  if (has_shadow || !clipPath.empty()) {
+    CGContextRestoreGState(gc);
+  }
+}
+
+void
+ContextQuartz2d::resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) {
+  Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _format);
+  
+  if (gc) {
+    if (CFGetRetainCount(gc) != 1) std::cerr << "leaking memory E!\n";
+    CGContextRelease(gc);
+    gc = 0;
+  }
+  delete[] bitmapData;
+  
+  assert(getActualWidth() && getActualHeight());
+  unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
+  bitmapData = new unsigned char[bitmapByteCount];
+  memset(bitmapData, 0, bitmapByteCount);
+}
+
+void
+ContextQuartz2d::drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
+  initializeContext();
+  bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
+  if (has_shadow || !clipPath.empty()) {
+    CGContextSaveGState(gc);
+  }
+  if (!clipPath.empty()) {
+    sendPath(clipPath, displayScale);
+    CGContextClip(gc);
+  }
+  if (has_shadow) {
+    setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, displayScale);
+  }
+  auto & format = _img.getFormat();
+  CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), format.getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
+  assert(format.getBytesPerPixel() == 4);
+  auto f = (format.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
+  CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), cache->getColorSpace(), f, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
+  assert(img);
+  flipY();
+  if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
+  CGContextDrawImage(gc, CGRectMake(displayScale * p.x, getActualHeight() - 1 - displayScale * (p.y + h), displayScale * w, displayScale * h), img);
+  if (globalAlpha < 1.0f) CGContextSetAlpha(gc, 1.0f);
+  flipY();
+  
+  if (CFGetRetainCount(img) != 1) std::cerr << "leaking memory O!\n";
+  CGImageRelease(img);
+  if (CFGetRetainCount(provider) != 1) std::cerr << "leaking memory P!\n";
+  CGDataProviderRelease(provider);
   if (has_shadow || !clipPath.empty()) {
     CGContextRestoreGState(gc);
   }
