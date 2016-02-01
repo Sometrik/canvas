@@ -3,7 +3,6 @@
 
 #include "Context.h"
 
-#include <cassert>
 #include <sstream>
 #include <jni.h>
 #include <android/bitmap.h>
