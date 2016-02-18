@@ -402,6 +402,7 @@ public:
 
 	void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
 
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "RenderText called");
 		checkForCanvas();
 
 		jobject jpaint = createJavaPaint(mode, font, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
@@ -419,21 +420,17 @@ public:
 			break;
 		}
 
-		if (textBaseline == TextBaseline::BOTTOM) {
-			env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y, jpaint);
-		} else {
-
+			if (textBaseline == TextBaseline::MIDDLE || textBaseline == TextBaseline::TOP) {
 			float descent = env->CallFloatMethod(jpaint, cache->measureDescentMethod);
 			float ascent = env->CallFloatMethod(jpaint, cache->measureAscentMethod);
-
 			if (textBaseline == TextBaseline::MIDDLE) {
 				env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent) / 2, jpaint);
 			} else if (textBaseline == TextBaseline::TOP) {
 				env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent), jpaint);
 			}
-
+		} else {
+			env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y, jpaint);
 		}
-
 
 	}
 
