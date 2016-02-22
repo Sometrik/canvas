@@ -457,8 +457,11 @@ public:
 			__android_log_print(ANDROID_LOG_INFO, "Sometrik", "measure text baseline - top = %f", baseline);
 		}
 
-		ascent = ascent + baseline;
-		descent = descent + baseline;
+		ascent = ascent - baseline;
+		descent = descent - baseline;
+
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Descent = %f", descent);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Ascent = %f", ascent);
 
 		return TextMetrics(textWidth, descent, ascent);
 	}
