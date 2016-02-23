@@ -25,7 +25,7 @@ namespace canvas {
     CTFontRef getFont(const Font & font, float display_scale) {
       float size = font.size * display_scale;
       bool is_bold = font.weight == Font::BOLD || font.weight == Font::BOLDER;
-      bool is_italic = font.slant == Font::ITALIC;
+      bool is_italic = font.style == Font::ITALIC;
       std::ostringstream key;
       key << font.family << "/" << size << "/" << (is_bold ? "bold" : "") << "/" << (is_italic ? "italic" : "");
       auto it = fonts.find(key.str());
@@ -179,7 +179,7 @@ namespace canvas {
       }
     }
 
-    TextMetrics measureText(const Font & font, const std::string & text, float display_scale) override {
+    TextMetrics measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float display_scale) override {
       CTFontRef font2 = cache->getFont(font, display_scale);
       CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
       CFStringRef keys[] = { kCTFontAttributeName };

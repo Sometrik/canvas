@@ -285,7 +285,17 @@ CairoSurface::measureText(const Font & font, const std::string & text, TextBasel
   cairo_set_font_size(cr, font.size * displayScale);
   cairo_text_extents_t te;
   cairo_text_extents(cr, text.c_str(), &te);
-  return TextMetrics((float)te.width / displayScale); //, (float)te.height);
+
+  cairo_font_extents_t fe;
+  cairo_font_extents(cr, &fe);
+
+  int baseline = 0;
+  if (textBaseline == TextBaseline::MIDDLE){
+		baseline = (fe.ascent + fe.descent)/2;
+	} else if (textBaseline == TextBaseline::TOP){
+		baseline = (fe.ascent + fe.descent);
+	}
+  return TextMetrics((float)te.width / displayScale, fe.descent - baseline, fe.ascent - baseline); //, (float)te.height);
 }
 
 void

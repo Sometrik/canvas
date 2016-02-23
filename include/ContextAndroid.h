@@ -12,8 +12,8 @@ namespace canvas {
 class AndroidCache {
 public:
 	AndroidCache(JNIEnv * _env, jobject _mgr) :
-			env(_env), mgr(_mgr) {
-
+			env(_env) {
+		mgr = env->NewGlobalRef(_mgr);
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache created");
 
 	//	javaInitialized = false;
@@ -33,22 +33,22 @@ public:
 
 			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java is being initialized");
 
-			typefaceClass = env->FindClass("android/graphics/Typeface");
-		  canvasClass = env->FindClass("android/graphics/Canvas");
-			mgrClass = env->FindClass("android/content/res/AssetManager");
-			factoryClass = env->FindClass("android/graphics/BitmapFactory");
-			bitmapClass = env->FindClass("android/graphics/Bitmap");
-			paintClass = env->FindClass("android/graphics/Paint");
-			pathClass = env->FindClass("android/graphics/Path");
-			paintStyleClass = env->FindClass("android/graphics/Paint$Style");
-			alignClass = env->FindClass("android/graphics/Paint$Align");
-			bitmapConfigClass = env->FindClass("android/graphics/Bitmap$Config");
+			typefaceClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Typeface"));
+		  canvasClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Canvas"));
+			mgrClass = (jclass)env->NewGlobalRef(env->FindClass("android/content/res/AssetManager"));
+			factoryClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/BitmapFactory"));
+			bitmapClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Bitmap"));
+			paintClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Paint"));
+			pathClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Path"));
+			paintStyleClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Paint$Style"));
+			alignClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Paint$Align"));
+			bitmapConfigClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Bitmap$Config"));
 			field_argb_8888 = env->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
 			field_rgb_565 = env->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
 			field_alpha_8 = env->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
-			rectFClass = env->FindClass("android/graphics/RectF");
-			rectClass = env->FindClass("android/graphics/Rect");
-			bitmapOptionsClass = env->FindClass("android/graphics/BitmapFactory$Options");
+			rectFClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/RectF"));
+			rectClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/Rect"));
+			bitmapOptionsClass = (jclass)env->NewGlobalRef(env->FindClass("android/graphics/BitmapFactory$Options"));
 
 		measureAscentMethod = env->GetMethodID(paintClass, "ascent", "()F");
 		measureDescentMethod = env->GetMethodID(paintClass, "descent", "()F");
@@ -101,9 +101,10 @@ public:
 		return is_valid;
 	}
 
-	//JNIEnv * env;
-	//blab * mgr;
-	//Jnimethodid arcToMethod;
+	JNIEnv * getJNIEnv() { return env; }
+	jobject & getMgr() { return mgr; }
+
+
 	jmethodID paintSetStyleMethod;
 	jmethodID paintSetStrokeWidthMethod;
 	jmethodID paintSetStrokeJoinMethod;
@@ -192,7 +193,8 @@ public:
 			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_rgb_565);
 		} else {
 			__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
-			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+			argbObject = env->GetStaticObjectField(cache->bitmapConfigClass,
+					env->GetStaticFieldID(cache->bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;"));
 		}
 
 		bitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
@@ -209,8 +211,7 @@ public:
 	}
 
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) :
-			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr) {
-
+			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr){
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
 		cache->initJava();
@@ -230,9 +231,9 @@ public:
 		Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
 	}
 
+	//Create a bitmap from bytearray
 	AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const unsigned char * buffer, size_t size) :
 			Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr) {
-		//Create a bitmap from bytearray
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
@@ -243,7 +244,6 @@ public:
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "size = %i", size);
 
 		jbyteArray array = env->NewByteArray(arraySize);
-	//	env->SetByteArrayRegion(array, 0, arraySize, reinterpret_cast<jbyte*>(*buffer));
 		env->SetByteArrayRegion(array, 0, arraySize, (const jbyte*)buffer);
 		jclass thisClass = env->FindClass("android/graphics/BitmapFactory");
 		jmethodID thisMethod = env->GetStaticMethodID(env->FindClass("android/graphics/BitmapFactory"), "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
@@ -316,13 +316,12 @@ public:
 
 		//Set Text Font and properties
 		int textProperty = 0;
-		if (font.slant == Font::Slant::ITALIC)
-			textProperty = 2;
-		if (font.weight == Font::Weight::BOLD)
-			textProperty = 1;
-		if (font.weight == Font::Weight::BOLD && font.slant == Font::Slant::ITALIC)
-			textProperty = 3;
-		jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
+		if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) textProperty = 2;
+		if (font.weight == Font::Weight::BOLD) {
+			if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) textProperty = 3;
+			else textProperty = 1;
+		}
+			jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
 		env->CallObjectMethod(jpaint, cache->setTypefaceMethod, typef);
 
 		return jpaint;
@@ -402,6 +401,7 @@ public:
 
 	void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
 
+		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "RenderText called");
 		checkForCanvas();
 
 		jobject jpaint = createJavaPaint(mode, font, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
@@ -419,19 +419,46 @@ public:
 			break;
 		}
 
-		env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y, jpaint);
+			if (textBaseline == TextBaseline::MIDDLE || textBaseline == TextBaseline::TOP) {
+			float descent = env->CallFloatMethod(jpaint, cache->measureDescentMethod);
+			float ascent = env->CallFloatMethod(jpaint, cache->measureAscentMethod);
+			if (textBaseline == TextBaseline::MIDDLE) {
+				env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent) / 2, jpaint);
+			} else if (textBaseline == TextBaseline::TOP) {
+				env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent), jpaint);
+			}
+		} else {
+			env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y, jpaint);
+		}
 
 	}
 
-	TextMetrics measureText(const Font & font, const std::string & text, float displayScale) override {
+	TextMetrics measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float displayScale) override {
 
 		__android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Measuring text");
 		jobject jpaint = createJavaPaint(RenderMode::STROKE, font, NULL, NULL, 1.0f, 0.0f, 0.0f, 0.0f, Color::BLACK);
+
 
 		float textWidth = env->CallFloatMethod(jpaint, cache->measureTextMethod, env->NewStringUTF(text.c_str()));
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "Measured text width = %f", textWidth);
 		float descent = env->CallFloatMethod(jpaint, cache->measureDescentMethod);
 		float ascent = env->CallFloatMethod(jpaint, cache->measureAscentMethod);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Descent = %f", descent);
+		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Ascent = %f", ascent);
+
+		//Change ascent and descent according to baseline
+		float baseline = 0;
+		if (textBaseline == TextBaseline::MIDDLE){
+			baseline = (ascent + descent)/2;
+			__android_log_print(ANDROID_LOG_INFO, "Sometrik", "measure text baseline - middle = %f", baseline);
+		} else if (textBaseline == TextBaseline::TOP){
+			baseline = (ascent + descent);
+			__android_log_print(ANDROID_LOG_INFO, "Sometrik", "measure text baseline - top = %f", baseline);
+		}
+
+		ascent = ascent - baseline;
+		descent = descent - baseline;
+
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Descent = %f", descent);
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Ascent = %f", ascent);
 
@@ -477,14 +504,20 @@ public:
 
 		const unsigned char* buf = _img.getData();
 
-		int length = _img.getWidth() * _img.getHeight() * 4;
+		int length;
+		if (_img.getImageFormat() == ImageFormat::RGB24 || _img.getImageFormat() == ImageFormat::RGB32
+				|| _img.getImageFormat() == ImageFormat::RGB565) {
+			length = _img.getWidth() * _img.getHeight() * 3;
+		} else {
+			length = _img.getWidth() * _img.getHeight() * 4;
+		}
+
 
 		__android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
 
 		jbyteArray jarray = env->NewByteArray(length);
 		env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
 
-		//change field_argb_8888 to use
 		jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
 		jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
 
@@ -562,30 +595,28 @@ private:
 class AndroidContextFactory: public ContextFactory {
 public:
 	AndroidContextFactory(JNIEnv * _env, jobject _mgr, float _displayScale = 1.0f) :
-			ContextFactory(_displayScale), cache(_env, _mgr), env(_env), mgr(_mgr) {
+			ContextFactory(_displayScale), cache(_env, _mgr) {
 	}
 	std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling = false) override {
-		std::shared_ptr<Context> ptr(new ContextAndroid(&cache, env, mgr, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
+		std::shared_ptr<Context> ptr(new ContextAndroid(&cache, cache.getJNIEnv(), cache.getMgr(), width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
 		return ptr;
 	}
 	std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-		return std::shared_ptr<Surface>(new AndroidSurface(&cache, env, mgr, filename));
+		return std::shared_ptr<Surface>(new AndroidSurface(&cache, cache.getJNIEnv(), cache.getMgr(), filename));
 	}
 	std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) override {
 		unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
 		unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
-		std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, env, mgr, width, height, aw, ah, format));
+		std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, cache.getJNIEnv(), cache.getMgr(), width, height, aw, ah, format));
 		return ptr;
 	}
 	std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) override {
-		std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, env, mgr, buffer, size));
+		std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, cache.getJNIEnv(), cache.getMgr(), buffer, size));
 		return ptr;
 	}
 
 private:
 	AndroidCache cache;
-	JNIEnv * env;
-	jobject mgr;
 };
 }
 ;
