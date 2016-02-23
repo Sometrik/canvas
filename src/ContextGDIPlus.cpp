@@ -314,6 +314,15 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, float d
   g->MeasureString(text2.data(), text2.size(), &gdi_font, layoutRect, &boundingBox);
   Gdiplus::SizeF size;
   boundingBox.GetSize(&size);
+
+  float ascent = &Gdiplus::FontFamily(L"Arial")::GetCellAscent(style);
+  float descent = &Gdiplus::FontFamily(L"Arial")::GetCellDescent(style);
+  float baseline = 0;
+  if (textBaseline == TextBaseline::MIDDLE) {
+    baseline = (ascent + descent) / 2;
+  } else if (textBaseline == TextBaseline::TOP) {
+    baseline = (ascent + descent);
+  }
   
-  return TextMetrics(size.Width / display_scale);
+  return TextMetrics(size.Width / display_scale, (descent - baseline) / dispaly_scale, (ascent - baseline) / display_scale);
 }
