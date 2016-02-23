@@ -293,7 +293,7 @@ CairoSurface::measureText(const Font & font, const std::string & text, TextBasel
   } else if (textBaseline == TextBaseline::TOP) {
     baseline = (fe.ascent + fe.descent);
   }
-  return TextMetrics((float) te.width / displayScale, fe.descent - baseline, fe.ascent - baseline); //, (float)te.height);
+  return TextMetrics((float) te.width / displayScale, (fe.descent - baseline) / displayScale, (fe.ascent - baseline) / displayScale); //, (float)te.height);
 }
 
 void
