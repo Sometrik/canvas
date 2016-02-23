@@ -324,5 +324,5 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, float d
     baseline = (ascent + descent);
   }
   
-  return TextMetrics(size.Width / display_scale, (descent - baseline) / dispaly_scale, (ascent - baseline) / display_scale);
+  return TextMetrics(size.Width / display_scale, (descent - baseline) / display_scale, (ascent - baseline) / display_scale);
 }
