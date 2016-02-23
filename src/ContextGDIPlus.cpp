@@ -309,14 +309,17 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, float d
   if (font.slant == Font::ITALIC) {
     style |= Gdiplus::FontStyleItalic;
   }
-  Gdiplus::Font gdi_font(&Gdiplus::FontFamily(L"Arial"), font.size * display_scale, style, Gdiplus::UnitPixel);
+
+  Gdiplus::FontFamily fontFamily(L"Arial");
+
+  Gdiplus::Font gdi_font(&fontFamily, font.size * display_scale, style, Gdiplus::UnitPixel);
   Gdiplus::RectF layoutRect(0, 0, 512, 512), boundingBox;
   g->MeasureString(text2.data(), text2.size(), &gdi_font, layoutRect, &boundingBox);
   Gdiplus::SizeF size;
   boundingBox.GetSize(&size);
 
-  float ascent = &Gdiplus::FontFamily(L"Arial")::GetCellAscent(style);
-  float descent = &Gdiplus::FontFamily(L"Arial")::GetCellDescent(style);
+  float ascent = font.GetSize() * fontFamily.GetCellAscent(style) / fontFamily.GetEmHeight(style);
+  float descent = font.GetSize() * fontFamily.GetCellDescent(style) / fontFamily.GetEmHeight(style);
   float baseline = 0;
   if (textBaseline == TextBaseline::MIDDLE) {
     baseline = (ascent + descent) / 2;
