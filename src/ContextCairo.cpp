@@ -279,9 +279,7 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
 TextMetrics
 CairoSurface::measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float displayScale) {
   initializeContext();
-  cairo_select_font_face(cr, font.family.c_str(),
-			 font.style == Font::NORMAL_STYLE ? CAIRO_FONT_SLANT_NORMAL : (font.style == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
-			 font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
+  cairo_select_font_face(cr, font.family.c_str(), font.style == Font::NORMAL_STYLE ? CAIRO_FONT_SLANT_NORMAL : (font.style == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE), font.weight == Font::NORMAL || font.weight == Font::LIGHTER ? CAIRO_FONT_WEIGHT_NORMAL : CAIRO_FONT_WEIGHT_BOLD);
   cairo_set_font_size(cr, font.size * displayScale);
   cairo_text_extents_t te;
   cairo_text_extents(cr, text.c_str(), &te);
@@ -290,12 +288,12 @@ CairoSurface::measureText(const Font & font, const std::string & text, TextBasel
   cairo_font_extents(cr, &fe);
 
   int baseline = 0;
-  if (textBaseline == TextBaseline::MIDDLE){
-		baseline = (fe.ascent + fe.descent)/2;
-	} else if (textBaseline == TextBaseline::TOP){
-		baseline = (fe.ascent + fe.descent);
-	}
-  return TextMetrics((float)te.width / displayScale, fe.descent - baseline, fe.ascent - baseline); //, (float)te.height);
+  if (textBaseline == TextBaseline::MIDDLE) {
+    baseline = (fe.ascent + fe.descent) / 2;
+  } else if (textBaseline == TextBaseline::TOP) {
+    baseline = (fe.ascent + fe.descent);
+  }
+  return TextMetrics((float) te.width / displayScale, fe.descent - baseline, fe.ascent - baseline); //, (float)te.height);
 }
 
 void
