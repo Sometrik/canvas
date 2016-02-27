@@ -9,11 +9,11 @@ using namespace canvas;
 using namespace std;
 
 Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const Image & image)
-  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha() ? RGBA8 : RGB8), cache(_cache) {
+  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getImageFormat().hasAlpha() ? RGBA8 : RGB8), cache(_cache) {
   assert(getActualWidth() && getActualHeight());
   size_t bitmapByteCount = 4 * getActualWidth() * getActualHeight();
   bitmapData = new unsigned char[bitmapByteCount];
-  if (image.getFormat().getBytesPerPixel() == 4) {
+  if (image.getImageFormat().getBytesPerPixel() == 4) {
     memcpy(bitmapData, image.getData(), bitmapByteCount);
   } else {
     for (unsigned int i = 0; i < getActualWidth() * getActualHeight(); i++) {
@@ -218,7 +218,7 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path2D & path, const Style & 
 }
 
 void
-ContextQuartz2d::resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) {
+Quartz2DSurface::resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) {
   Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _format);
   
   if (gc) {
@@ -235,7 +235,7 @@ ContextQuartz2d::resize(unsigned int _logical_width, unsigned int _logical_heigh
 }
 
 void
-ContextQuartz2d::drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
+Quartz2DSurface::drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
   initializeContext();
   bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
   if (has_shadow || !clipPath.empty()) {
@@ -248,7 +248,7 @@ ContextQuartz2d::drawImage(const Image & _img, const Point & p, double w, double
   if (has_shadow) {
     setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, displayScale);
   }
-  auto & format = _img.getFormat();
+  auto format = _img.getImageFormat();
   CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), format.getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
   assert(format.getBytesPerPixel() == 4);
   auto f = (format.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
