@@ -272,7 +272,7 @@ namespace canvas {
     std::shared_ptr<Surface> createSurface(const Image & image) override {
         return std::shared_ptr<Surface>(new Quartz2DSurface(cache, image));
     }
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, const InternalFormat & _format) override {
+    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {
       return std::shared_ptr<Surface>(new Quartz2DSurface(cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _format));
     }
       std::shared_ptr<Surface> createSurface(const std::string & filename) override {
@@ -294,7 +294,7 @@ namespace canvas {
   class Quartz2DContextFactory : public ContextFactory {
   public:
     Quartz2DContextFactory(float _display_scale, std::shared_ptr<FilenameConverter> & _converter) : ContextFactory(_display_scale), converter(_converter) { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, const InternalFormat & format, bool apply_scaling) override {
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) override {
       std::shared_ptr<Context> ptr(new ContextQuartz2D(&cache, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
       return ptr;
     }
@@ -307,7 +307,7 @@ namespace canvas {
         return createSurface(16, 16, RGBA8, false);
       }
     }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, const InternalFormat & format, bool apply_scaling) override {
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) override {
       unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
       unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
       std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, width, height, aw, ah, format));
