@@ -48,7 +48,9 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
     initializeContext();
     flipY();
     CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
+#ifdef MEMDEBUG
     if (CFGetRetainCount(img) != 1) cerr << "leaking memory 1!\n";
+#endif
     CGImageRelease(img);
     flipY();
   } else {
@@ -57,7 +59,9 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
   }
+#ifdef MEMDEBUG
   if (CFGetRetainCount(provider) != 1) cerr << "leaking memory 2!\n";
+#endif
   CGDataProviderRelease(provider);
 }
 
@@ -78,12 +82,18 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     // sizeof(keys) / sizeof(keys[0])
     auto isrc = CGImageSourceCreateWithData(data, options);
     img = CGImageSourceCreateImageAtIndex(isrc, 0, options);
+#ifdef MEMDEBUG
     if (CFGetRetainCount(isrc) != 1) cerr << "leaking memory 3!\n";
+#endif
     CFRelease(isrc);
+#ifdef MEMDEBUG
     if (CFGetRetainCount(options) != 1) cerr << "leaking memory 4!\n";
+#endif
     CFRelease(options);
     long data_retain = CFGetRetainCount(data);
+#ifdef MEMDEBUG
     if (data_retain != 1) cerr << "leaking memory 5 (" << data_retain << ")!\n";
+#endif
     CFRelease(data);
   } else if (isXML(buffer, size)) {
     cerr << "trying to render XML/HTML" << endl;
@@ -110,11 +120,15 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     memset(bitmapData, 0, bitmapByteCount);
   }
   if (img) {
+#ifdef MEMDEBUG
     if (CFGetRetainCount(img) != 1) cerr << "leaking CGImage!\n";
+#endif
     CGImageRelease(img);
   }
   if (provider) {
+#ifdef MEMDEBUG
     if (CFGetRetainCount(provider) != 1) cerr << "leaking CGDataProvider!\n";
+#endif
     CGDataProviderRelease(provider);
   }
 }
@@ -197,7 +211,9 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path2D & path, const Style & 
 	
         CGContextRestoreGState(gc);
 
+#ifdef MEMDEBUG
 	if (CFGetRetainCount(myGradient) != 1) cerr << "leaking memory 7!\n";
+#endif
 	CGGradientRelease(myGradient);
       }
     } else {
@@ -222,7 +238,9 @@ Quartz2DSurface::resize(unsigned int _logical_width, unsigned int _logical_heigh
   Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _format);
   
   if (gc) {
+#ifdef MEMDEBUG
     if (CFGetRetainCount(gc) != 1) std::cerr << "leaking memory E!\n";
+#endif
     CGContextRelease(gc);
     gc = 0;
   }
@@ -260,9 +278,13 @@ Quartz2DSurface::drawImage(const Image & _img, const Point & p, double w, double
   if (globalAlpha < 1.0f) CGContextSetAlpha(gc, 1.0f);
   flipY();
   
+#ifdef MEMDEBUG
   if (CFGetRetainCount(img) != 1) std::cerr << "leaking memory O!\n";
+#endif
   CGImageRelease(img);
+#ifdef MEMDEBUG
   if (CFGetRetainCount(provider) != 1) std::cerr << "leaking memory P!\n";
+#endif
   CGDataProviderRelease(provider);
   if (has_shadow || !clipPath.empty()) {
     CGContextRestoreGState(gc);
