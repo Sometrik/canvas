@@ -109,7 +109,7 @@ OpenGLTexture::updateCompressedData(const Image & image, unsigned int x, unsigne
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
     // cerr << "compressed tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", offset = " << offset << ", size = " << size << endl;
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, format, size, image.getData() + offset);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, format, (GLsizei)size, image.getData() + offset);
     offset += size;
     current_width /= 2;
     current_height /= 2;
