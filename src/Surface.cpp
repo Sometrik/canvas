@@ -258,35 +258,6 @@ Surface::slowBlur(float hradius, float vradius) {
   releaseMemory();
 }
 
-static inline unsigned char toByte(float f) {
-  int a = int(f * 255);
-  if (a < 0) a = 0;
-  else if (a > 255) a = 255;
-  return (unsigned char)a;
-}
-
-#if 0
-void
-Surface::colorFill(const Color & color) {
-  assert(getFormat() == RGBA8);
-  unsigned char * buffer = (unsigned char *)lockMemory(true);
-  assert(buffer);
-  unsigned int red = toByte(color.red * color.alpha);
-  unsigned int green = toByte(color.green * color.alpha);
-  unsigned int blue = toByte(color.blue * color.alpha);
-  unsigned int alpha = toByte(color.alpha);
-  for (unsigned int i = 0; i < actual_width * actual_height; i++) {
-    unsigned char * ptr = buffer + (i * 4);
-    unsigned int dest_alpha = ptr[3];
-    *ptr++ = (unsigned char)(dest_alpha * red / 255);
-    *ptr++ = (unsigned char)(dest_alpha * green / 255);
-    *ptr++ = (unsigned char)(dest_alpha * blue / 255);
-    *ptr++ = (unsigned char)(dest_alpha * alpha / 255);
-  }
-  releaseMemory();
-}
-#endif
-
 void
 Surface::colorize(const Color & input_color, Surface & target) {
   Color color = input_color;
