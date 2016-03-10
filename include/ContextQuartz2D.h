@@ -126,8 +126,8 @@ namespace canvas {
       }
       
       CTFontRef font2 = cache->getFont(font, display_scale);
-      int font_retain = CFGetRetainCount(font2);
 #ifdef MEMDEBUG
+      int font_retain = CFGetRetainCount(font2);
       if (font_retain != 1) std::cerr << "too many retains for font (" << font_retain << ")" << std::endl;
 #endif
       CGColorRef color = createCGColor(style.color, globalAlpha);
@@ -190,8 +190,8 @@ namespace canvas {
 #endif
       CFRelease(text2);
       // CFRelease(traits2);
-      int color_retain = CFGetRetainCount(color);
 #ifdef MEMDEBUG
+      int color_retain = CFGetRetainCount(color);
       if (color_retain != 1) std::cerr << "leaking CGColor (" << color_retain << ")!\n";
 #endif
       CGColorRelease(color);
