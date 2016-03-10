@@ -90,8 +90,8 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * b
     if (CFGetRetainCount(options) != 1) cerr << "leaking memory 4!\n";
 #endif
     CFRelease(options);
-    long data_retain = CFGetRetainCount(data);
 #ifdef MEMDEBUG
+    long data_retain = CFGetRetainCount(data);
     if (data_retain != 1) cerr << "leaking memory 5 (" << data_retain << ")!\n";
 #endif
     CFRelease(data);
