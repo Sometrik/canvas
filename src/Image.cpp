@@ -6,6 +6,9 @@
 #include "rg_etc1.h"
 #include "dxt.h"
 
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize.h"
+
 using namespace std;
 using namespace canvas;
 
@@ -195,6 +198,10 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
   // cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
   unsigned int target_offset = 0, target_width = target_base_width, target_height = target_base_height;
+#if 1
+  stbir_resize_uint8(data, getWidth(), getHeight(), 0, output_data.get(), target_width, target_height, 0, fd.getBytesPerPixel());
+
+#else
   for (int y = 0; y < int(target_height); y++) {
     for (int x = 0; x < int(target_width); x++) {
       int red = 0, green = 0, blue = 0, alpha = 0, n = 0;
@@ -227,6 +234,7 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
       output_data[target_offset++] = (unsigned char)(alpha);
     }
   }
+#endif
 
   if (target_levels > 1) {
     unsigned int source_width = target_width, source_height = target_height;
