@@ -31,6 +31,7 @@ class FontWeight {
   FontWeight & operator=(const char * _value) { setValue(_value); return *this; }
 
   Weight getValue() const { return value; }
+  bool isBold() const { return value == BOLD || value == BOLDER; }
   
  private:
   void setValue(const char * _value) {

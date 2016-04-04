@@ -28,7 +28,7 @@ namespace canvas {
     
     CTFontRef getFont(const Font & font, float display_scale) {
       float size = font.size * display_scale;
-      bool is_bold = font.weight == Font::BOLD || font.weight == Font::BOLDER;
+      bool is_bold = font.weight.isBold();
       bool is_italic = font.style == Font::ITALIC;
       std::ostringstream key;
       key << font.family << "/" << size << "/" << (is_bold ? "bold" : "") << "/" << (is_italic ? "italic" : "");
@@ -134,7 +134,7 @@ namespace canvas {
       
 #if 0
       int traits = 0;
-      if (font.weight == Font::BOLD || font.weight == Font::BOLDER) traits |= kCTFontBoldTrait;
+      if (font.weight.isBold()) traits |= kCTFontBoldTrait;
       if (font.slant == Font::ITALIC) traits |= kCTFontItalicTrait;
       CFNumberRef traits2 = CFNumberCreate(NULL, kCFNumberSInt32Type, &traits);
 #endif

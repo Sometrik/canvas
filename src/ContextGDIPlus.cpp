@@ -259,7 +259,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     
   std::wstring text2 = convert_to_wstring(text);
   int style_bits = 0;
-  if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {
+  if (font.weight.isBold()) {
     style_bits |= Gdiplus::FontStyleBold;
   }
   if (font.slant == Font::ITALIC) {
@@ -303,7 +303,7 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, float d
   initializeContext();
   std::wstring text2 = convert_to_wstring(text);
   int style = 0;
-  if (font.weight == Font::BOLD || font.weight == Font::BOLDER) {
+  if (font.weight.isBold()) {
     style |= Gdiplus::FontStyleBold;
   }
   if (font.slant == Font::ITALIC) {

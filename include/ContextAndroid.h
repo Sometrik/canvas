@@ -321,7 +321,7 @@ public:
     int textProperty = 0;
     if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE)
       textProperty = 2;
-    if (font.weight == Font::Weight::BOLD) {
+    if (font.weight.isBold()) {
       if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE)
 	textProperty = 3;
       else
