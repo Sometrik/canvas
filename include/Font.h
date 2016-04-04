@@ -2,6 +2,7 @@
 #define _CANVAS_FONT_H_
 
 #include <Attribute.h>
+#include <FontWeight.h>
 
 namespace canvas {
   class Font : public Attribute {
@@ -10,23 +11,6 @@ namespace canvas {
       NORMAL_STYLE = 1,
       ITALIC,
       OBLIQUE
-    };
-    enum Weight {
-      NORMAL = 1,
-      BOLD,
-      BOLDER,
-      LIGHTER
-#if 0
-100
-200
-300
-400
-500
-600
-700
-800
-900
-#endif
     };
     enum TextDecoration {
       NO_DECORATION,
@@ -55,7 +39,7 @@ namespace canvas {
     std::string family = "sans-serif";
     float size = 10.0f;
     Style style = NORMAL_STYLE;
-    Weight weight = NORMAL;
+    FontWeight weight;
     TextDecoration decoration = NO_DECORATION;
     Variant variant = NORMAL_VARIANT;
     bool antialiasing = true;
