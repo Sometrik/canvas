@@ -317,16 +317,18 @@ public:
     //set paint text size.
     env->CallVoidMethod(jpaint, env->GetMethodID(cache->paintClass, "setTextSize", "(F)V"), font.size);
 
-    //Set Text Font and properties
+    // Set Text Font and properties
     int textProperty = 0;
-    if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE)
-      textProperty = 2;
     if (font.weight.isBold()) {
-      if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE)
+      if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) {
 	textProperty = 3;
-      else
+      } else {
 	textProperty = 1;
+      }
+    } else if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) {
+      textProperty = 2;
     }
+
     jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
     env->CallObjectMethod(jpaint, cache->setTypefaceMethod, typef);
 
