@@ -136,6 +136,8 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
       // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image.getWidth(), height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, image.getData());
 #endif
+    } else if (getInternalFormat() == RGBA4) {
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, image.getData() + offset);
     } else if (getInternalFormat() == LA44) {
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RED, GL_UNSIGNED_BYTE, image.getData() + offset);      
     } else if (getInternalFormat() == RGB565) {
@@ -216,12 +218,22 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RG, GL_UNSIGNED_BYTE, tmp_image->getData()); 
     }
   } else if (getInternalFormat() == RGB565) {
-    auto tmp_image = image.convert(RGB565);
-    updatePlainData(*tmp_image, x, y);    
-    // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGB, GL_UNSIGNED_SHORT_5_6_5, tmp_image->getData());
+    if (image.getInternalFormat() == RGB565) {
+      updatePlainData(image, x, y);
+    } else {
+      cerr << "OpenGLTexture: doing online image conversion for RGB565 (SLOW)\n";
+      auto tmp_image = image.convert(RGB565);
+      updatePlainData(*tmp_image, x, y);    
+    }
   } else if (getInternalFormat() == RGBA4) {
-    auto tmp_image = image.convert(RGBA4);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, tmp_image->getData());
+    if (image.getInternalFormat() == RGBA4) {
+      updatePlainData(image, x, y);
+    } else {
+      cerr << "OpenGLTexture: doing online image conversion for RGBA4 (SLOW)\n";
+      auto tmp_image = image.convert(RGBA4);
+      updatePlainData(*tmp_image, x, y);
+      // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, tmp_image->getData());
+    }
   } else if (getInternalFormat() == RGB_ETC1) {
     if (image.getInternalFormat() == RGB_ETC1) {
       updateCompressedData(image, x, y);
