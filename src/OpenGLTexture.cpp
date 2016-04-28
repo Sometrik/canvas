@@ -131,6 +131,7 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     assert(image.getData());
     switch (getInternalFormat()) {
     case RGBA8:
+    case RGB8:
 #if defined __APPLE__ || defined ANDROID 
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
 #else
