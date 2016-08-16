@@ -265,6 +265,8 @@ public:
 
   ~AndroidSurface() {
     // remember to free canvas and bitmap
+    env->DeleteGlobalRef(bitmap);
+    env->DeleteGlobalRef(canvas);
   }
 
   void * lockMemory(bool write_access = false) override {
@@ -534,7 +536,7 @@ public:
     if (!canvasCreated) {
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
       //Create new Canvas from the mutable bitmap
-      canvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
+      canvas = (jobject)env->NewGlobalRef(env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap));
       canvasCreated = true;
     }
   }
