@@ -199,7 +199,7 @@ public:
       argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, env->GetStaticFieldID(cache->bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;"));
     }
 
-    bitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
+    bitmap = (jobject)env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject));
 
   }
 
@@ -209,7 +209,7 @@ public:
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
 
     // creates a surface with width, height and contents from image
-    bitmap = imageToBitmap(image);
+    bitmap = (jobject)env->NewGlobalRef(imageToBitmap(image));
   }
 
   AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) :
@@ -226,7 +226,7 @@ public:
     env->SetBooleanField(factoryOptions, cache->optionsMutableField, JNI_TRUE);
 
     //Create a bitmap from the inputStream
-    bitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, factoryOptions);
+    bitmap = (jobject)env->NewGlobalRef(env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, factoryOptions));
 
     int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
     int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
@@ -253,7 +253,7 @@ public:
 
     //make this with factory options instead
     jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-    bitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE);
+    bitmap = (jobject)env->NewGlobalRef(env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE));
 
     int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
     int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
@@ -331,6 +331,7 @@ public:
 
     jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
     env->CallObjectMethod(jpaint, cache->setTypefaceMethod, typef);
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Java paint created");
 
     return jpaint;
   }
@@ -403,7 +404,7 @@ public:
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
 
-    bitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, bitmap, _logical_width, _logical_height, JNI_FALSE);
+    bitmap = (jobject)env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, bitmap, _logical_width, _logical_height, JNI_FALSE));
 
   }
 
