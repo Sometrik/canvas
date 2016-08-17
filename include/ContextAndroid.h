@@ -306,7 +306,6 @@ public:
 
     //Paint.setColor;
     env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, JNI_TRUE);
-    ;
 
     //Paint Set Style
     switch (mode) {
