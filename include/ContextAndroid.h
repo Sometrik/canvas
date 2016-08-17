@@ -24,6 +24,11 @@ public:
     //}
   }
 
+  void resetCache(){
+    javaInitialized = false;
+    initJava();
+  }
+
   void initJava() {
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache initJava called");
@@ -183,6 +188,8 @@ public:
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidSurface widthheight constructor called");
 
+
+    cache->resetCache();
     cache->initJava();
 
     //set bitmap config according to internalformat
@@ -216,6 +223,7 @@ public:
       Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), mgr(_mgr) {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
+    cache->resetCache();
     cache->initJava();
 
     //Get inputStream from the picture(filename)
@@ -239,6 +247,7 @@ public:
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
+    cache->resetCache();
     cache->initJava();
 
     int arraySize = size;
@@ -268,20 +277,15 @@ public:
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor on ContextAndroid");
     //check if these have been made global references and delete if they are.
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "checking for bitmap");
     if (env->GetObjectRefType(bitmap) == 2) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "global bitmap found. Deleting");
       env->DeleteGlobalRef(bitmap);
     }
 
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "checking canvas");
     if (canvasCreated) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvasCreated checked");
       if (env->GetObjectRefType(canvas) == 2) {
 	env->DeleteGlobalRef(canvas);
       }
     }
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "destructor over");
   }
 
   void * lockMemory(bool write_access = false) override {
@@ -301,6 +305,7 @@ public:
   jobject createJavaPaint(RenderMode mode, const Font & font, const Style & style, float lineWidth, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
 
     __android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWiPdth = %f", lineWidth);
+
     //create paint
     jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
 
@@ -548,10 +553,11 @@ public:
 
   void checkForCanvas() {
     if (!canvasCreated) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating canvas");
       //Create new Canvas from the mutable bitmap
       canvas = (jobject) env->NewGlobalRef(env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap));
       canvasCreated = true;
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
     }
   }
 
