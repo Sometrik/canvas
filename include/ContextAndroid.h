@@ -199,7 +199,7 @@ public:
       argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, env->GetStaticFieldID(cache->bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;"));
     }
 
-    bitmap = (jobject)env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject));
+    bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject));
 
   }
 
@@ -209,7 +209,7 @@ public:
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
 
     // creates a surface with width, height and contents from image
-    bitmap = (jobject)env->NewGlobalRef(imageToBitmap(image));
+    bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
   }
 
   AndroidSurface(AndroidCache * _cache, JNIEnv * _env, jobject _mgr, const std::string & filename) :
@@ -226,7 +226,7 @@ public:
     env->SetBooleanField(factoryOptions, cache->optionsMutableField, JNI_TRUE);
 
     //Create a bitmap from the inputStream
-    bitmap = (jobject)env->NewGlobalRef(env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, factoryOptions));
+    bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, factoryOptions));
 
     int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
     int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
@@ -253,7 +253,7 @@ public:
 
     //make this with factory options instead
     jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-    bitmap = (jobject)env->NewGlobalRef(env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE));
+    bitmap = (jobject) env->NewGlobalRef(env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE));
 
     int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
     int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
@@ -265,8 +265,23 @@ public:
 
   ~AndroidSurface() {
     // remember to free canvas and bitmap
-    env->DeleteGlobalRef(bitmap);
-    env->DeleteGlobalRef(canvas);
+
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor on ContextAndroid");
+    //check if these have been made global references and delete if they are.
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "checking for bitmap");
+    if (env->GetObjectRefType(bitmap) == 2) {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "global bitmap found. Deleting");
+      env->DeleteGlobalRef(bitmap);
+    }
+
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "checking canvas");
+    if (canvasCreated) {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvasCreated checked");
+      if (env->GetObjectRefType(canvas) == 2) {
+	env->DeleteGlobalRef(canvas);
+      }
+    }
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "destructor over");
   }
 
   void * lockMemory(bool write_access = false) override {
@@ -406,7 +421,7 @@ public:
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
 
-    bitmap = (jobject)env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, bitmap, _logical_width, _logical_height, JNI_FALSE));
+    bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, bitmap, _logical_width, _logical_height, JNI_FALSE));
 
   }
 
@@ -536,7 +551,7 @@ public:
     if (!canvasCreated) {
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
       //Create new Canvas from the mutable bitmap
-      canvas = (jobject)env->NewGlobalRef(env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap));
+      canvas = (jobject) env->NewGlobalRef(env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap));
       canvasCreated = true;
     }
   }
