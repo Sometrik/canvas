@@ -290,7 +290,7 @@ public:
 
   void * lockMemory(bool write_access = false) override {
 
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas making is...");
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "lockMemory called");
     uint32_t *pixels;
     AndroidBitmap_lockPixels(env, bitmap, reinterpret_cast<void **>(&pixels));
 
@@ -424,7 +424,7 @@ public:
     // do resize the surface and discard the old data
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
-
+    env->DeleteGlobalRef(bitmap);
     bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, bitmap, _logical_width, _logical_height, JNI_FALSE));
 
   }
