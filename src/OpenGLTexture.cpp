@@ -24,6 +24,7 @@
 #ifdef __ANDROID__
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
+#include <android/log.h>
 #else
 #include <GL/gl.h>
 
@@ -36,7 +37,7 @@
 
 #endif
 
-#if defined __APPLE__ || defined ANDROID
+#if defined __APPLE__ || defined __ANDROID__
 #ifndef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
 #define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0
 #endif
@@ -126,13 +127,19 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
 
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
-    // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
-    
+     cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
+#ifdef __ANDROID__
+     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr x: %d", x);
+     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr y: %d", y);
+     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr w: %d", current_width);
+     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr h: %d", current_height);
+     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr size: %zu", size);
+#endif
     assert(image.getData());
     switch (getInternalFormat()) {
     case RGBA8:
     case RGB8:
-#if defined __APPLE__ || defined ANDROID 
+#if defined __APPLE__ || defined __ANDROID__
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
 #else
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
