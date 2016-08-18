@@ -424,6 +424,10 @@ public:
     // do resize the surface and discard the old data
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
+    if (canvasCreated){
+      env->DeleteGlobalRef(canvas);
+      canvasCreated = false;
+    }
     env->DeleteGlobalRef(bitmap);
     bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, bitmap, _logical_width, _logical_height, JNI_FALSE));
   }
