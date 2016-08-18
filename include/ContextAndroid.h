@@ -11,9 +11,9 @@
 namespace canvas {
 class AndroidCache {
 public:
-  AndroidCache(JNIEnv * _env, jobject _mgr) :
+  AndroidCache(JNIEnv * _env, jobject _assetManager) :
       env(_env) {
-    mgr = env->NewGlobalRef(_mgr);
+    assetManager = env->NewGlobalRef(_assetManager);
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache created");
 
     //	javaInitialized = false;
@@ -40,7 +40,7 @@ public:
 
       typefaceClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Typeface"));
       canvasClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Canvas"));
-      mgrClass = (jclass) env->NewGlobalRef(env->FindClass("android/content/res/AssetManager"));
+      assetManagerClass = (jclass) env->NewGlobalRef(env->FindClass("android/content/res/AssetManager"));
       factoryClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/BitmapFactory"));
       bitmapClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Bitmap"));
       paintClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Paint"));
@@ -61,7 +61,7 @@ public:
       setAlphaMethod = env->GetMethodID(paintClass, "setAlpha", "(I)V");
       setTypefaceMethod = env->GetMethodID(paintClass, "setTypeface", "(Landroid/graphics/Typeface;)Landroid/graphics/Typeface;");
       typefaceCreator = env->GetStaticMethodID(typefaceClass, "create", "(Ljava/lang/String;I)Landroid/graphics/Typeface;");
-      managerOpenMethod = env->GetMethodID(mgrClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
+      managerOpenMethod = env->GetMethodID(assetManagerClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
       bitmapCreateMethod = env->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
       bitmapCreateMethod2 = env->GetStaticMethodID(bitmapClass, "createBitmap", "([IIILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
       textAlignMethod = env->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
@@ -109,8 +109,8 @@ public:
   JNIEnv * getJNIEnv() {
     return env;
   }
-  jobject & getMgr() {
-    return mgr;
+  jobject & getAssetManager() {
+    return assetManager;
   }
 
   jmethodID paintSetStyleMethod;
@@ -157,7 +157,7 @@ public:
   jclass paintClass;
   jclass pathClass;
   jclass bitmapClass;
-  jclass mgrClass;
+  jclass assetManagerClass;
   jclass factoryClass;
   jclass paintStyleClass;
   jclass alignClass;
@@ -174,7 +174,7 @@ public:
 
 private:
   JNIEnv * env;
-  jobject mgr;
+  jobject assetManager;
   bool is_valid = false;
   bool javaInitialized = false;
 };
@@ -227,7 +227,7 @@ public:
     cache->initJava();
 
     //Get inputStream from the picture(filename)
-    jobject inputStream = env->CallObjectMethod(cache->getMgr(), cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
+    jobject inputStream = env->CallObjectMethod(cache->getAssetManager(), cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
 
     //Create BitmapFactory options to make the created bitmap mutable straight away
     jobject factoryOptions = env->NewObject(cache->bitmapOptionsClass, cache->bitmapOptionsConstructor);
@@ -618,14 +618,14 @@ protected:
 private:
   AndroidCache * cache;
   JNIEnv * env;
-  jobject mgr;
+  jobject assetManager;
   AndroidSurface default_surface;
 };
 
 class AndroidContextFactory: public ContextFactory {
 public:
-  AndroidContextFactory(JNIEnv * _env, jobject _mgr, float _displayScale = 1.0f) :
-      ContextFactory(_displayScale), cache(_env, _mgr) {
+  AndroidContextFactory(JNIEnv * _env, jobject _assetManager, float _displayScale = 1.0f) :
+      ContextFactory(_displayScale), cache(_env, _assetManager) {
   }
   std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling = false) override {
     std::shared_ptr<Context> ptr(new ContextAndroid(&cache, cache.getJNIEnv(), width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
