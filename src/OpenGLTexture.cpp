@@ -21,7 +21,7 @@
 #include <windows.h>
 #endif
 
-#ifdef ANDROID
+#ifdef __ANDROID__
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
 #else
