@@ -172,7 +172,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     global_init = true;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   }
-    
+
   bool initialize = false;
   if (!texture_id) {
     initialize = true;
@@ -187,7 +187,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   bool has_mipmaps = getMinFilter() == LINEAR_MIPMAP_LINEAR;
   if (initialize) {
     glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, getOpenGLInternalFormat(getInternalFormat()), getActualWidth(), getActualHeight());
-    
+
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()));
@@ -277,7 +277,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   } else {
     updatePlainData(image, x, y);    
   }
-    
+
   if (has_mipmaps && image.getLevels() == 1) {
     need_mipmaps = true;
   }
