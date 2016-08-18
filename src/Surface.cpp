@@ -305,7 +305,12 @@ Surface::multiply(const Color & color) {
 	       
 std::shared_ptr<Image>
 Surface::createImage() {
+
   unsigned char * buffer = (unsigned char *)lockMemory(false);
+
+  for (int i = 0; i < getActualWidth() * getActualHeight(); i++){
+    buffer[i] = 255;
+  }
   assert(buffer);
   
   shared_ptr<Image> image(new Image(buffer, getFormat(), getActualWidth(), getActualHeight()));
