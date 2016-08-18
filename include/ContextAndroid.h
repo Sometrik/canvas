@@ -308,7 +308,7 @@ public:
 
   jobject createJavaPaint(RenderMode mode, const Font & font, const Style & style, float lineWidth, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
 
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWiPdth = %f", lineWidth);
+    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWidth = %f", lineWidth);
 
     //create paint
     jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
@@ -334,7 +334,7 @@ public:
     env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
 
     //Set alpha
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Globalalhpa = %f", globalAlpha);
+    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Globalalpha = %f", globalAlpha);
     env->CallVoidMethod(jpaint, cache->setAlphaMethod, (int) (255 * globalAlpha));
 
     //Set shadow
@@ -354,7 +354,7 @@ public:
       textProperty = 2;
     }
 
-    jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
+    jobject typef = env->CallStaticObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
     env->CallObjectMethod(jpaint, cache->setTypefaceMethod, typef);
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Java paint created");
 
