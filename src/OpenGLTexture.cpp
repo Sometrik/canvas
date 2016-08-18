@@ -313,6 +313,9 @@ OpenGLTexture::releaseTextures() {
       GLuint texid = *it;
       glDeleteTextures(1, &texid);
     }
+#ifdef __ANDROID__
+        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "OpenGLTexture released Textures");
+#endif
     freed_textures.clear();
   }
 }
