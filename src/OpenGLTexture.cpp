@@ -140,8 +140,14 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
       // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image.getWidth(), height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, image.getData());
 #endif
       break;
+    case R8:
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RED, GL_UNSIGNED_BYTE, image.getData() + offset);
+      break;
+    case R32F:
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RED, GL_FLOAT, image.getData() + offset);
+      break;
     case RGBA4:
-      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, image.getData() + offset);
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, image.getData() + offset);      
       break;
     case LA44:
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RED, GL_UNSIGNED_BYTE, image.getData() + offset);
@@ -151,6 +157,9 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
       break;
     case R32F:
       glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, current_width, current_height, GL_RED, GL_FLOAT, image.getData() + offset);
+      break;
+    case LUMINANCE_ALPHA:
+      glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, current_width, current_height, GL_RG, GL_UNSIGNED_BYTE, image.getData() + offset); 
       break;
     default:
       cerr << "unhandled format " << int(getInternalFormat()) << endl;
@@ -213,19 +222,15 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     }
   }
 
-  if (getInternalFormat() == R32F) {
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RED, GL_FLOAT, image.getData());
-  } else if (getInternalFormat() == R8) {
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RED, GL_UNSIGNED_BYTE, image.getData());
-  } else if (getInternalFormat() == LA44) {
+  if (getInternalFormat() == LA44) {
     auto tmp_image = image.convert(LA44);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RED, GL_UNSIGNED_BYTE, tmp_image->getData());
+    updatePlainData(*tmp_image, x, y);
   } else if (getInternalFormat() == LUMINANCE_ALPHA) {
     if (image.getInternalFormat() == LUMINANCE_ALPHA) {
-      glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.getWidth(), image.getHeight(), GL_RG, GL_UNSIGNED_BYTE, image.getData());
+      updatePlainData(image, x, y);
     } else {
       auto tmp_image = image.convert(LUMINANCE_ALPHA);
-      glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RG, GL_UNSIGNED_BYTE, tmp_image->getData()); 
+      updatePlainData(*tmp_image, x, y);
     }
   } else if (getInternalFormat() == RGB565) {
     if (image.getInternalFormat() == RGB565) {
@@ -242,7 +247,6 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       cerr << "OpenGLTexture: doing online image conversion for RGBA4 (SLOW)\n";
       auto tmp_image = image.convert(RGBA4);
       updatePlainData(*tmp_image, x, y);
-      // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image->getWidth(), tmp_image->getHeight(), GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, tmp_image->getData());
     }
   } else if (getInternalFormat() == RGB_ETC1) {
     if (image.getInternalFormat() == RGB_ETC1) {
