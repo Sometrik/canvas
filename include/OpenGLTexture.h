@@ -35,6 +35,8 @@ namespace canvas {
     static TextureRef createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels = 8);
     static TextureRef createTexture(Surface & surface);
 
+    static void hasTexStorage() { return has_tex_storage; }
+
   protected:
     void updateCompressedData(const Image & image, unsigned int x, unsigned int y);
     void updatePlainData(const Image & image, unsigned int x, unsigned int y);
@@ -46,6 +48,7 @@ namespace canvas {
     static size_t total_textures;
     static std::vector<unsigned int> freed_textures;
     static bool global_init;
+    static bool has_tex_storage;
   };
 
   class OpenGLTextureFactory : public TextureFactory {

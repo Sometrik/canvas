@@ -60,6 +60,7 @@ using namespace canvas;
 size_t OpenGLTexture::total_textures = 0;
 vector<unsigned int> OpenGLTexture::freed_textures;
 bool OpenGLTexture::global_init = false;
+bool OpenGLTexture::has_tex_storage = false;
 
 OpenGLTexture::OpenGLTexture(Surface & surface)
   : Texture(surface.getLogicalWidth(), surface.getLogicalHeight(), surface.getActualWidth(), surface.getActualHeight(), surface.getMinFilter(), surface.getMagFilter(), surface.getTargetFormat(), 1) {
@@ -186,7 +187,9 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
   bool has_mipmaps = getMinFilter() == LINEAR_MIPMAP_LINEAR;
   if (initialize) {
-    glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, getOpenGLInternalFormat(getInternalFormat()), getActualWidth(), getActualHeight());
+    if (hasTexStorage()) {
+      glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, getOpenGLInternalFormat(getInternalFormat()), getActualWidth(), getActualHeight());
+    }
     
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
