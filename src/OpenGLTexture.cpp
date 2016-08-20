@@ -219,33 +219,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     }
   }
 
-  if (getInternalFormat() == LA44) {
-    auto tmp_image = image.convert(LA44);
-    updatePlainData(*tmp_image, x, y);
-  } else if (getInternalFormat() == LUMINANCE_ALPHA) {
-    if (image.getInternalFormat() == LUMINANCE_ALPHA) {
-      updatePlainData(image, x, y);
-    } else {
-      auto tmp_image = image.convert(LUMINANCE_ALPHA);
-      updatePlainData(*tmp_image, x, y);
-    }
-  } else if (getInternalFormat() == RGB565) {
-    if (image.getInternalFormat() == RGB565) {
-      updatePlainData(image, x, y);
-    } else {
-      cerr << "OpenGLTexture: doing online image conversion for RGB565 (SLOW)\n";
-      auto tmp_image = image.convert(RGB565);
-      updatePlainData(*tmp_image, x, y);    
-    }
-  } else if (getInternalFormat() == RGBA4) {
-    if (image.getInternalFormat() == RGBA4) {
-      updatePlainData(image, x, y);
-    } else {
-      cerr << "OpenGLTexture: doing online image conversion for RGBA4 (SLOW)\n";
-      auto tmp_image = image.convert(RGBA4);
-      updatePlainData(*tmp_image, x, y);
-    }
-  } else if (getInternalFormat() == RGB_ETC1) {
+  if (getInternalFormat() == RGB_ETC1) {
     if (image.getInternalFormat() == RGB_ETC1) {
       updateCompressedData(image, x, y);
     } else {
@@ -277,16 +251,19 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       cerr << "WARNING: compression should be done in thread\n";
       auto tmp_image = image.convert(RG_RGTC2);
       updateCompressedData(*tmp_image, x, y);
-    }    
+    }
+  } else if (image.getInternalFormat() != getInternalFormat()) {
+    cerr << "OpenGLTexture: doing online image conversion (SLOW)\n";
+    auto tmp_image = image.convert(getInternalFormat());
+    updatePlainData(*tmp_image, x, y);
   } else {
     updatePlainData(image, x, y);    
   }
-    
+
+  // if the image has only one level, and mipmaps are needed, generate them
   if (has_mipmaps && image.getLevels() == 1) {
     need_mipmaps = true;
   }
-
-  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void
