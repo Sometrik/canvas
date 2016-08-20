@@ -35,7 +35,7 @@ namespace canvas {
     static TextureRef createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels = 8);
     static TextureRef createTexture(Surface & surface);
 
-    static void hasTexStorage() { return has_tex_storage; }
+    static bool hasTexStorage() { return has_tex_storage; }
     void setHasTexStorage(bool t) { has_tex_storage = t; }
 
   protected:
