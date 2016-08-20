@@ -36,6 +36,7 @@ namespace canvas {
     static TextureRef createTexture(Surface & surface);
 
     static void hasTexStorage() { return has_tex_storage; }
+    void setHasTexStorage(bool t) { has_tex_storage = t; }
 
   protected:
     void updateCompressedData(const Image & image, unsigned int x, unsigned int y);

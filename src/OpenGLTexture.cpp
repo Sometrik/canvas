@@ -60,7 +60,7 @@ using namespace canvas;
 size_t OpenGLTexture::total_textures = 0;
 vector<unsigned int> OpenGLTexture::freed_textures;
 bool OpenGLTexture::global_init = false;
-bool OpenGLTexture::has_tex_storage = false;
+bool OpenGLTexture::has_tex_storage = true;
 
 OpenGLTexture::OpenGLTexture(Surface & surface)
   : Texture(surface.getLogicalWidth(), surface.getLogicalHeight(), surface.getActualWidth(), surface.getActualHeight(), surface.getMinFilter(), surface.getMagFilter(), surface.getTargetFormat(), 1) {
@@ -137,7 +137,7 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
 #else
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
-      // glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, tmp_image.getWidth(), height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, image.getData());
+      // glTexSubImage2D(GL_TEXTURE_2D, level, x, y, tmp_image.getWidth(), height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, image.getData() + offset);
 #endif
       break;
     case R8:
@@ -155,11 +155,8 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     case RGB565:
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, image.getData() + offset);
       break;
-    case R32F:
-      glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, current_width, current_height, GL_RED, GL_FLOAT, image.getData() + offset);
-      break;
     case LUMINANCE_ALPHA:
-      glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, current_width, current_height, GL_RG, GL_UNSIGNED_BYTE, image.getData() + offset); 
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RG, GL_UNSIGNED_BYTE, image.getData() + offset); 
       break;
     default:
       cerr << "unhandled format " << int(getInternalFormat()) << endl;
