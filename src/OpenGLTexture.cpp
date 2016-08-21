@@ -130,40 +130,42 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
     
     assert(image.getData());
+
+    GLenum format = 0, type = GL_UNSIGNED_BYTE;
+    
     switch (getInternalFormat()) {
     case RGBA8:
     case RGB8:
 #if defined __APPLE__ || defined ANDROID 
-      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA, GL_UNSIGNED_BYTE, image.getData() + offset);
+      format = GL_RGBA;      
 #else
-      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, image.getData() + offset);    
-      // glTexSubImage2D(GL_TEXTURE_2D, level, x, y, tmp_image.getWidth(), height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, image.getData() + offset);
+      format = GL_BGRA; type = GL_UNSIGNED_INT_8_8_8_8_REV;
 #endif
       break;
     case R8:
-      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RED, GL_UNSIGNED_BYTE, image.getData() + offset);
+      format = GL_RED;
       break;
     case R32F:
-      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RED, GL_FLOAT, image.getData() + offset);
+      format = GL_RED; type = GL_FLOAT;
       break;
     case RGBA4:
-      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGBA4, GL_UNSIGNED_SHORT_4_4_4_4, image.getData() + offset);      
+      format = GL_RGBA4; type = GL_UNSIGNED_SHORT_4_4_4_4;
       break;
     case LA44:
-      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RED, GL_UNSIGNED_BYTE, image.getData() + offset);
+      format = GL_RED;
       break;
     case RGB565:
-      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, image.getData() + offset);
+      format = GL_RGB; type = GL_UNSIGNED_SHORT_5_6_5;
       break;
     case LUMINANCE_ALPHA:
-      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, GL_RG, GL_UNSIGNED_BYTE, image.getData() + offset); 
+      format = GL_RG; type = GL_UNSIGNED_BYTE;
       break;
     default:
       cerr << "unhandled format " << int(getInternalFormat()) << endl;
       assert(0);
     }
-    
-    // glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, getOpenGLInternalFormat(getInternalFormat()), size, image.getData() + offset);
+
+    glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, format, type, image.getData() + offset);
     
     offset += size;
     current_width /= 2;
