@@ -60,7 +60,7 @@ using namespace canvas;
 size_t OpenGLTexture::total_textures = 0;
 vector<unsigned int> OpenGLTexture::freed_textures;
 bool OpenGLTexture::global_init = false;
-bool OpenGLTexture::has_tex_storage = true;
+bool OpenGLTexture::has_tex_storage = false;
 
 struct format_description_s {
   GLenum internalFormat;
