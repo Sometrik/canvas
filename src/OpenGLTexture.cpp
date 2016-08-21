@@ -62,6 +62,12 @@ vector<unsigned int> OpenGLTexture::freed_textures;
 bool OpenGLTexture::global_init = false;
 bool OpenGLTexture::has_tex_storage = true;
 
+struct format_description_s {
+  GLenum internalFormat;
+  GLenum format;
+  GLenum type;
+};
+
 OpenGLTexture::OpenGLTexture(Surface & surface)
   : Texture(surface.getLogicalWidth(), surface.getLogicalHeight(), surface.getActualWidth(), surface.getActualHeight(), surface.getMinFilter(), surface.getMagFilter(), surface.getTargetFormat(), 1) {
   assert(getInternalFormat());
@@ -69,28 +75,41 @@ OpenGLTexture::OpenGLTexture(Surface & surface)
   updateData(*image, 0, 0);
 }
 
-static GLenum getOpenGLInternalFormat(InternalFormat internal_format) {
+static format_description_s getFormatDescription(InternalFormat internal_format) {
   switch (internal_format) {
-  case NO_FORMAT: return 0;
-  case R8: return GL_R8;
-  case RG8: return GL_RG8;
-  case RGB565: return GL_RGB565;
-  case RGBA4: return GL_RGBA4;
-  case RGBA8: return GL_RGBA8;
-  case RGB8: return GL_RGB8;
-  case RGB8_24: return GL_RGBA8;
-  case RED_RGTC1: return GL_COMPRESSED_RED_RGTC1;
-  case RG_RGTC2: return GL_COMPRESSED_RG_RGTC2;
-  case RGB_ETC1: return GL_COMPRESSED_RGB8_ETC2;
-  case RGB_DXT1: return GL_COMPRESSED_RGB_S3TC_DXT1_EXT;
-  case RGBA_DXT5: return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-  case LUMINANCE_ALPHA: return GL_RG8;
-  case LA44: return GL_R8; // pack luminance and alpha to single byte
-  case R32F: return GL_R32F;
-    
+  case NO_FORMAT: return { 0, 0, 0 };
+  case R8: return { GL_R8, GL_RED, GL_UNSIGNED_BYTE };
+  case RG8: return { GL_RG8, GL_RG, GL_UNSIGNED_BYTE };
+  case RGB565: return { GL_RGB565, GL_RGB, GL_UNSIGNED_SHORT_5_6_5 };
+  case RGBA4: return { GL_RGBA4, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4 };
+  case RGBA8: 
+#if defined __APPLE__ || defined __ANDROID__
+    return { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE };
+#else
+    return { GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV };
+#endif
+  case RGB8:
+#if defined __APPLE__ || defined __ANDROID__
+    return { GL_RGB8, GL_RGBA, GL_UNSIGNED_BYTE };
+#else
+    return { GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV };
+#endif
+    // case RGB8_24: return GL_RGBA8;
+  case RED_RGTC1: return { GL_COMPRESSED_RED_RGTC1, GL_RG, 0 };
+  case RG_RGTC2: return { GL_COMPRESSED_RG_RGTC2, GL_RG, 0 };
+  case RGB_ETC1: return { GL_COMPRESSED_RGB8_ETC2, GL_RGB, 0 };
+  case RGB_DXT1: return { GL_COMPRESSED_RGB_S3TC_DXT1_EXT, GL_RGB, 0 };
+  case RGBA_DXT5: return { GL_COMPRESSED_RGBA_S3TC_DXT5_EXT, GL_RGBA, 0 };
+  case LUMINANCE_ALPHA: return { GL_RG8, GL_RG, GL_UNSIGNED_BYTE };
+  case LA44: // pack luminance and alpha to single byte
+    return { GL_R8, GL_RED, GL_UNSIGNED_BYTE };
+  case R32F: return { GL_R32F, GL_RED, GL_FLOAT };
+  default:
+    break;
   }
+  cerr << "unhandled format: " << int(internal_format) << endl;
   assert(0);
-  return 0;
+  return { 0, 0, 0 };
 }
 
 static GLenum getOpenGLFilterType(FilterMode mode) {
@@ -106,11 +125,11 @@ void
 OpenGLTexture::updateCompressedData(const Image & image, unsigned int x, unsigned int y) {
   unsigned int offset = 0;
   unsigned int current_width = image.getWidth(), current_height = image.getHeight();
-  GLenum format = getOpenGLInternalFormat(getInternalFormat());
+  auto fd = getFormatDescription(getInternalFormat());
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
     // cerr << "compressed tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", offset = " << offset << ", size = " << size << endl;
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, format, (GLsizei)size, image.getData() + offset);
+    glCompressedTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, fd.internalFormat, (GLsizei)size, image.getData() + offset);
     offset += size;
     current_width /= 2;
     current_height /= 2;
@@ -123,7 +142,7 @@ void
 OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int y) {
   unsigned int offset = 0;
   unsigned int current_width = image.getWidth(), current_height = image.getHeight();
-  GLenum format = getOpenGLInternalFormat(getInternalFormat());
+  auto fd = getFormatDescription(getInternalFormat());
   bool filled = false;
 
   for (unsigned int level = 0; level < image.getLevels(); level++) {
@@ -131,45 +150,11 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
     
     assert(image.getData());
-
-    GLenum format = 0, type = GL_UNSIGNED_BYTE;
     
-    switch (getInternalFormat()) {
-    case RGBA8:
-    case RGB8:
-#if defined __APPLE__ || defined ANDROID 
-      format = GL_RGBA;      
-#else
-      format = GL_BGRA; type = GL_UNSIGNED_INT_8_8_8_8_REV;
-#endif
-      break;
-    case R8:
-      format = GL_RED;
-      break;
-    case R32F:
-      format = GL_RED; type = GL_FLOAT;
-      break;
-    case RGBA4:
-      format = GL_RGBA4; type = GL_UNSIGNED_SHORT_4_4_4_4;
-      break;
-    case LA44:
-      format = GL_RED;
-      break;
-    case RGB565:
-      format = GL_RGB; type = GL_UNSIGNED_SHORT_5_6_5;
-      break;
-    case LUMINANCE_ALPHA:
-      format = GL_RG; type = GL_UNSIGNED_BYTE;
-      break;
-    default:
-      cerr << "unhandled format " << int(getInternalFormat()) << endl;
-      assert(0);
-    }
-
     if (hasTexStorage() || is_data_initialized) {
-      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, format, type, image.getData() + offset);
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, fd.format, fd.type, image.getData() + offset);
     } else {
-      glTexImage2D(GL_TEXTURE_2D, level, getOpenGLInternalFormat(getInternalFormat()), current_width, current_height, 0, type, format, image.getData() + offset);
+      glTexImage2D(GL_TEXTURE_2D, level, fd.internalFormat, current_width, current_height, 0, fd.format, fd.type, image.getData() + offset);
       filled = true;
     }
     
@@ -204,7 +189,8 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
   bool has_mipmaps = getMinFilter() == LINEAR_MIPMAP_LINEAR;
   if (initialize) {
     if (hasTexStorage()) {
-      glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, getOpenGLInternalFormat(getInternalFormat()), getActualWidth(), getActualHeight());
+      auto fd = getFormatDescription(getInternalFormat());
+      glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, fd.internalFormat, getActualWidth(), getActualHeight());
     }
     
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
