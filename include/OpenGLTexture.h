@@ -39,8 +39,7 @@ namespace canvas {
     void setHasTexStorage(bool t) { has_tex_storage = t; }
 
   protected:
-    void updateCompressedData(const Image & image, unsigned int x, unsigned int y);
-    void updatePlainData(const Image & image, unsigned int x, unsigned int y);
+    void updateTextureData(const Image & image, unsigned int x, unsigned int y);
 
   private:
     unsigned int texture_id = 0;

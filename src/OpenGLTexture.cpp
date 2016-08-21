@@ -122,24 +122,7 @@ static GLenum getOpenGLFilterType(FilterMode mode) {
 }
 
 void
-OpenGLTexture::updateCompressedData(const Image & image, unsigned int x, unsigned int y) {
-  unsigned int offset = 0;
-  unsigned int current_width = image.getWidth(), current_height = image.getHeight();
-  auto fd = getFormatDescription(getInternalFormat());
-  for (unsigned int level = 0; level < image.getLevels(); level++) {
-    size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
-    // cerr << "compressed tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", offset = " << offset << ", size = " << size << endl;
-    glCompressedTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, fd.internalFormat, (GLsizei)size, image.getData() + offset);
-    offset += size;
-    current_width /= 2;
-    current_height /= 2;
-    x /= 2;
-    y /= 2;
-  }
-}
-
-void
-OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int y) {
+OpenGLTexture::updateTextureData(const Image & image, unsigned int x, unsigned int y) {
   unsigned int offset = 0;
   unsigned int current_width = image.getWidth(), current_height = image.getHeight();
   auto fd = getFormatDescription(getInternalFormat());
@@ -150,8 +133,14 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
     
     assert(image.getData());
-    
-    if (hasTexStorage() || is_data_initialized) {
+
+    if (fd.type == 0) { // compressed
+      if (hasTexStorage() || is_data_initialized) {
+	glCompressedTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, fd.internalFormat, (GLsizei)size, image.getData() + offset);
+      } else {
+	glCompressedTexImage2D(GL_TEXTURE_2D, level, fd.internalFormat, current_width, current_height, 0, (GLsizei)size, image.getData() + offset);
+      }      
+    } else if (hasTexStorage() || is_data_initialized) {
       glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, fd.format, fd.type, image.getData() + offset);
     } else {
       glTexImage2D(GL_TEXTURE_2D, level, fd.internalFormat, current_width, current_height, 0, fd.format, fd.type, image.getData() + offset);
@@ -200,60 +189,17 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
     if (x != 0 || y != 0 || image.getWidth() != getActualWidth() || image.getHeight() != getActualHeight()) {
       int levels = has_mipmaps ? getMipmapLevels() : 1;
-      if (getInternalFormat() == RGB_ETC1 || getInternalFormat() == RGB_DXT1 ||
-	  getInternalFormat() == RED_RGTC1
-	  ) {
-	Image img(getInternalFormat(), getActualWidth(), getActualHeight(), levels);
-	updateCompressedData(img, 0, 0);	
-      } else if (getInternalFormat() == RGBA8 || getInternalFormat() == LA44 ||
-		 getInternalFormat() == RGB565 || getInternalFormat() == R32F) {
-	Image img(getInternalFormat(), getActualWidth(), getActualHeight(), levels);
-	updatePlainData(img, 0, 0);
-      } else {
-	assert(0);
-      }
+      Image img(getInternalFormat(), getActualWidth(), getActualHeight(), levels);
+      updateTextureData(img, 0, 0);	
     }
   }
-
-  if (getInternalFormat() == RGB_ETC1) {
-    if (image.getInternalFormat() == RGB_ETC1) {
-      updateCompressedData(image, x, y);
-    } else {
-      auto fd = image.getImageFormat();
-      cerr << "WARNING: compression should be done in thread (bpp = " << fd.getBytesPerPixel() << ", c = " << int(fd.getCompression()) << ", ch = " << fd.getNumChannels() << ")\n";
-      auto tmp_image = image.convert(RGB_ETC1);
-      updateCompressedData(*tmp_image, x, y);
-    }
-  } else if (getInternalFormat() == RGB_DXT1) {
-    if (image.getInternalFormat() == RGB_DXT1) {
-      updateCompressedData(image, x, y);
-    } else {
-      cerr << "WARNING: compression should be done in thread\n";
-      auto tmp_image = image.convert(RGB_DXT1);
-      updateCompressedData(*tmp_image, x, y);
-    }    
-  } else if (getInternalFormat() == RED_RGTC1) {
-    if (image.getInternalFormat() == RED_RGTC1) {
-      updateCompressedData(image, x, y);
-    } else {
-      cerr << "WARNING: compression should be done in thread\n";
-      auto tmp_image = image.convert(RED_RGTC1);
-      updateCompressedData(*tmp_image, x, y);
-    }    
-  } else if (getInternalFormat() == RG_RGTC2) {
-    if (image.getInternalFormat() == RG_RGTC2) {
-      updateCompressedData(image, x, y);
-    } else {
-      cerr << "WARNING: compression should be done in thread\n";
-      auto tmp_image = image.convert(RG_RGTC2);
-      updateCompressedData(*tmp_image, x, y);
-    }
-  } else if (image.getInternalFormat() != getInternalFormat()) {
+  
+  if (image.getInternalFormat() == getInternalFormat()) {
+    updateTextureData(image, x, y);
+  } else {
     cerr << "OpenGLTexture: doing online image conversion (SLOW)\n";
     auto tmp_image = image.convert(getInternalFormat());
-    updatePlainData(*tmp_image, x, y);
-  } else {
-    updatePlainData(image, x, y);    
+    updateTextureData(*tmp_image, x, y);
   }
 
   // if the image has only one level, and mipmaps are needed, generate them
