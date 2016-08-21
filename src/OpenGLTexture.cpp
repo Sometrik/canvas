@@ -21,9 +21,10 @@
 #include <windows.h>
 #endif
 
-#ifdef ANDROID
+#ifdef __ANDROID__
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
+#include <android/log.h>
 #else
 #include <GL/gl.h>
 
@@ -36,7 +37,7 @@
 
 #endif
 
-#if defined __APPLE__ || defined ANDROID
+#if defined __APPLE__ || defined __ANDROID__
 #ifndef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
 #define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0
 #endif
@@ -130,8 +131,14 @@ OpenGLTexture::updateTextureData(const Image & image, unsigned int x, unsigned i
 
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
-    // cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
-    
+     cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
+#ifdef __ANDROID__
+     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr x: %d", x);
+     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr y: %d", y);
+     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr w: %d", current_width);
+     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr h: %d", current_height);
+     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr size: %zu", size);
+#endif
     assert(image.getData());
 
     if (fd.type == 0) { // compressed
@@ -163,7 +170,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     global_init = true;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   }
-    
+
   bool initialize = false;
   if (!texture_id) {
     initialize = true;
@@ -181,7 +188,6 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       auto fd = getFormatDescription(getInternalFormat());
       glTexStorage2D(GL_TEXTURE_2D, has_mipmaps ? getMipmapLevels() : 1, fd.internalFormat, getActualWidth(), getActualHeight());
     }
-    
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getOpenGLFilterType(getMinFilter()));
@@ -229,6 +235,9 @@ OpenGLTexture::releaseTextures() {
       GLuint texid = *it;
       glDeleteTextures(1, &texid);
     }
+#ifdef __ANDROID__
+        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "OpenGLTexture released Textures");
+#endif
     freed_textures.clear();
   }
 }
