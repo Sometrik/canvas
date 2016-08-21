@@ -124,6 +124,7 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
   unsigned int offset = 0;
   unsigned int current_width = image.getWidth(), current_height = image.getHeight();
   GLenum format = getOpenGLInternalFormat(getInternalFormat());
+  bool filled = false;
 
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
@@ -165,7 +166,12 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
       assert(0);
     }
 
-    glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, format, type, image.getData() + offset);
+    if (hasTexStorage() || is_data_initialized) {
+      glTexSubImage2D(GL_TEXTURE_2D, level, x, y, current_width, current_height, format, type, image.getData() + offset);
+    } else {
+      glTexImage2D(GL_TEXTURE_2D, level, getOpenGLInternalFormat(getInternalFormat()), current_width, current_height, 0, type, format, image.getData() + offset);
+      filled = true;
+    }
     
     offset += size;
     current_width /= 2;
@@ -173,6 +179,8 @@ OpenGLTexture::updatePlainData(const Image & image, unsigned int x, unsigned int
     x /= 2;
     y /= 2;
   }
+
+  if (filled) is_data_initialized = true;
 }
 
 void

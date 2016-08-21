@@ -44,7 +44,7 @@ namespace canvas {
 
   private:
     unsigned int texture_id = 0;
-    bool need_mipmaps = false;
+    bool need_mipmaps = false, is_data_initialized = false;
     
     static size_t total_textures;
     static std::vector<unsigned int> freed_textures;
