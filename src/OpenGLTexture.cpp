@@ -24,7 +24,6 @@
 #ifdef __ANDROID__
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
-#include <android/log.h>
 #else
 #include <GL/gl.h>
 
@@ -132,13 +131,6 @@ OpenGLTexture::updateTextureData(const Image & image, unsigned int x, unsigned i
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
      cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
-#ifdef __ANDROID__
-     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr x: %d", x);
-     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr y: %d", y);
-     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr w: %d", current_width);
-     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr h: %d", current_height);
-     	__android_log_print(ANDROID_LOG_INFO, "Sometrik", "updatePlainData Cerr size: %zu", size);
-#endif
     assert(image.getData());
 
     if (fd.type == 0) { // compressed
@@ -235,9 +227,6 @@ OpenGLTexture::releaseTextures() {
       GLuint texid = *it;
       glDeleteTextures(1, &texid);
     }
-#ifdef __ANDROID__
-        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "OpenGLTexture released Textures");
-#endif
     freed_textures.clear();
   }
 }
