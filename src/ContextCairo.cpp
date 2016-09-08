@@ -73,6 +73,7 @@ CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0, 0, 0, R
   surface = cairo_image_surface_create_from_png(filename.c_str());
   assert(surface);
   unsigned int w = cairo_image_surface_get_width(surface), h = cairo_image_surface_get_height(surface);
+  cerr << "loaded bitmap " << filename << ": w = " << w << ", h = " << h << endl;
   bool a = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
   Surface::resize(w, h, w, h, a ? RGBA8 : RGB8);
 }
