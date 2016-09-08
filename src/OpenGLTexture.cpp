@@ -71,6 +71,10 @@ struct format_description_s {
 OpenGLTexture::OpenGLTexture(Surface & surface)
   : Texture(surface.getLogicalWidth(), surface.getLogicalHeight(), surface.getActualWidth(), surface.getActualHeight(), surface.getMinFilter(), surface.getMagFilter(), surface.getTargetFormat(), 1) {
   assert(getInternalFormat());
+  assert(getLogicalWidth() > 0);
+  assert(getLogicalHeight() > 0);
+  assert(getActualWidth() > 0);
+  assert(getActualHeight() > 0);
   auto image = surface.createImage();
   updateData(*image, 0, 0);
 }
