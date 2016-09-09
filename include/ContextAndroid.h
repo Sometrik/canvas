@@ -186,25 +186,128 @@ private:
 class AndroidPaint {
   AndroidPaint(AndroidCache * cache) : cache(_cache) {
     obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
-    
+
+    JNIEnv * env = cache->getJNIEnv();
+    env->CallVoidMethod(obj, cache->paintSetAntiAliasMethod, JNI_TRUE);
+    env->CallVoidMethod(obj, cache->paintSetStrokeJoinMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Join"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Join"), "ROUND", "Landroid/graphics/Paint$Join;")));
   }
+
   ~AndroidPaint() {
-    env->DeleteGlobalRef(obj);
+    cache->getJNIEnv()->DeleteGlobalRef(obj);
+  }
+
+  void setRenderMode(RenderMode mode) {
+    switch (mode) {
+    case STROKE:
+      env->CallVoidMethod(obj, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
+      break;
+    case FILL:
+      env->CallVoidMethod(obj, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "FILL", "Landroid/graphics/Paint$Style;")));
+      break;
+    }
+  }
+
+  void setLineWidth(float lineWidth) {
+    cache->getJNIEnv()->CallVoidMethod(obj, cache->paintSetStrokeWidthMethod, lineWidth);
+  }
+
+  void setStyle(const Style & style) {
+    JNIEnv * env = cache->getJNIEnv();
+    env->CallVoidMethod(obj, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
+  }
+
+  void setGlobalAlpha(float alpha) {
+    if (alpha != globalAlpha) {
+      globalAlpha = alpha;
+      cache->getJNIEnv()->CallVoidMethod(obj, cache->setAlphaMethod, (int) (255 * globalAlpha));
+    }
+  }
+
+  void setShadow(float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
+    cache->getJNIEnv()->CallVoidMethod(obj, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
+  }
+
+  void setFont(const Font & font) {
+    JNIEnv * env = cache->getJNIEnv();
+
+    if (font.size != current_font_size) {
+      current_font_size = font.size;
+      env->CallVoidMethod(obj, env->GetMethodID(cache->paintClass, "setTextSize", "(F)V"), font.size);
+    }
+
+    int textProperty = 0;
+    if (font.weight.isBold()) {
+      if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) {
+	  textProperty = 3;
+      } else {
+	textProperty = 1;
+      }
+    } else if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) {
+      textProperty = 2;
+    }
+
+    if (font.family != current_font_family || textProperty != current_text_property) {
+      current_font_family = font.family;
+      current_text_property = textProperty;
+      
+      jobject typef = env->CallStaticObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
+      env->CallObjectMethod(obj, cache->setTypefaceMethod, typef);
+    }    
+  }
+
+  void setTextAlign(TextAlign textAlign) {
+    if (textAlign != currentTextAlign) {
+      currentTextAlign = textAlign;
+      JNIEnv * env = cache->getJNIEnv();
+      switch (textAlign) {
+      case ALIGN_LEFT:
+	env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
+	break;
+      case ALIGN_RIGHT:
+	env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
+	break;
+      case ALIGN_CENTER:
+	env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
+      default:
+	break;
+      }
+    }
+  }
+
+  float measureText(const std::string & text) {    
+    return cache->getJNIEnv()->CallFloatMethod(jpaint, cache->measureTextMethod, env->NewStringUTF(text.c_str()));
+  }
+  float getTextDescent() {
+    return cache->getJNIEnv()->CallFloatMethod(jpaint, cache->measureDescentMethod);
+  }
+  float getTextAscent() {
+    return cache->getJNIEnv()->CallFloatMethod(jpaint, cache->measureAscentMethod);
   }
   
   jobject & getObject() { return obj; }
-   
+
+ protected:
+  static int getAndroidColor(const Color & color, float globalAlpha = 1.0f) {
+    return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
+    return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
+  }
+
  private:
    AndroidCache * cache;
    jobject obj;
+   float globalAlpha = 1.0f;
+   float current_font_size = 0;
+   int current_font_property = 0;
+   std::string current_font_family;
+   TextAlign currentTextAlign = ALIGN_LEFT;
  }
 
 class AndroidSurface: public Surface {
 public:
   friend class ContextAndroid;
 
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) :
-      Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format), cache(_cache), env(_env) {
+  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format)
+    : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format), cache(_cache), env(_env), paint(_cache) {
     // creates an empty canvas
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidSurface widthheight constructor called");
@@ -231,8 +334,8 @@ public:
 
   }
 
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, const Image & image) :
-      Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), RGBA8), cache(_cache), env(_env) {
+  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, const Image & image)
+    : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), RGBA8), cache(_cache), env(_env), paint(_cache) {
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
 
@@ -240,8 +343,8 @@ public:
     bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
   }
 
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, const std::string & filename) :
-      Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env) {
+  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, const std::string & filename)
+    : Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), paint(_cache) {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
     cache->resetCache();
@@ -263,8 +366,8 @@ public:
   }
 
   //Create a bitmap from bytearray
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, const unsigned char * buffer, size_t size) :
-      Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env) {
+  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, const unsigned char * buffer, size_t size)
+    : Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), paint(_cache) {
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
@@ -321,71 +424,19 @@ public:
     // is there AndroidBitmap_releasePixels?
   }
 
-  jobject createJavaPaint(RenderMode mode, const Font & font, const Style & style, float lineWidth, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
-
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWidth = %f", lineWidth);
-
-    //create paint
-    jobject jpaint = env->NewObject(cache->paintClass, cache->paintConstructor);
-
-    //Paint.setColor;
-    env->CallVoidMethod(jpaint, cache->paintSetAntiAliasMethod, JNI_TRUE);
-
-    //Paint Set Style
-    switch (mode) {
-    case STROKE:
-      env->CallVoidMethod(jpaint, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
-      //Paint Set Stroke Width
-      env->CallVoidMethod(jpaint, cache->paintSetStrokeWidthMethod, lineWidth);
-      //Paint set StrokeJoin
-      env->CallVoidMethod(jpaint, cache->paintSetStrokeJoinMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Join"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Join"), "ROUND", "Landroid/graphics/Paint$Join;")));
-      break;
-    case FILL:
-      env->CallVoidMethod(jpaint, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "FILL", "Landroid/graphics/Paint$Style;")));
-
-      break;
-    }
-    //Paint set Color
-    env->CallVoidMethod(jpaint, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
-
-    //Set alpha
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Globalalpha = %f", globalAlpha);
-    env->CallVoidMethod(jpaint, cache->setAlphaMethod, (int) (255 * globalAlpha));
-
-    //Set shadow
-    env->CallVoidMethod(jpaint, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
-    //set paint text size.
-    env->CallVoidMethod(jpaint, env->GetMethodID(cache->paintClass, "setTextSize", "(F)V"), font.size);
-
-    // Set Text Font and properties
-    int textProperty = 0;
-    if (font.weight.isBold()) {
-      if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) {
-	textProperty = 3;
-      } else {
-	textProperty = 1;
-      }
-    } else if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) {
-      textProperty = 2;
-    }
-
-    jobject typef = env->CallStaticObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
-    env->CallObjectMethod(jpaint, cache->setTypefaceMethod, typef);
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Java paint created");
-
-    return jpaint;
-  }
-
   void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
-
     checkForCanvas();
 
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "LineWidth = %f", lineWidth);
+    paint.setRenderMode(mode);
+    paint.setStyle(style);
+    paint.setGlobalAlpha(globalAlpha);
+    paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);       
+    if (mode == STROKE) paint.setLineWidth(lineWidth);
 
-    jobject jpaint = createJavaPaint(mode, NULL, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
-
-    //set font
+#if 0
+    // set font
     jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, NULL, 0);
+#endif
 
     jboolean copyBoolean = JNI_TRUE;
     jboolean falseBoolean = JNI_FALSE;
@@ -433,9 +484,8 @@ public:
       }
     }
 
-    //Draw path to canvas
-    env->CallVoidMethod(canvas, cache->canvasPathDrawMethod, jpath, jpaint);
-
+    // Draw path to canvas
+    env->CallVoidMethod(canvas, cache->canvasPathDrawMethod, jpath, paint.getObject());
   }
 
   void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat format) override {
@@ -456,62 +506,48 @@ public:
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "RenderText called");
     checkForCanvas();
 
-    jobject jpaint = createJavaPaint(mode, font, style, lineWidth, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
-
-    switch (textAlign) {
-    case ALIGN_LEFT:
-      env->CallVoidMethod(jpaint, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
-      break;
-    case ALIGN_RIGHT:
-      env->CallVoidMethod(jpaint, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
-      break;
-    case ALIGN_CENTER:
-      env->CallVoidMethod(jpaint, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
-    default:
-      break;
-    }
-
+    paint.setRenderMode(mode);
+    paint.setFont(font);
+    paint.setStyle(style);
+    paint.setGlobalAlpha(globalAlpha);
+    paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+    paint.setTextAlign(textAlign);
+    if (mode == STROKE) paint.setLineWidth(lineWidth);
+    
     if (textBaseline == TextBaseline::MIDDLE || textBaseline == TextBaseline::TOP) {
-      float descent = env->CallFloatMethod(jpaint, cache->measureDescentMethod);
-      float ascent = env->CallFloatMethod(jpaint, cache->measureAscentMethod);
+      float descent = paint.getTextDescent();
+      float ascent = paint.getTextAscent();
+      
       if (textBaseline == TextBaseline::MIDDLE) {
-	env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent) / 2, jpaint);
+	env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent) / 2, paint.getObject());
       } else if (textBaseline == TextBaseline::TOP) {
-	env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent), jpaint);
+	env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent), paint.getObject());
       }
     } else {
-      env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y, jpaint);
+      env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y, paint.getObject());
     }
 
   }
 
   TextMetrics measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float displayScale) override {
-
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Measuring text");
-    jobject jpaint = createJavaPaint(RenderMode::STROKE, font, NULL, NULL, 1.0f, 0.0f, 0.0f, 0.0f, Color::BLACK);
 
-    float textWidth = env->CallFloatMethod(jpaint, cache->measureTextMethod, env->NewStringUTF(text.c_str()));
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Measured text width = %f", textWidth);
-    float descent = env->CallFloatMethod(jpaint, cache->measureDescentMethod);
-    float ascent = env->CallFloatMethod(jpaint, cache->measureAscentMethod);
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Descent = %f", descent);
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Ascent = %f", ascent);
+    paint.setFont(font);
+    
+    float textWidth = paint.measureText(text);   
+    float descent = paint.getTextDescent();
+    float ascent = paint.getTextAscent();
 
     //Change ascent and descent according to baseline
     float baseline = 0;
     if (textBaseline == TextBaseline::MIDDLE) {
       baseline = (ascent + descent) / 2;
-      __android_log_print(ANDROID_LOG_INFO, "Sometrik", "measure text baseline - middle = %f", baseline);
     } else if (textBaseline == TextBaseline::TOP) {
       baseline = (ascent + descent);
-      __android_log_print(ANDROID_LOG_INFO, "Sometrik", "measure text baseline - top = %f", baseline);
     }
 
-    ascent = ascent - baseline;
-    descent = descent - baseline;
-
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Descent = %f", descent);
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "MeasureText Ascent = %f", ascent);
+    ascent -= baseline;
+    descent -= baseline;
 
     return TextMetrics(textWidth, descent, ascent);
   }
@@ -521,9 +557,10 @@ public:
     AndroidSurface * native_surface = dynamic_cast<canvas::AndroidSurface *>(&_img);
     if (native_surface) {
       checkForCanvas();
-      jobject jpaint = createJavaPaint(RenderMode::STROKE, NULL, NULL, NULL, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+      paint.setGlobalAlpha(globalAlpha);
+      paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
       jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
-      env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, jpaint);
+      env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, paint.getObject());
     } else {
       auto img = native_surface->createImage();
       drawImage(*img, p, w, h, displayScale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, imageSmoothingEnabled);
@@ -536,17 +573,14 @@ public:
 
     checkForCanvas();
 
-    createJavaPaint(RenderMode::STROKE, NULL, NULL, NULL, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
-
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "width = %f", w);
-    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "height = %f", h);
-
+    paint.setGlobalAlpha(globalAlpha);
+    paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+    
     jobject drawableBitmap = imageToBitmap(_img);
 
-    //Create new Canvas from the mutable bitmap
+    // Create new Canvas from the mutable bitmap
     jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
     env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, NULL, dstRect, NULL);
-
   }
 
   jobject imageToBitmap(const Image & _img) {
@@ -590,12 +624,6 @@ public:
     return canvas;
   }
 
-protected:
-  static int getAndroidColor(const Color & color, float globalAlpha = 1.0f) {
-    return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
-    return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
-  }
-
 private:
   jobject bitmap;
   jobject canvas;
@@ -604,6 +632,7 @@ private:
 
   AndroidCache * cache;
   JNIEnv * env;
+  AndroidPaint paint;
 };
 
 class ContextAndroid: public Context {
@@ -639,7 +668,6 @@ private:
   JNIEnv * env;
   jobject assetManager;
   AndroidSurface default_surface;
-  AndroidPaint paint;
 };
 
 class AndroidContextFactory: public ContextFactory {
