@@ -182,6 +182,23 @@ private:
   bool is_valid = false;
   bool javaInitialized = false;
 };
+
+class AndroidPaint {
+  AndroidPaint(AndroidCache * cache) : cache(_cache) {
+    obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
+    
+  }
+  ~AndroidPaint() {
+    env->DeleteGlobalRef(obj);
+  }
+  
+  jobject & getObject() { return obj; }
+   
+ private:
+   AndroidCache * cache;
+   jobject obj;
+ }
+
 class AndroidSurface: public Surface {
 public:
   friend class ContextAndroid;
@@ -277,8 +294,6 @@ public:
   }
 
   ~AndroidSurface() {
-    // remember to free canvas and bitmap
-
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor on ContextAndroid");
     //check if these have been made global references and delete if they are.
     if (env->GetObjectRefType(bitmap) == 2) {
@@ -624,6 +639,7 @@ private:
   JNIEnv * env;
   jobject assetManager;
   AndroidSurface default_surface;
+  AndroidPaint paint;
 };
 
 class AndroidContextFactory: public ContextFactory {
