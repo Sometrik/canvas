@@ -366,7 +366,8 @@ public:
     cache->initJava();
 
     //Get inputStream from the picture(filename)
-    jobject inputStream = env->CallObjectMethod(cache->getAssetManager(), cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
+    jobject file = env->NewObject(cache->fileClass, cache->fileConstructor, env->NewStringUTF(filename.c_str()));
+    jobject inputStream = env->NewObject(cache->fileInputStreamClass, cache->fileInputStreamConstructor, file);
 
     //Create BitmapFactory options to make the created bitmap mutable straight away
     jobject factoryOptions = env->NewObject(cache->bitmapOptionsClass, cache->bitmapOptionsConstructor);
