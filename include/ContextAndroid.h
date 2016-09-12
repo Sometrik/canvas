@@ -111,6 +111,10 @@ public:
   }
 
   JNIEnv * getJNIEnv() {
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Canvas getJNIENv called");
+    if (env == NULL){
+       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Env is null");
+     }
     return env;
   }
   jobject & getAssetManager() {
@@ -186,6 +190,7 @@ private:
 class AndroidPaint {
 public:
   AndroidPaint(AndroidCache * _cache) : cache(_cache) {
+    cache->initJava();
     JNIEnv * env = cache->getJNIEnv();
     obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
     env->CallVoidMethod(obj, cache->paintSetAntiAliasMethod, JNI_TRUE);
