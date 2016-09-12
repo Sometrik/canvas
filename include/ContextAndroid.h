@@ -58,6 +58,8 @@ public:
       rectFClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/RectF"));
       rectClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Rect"));
       bitmapOptionsClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/BitmapFactory$Options"));
+      fileClass = (jclass) env->NewGlobalRef(env->FindClass("java/io/File"));
+      fileInputStreamClass = (jclass) env->NewGlobalRef(env->FindClass("java/io/FileInputStream"));
 
       measureAscentMethod = env->GetMethodID(paintClass, "ascent", "()F");
       measureDescentMethod = env->GetMethodID(paintClass, "descent", "()F");
@@ -95,6 +97,8 @@ public:
       bitmapGetWidthMethod = env->GetMethodID(bitmapClass, "getWidth", "()I");
       bitmapGetHeightMethod = env->GetMethodID(bitmapClass, "getHeight", "()I");
       bitmapOptionsConstructor = env->GetMethodID(bitmapOptionsClass, "<init>", "()V");
+      fileConstructor = env->GetMethodID(fileClass, "<init>", "(Ljava/lang/String;)V");
+      fileInputStreamConstructor = env->GetMethodID(fileInputStreamClass, "<init>", "(Ljava/io/File;)V");
 
       optionsMutableField = env->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
       alignEnumRight = env->GetStaticFieldID(alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
@@ -157,6 +161,8 @@ public:
   jmethodID measureTextMethod;
   jmethodID measureDescentMethod;
   jmethodID measureAscentMethod;
+  jmethodID fileConstructor;
+  jmethodID fileInputStreamConstructor;
 
   jclass typefaceClass;
   jclass rectFClass;
@@ -171,6 +177,8 @@ public:
   jclass alignClass;
   jclass bitmapConfigClass;
   jclass bitmapOptionsClass;
+  jclass fileClass;
+  jclass fileInputStreamClass;
 
   jfieldID field_argb_8888;
   jfieldID field_rgb_565;
