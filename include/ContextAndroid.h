@@ -184,10 +184,10 @@ private:
 };
 
 class AndroidPaint {
-  AndroidPaint(AndroidCache * cache) : cache(_cache) {
-    obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
-
+public:
+  AndroidPaint(AndroidCache * _cache) : cache(_cache) {
     JNIEnv * env = cache->getJNIEnv();
+    obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
     env->CallVoidMethod(obj, cache->paintSetAntiAliasMethod, JNI_TRUE);
     env->CallVoidMethod(obj, cache->paintSetStrokeJoinMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Join"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Join"), "ROUND", "Landroid/graphics/Paint$Join;")));
   }
@@ -197,6 +197,7 @@ class AndroidPaint {
   }
 
   void setRenderMode(RenderMode mode) {
+    auto * env = cache->getJNIEnv();
     switch (mode) {
     case STROKE:
       env->CallVoidMethod(obj, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
@@ -261,13 +262,13 @@ class AndroidPaint {
       JNIEnv * env = cache->getJNIEnv();
       switch (textAlign) {
       case ALIGN_LEFT:
-	env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
+	env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
 	break;
       case ALIGN_RIGHT:
-	env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
+	env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
 	break;
       case ALIGN_CENTER:
-	env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
+	env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
       default:
 	break;
       }
@@ -275,13 +276,13 @@ class AndroidPaint {
   }
 
   float measureText(const std::string & text) {    
-    return cache->getJNIEnv()->CallFloatMethod(jpaint, cache->measureTextMethod, env->NewStringUTF(text.c_str()));
+    return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureTextMethod, cache->getJNIEnv()->NewStringUTF(text.c_str()));
   }
   float getTextDescent() {
-    return cache->getJNIEnv()->CallFloatMethod(jpaint, cache->measureDescentMethod);
+    return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureDescentMethod);
   }
   float getTextAscent() {
-    return cache->getJNIEnv()->CallFloatMethod(jpaint, cache->measureAscentMethod);
+    return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureAscentMethod);
   }
   
   jobject & getObject() { return obj; }
@@ -299,8 +300,9 @@ class AndroidPaint {
    float current_font_size = 0;
    int current_font_property = 0;
    std::string current_font_family;
+   int current_text_property;
    TextAlign currentTextAlign = ALIGN_LEFT;
- }
+ };
 
 class AndroidSurface: public Surface {
 public:
