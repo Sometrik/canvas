@@ -31,7 +31,10 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, JNIEnv * _env, unsigned in
 AndroidSurface::AndroidSurface(AndroidCache * _cache, JNIEnv * _env, const Image & image)
   : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), RGBA8), cache(_cache), env(_env), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
-  
+
+  cache->resetCache();
+  cache->initJava();
+
   // creates a surface with width, height and contents from image
   bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
 }
