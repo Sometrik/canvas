@@ -215,18 +215,16 @@ private:
 class AndroidPaint {
 public:
   AndroidPaint(AndroidCache * _cache) : cache(_cache) {
-    cache->initJava();
-    JNIEnv * env = cache->getJNIEnv();
-    obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
-    env->CallVoidMethod(obj, cache->paintSetAntiAliasMethod, JNI_TRUE);
-    env->CallVoidMethod(obj, cache->paintSetStrokeJoinMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Join"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Join"), "ROUND", "Landroid/graphics/Paint$Join;")));
   }
 
   ~AndroidPaint() {
-    cache->getJNIEnv()->DeleteGlobalRef(obj);
+    if (is_valid) {
+      cache->getJNIEnv()->DeleteGlobalRef(obj);
+    }
   }
 
   void setRenderMode(RenderMode mode) {
+    create();
     auto * env = cache->getJNIEnv();
     switch (mode) {
     case STROKE:
@@ -239,16 +237,19 @@ public:
   }
 
   void setLineWidth(float lineWidth) {
+    create();
     cache->getJNIEnv()->CallVoidMethod(obj, cache->paintSetStrokeWidthMethod, lineWidth);
   }
 
   void setStyle(const Style & style) {
+    create();
     JNIEnv * env = cache->getJNIEnv();
     env->CallVoidMethod(obj, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
   }
 
   void setGlobalAlpha(float alpha) {
     if (alpha != globalAlpha) {
+      create();
       globalAlpha = alpha;
       cache->getJNIEnv()->CallVoidMethod(obj, cache->setAlphaMethod, (int) (255 * globalAlpha));
     }
@@ -259,6 +260,7 @@ public:
   }
 
   void setFont(const Font & font) {
+    create();
     JNIEnv * env = cache->getJNIEnv();
 
     if (font.size != current_font_size) {
@@ -288,6 +290,7 @@ public:
 
   void setTextAlign(TextAlign textAlign) {
     if (textAlign != currentTextAlign) {
+      create();
       currentTextAlign = textAlign;
       JNIEnv * env = cache->getJNIEnv();
       switch (textAlign) {
@@ -306,18 +309,35 @@ public:
   }
 
   float measureText(const std::string & text) {    
+    create();
     return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureTextMethod, cache->getJNIEnv()->NewStringUTF(text.c_str()));
   }
   float getTextDescent() {
+    create();
     return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureDescentMethod);
   }
   float getTextAscent() {
+    create();
     return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureAscentMethod);
   }
   
-  jobject & getObject() { return obj; }
+  jobject & getObject() {
+    create();
+    return obj;
+  }
 
  protected:
+  void create() {
+    if (!is_valid) {
+      is_valid = true;
+      cache->initJava();
+      JNIEnv * env = cache->getJNIEnv();
+      obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
+      env->CallVoidMethod(obj, cache->paintSetAntiAliasMethod, JNI_TRUE);
+      env->CallVoidMethod(obj, cache->paintSetStrokeJoinMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Join"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Join"), "ROUND", "Landroid/graphics/Paint$Join;")));
+    }
+  }
+  
   static int getAndroidColor(const Color & color, float globalAlpha = 1.0f) {
     return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
     return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
@@ -332,6 +352,7 @@ public:
    std::string current_font_family;
    int current_text_property;
    TextAlign currentTextAlign = ALIGN_LEFT;
+   bool is_valid = false;
  };
 
 class AndroidSurface: public Surface {
