@@ -256,7 +256,7 @@ public:
   }
 
   void setShadow(float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor) {
-    cache->getJNIEnv()->CallVoidMethod(obj, cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
+    cache->getJNIEnv()->CallVoidMethod(getObject(), cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
   }
 
   void setFont(const Font & font) {
