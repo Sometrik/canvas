@@ -361,14 +361,17 @@ class AndroidSurface: public Surface {
 public:
   friend class ContextAndroid;
 
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format);
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, const Image & image);
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, const std::string & filename);
-  AndroidSurface(AndroidCache * _cache, JNIEnv * _env, const unsigned char * buffer, size_t size); // Create a bitmap from bytearray
+  AndroidSurface(AndroidCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format);
+  AndroidSurface(AndroidCache * _cache, const Image & image);
+  AndroidSurface(AndroidCache * _cache, const std::string & filename);
+  AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size); // Create a bitmap from bytearray
 
   ~AndroidSurface() {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor on ContextAndroid");
     //check if these have been made global references and delete if they are.
+
+    JNIEnv * env = cache->getJNIEnv();
+
     if (env->GetObjectRefType(bitmap) == 2) {
       env->DeleteGlobalRef(bitmap);
     }
@@ -382,6 +385,9 @@ public:
 
   void * lockMemory(bool write_access = false) override {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "lockMemory called");
+
+    JNIEnv * env = cache->getJNIEnv();
+
     uint32_t *pixels;
     AndroidBitmap_lockPixels(env, bitmap, reinterpret_cast<void **>(&pixels));
 
@@ -401,6 +407,8 @@ public:
     paint.setGlobalAlpha(globalAlpha);
     paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);       
     if (mode == STROKE) paint.setLineWidth(lineWidth);
+
+    JNIEnv * env = cache->getJNIEnv();
 
 #if 0
     // set font
@@ -461,6 +469,8 @@ public:
     Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, format);
     // do resize the surface and discard the old data
 
+    JNIEnv * env = cache->getJNIEnv();
+
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
     if (canvasCreated){
       env->DeleteGlobalRef(canvas);
@@ -482,7 +492,9 @@ public:
     paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
     paint.setTextAlign(textAlign);
     if (mode == STROKE) paint.setLineWidth(lineWidth);
-    
+
+    JNIEnv * env = cache->getJNIEnv();
+
     if (textBaseline == TextBaseline::MIDDLE || textBaseline == TextBaseline::TOP) {
       float descent = paint.getTextDescent();
       float ascent = paint.getTextAscent();
@@ -528,6 +540,8 @@ public:
       checkForCanvas();
       paint.setGlobalAlpha(globalAlpha);
       paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+
+      JNIEnv * env = cache->getJNIEnv();
       jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
       env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, paint.getObject());
     } else {
@@ -548,6 +562,7 @@ public:
     jobject drawableBitmap = imageToBitmap(_img);
 
     // Create new Canvas from the mutable bitmap
+    JNIEnv * env = cache->getJNIEnv();
     jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
     env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, NULL, dstRect, paint.getObject());
   }
@@ -558,6 +573,7 @@ public:
     if (!canvasCreated) {
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating canvas");
       //Create new Canvas from the mutable bitmap
+      JNIEnv * env = cache->getJNIEnv();
       canvas = (jobject) env->NewGlobalRef(env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap));
       canvasCreated = true;
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
@@ -578,24 +594,23 @@ private:
   bool canvasCreated = false;
 
   AndroidCache * cache;
-  JNIEnv * env;
   AndroidPaint paint;
 };
 
 class ContextAndroid: public Context {
 public:
-  ContextAndroid(AndroidCache * _cache, JNIEnv * _env, unsigned int _width, unsigned int _height, InternalFormat format, float _displayScale) :
-      Context(_displayScale), cache(_cache), env(_env), default_surface(_cache, _env, _width, _height, (unsigned int) (_width * _displayScale), (unsigned int) (_height * _displayScale), format) {
+  ContextAndroid(AndroidCache * _cache, unsigned int _width, unsigned int _height, InternalFormat format, float _displayScale) :
+      Context(_displayScale), cache(_cache), default_surface(_cache, _width, _height, (unsigned int) (_width * _displayScale), (unsigned int) (_height * _displayScale), format) {
   }
 
   std::shared_ptr<Surface> createSurface(const Image & image) override {
-    return std::shared_ptr<Surface>(new AndroidSurface(cache, env, image));
+    return std::shared_ptr<Surface>(new AndroidSurface(cache, image));
   }
   std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {
-    return std::shared_ptr<Surface>(new AndroidSurface(cache, env, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _format));
+    return std::shared_ptr<Surface>(new AndroidSurface(cache, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _format));
   }
   std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-    return std::shared_ptr<Surface>(new AndroidSurface(cache, env, filename));
+    return std::shared_ptr<Surface>(new AndroidSurface(cache, filename));
   }
 
   Surface & getDefaultSurface() override {
@@ -612,7 +627,6 @@ protected:
 
 private:
   AndroidCache * cache;
-  JNIEnv * env;
   jobject assetManager;
   AndroidSurface default_surface;
 };
