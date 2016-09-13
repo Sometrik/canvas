@@ -97,7 +97,9 @@ ContextAndroid::imageToBitmap(const Image & _img) {
   const unsigned char * buf = _img.getData();
   
   int length;
-  if (_img.getImageFormat() == ImageFormat::RGB24 || _img.getImageFormat() == ImageFormat::RGB32 || _img.getImageFormat() == ImageFormat::RGB565) {
+  if (_img.getImageFormat() == ImageFormat::RGB565) {
+    length = _img.getWidth() * _img.getHeight() * 2;
+  } else if (_img.getImageFormat() == ImageFormat::RGB24 || _img.getImageFormat() == ImageFormat::RGB32) {
     length = _img.getWidth() * _img.getHeight() * 3;
   } else {
     length = _img.getWidth() * _img.getHeight() * 4;
