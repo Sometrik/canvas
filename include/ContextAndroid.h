@@ -11,17 +11,10 @@
 namespace canvas {
 class AndroidCache {
 public:
-  AndroidCache(JNIEnv * _env, jobject _assetManager) :
-      env(_env) {
-    assetManager = env->NewGlobalRef(_assetManager);
+  AndroidCache(JNIEnv * _env, jobject _assetManager) {
+    _env->GetJavaVM(&javaVM);
+    assetManager = _env->NewGlobalRef(_assetManager);
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache created");
-
-    //	javaInitialized = false;
-
-    //arcToMethod = blablah();
-    //if (arcToMethod && pathConstructor) {
-    //	is_valid = true;
-    //}
   }
 
   void resetCache(){
@@ -30,6 +23,7 @@ public:
   }
 
   ~AndroidCache() {
+    JNIEnv * env = getJNIEnv();
     env->DeleteGlobalRef(assetManager);
     if (javaInitialized) {
       env->DeleteGlobalRef(typefaceClass);
@@ -58,6 +52,7 @@ public:
       javaInitialized = true;
 
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java is being initialized");
+      JNIEnv * env = getJNIEnv();
 
       typefaceClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Typeface"));
       canvasClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Canvas"));
@@ -133,10 +128,16 @@ public:
 
   JNIEnv * getJNIEnv() {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Canvas getJNIENv called");
-    if (env == NULL){
+    if (javaVM == NULL){
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "VM is null");
+    }
+
+    JNIEnv *Myenv = NULL;
+    javaVM->GetEnv((void**)&Myenv, JNI_VERSION_1_6);
+    if (Myenv == NULL){
        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Env is null");
      }
-    return env;
+    return Myenv;
   }
   jobject & getAssetManager() {
     return assetManager;
@@ -206,7 +207,7 @@ public:
   jfieldID alignEnumCenter;
 
 private:
-  JNIEnv * env;
+  JavaVM * javaVM;
   jobject assetManager;
   bool is_valid = false;
   bool javaInitialized = false;
