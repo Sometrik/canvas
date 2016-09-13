@@ -89,14 +89,20 @@ static format_description_s getFormatDescription(InternalFormat internal_format)
   case RGBA8: 
 #if defined __APPLE__ || defined __ANDROID__
     return { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE };
-#else
+#elif defined _WIN32
     return { GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV };
+#else
+    // Linux
+    return { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE };
 #endif
   case RGB8:
 #if defined __APPLE__ || defined __ANDROID__
     return { GL_RGB8, GL_RGBA, GL_UNSIGNED_BYTE };
+#elif defined _WIN32
+    return { GL_RGB8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV };
 #else
-    return { GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV };
+    // Linux
+    return { GL_RGB8, GL_RGBA, GL_UNSIGNED_BYTE };
 #endif
     // case RGB8_24: return GL_RGBA8;
   case RED_RGTC1: return { GL_COMPRESSED_RED_RGTC1, GL_RG, 0 };
@@ -134,7 +140,7 @@ OpenGLTexture::updateTextureData(const Image & image, unsigned int x, unsigned i
 
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
-     cerr << "plain tex: x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
+    cerr << "plain tex: f = " << int(getInternalFormat()) << ", x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
     assert(image.getData());
 
     if (fd.type == 0) { // compressed
