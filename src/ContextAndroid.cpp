@@ -103,15 +103,7 @@ ContextAndroid::imageToBitmap(const Image & _img) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", " ImageToBitmap called");
   
   const unsigned char * buf = _img.getData();
-  
-  int length;
-  if (_img.getImageFormat() == ImageFormat::RGB565) {
-    length = _img.getWidth() * _img.getHeight() * 2;
-  } else if (_img.getImageFormat() == ImageFormat::RGB24 || _img.getImageFormat() == ImageFormat::RGB32) {
-    length = _img.getWidth() * _img.getHeight() * 3;
-  } else {
-    length = _img.getWidth() * _img.getHeight() * 4;
-  }
+  int length = _img.calculateOffset(1);
 
   __android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
 
