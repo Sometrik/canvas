@@ -89,7 +89,7 @@ namespace canvas {
 
     FilterMode getMagFilter() const { return mag_filter; }
     FilterMode getMinFilter() const { return min_filter; }
-    InternalFormat getTargetFormat() const { return target_format; }
+    InternalFormat getTargetFormat() const { return target_format ? target_format : getFormat(); }
     
   protected:
     static bool isPNG(const unsigned char * buffer, size_t size);
@@ -103,7 +103,7 @@ namespace canvas {
     FilterMode mag_filter = LINEAR;
     FilterMode min_filter = LINEAR;
     InternalFormat format;
-    InternalFormat target_format = RGBA8;
+    InternalFormat target_format = NO_FORMAT;
     unsigned int * scaled_buffer = 0;
   };
 };
