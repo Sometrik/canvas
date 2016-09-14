@@ -68,7 +68,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size)
-  : Surface(0, 0, 0, 0, RGBA8), cache(_cache), env(_env), paint(_cache) {
+  : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
 
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
   
@@ -99,7 +99,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
 }
 
 jobject
-ContextAndroid::imageToBitmap(const Image & _img) {
+AndroidSurface::imageToBitmap(const Image & _img) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", " ImageToBitmap called");
   
   const unsigned char * buf = _img.getData();
