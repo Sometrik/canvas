@@ -622,7 +622,6 @@ protected:
 
 private:
   AndroidCache * cache;
-  jobject assetManager;
   AndroidSurface default_surface;
 };
 
