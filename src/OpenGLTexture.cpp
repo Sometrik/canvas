@@ -99,10 +99,10 @@ static format_description_s getFormatDescription(InternalFormat internal_format)
 #if defined __APPLE__ || defined __ANDROID__
     return { GL_RGB8, GL_RGBA, GL_UNSIGNED_BYTE };
 #elif defined _WIN32
-    return { GL_RGB8, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV };
+    return { GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV };
 #else
     // Linux
-    return { GL_RGB8, GL_RGBA, GL_UNSIGNED_BYTE };
+    return { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE };
 #endif
     // case RGB8_24: return GL_RGBA8;
   case RED_RGTC1: return { GL_COMPRESSED_RED_RGTC1, GL_RG, 0 };
