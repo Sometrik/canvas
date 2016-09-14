@@ -8,7 +8,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
   // creates an empty canvas
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidSurface widthheight constructor called");
 
-  cache->resetCache();
   cache->initJava();
 
   //set bitmap config according to internalformat
@@ -34,7 +33,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const Image & image)
   : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), RGBA8), cache(_cache), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
 
-  cache->resetCache();
   cache->initJava();
 
   JNIEnv * env = cache->getJNIEnv();
@@ -47,7 +45,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
   
-  cache->resetCache();
   cache->initJava();
 
   JNIEnv * env = cache->getJNIEnv();
@@ -72,7 +69,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
 
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
   
-  cache->resetCache();
   cache->initJava();
 
   JNIEnv * env = cache->getJNIEnv();

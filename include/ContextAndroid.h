@@ -17,11 +17,6 @@ public:
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache created");
   }
 
-  void resetCache(){
-    javaInitialized = false;
-    initJava();
-  }
-
   ~AndroidCache() {
     JNIEnv * env = getJNIEnv();
     env->DeleteGlobalRef(assetManager);
