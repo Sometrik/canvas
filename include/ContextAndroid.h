@@ -17,11 +17,6 @@ public:
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache created");
   }
 
-  void resetCache(){
-    javaInitialized = false;
-    initJava();
-  }
-
   ~AndroidCache() {
     JNIEnv * env = getJNIEnv();
     env->DeleteGlobalRef(assetManager);
@@ -627,7 +622,6 @@ protected:
 
 private:
   AndroidCache * cache;
-  jobject assetManager;
   AndroidSurface default_surface;
 };
 
@@ -637,20 +631,20 @@ public:
       ContextFactory(_displayScale), cache(_env, _assetManager) {
   }
   std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling = false) override {
-    std::shared_ptr<Context> ptr(new ContextAndroid(&cache, cache.getJNIEnv(), width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
+    std::shared_ptr<Context> ptr(new ContextAndroid(&cache, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
     return ptr;
   }
   std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-    return std::shared_ptr<Surface>(new AndroidSurface(&cache, cache.getJNIEnv(), filename));
+    return std::shared_ptr<Surface>(new AndroidSurface(&cache, filename));
   }
   std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) override {
     unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
     unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
-    std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, cache.getJNIEnv(), width, height, aw, ah, format));
+    std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, width, height, aw, ah, format));
     return ptr;
   }
   std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) override {
-    std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, cache.getJNIEnv(), buffer, size));
+    std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, buffer, size));
     return ptr;
   }
 
