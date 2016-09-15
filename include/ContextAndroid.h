@@ -268,9 +268,9 @@ public:
     int textProperty = 0;
     if (font.weight.isBold()) {
       if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) {
-	  textProperty = 3;
+          textProperty = 3;
       } else {
-	textProperty = 1;
+        textProperty = 1;
       }
     } else if (font.style == Font::Style::ITALIC || font.style == Font::Style::OBLIQUE) {
       textProperty = 2;
@@ -292,15 +292,15 @@ public:
       JNIEnv * env = cache->getJNIEnv();
       switch (textAlign) {
       case ALIGN_LEFT:
-	env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
-	break;
+        env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
+        break;
       case ALIGN_RIGHT:
-	env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
-	break;
+        env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
+        break;
       case ALIGN_CENTER:
-	env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
+        env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
       default:
-	break;
+        break;
       }
     }
   }
@@ -373,7 +373,7 @@ public:
 
     if (canvasCreated) {
       if (env->GetObjectRefType(canvas) == 2) {
-	env->DeleteGlobalRef(canvas);
+        env->DeleteGlobalRef(canvas);
       }
     }
   }
@@ -418,41 +418,41 @@ public:
     for (auto pc : path.getData()) {
       switch (pc.type) {
       case PathComponent::MOVE_TO: {
-	env->CallVoidMethod(jpath, cache->pathMoveToMethod, pc.x0, pc.y0);
+        env->CallVoidMethod(jpath, cache->pathMoveToMethod, pc.x0, pc.y0);
       }
-	break;
+        break;
       case PathComponent::LINE_TO: {
-	env->CallVoidMethod(jpath, cache->pathLineToMethod, pc.x0, pc.y0);
+        env->CallVoidMethod(jpath, cache->pathLineToMethod, pc.x0, pc.y0);
       }
-	break;
+        break;
       case PathComponent::ARC: {
 
-	float span = 0;
+        float span = 0;
 
-	// FIXME: If ea = 0, and sa = 2 * M_PI => span = 0
-	if (!pc.anticlockwise && (pc.ea < pc.sa)) {
-	  span += 2 * M_PI;
-	} else if (pc.anticlockwise && (pc.sa < pc.ea)) {
-	  span -= 2 * M_PI;
-	}
+        // FIXME: If ea = 0, and sa = 2 * M_PI => span = 0
+        if (!pc.anticlockwise && (pc.ea < pc.sa)) {
+          span += 2 * M_PI;
+        } else if (pc.anticlockwise && (pc.sa < pc.ea)) {
+          span -= 2 * M_PI;
+        }
 
-	span += pc.ea - pc.sa;
-	float left = pc.x0 * displayScale - pc.radius * displayScale;
-	float right = pc.x0 * displayScale + pc.radius * displayScale;
-	float bottom = pc.y0 * displayScale + pc.radius * displayScale;
-	float top = pc.y0 * displayScale - pc.radius * displayScale;
+        span += pc.ea - pc.sa;
+        float left = pc.x0 * displayScale - pc.radius * displayScale;
+        float right = pc.x0 * displayScale + pc.radius * displayScale;
+        float bottom = pc.y0 * displayScale + pc.radius * displayScale;
+        float top = pc.y0 * displayScale - pc.radius * displayScale;
 
-	jobject jrect = env->NewObject(cache->rectFClass, cache->rectFConstructor, left, top, right, bottom);
+        jobject jrect = env->NewObject(cache->rectFClass, cache->rectFConstructor, left, top, right, bottom);
 
-	jmethodID pathArcToMethod = env->GetMethodID(cache->pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
+        jmethodID pathArcToMethod = env->GetMethodID(cache->pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
 
-	env->CallVoidMethod(jpath, pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
+        env->CallVoidMethod(jpath, pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
       }
-	break;
+        break;
       case PathComponent::CLOSE: {
-	env->CallVoidMethod(jpath, cache->pathCloseMethod);
+        env->CallVoidMethod(jpath, cache->pathCloseMethod);
       }
-	break;
+        break;
       }
     }
 
@@ -495,9 +495,9 @@ public:
       float ascent = paint.getTextAscent();
       
       if (textBaseline == TextBaseline::MIDDLE) {
-	env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent) / 2, paint.getObject());
+        env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent) / 2, paint.getObject());
       } else if (textBaseline == TextBaseline::TOP) {
-	env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent), paint.getObject());
+        env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent), paint.getObject());
       }
     } else {
       env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y, paint.getObject());
