@@ -92,8 +92,8 @@ static format_description_s getFormatDescription(InternalFormat internal_format)
 #elif defined _WIN32
     return { GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV };
 #else
-    // Linux
-    return { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE };
+    // Linux (doesn't work for OpenGL ES)
+    return { GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV };
 #endif
   case RGB8:
 #if defined __APPLE__ || defined __ANDROID__
@@ -102,7 +102,7 @@ static format_description_s getFormatDescription(InternalFormat internal_format)
     return { GL_RGB8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV };
 #else
     // Linux
-    return { GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE };
+    return { GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV };
 #endif
     // case RGB8_24: return GL_RGBA8;
   case RED_RGTC1: return { GL_COMPRESSED_RED_RGTC1, GL_RG, 0 };
@@ -173,6 +173,8 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   }
 
+  releaseTextures();
+
   bool initialize = false;
   if (!texture_id) {
     initialize = true;
@@ -232,11 +234,9 @@ OpenGLTexture::generateMipmaps() {
 void
 OpenGLTexture::releaseTextures() {
   if (!freed_textures.empty()) {
-    // cerr << "DELETING TEXTURES: " << OpenGLTexture::getFreedTextures().size() << "/" << OpenGLTexture::getNumTextures() << endl;
-    
-    for (vector<unsigned int>::const_iterator it = freed_textures.begin(); it != freed_textures.end(); it++) {
-      GLuint texid = *it;
-      glDeleteTextures(1, &texid);
+    for (auto id : freed_textures) {
+      cerr << "deleting texture " << id << endl;
+      glDeleteTextures(1, &id);
     }
     freed_textures.clear();
   }
