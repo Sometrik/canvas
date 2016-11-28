@@ -140,7 +140,7 @@ OpenGLTexture::updateTextureData(const Image & image, unsigned int x, unsigned i
 
   for (unsigned int level = 0; level < image.getLevels(); level++) {
     size_t size = image.calculateOffset(level + 1) - image.calculateOffset(level);
-    cerr << "plain tex: f = " << int(getInternalFormat()) << ", x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
+    // cerr << "plain tex: f = " << int(getInternalFormat()) << ", x = " << x << ", y = " << y << ", l = " << (level+1) << "/" << image.getLevels() << ", w = " << current_width << ", h = " << current_height << ", size = " << size << ", offset = " << offset << endl;
     assert(image.getData());
 
     if (fd.type == 0) { // compressed
@@ -235,7 +235,7 @@ void
 OpenGLTexture::releaseTextures() {
   if (!freed_textures.empty()) {
     for (auto id : freed_textures) {
-      cerr << "deleting texture " << id << endl;
+      // cerr << "deleting texture " << id << endl;
       glDeleteTextures(1, &id);
     }
     freed_textures.clear();
