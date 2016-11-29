@@ -208,7 +208,9 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
       (image.getInternalFormat() == RGB8 && getInternalFormat() == RGBA8)) {
     updateTextureData(image, x, y);
   } else {
-    cerr << "OpenGLTexture: doing online image conversion from " << int(image.getInternalFormat()) << " to " << int(getInternalFormat()) << " (SLOW)\n";
+    if (getInternalFormat() != LA44) {
+      cerr << "OpenGLTexture: doing online image conversion from " << int(image.getInternalFormat()) << " to " << int(getInternalFormat()) << " (SLOW)\n";
+    }
     auto tmp_image = image.convert(getInternalFormat());
     updateTextureData(*tmp_image, x, y);
   }
