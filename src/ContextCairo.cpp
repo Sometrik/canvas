@@ -80,10 +80,10 @@ CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0, 0, 0, R
     cerr << "loaded bitmap " << filename << ": w = " << w << ", h = " << h << " f = " << int(cairo_image_surface_get_format(surface)) << endl;
   }
   bool a = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
-  if (a) cerr << "has alpha!\n";
-  else cerr << "no alpha\n";
+  // if (a) cerr << "has alpha!\n";
+  // else cerr << "no alpha\n";
   Surface::resize(w, h, w, h, a ? RGBA8 : RGB8);
-  cerr << "internal format = " << int(getFormat()) << endl;
+  // cerr << "internal format = " << int(getFormat()) << endl;
 }
 
 struct read_buffer_s {
