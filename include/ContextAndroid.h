@@ -96,10 +96,12 @@ public:
       canvasTextDrawMethod = env->GetMethodID(canvasClass, "drawText", "(Ljava/lang/String;FFLandroid/graphics/Paint;)V");
       pathLineToMethod = env->GetMethodID(pathClass, "lineTo", "(FF)V");
       pathCloseMethod = env->GetMethodID(pathClass, "close", "()V");
+      pathArcToMethod = env->GetMethodID(pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
       canvasPathDrawMethod = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
       rectFConstructor = env->GetMethodID(rectFClass, "<init>", "(FFFF)V");
       rectConstructor = env->GetMethodID(rectClass, "<init>", "(IIII)V");
       paintSetShadowMethod = env->GetMethodID(paintClass, "setShadowLayer", "(FFFI)V");
+      paintSetTextSizeMethod = env->GetMethodID(paintClass, "setTextSize", "(F)V");
       canvasBitmapDrawMethod = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;FFLandroid/graphics/Paint;)V");
       canvasBitmapDrawMethod2 = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;Landroid/graphics/Rect;Landroid/graphics/RectF;Landroid/graphics/Paint;)V");
       factoryDecodeByteMethod = env->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
@@ -169,10 +171,12 @@ public:
   jmethodID canvasTextDrawMethod;
   jmethodID pathLineToMethod;
   jmethodID pathCloseMethod;
+  jmethodID pathArcToMethod;
   jmethodID canvasPathDrawMethod;
   jmethodID rectFConstructor;
   jmethodID rectConstructor;
   jmethodID paintSetShadowMethod;
+  jmethodID paintSetTextSizeMethod;
   jmethodID canvasBitmapDrawMethod;
   jmethodID canvasBitmapDrawMethod2;
   jmethodID factoryDecodeByteMethod;
@@ -278,7 +282,7 @@ public:
 
     if (font.size != current_font_size) {
       current_font_size = font.size;
-      env->CallVoidMethod(obj, env->GetMethodID(cache->paintClass, "setTextSize", "(F)V"), font.size);
+      env->CallVoidMethod(obj, cache->paintSetTextSizeMethod, font.size);
     }
 
     int textProperty = 0;
@@ -464,9 +468,7 @@ public:
 
         jobject jrect = env->NewObject(cache->rectFClass, cache->rectFConstructor, left, top, right, bottom);
 
-        jmethodID pathArcToMethod = env->GetMethodID(cache->pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
-
-        env->CallVoidMethod(jpath, pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
+        env->CallVoidMethod(jpath, cache->pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
       }
         break;
       case PathComponent::CLOSE: {
