@@ -15,27 +15,29 @@ public:
     _env->GetJavaVM(&javaVM);
     assetManager = _env->NewGlobalRef(_assetManager);
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache created");
+
+    initJava();
   }
 
   ~AndroidCache() {
     JNIEnv * env = getJNIEnv();
-    env->DeleteGlobalRef(assetManager);
+//    env->DeleteGlobalRef(assetManager);
     if (javaInitialized) {
-      env->DeleteGlobalRef(typefaceClass);
-      env->DeleteGlobalRef(rectFClass);
-      env->DeleteGlobalRef(rectClass);
-      env->DeleteGlobalRef(canvasClass);
-      env->DeleteGlobalRef(paintClass);
-      env->DeleteGlobalRef(pathClass);
-      env->DeleteGlobalRef(bitmapClass);
-      env->DeleteGlobalRef(assetManagerClass);
-      env->DeleteGlobalRef(factoryClass);
-      env->DeleteGlobalRef(paintStyleClass);
-      env->DeleteGlobalRef(alignClass);
-      env->DeleteGlobalRef(bitmapConfigClass);
-      env->DeleteGlobalRef(bitmapOptionsClass);
-      env->DeleteGlobalRef(fileClass);
-      env->DeleteGlobalRef(fileInputStreamClass);
+//      env->DeleteGlobalRef(typefaceClass);
+//      env->DeleteGlobalRef(rectFClass);
+//      env->DeleteGlobalRef(rectClass);
+//      env->DeleteGlobalRef(canvasClass);
+//      env->DeleteGlobalRef(paintClass);
+//      env->DeleteGlobalRef(pathClass);
+//      env->DeleteGlobalRef(bitmapClass);
+//      env->DeleteGlobalRef(assetManagerClass);
+//      env->DeleteGlobalRef(factoryClass);
+//      env->DeleteGlobalRef(paintStyleClass);
+//      env->DeleteGlobalRef(alignClass);
+//      env->DeleteGlobalRef(bitmapConfigClass);
+//      env->DeleteGlobalRef(bitmapOptionsClass);
+//      env->DeleteGlobalRef(fileClass);
+//      env->DeleteGlobalRef(fileInputStreamClass);
     }
   }
 
@@ -122,16 +124,26 @@ public:
   }
 
   JNIEnv * getJNIEnv() {
+
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Canvas getJNIENv called");
-    if (javaVM == NULL){
+
+    if (javaVM == NULL) {
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "VM is null");
     }
 
     JNIEnv *Myenv = NULL;
-    javaVM->GetEnv((void**)&Myenv, JNI_VERSION_1_6);
-    if (Myenv == NULL){
-       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Env is null");
-     }
+//    javaVM->GetEnv((void**) &Myenv, JNI_VERSION_1_6);
+
+    JavaVMAttachArgs args;
+    args.version = JNI_VERSION_1_6; // choose your JNI version
+    args.name = NULL; // you might want to give the java thread a name
+    args.group = NULL; // you might want to assign the java thread to a ThreadGroup
+    javaVM->AttachCurrentThread(&Myenv, &args);
+
+    if (Myenv == NULL) {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Env is null");
+    }
+
     return Myenv;
   }
   jobject & getAssetManager() {
@@ -201,16 +213,20 @@ public:
   jfieldID alignEnumLeft;
   jfieldID alignEnumCenter;
 
+
+
 private:
-  JavaVM * javaVM;
+  JNIEnv * env;
   jobject assetManager;
   bool is_valid = false;
   bool javaInitialized = false;
+  JavaVM * javaVM;
 };
 
 class AndroidPaint {
 public:
   AndroidPaint(AndroidCache * _cache) : cache(_cache) {
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidPaint created");
   }
 
   ~AndroidPaint() {
@@ -298,7 +314,7 @@ public:
         env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
         break;
       case ALIGN_CENTER:
-        env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
+        env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
       default:
         break;
       }
@@ -307,14 +323,17 @@ public:
 
   float measureText(const std::string & text) {    
     create();
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "1");
     return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureTextMethod, cache->getJNIEnv()->NewStringUTF(text.c_str()));
   }
   float getTextDescent() {
     create();
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "2");
     return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureDescentMethod);
   }
   float getTextAscent() {
     create();
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "3");
     return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureAscentMethod);
   }
   
@@ -397,6 +416,7 @@ public:
   void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
     checkForCanvas();
 
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "renderPath called");
     paint.setRenderMode(mode);
     paint.setStyle(style);
     paint.setGlobalAlpha(globalAlpha);
@@ -627,8 +647,8 @@ private:
 
 class AndroidContextFactory: public ContextFactory {
 public:
-  AndroidContextFactory(JNIEnv * _env, jobject _assetManager, float _displayScale = 1.0f) :
-      ContextFactory(_displayScale), cache(_env, _assetManager) {
+  AndroidContextFactory(JNIEnv * _env, jobject _assetManager, AndroidCache _cache, float _displayScale = 1.0f) :
+      ContextFactory(_displayScale), cache(_cache) {
   }
   std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling = false) override {
     std::shared_ptr<Context> ptr(new ContextAndroid(&cache, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));

@@ -25,7 +25,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
     argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
   }
-  
+
   bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject));
 }
 
