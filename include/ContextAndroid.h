@@ -647,29 +647,29 @@ private:
 
 class AndroidContextFactory: public ContextFactory {
 public:
-  AndroidContextFactory(JNIEnv * _env, jobject _assetManager, AndroidCache _cache, float _displayScale = 1.0f) :
+ AndroidContextFactory(jobject _assetManager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale = 1.0f) :
       ContextFactory(_displayScale), cache(_cache) {
   }
   std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling = false) override {
-    std::shared_ptr<Context> ptr(new ContextAndroid(&cache, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
+    std::shared_ptr<Context> ptr(new ContextAndroid(cache.get(), width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
     return ptr;
   }
   std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-    return std::shared_ptr<Surface>(new AndroidSurface(&cache, filename));
+    return std::shared_ptr<Surface>(new AndroidSurface(cache.get(), filename));
   }
   std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) override {
     unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
     unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
-    std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, width, height, aw, ah, format));
+    std::shared_ptr<Surface> ptr(new AndroidSurface(cache.get(), width, height, aw, ah, format));
     return ptr;
   }
   std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) override {
-    std::shared_ptr<Surface> ptr(new AndroidSurface(&cache, buffer, size));
+    std::shared_ptr<Surface> ptr(new AndroidSurface(cache.get(), buffer, size));
     return ptr;
   }
 
 private:
-  AndroidCache cache;
+  std::shared_ptr<AndroidCache> cache;
 };
 }
 ;
