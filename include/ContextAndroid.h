@@ -116,6 +116,9 @@ public:
       alignEnumLeft = env->GetStaticFieldID(alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
       alignEnumCenter = env->GetStaticFieldID(alignClass, "CENTER", "Landroid/graphics/Paint$Align;");
 
+      paintStyleEnumStroke = env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;");
+      paintStyleEnumFill = env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "FILL", "Landroid/graphics/Paint$Style;");
+
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java successfully initialized");
     }
 
@@ -208,7 +211,7 @@ public:
   jclass bitmapOptionsClass;
   jclass fileClass;
   jclass fileInputStreamClass;
-
+  
   jfieldID field_argb_8888;
   jfieldID field_rgb_565;
   jfieldID optionsMutableField;
@@ -216,8 +219,8 @@ public:
   jfieldID alignEnumRight;
   jfieldID alignEnumLeft;
   jfieldID alignEnumCenter;
-
-
+  jfieldID paintStyleEnumStroke;
+  jfieldID paintStyleEnumFill;
 
 private:
   JNIEnv * env;
@@ -238,16 +241,16 @@ public:
       cache->getJNIEnv()->DeleteGlobalRef(obj);
     }
   }
-
+    
   void setRenderMode(RenderMode mode) {
     create();
     auto * env = cache->getJNIEnv();
     switch (mode) {
     case STROKE:
-      env->CallVoidMethod(obj, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;")));
+      env->CallVoidMethod(obj, cache->paintSetStyleMethod, env->GetStaticObjectField(cache->paintStyleClass, cache->paintStyleEnumStroke));
       break;
     case FILL:
-      env->CallVoidMethod(obj, cache->paintSetStyleMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Style"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "FILL", "Landroid/graphics/Paint$Style;")));
+      env->CallVoidMethod(obj, cache->paintSetStyleMethod, env->GetStaticObjectField(cache->paintStyleClass, cache->paintStyleEnumFill));
       break;
     }
   }
