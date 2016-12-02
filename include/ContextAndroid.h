@@ -312,10 +312,10 @@ public:
       JNIEnv * env = cache->getJNIEnv();
       switch (textAlign) {
       case ALIGN_LEFT:
-        env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
+        env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
         break;
       case ALIGN_RIGHT:
-        env->CallVoidMethod(obj, cache->textAlignMethod, cache->getJNIEnv()->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
+        env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
         break;
       case ALIGN_CENTER:
         env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
