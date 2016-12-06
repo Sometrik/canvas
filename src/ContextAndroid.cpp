@@ -79,9 +79,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
   
   jbyteArray array = env->NewByteArray(arraySize);
   env->SetByteArrayRegion(array, 0, arraySize, (const jbyte*) buffer);
-  jclass thisClass = env->FindClass("android/graphics/BitmapFactory");
-  jmethodID thisMethod = env->GetStaticMethodID(env->FindClass("android/graphics/BitmapFactory"), "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
-  jobject firstBitmap = env->CallStaticObjectMethod(thisClass, thisMethod, array, 0, arraySize);
+  jobject firstBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeByteMethod, array, 0, arraySize);
   
   //make this with factory options instead
   jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
