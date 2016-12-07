@@ -7,13 +7,14 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
   : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format), cache(_cache), paint(_cache) {
   // creates an empty canvas
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidSurface widthheight constructor called");
+  JNIEnv * env = cache->getJNIEnv();
+  env->PushLocalFrame(15);
 
   cache->initJava();
 
   //set bitmap config according to internalformat
   jobject argbObject;
 
-  JNIEnv * env = cache->getJNIEnv();
 
   if (_format == LUMINANCE_ALPHA) {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to alpha 8");
@@ -27,27 +28,31 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
   }
 
   bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject));
+  env->DeleteLocalRef(argbObject);
+  env->PopLocalFrame(NULL);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const Image & image)
   : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), RGBA8), cache(_cache), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
 
-  cache->initJava();
-
   JNIEnv * env = cache->getJNIEnv();
+  env->PushLocalFrame(15);
+  cache->initJava();
 
   // creates a surface with width, height and contents from image
   bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
+  env->PopLocalFrame(NULL);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filename)
   : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
-  
-  cache->initJava();
 
   JNIEnv * env = cache->getJNIEnv();
+  env->PushLocalFrame(15);
+  cache->initJava();
+
 
   //Get inputStream from the picture(filename)
   jobject inputStream = env->CallObjectMethod(cache->getAssetManager(), cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
@@ -62,16 +67,22 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
   int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
   Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
+
+  env->DeleteLocalRef(inputStream);
+  env->DeleteLocalRef(factoryOptions);
+  env->PopLocalFrame(NULL);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size)
   : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
 
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
+
+  JNIEnv * env = cache->getJNIEnv();
+  env->PushLocalFrame(15);
   
   cache->initJava();
 
-  JNIEnv * env = cache->getJNIEnv();
 
   int arraySize = size;
   
@@ -90,18 +101,25 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
   Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
   
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");  
+
+  env->DeleteLocalRef(argbObject);
+  env->DeleteLocalRef(firstBitmap);
+  env->DeleteLocalRef(array);
+  env->PopLocalFrame(NULL);
 }
 
 jobject
 AndroidSurface::imageToBitmap(const Image & _img) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", " ImageToBitmap called");
-  
+
+  JNIEnv * env = cache->getJNIEnv();
+  env->PushLocalFrame(15);
+
   const unsigned char * buf = _img.getData();
   int length = _img.calculateOffset(1);
 
   __android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
 
-  JNIEnv * env = cache->getJNIEnv();
 
   jbyteArray jarray = env->NewByteArray(length);
   env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
@@ -109,5 +127,9 @@ AndroidSurface::imageToBitmap(const Image & _img) {
   jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
   jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
   
+  env->DeleteLocalRef(argbObject);
+  env->DeleteLocalRef(jarray);
+  env->PopLocalFrame(NULL);
+
   return drawableBitmap;
 }
