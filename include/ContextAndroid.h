@@ -331,17 +331,14 @@ public:
 
   float measureText(const std::string & text) {    
     create();
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "1");
     return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureTextMethod, cache->getJNIEnv()->NewStringUTF(text.c_str()));
   }
   float getTextDescent() {
     create();
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "2");
     return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureDescentMethod);
   }
   float getTextAscent() {
     create();
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "3");
     return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureAscentMethod);
   }
   
