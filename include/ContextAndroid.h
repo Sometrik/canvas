@@ -33,10 +33,6 @@ public:
     env->DeleteGlobalRef(fileInputStreamClass);
   }
 
-  bool isValid() const {
-    return is_valid;
-  }
-
   JNIEnv * getJNIEnv() {
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Canvas getJNIENv called");
@@ -132,10 +128,7 @@ public:
   jfieldID paintStyleEnumFill;
 
 private:
-  JNIEnv * env;
   jobject assetManager;
-  bool is_valid = false;
-  bool javaInitialized = false;
   JavaVM * javaVM;
 };
 
