@@ -21,23 +21,23 @@ public:
 
   ~AndroidCache() {
     JNIEnv * env = getJNIEnv();
-//    env->DeleteGlobalRef(assetManager);
+    env->DeleteGlobalRef(assetManager);
     if (javaInitialized) {
-//      env->DeleteGlobalRef(typefaceClass);
-//      env->DeleteGlobalRef(rectFClass);
-//      env->DeleteGlobalRef(rectClass);
-//      env->DeleteGlobalRef(canvasClass);
-//      env->DeleteGlobalRef(paintClass);
-//      env->DeleteGlobalRef(pathClass);
-//      env->DeleteGlobalRef(bitmapClass);
-//      env->DeleteGlobalRef(assetManagerClass);
-//      env->DeleteGlobalRef(factoryClass);
-//      env->DeleteGlobalRef(paintStyleClass);
-//      env->DeleteGlobalRef(alignClass);
-//      env->DeleteGlobalRef(bitmapConfigClass);
-//      env->DeleteGlobalRef(bitmapOptionsClass);
-//      env->DeleteGlobalRef(fileClass);
-//      env->DeleteGlobalRef(fileInputStreamClass);
+      env->DeleteGlobalRef(typefaceClass);
+      env->DeleteGlobalRef(rectFClass);
+      env->DeleteGlobalRef(rectClass);
+      env->DeleteGlobalRef(canvasClass);
+      env->DeleteGlobalRef(paintClass);
+      env->DeleteGlobalRef(pathClass);
+      env->DeleteGlobalRef(bitmapClass);
+      env->DeleteGlobalRef(assetManagerClass);
+      env->DeleteGlobalRef(factoryClass);
+      env->DeleteGlobalRef(paintStyleClass);
+      env->DeleteGlobalRef(alignClass);
+      env->DeleteGlobalRef(bitmapConfigClass);
+      env->DeleteGlobalRef(bitmapOptionsClass);
+      env->DeleteGlobalRef(fileClass);
+      env->DeleteGlobalRef(fileInputStreamClass);
     }
   }
 
