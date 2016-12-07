@@ -305,6 +305,7 @@ public:
       
       jobject typef = env->CallStaticObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
       env->CallObjectMethod(obj, cache->setTypefaceMethod, typef);
+      env->DeleteLocalRef(typef);
     }    
   }
 
@@ -437,9 +438,6 @@ public:
     jobject typef = env->CallObjectMethod(cache->typefaceClass, cache->typefaceCreator, NULL, 0);
 #endif
 
-    jboolean copyBoolean = JNI_TRUE;
-    jboolean falseBoolean = JNI_FALSE;
-
     jobject jpath = env->NewObject(cache->pathClass, cache->pathConstructor);
 
     for (auto pc : path.getData()) {
@@ -471,7 +469,10 @@ public:
 
         jobject jrect = env->NewObject(cache->rectFClass, cache->rectFConstructor, left, top, right, bottom);
 
-        env->CallVoidMethod(jpath, cache->pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
+        jmethodID pathArcToMethod = env->GetMethodID(cache->pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
+
+        env->CallVoidMethod(jpath, pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
+        env->DeleteLocalRef(jrect);
       }
         break;
       case PathComponent::CLOSE: {
@@ -483,6 +484,7 @@ public:
 
     // Draw path to canvas
     env->CallVoidMethod(canvas, cache->canvasPathDrawMethod, jpath, paint.getObject());
+    env->DeleteLocalRef(jpath);
   }
 
   void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat format) override {
@@ -564,6 +566,7 @@ public:
       JNIEnv * env = cache->getJNIEnv();
       jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
       env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, paint.getObject());
+      env->DeleteLocalRef(dstRect);
     } else {
       auto img = native_surface->createImage();
       drawImage(*img, p, w, h, displayScale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, imageSmoothingEnabled);
@@ -585,6 +588,7 @@ public:
     JNIEnv * env = cache->getJNIEnv();
     jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
     env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, NULL, dstRect, paint.getObject());
+    env->DeleteLocalRef(drawableBitmap);
   }
 
   jobject imageToBitmap(const Image & _img);
