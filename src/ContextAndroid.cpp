@@ -90,8 +90,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
   JNIEnv * env = cache->getJNIEnv();
   env->PushLocalFrame(15);
 
-  cache->initJava();
-
   //set bitmap config according to internalformat
   jobject argbObject;
 
@@ -118,7 +116,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const Image & image)
 
   JNIEnv * env = cache->getJNIEnv();
   env->PushLocalFrame(15);
-  cache->initJava();
 
   // creates a surface with width, height and contents from image
   bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
@@ -131,7 +128,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
 
   JNIEnv * env = cache->getJNIEnv();
   env->PushLocalFrame(15);
-  cache->initJava();
 
 
   //Get inputStream from the picture(filename)
@@ -159,10 +155,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
   JNIEnv * env = cache->getJNIEnv();
-  env->PushLocalFrame(15);
-  
-  cache->initJava();
-
+  env->PushLocalFrame(15); 
 
   int arraySize = size;
   

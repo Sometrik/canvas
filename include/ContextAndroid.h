@@ -253,7 +253,6 @@ public:
   void create() {
     if (!is_valid) {
       is_valid = true;
-      cache->initJava();
       JNIEnv * env = cache->getJNIEnv();
       obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
       env->CallVoidMethod(obj, cache->paintSetAntiAliasMethod, JNI_TRUE);
