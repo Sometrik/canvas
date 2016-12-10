@@ -12,7 +12,6 @@ namespace canvas {
   public:
     static inline const ImageFormat & getImageFormat(InternalFormat format) {
       switch (format) {
-      case RGB8_24: return ImageFormat::RGB24;
       case RGB_ETC1: return ImageFormat::RGB_ETC1;
       case RGB_DXT1: return ImageFormat::RGB_DXT1;
       case RED_RGTC1: return ImageFormat::RED_RGTC1;
