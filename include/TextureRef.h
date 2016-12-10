@@ -31,7 +31,7 @@ namespace canvas {
       return *this;
     }
     ~TextureRef() {
-      clear();
+      reset();
     }
   
     unsigned int getLogicalWidth() const { return logical_width; }
@@ -47,7 +47,7 @@ namespace canvas {
     void setActualHeight(unsigned int h) { actual_height = h; }
     void setData(canvas::Texture * _data) {
       if (_data != data) {
-	if (data) clear();
+	if (data) reset();
 	if (_data) {
 	  data = _data;
 	  data->incRefcnt();
@@ -62,7 +62,7 @@ namespace canvas {
       if (data) data->generateMipmaps();
     }
   
-    void clear() {
+    void reset() {
       if (data && data->decRefcnt() <= 0) delete data;
       logical_width = logical_height = actual_width = actual_height = 0;
       data = 0;
