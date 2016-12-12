@@ -10,6 +10,7 @@ namespace canvas {
     RGBA4,
     RGBA8,
     RGB8,
+    RGB8_24,
     RED_RGTC1,
     RG_RGTC2,
     RGB_DXT1,
