@@ -4,6 +4,9 @@
 #include <cmath>
 #include <iostream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 using namespace canvas;
 using namespace std;
 
@@ -20,26 +23,13 @@ static cairo_format_t getCairoFormat(InternalFormat format) {
   }
 }
 
-CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _image_format)
-  : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _image_format) {
-  if (_actual_width && _actual_height) {
-    surface = cairo_image_surface_create(getCairoFormat(_image_format), _actual_width, _actual_height);
-    assert(surface);
-  } else {
-    surface = 0;
-  }
-}
- 
-CairoSurface::CairoSurface(const Image & image)
-  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getInternalFormat())
-{
-  cairo_format_t format = getCairoFormat(getFormat());
-  unsigned int stride = cairo_format_stride_for_width(format, getActualWidth());
-  assert(stride == 4 * getActualWidth());
-  size_t numPixels = getActualWidth() * getActualHeight();
-  storage = new unsigned int[numPixels];
-  const unsigned char * data = image.getData();
-  ImageFormat fd = image.getImageFormat();
+static pair<cairo_surface_t *, unsigned int *> initializeSurfaceFromData(InternalFormat _format, unsigned int width, unsigned int height, const unsigned char * data) {
+  cairo_format_t format = getCairoFormat(_format);
+  unsigned int stride = cairo_format_stride_for_width(format, width);
+  assert(stride == 4 * width);
+  size_t numPixels = width * height;
+  unsigned int * storage = new unsigned int[numPixels];
+  ImageFormat fd = Image::getImageFormat(_format);
   if (fd.getBytesPerPixel() == 4) {
     memcpy(storage, data, numPixels * 4);
   } else if (fd.getBytesPerPixel() == 1) {
@@ -53,12 +43,31 @@ CairoSurface::CairoSurface(const Image & image)
       storage[i] = data[3 * i + 2] + (data[3 * i + 1] << 8) + (data[3 * i + 0] << 16);
     }
   }
-  surface = cairo_image_surface_create_for_data((unsigned char*)storage,
-						format,
-						getActualWidth(),
-						getActualHeight(),
-						stride);
+  cairo_surface_t * surface = cairo_image_surface_create_for_data((unsigned char*)storage,
+								format,
+								width,
+								height,
+								stride);
   assert(surface);
+  return std::pair<cairo_surface_t *, unsigned int *>(surface, storage);
+}
+
+CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _image_format)
+  : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _image_format) {
+  if (_actual_width && _actual_height) {
+    surface = cairo_image_surface_create(getCairoFormat(_image_format), _actual_width, _actual_height);
+    assert(surface);
+  } else {
+    surface = 0;
+  }
+}
+
+CairoSurface::CairoSurface(const Image & image)
+  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getInternalFormat())
+{
+  auto p = initializeSurfaceFromData(image.getInternalFormat(), image.getWidth(), image.getHeight(), image.getData());
+  surface = p.first;
+  storage = p.second;
 }
 
 CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0, 0, 0, RGBA8) {
@@ -102,6 +111,19 @@ CairoSurface::CairoSurface(const unsigned char * buffer, size_t size) : Surface(
     unsigned int w = cairo_image_surface_get_width(surface), h = cairo_image_surface_get_height(surface);
     bool a = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
     Surface::resize(w, h, w, h, a ? RGBA8 : RGB8);
+  } else if (1) {
+    int width, height, channels;
+    auto img_buffer = stbi_load_from_memory(buffer, size, &width, &height, &channels, 4);
+    assert(img_buffer);
+    assert(width && height && channels);
+    cerr << "loaded image, w = " << width << ", h = " << height << ", ch = " << channels << endl;
+    assert(channels == 1 || channels == 3 || channels == 4);
+    InternalFormat f = channels == 4 ? RGBA8 : RGB8;
+    auto p = initializeSurfaceFromData(f, width, height, img_buffer);
+    surface = p.first;
+    storage = p.second;
+    stbi_image_free(img_buffer);
+    Surface::resize(width, height, width, height, f);
   } else {
     cerr << "failed to load image from memory\n";
     surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, getActualWidth(), getActualHeight());
