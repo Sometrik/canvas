@@ -18,6 +18,7 @@ namespace canvas {
       case RG_RGTC2: return ImageFormat::RG_RGTC2;
       case RGBA8: return ImageFormat::RGBA32;
       case RGB8: return ImageFormat::RGB32;
+      case RGB8_24: return ImageFormat::RGB24;
       case R8: return ImageFormat::LUM8;
       case LA44: return ImageFormat::LA44;
       case RG8: case LUMINANCE_ALPHA: return ImageFormat::LA88;
