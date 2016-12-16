@@ -38,6 +38,7 @@ namespace canvas {
     static ImageFormat RED_RGTC1;
     static ImageFormat RG_RGTC2;
     static ImageFormat FLOAT32;
+    static ImageFormat RGB8_24;
 
     enum Compression {
       NO_COMPRESSION = 0,
