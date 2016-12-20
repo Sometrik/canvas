@@ -9,10 +9,34 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 using namespace std;
 using namespace canvas;
 
 bool Image::etc1_initialized = false;
+
+Image::Image(const unsigned char * buffer, size_t size) {
+  int w, h, channels;
+  auto img_buffer = stbi_load_from_memory(buffer, size, &w, &h, &channels, 4);
+  assert(img_buffer);
+  cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
+  assert(w && h && channels);    
+  assert(channels == 1 || channels == 3 || channels == 4);
+
+  width = w;
+  height = h;
+  format = channels == 4 ? RGBA8 : RGB8;
+
+  size_t numPixels = width * height;
+  data = new unsigned char[4 * numPixels];
+  unsigned int * storage = (unsigned int *)data;
+  for (unsigned int i = 0; i < numPixels; i++) {
+    storage[i] = (img_buffer[4 * i + 2]) + (img_buffer[4 * i + 1] << 8) + (img_buffer[4 * i + 0] << 16) + (img_buffer[4 * i + 3] << 24);
+  }
+  stbi_image_free(img_buffer);  
+}
 
 Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) : width(_width), height(_height), levels(_levels), format(_format), quality(_quality) {
   size_t s = calculateSize();

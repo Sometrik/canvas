@@ -4,9 +4,6 @@
 #include <cmath>
 #include <iostream>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 using namespace canvas;
 using namespace std;
 
@@ -113,7 +110,8 @@ CairoSurface::CairoSurface(const unsigned char * buffer, size_t size) : Surface(
     unsigned int w = cairo_image_surface_get_width(surface), h = cairo_image_surface_get_height(surface);
     bool a = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
     Surface::resize(w, h, w, h, a ? RGBA8 : RGB8);
-  } else if (1) {
+  } else if (0) {
+#if 0
     int width, height, channels;
     auto img_buffer = stbi_load_from_memory(buffer, size, &width, &height, &channels, 4);
     assert(img_buffer);
@@ -126,6 +124,7 @@ CairoSurface::CairoSurface(const unsigned char * buffer, size_t size) : Surface(
     storage = p.second;
     stbi_image_free(img_buffer);
     Surface::resize(width, height, width, height, f);
+#endif
   } else {
     cerr << "failed to load image from memory\n";
     surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, getActualWidth(), getActualHeight());
