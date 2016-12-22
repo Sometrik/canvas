@@ -30,6 +30,8 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   bitmapOptionsClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/BitmapFactory$Options"));
   fileClass = (jclass) env->NewGlobalRef(env->FindClass("java/io/File"));
   fileInputStreamClass = (jclass) env->NewGlobalRef(env->FindClass("java/io/FileInputStream"));
+  stringClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/String"));
+  charsetString = (jstring) env->NewGlobalRef(env->NewStringUTF("UTF-8"));
 
   measureAscentMethod = env->GetMethodID(paintClass, "ascent", "()F");
   measureDescentMethod = env->GetMethodID(paintClass, "descent", "()F");
@@ -71,6 +73,9 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   bitmapOptionsConstructor = env->GetMethodID(bitmapOptionsClass, "<init>", "()V");
   fileConstructor = env->GetMethodID(fileClass, "<init>", "(Ljava/lang/String;)V");
   fileInputStreamConstructor = env->GetMethodID(fileInputStreamClass, "<init>", "(Ljava/io/File;)V");
+  stringConstructor = env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V");
+  stringGetBytesMethod = env->GetMethodID(stringClass, "getBytes", "()[B");
+  stringConstructor2 = env->GetMethodID(stringClass, "<init>", "()V");
 
   optionsMutableField = env->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
   alignEnumRight = env->GetStaticFieldID(alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
