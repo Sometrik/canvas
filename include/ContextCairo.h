@@ -88,16 +88,12 @@ namespace canvas {
   class CairoContextFactory : public ContextFactory {
   public:
     CairoContextFactory() { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format, bool apply_scaling) { return std::shared_ptr<Context>(new ContextCairo(width, height, image_format)); }
-    std::shared_ptr<Surface> createSurface(const std::string & filename) { return std::shared_ptr<Surface>(new CairoSurface(filename)); }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format, bool apply_scaling) {
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format, bool apply_scaling) override { return std::shared_ptr<Context>(new ContextCairo(width, height, image_format)); }
+    std::shared_ptr<Surface> createSurface(const std::string & filename) override { return std::shared_ptr<Surface>(new CairoSurface(filename)); }
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format, bool apply_scaling) override {
       unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
       unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
       return std::shared_ptr<Surface>(new CairoSurface(width, height, aw, ah, image_format));
-    }
-    std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) {
-      std::shared_ptr<Surface> ptr(new CairoSurface(buffer, size));
-      return ptr;
     }
   };
 };

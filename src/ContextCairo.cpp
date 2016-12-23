@@ -76,60 +76,12 @@ CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0, 0, 0, R
   cairo_status_t r = cairo_surface_status(surface);
   if (r != CAIRO_STATUS_SUCCESS) {
     cerr << "failed to load bitmap " << filename << ", r = " << int(r) << endl;
-  } else {
-    cerr << "loaded bitmap " << filename << ": w = " << w << ", h = " << h << " f = " << int(cairo_image_surface_get_format(surface)) << endl;
   }
   bool a = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
   // if (a) cerr << "has alpha!\n";
   // else cerr << "no alpha\n";
   Surface::resize(w, h, w, h, a ? RGBA8 : RGB8);
   // cerr << "internal format = " << int(getFormat()) << endl;
-}
-
-struct read_buffer_s {
-  size_t offset, size;
-  const unsigned char * data;
-};
-
-static cairo_status_t read_buffer(void *closure, unsigned char *data, unsigned int length)
-{
-  read_buffer_s * buf = (read_buffer_s*)closure;
-
-  if (buf->offset + length > buf->size) {
-    return CAIRO_STATUS_READ_ERROR;
-  }
-  memcpy(data, buf->data + buf->offset, length);
-  buf->offset += length;
-  return CAIRO_STATUS_SUCCESS;
-}
-
-CairoSurface::CairoSurface(const unsigned char * buffer, size_t size) : Surface(16, 16, 16, 16, RGBA8) {
-  read_buffer_s buf = { 0, size, buffer };
-  if (isPNG(buffer, size)) {
-    surface = cairo_image_surface_create_from_png_stream(read_buffer, &buf);
-    unsigned int w = cairo_image_surface_get_width(surface), h = cairo_image_surface_get_height(surface);
-    bool a = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
-    Surface::resize(w, h, w, h, a ? RGBA8 : RGB8);
-  } else if (0) {
-#if 0
-    int width, height, channels;
-    auto img_buffer = stbi_load_from_memory(buffer, size, &width, &height, &channels, 4);
-    assert(img_buffer);
-    assert(width && height && channels);
-    cerr << "loaded image, w = " << width << ", h = " << height << ", ch = " << channels << endl;
-    assert(channels == 1 || channels == 3 || channels == 4);
-    InternalFormat f = channels == 4 ? RGBA8 : RGB8;
-    auto p = initializeSurfaceFromData(f, width, height, img_buffer, true);
-    surface = p.first;
-    storage = p.second;
-    stbi_image_free(img_buffer);
-    Surface::resize(width, height, width, height, f);
-#endif
-  } else {
-    cerr << "failed to load image from memory\n";
-    surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, getActualWidth(), getActualHeight());
-  }
-  assert(surface);
 }
 
 CairoSurface::~CairoSurface() {
