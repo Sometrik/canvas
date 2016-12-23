@@ -17,6 +17,29 @@ using namespace canvas;
 
 bool Image::etc1_initialized = false;
 
+Image::Image(const char * _filename)
+  : width(0), height(0), levels(1), data(0), format(NO_FORMAT), quality(0), filename(_filename) {
+  int w, h, channels;
+  cerr << "trying to load " << filename << endl;
+  auto img_buffer = stbi_load(filename.c_str(), &w, &h, &channels, 4);
+  assert(img_buffer);
+  cerr << "Image.cpp: loaded image, filename = " << filename << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
+  assert(w && h && channels);    
+  assert(channels == 1 || channels == 3 || channels == 4);
+
+  width = w;
+  height = h;
+  format = channels == 4 ? RGBA8 : RGB8;
+
+  size_t numPixels = width * height;
+  data = new unsigned char[4 * numPixels];
+  unsigned int * storage = (unsigned int *)data;
+  for (unsigned int i = 0; i < numPixels; i++) {
+    storage[i] = (img_buffer[4 * i + 2]) + (img_buffer[4 * i + 1] << 8) + (img_buffer[4 * i + 0] << 16) + (img_buffer[4 * i + 3] << 24);
+  }
+  stbi_image_free(img_buffer);  
+}
+  
 Image::Image(const unsigned char * buffer, size_t size) {
   int w, h, channels;
   auto img_buffer = stbi_load_from_memory(buffer, size, &w, &h, &channels, 4);

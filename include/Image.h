@@ -32,6 +32,7 @@ namespace canvas {
     }
 
   Image() : width(0), height(0), data(0), format(NO_FORMAT) { }
+  Image(const char * _filename);
   Image(const unsigned char * buffer, size_t size);
   Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0)
     : width(_width), height(_height), levels(_levels), format(_format), quality(_quality)
@@ -46,7 +47,7 @@ namespace canvas {
     }
     Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0);
     Image(const Image & other)
-      : width(other.getWidth()), height(other.getHeight()), levels(other.levels), format(other.format), quality(other.getQuality())
+      : width(other.getWidth()), height(other.getHeight()), levels(other.levels), format(other.format), quality(other.getQuality()), filename(other.filename)
     {
       size_t s = calculateSize();
       data = new unsigned char[s];
@@ -68,6 +69,7 @@ namespace canvas {
 	levels = other.levels;
 	format = other.format;
 	quality = other.quality;
+	filename = other.filename;
 	size_t s = calculateSize();	
 	data = new unsigned char[s];
 	if (other.data) {
@@ -133,6 +135,7 @@ namespace canvas {
     unsigned char * data = 0;
     InternalFormat format;
     short quality = 0;
+    std::string filename;
     static bool etc1_initialized;
   };
 };
