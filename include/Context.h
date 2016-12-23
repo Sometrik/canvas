@@ -108,19 +108,7 @@ namespace canvas {
     std::vector<HitRegion> hit_regions;
     HitRegion null_region;
   };
-  
-  class FilenameConverter {
-  public:
-    FilenameConverter() { }
-    virtual ~FilenameConverter() { }
-    virtual bool convert(const std::string & input, std::string & output) = 0;
-  };
-  
-  class NullConverter {
-  public:
-    bool convert(const std::string & input, std::string & output) { output = input; return true; }
-  };
-  
+    
   class ContextFactory {
   public:
     ContextFactory(float _display_scale = 1.0f) : display_scale(_display_scale) { }
