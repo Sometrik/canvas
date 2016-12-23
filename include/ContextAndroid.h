@@ -31,6 +31,8 @@ public:
     env->DeleteGlobalRef(bitmapOptionsClass);
     env->DeleteGlobalRef(fileClass);
     env->DeleteGlobalRef(fileInputStreamClass);
+    env->DeleteGlobalRef(stringClass);
+    env->DeleteLocalRef(charsetString);
   }
 
   JNIEnv * getJNIEnv() {
@@ -100,6 +102,9 @@ public:
   jmethodID measureAscentMethod;
   jmethodID fileConstructor;
   jmethodID fileInputStreamConstructor;
+  jmethodID stringConstructor;
+  jmethodID stringConstructor2;
+  jmethodID stringGetBytesMethod;
 
   jclass typefaceClass;
   jclass rectFClass;
@@ -116,6 +121,8 @@ public:
   jclass bitmapOptionsClass;
   jclass fileClass;
   jclass fileInputStreamClass;
+  jclass stringClass;
+  jstring charsetString;
   
   jfieldID field_argb_8888;
   jfieldID field_rgb_565;
@@ -422,20 +429,26 @@ public:
     paint.setTextAlign(textAlign);
     if (mode == STROKE) paint.setLineWidth(lineWidth);
 
+    jstring convertableString = env->NewStringUTF(text.c_str());
+    jobject bytes = env->CallObjectMethod(convertableString, cache->stringGetBytesMethod);
+    jobject jtext = env->NewObject(cache->stringClass, cache->stringConstructor, bytes, cache->charsetString);
+    env->DeleteLocalRef(convertableString);
+    env->DeleteLocalRef(bytes);
 
     if (textBaseline == TextBaseline::MIDDLE || textBaseline == TextBaseline::TOP) {
       float descent = paint.getTextDescent();
       float ascent = paint.getTextAscent();
       
       if (textBaseline == TextBaseline::MIDDLE) {
-        env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent) / 2, paint.getObject());
+        env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, jtext, p.x, p.y - (descent + ascent) / 2, paint.getObject());
       } else if (textBaseline == TextBaseline::TOP) {
-        env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y - (descent + ascent), paint.getObject());
+        env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, jtext, p.x, p.y - (descent + ascent), paint.getObject());
       }
     } else {
-      env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, env->NewStringUTF(text.c_str()), p.x, p.y, paint.getObject());
+      env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, jtext, p.x, p.y, paint.getObject());
     }
 
+    env->DeleteLocalRef(jtext);
     env->PopLocalFrame(NULL);
   }
 
