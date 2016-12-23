@@ -128,15 +128,9 @@ namespace canvas {
     virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) = 0;
-    virtual std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) = 0;
 
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, bool apply_scaling) {
       return createContext(width, height, RGBA8, apply_scaling);
-    }
-
-    std::shared_ptr<Image> createImage(const std::string & filename) {
-      auto surface = createSurface(filename);
-      return surface->createImage();
     }
     
     float getDisplayScale() const { return display_scale; }
