@@ -25,7 +25,6 @@ Image::Image(const char * _filename)
   assert(img_buffer);
   cerr << "Image.cpp: loaded image, filename = " << filename << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
-  assert(channels == 1 || channels == 3 || channels == 4);
 
   width = w;
   height = h;
@@ -35,7 +34,15 @@ Image::Image(const char * _filename)
   data = new unsigned char[4 * numPixels];
   unsigned int * storage = (unsigned int *)data;
   for (unsigned int i = 0; i < numPixels; i++) {
-    storage[i] = (img_buffer[4 * i + 2]) + (img_buffer[4 * i + 1] << 8) + (img_buffer[4 * i + 0] << 16) + (img_buffer[4 * i + 3] << 24);
+    unsigned char r = img_buffer[4 * i + 0];
+    unsigned char g = img_buffer[4 * i + 1];
+    unsigned char b = img_buffer[4 * i + 2];
+    unsigned char a = img_buffer[4 * i + 3];
+    if (a) {
+      storage[i] = (0xff * b / a) + ((0xff * g / a) << 8) + ((0xff * r / a) << 16) + (a << 24);
+    } else {
+      storage[i] = 0;
+    }
   }
   stbi_image_free(img_buffer);  
 }
@@ -46,7 +53,6 @@ Image::Image(const unsigned char * buffer, size_t size) {
   assert(img_buffer);
   cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
-  assert(channels == 1 || channels == 3 || channels == 4);
 
   width = w;
   height = h;
@@ -56,7 +62,15 @@ Image::Image(const unsigned char * buffer, size_t size) {
   data = new unsigned char[4 * numPixels];
   unsigned int * storage = (unsigned int *)data;
   for (unsigned int i = 0; i < numPixels; i++) {
-    storage[i] = (img_buffer[4 * i + 2]) + (img_buffer[4 * i + 1] << 8) + (img_buffer[4 * i + 0] << 16) + (img_buffer[4 * i + 3] << 24);
+    unsigned char r = img_buffer[4 * i + 0];
+    unsigned char g = img_buffer[4 * i + 1];
+    unsigned char b = img_buffer[4 * i + 2];
+    unsigned char a = img_buffer[4 * i + 3];
+    if (a) {
+      storage[i] = (0xff * b / a) + ((0xff * g / a) << 8) + ((0xff * r / a) << 16) + (a << 24);
+    } else {
+      storage[i] = 0;
+    }
   }
   stbi_image_free(img_buffer);  
 }
