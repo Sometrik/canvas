@@ -47,34 +47,6 @@ Image::Image(const char * _filename)
   stbi_image_free(img_buffer);  
 }
   
-Image::Image(const unsigned char * buffer, size_t size) {
-  int w, h, channels;
-  auto img_buffer = stbi_load_from_memory(buffer, size, &w, &h, &channels, 4);
-  assert(img_buffer);
-  cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
-  assert(w && h && channels);    
-
-  width = w;
-  height = h;
-  format = channels == 4 ? RGBA8 : RGB8;
-
-  size_t numPixels = width * height;
-  data = new unsigned char[4 * numPixels];
-  unsigned int * storage = (unsigned int *)data;
-  for (unsigned int i = 0; i < numPixels; i++) {
-    unsigned char r = img_buffer[4 * i + 0];
-    unsigned char g = img_buffer[4 * i + 1];
-    unsigned char b = img_buffer[4 * i + 2];
-    unsigned char a = img_buffer[4 * i + 3];
-    if (a) {
-      storage[i] = (0xff * b / a) + ((0xff * g / a) << 8) + ((0xff * r / a) << 16) + (a << 24);
-    } else {
-      storage[i] = 0;
-    }
-  }
-  stbi_image_free(img_buffer);  
-}
-
 Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) : width(_width), height(_height), levels(_levels), format(_format), quality(_quality) {
   size_t s = calculateSize();
 
@@ -109,6 +81,40 @@ Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, 
   } else {
     assert(0);
   }
+}
+
+bool
+Image::decode(const unsigned char * buffer, size_t size) {
+  int w, h, channels;
+  auto img_buffer = stbi_load_from_memory(buffer, size, &w, &h, &channels, 4);
+  if (!img_buffer) {
+    cerr << "Image decoding failed: " << stbi_failure_reason() << endl;
+    return false;
+  }
+  cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
+  assert(w && h && channels);    
+
+  width = w;
+  height = h;
+  format = channels == 4 ? RGBA8 : RGB8;
+
+  size_t numPixels = width * height;
+  data = new unsigned char[4 * numPixels];
+  unsigned int * storage = (unsigned int *)data;
+  for (unsigned int i = 0; i < numPixels; i++) {
+    unsigned char r = img_buffer[4 * i + 0];
+    unsigned char g = img_buffer[4 * i + 1];
+    unsigned char b = img_buffer[4 * i + 2];
+    unsigned char a = img_buffer[4 * i + 3];
+    if (a) {
+      storage[i] = (0xff * b / a) + ((0xff * g / a) << 8) + ((0xff * r / a) << 16) + (a << 24);
+    } else {
+      storage[i] = 0;
+    }
+  }
+  stbi_image_free(img_buffer);
+
+  return true;
 }
 
 std::shared_ptr<Image>

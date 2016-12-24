@@ -31,9 +31,8 @@ namespace canvas {
       return ImageFormat::UNDEF;
     }
 
-  Image() : width(0), height(0), data(0), format(NO_FORMAT) { }
+  Image() : width(0), height(0), levels(0), data(0), format(NO_FORMAT), quality(0) { }
   Image(const char * _filename);
-  Image(const unsigned char * buffer, size_t size);
   Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0)
     : width(_width), height(_height), levels(_levels), format(_format), quality(_quality)
     {
@@ -80,6 +79,8 @@ namespace canvas {
       }
       return *this;
     }
+
+    bool decode(const unsigned char * buffer, size_t size);
 
     std::shared_ptr<Image> convert(InternalFormat target_format) const;
     std::shared_ptr<Image> scale(unsigned int target_width, unsigned int target_height, unsigned int target_levels = 1) const;
@@ -134,7 +135,7 @@ namespace canvas {
     unsigned int width, height, levels;
     unsigned char * data = 0;
     InternalFormat format;
-    short quality = 0;
+    short quality;
     std::string filename;
     static bool etc1_initialized;
   };
