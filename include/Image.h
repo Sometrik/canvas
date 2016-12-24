@@ -60,26 +60,8 @@ namespace canvas {
       delete[] data;
     }
 
-    Image & operator=(const Image & other) {
-      if (&other != this) {
-	delete[] data;
-	width = other.width;
-	height = other.height;
-	levels = other.levels;
-	format = other.format;
-	quality = other.quality;
-	filename = other.filename;
-	size_t s = calculateSize();	
-	data = new unsigned char[s];
-	if (other.data) {
-	  memcpy(data, other.data, s);
-	} else {
-	  memset(data, 0, s);
-	}
-      }
-      return *this;
-    }
-
+    Image & operator=(const Image & other) = delete;
+    
     bool decode(const unsigned char * buffer, size_t size);
 
     std::shared_ptr<Image> convert(InternalFormat target_format) const;
