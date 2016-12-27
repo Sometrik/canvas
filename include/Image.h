@@ -11,6 +11,12 @@ namespace canvas {
     Image() { }
     Image(const char * _filename) : filename(_filename) { }
     Image(const std::shared_ptr<ImageData> & _data) : data(_data) { }
+
+    Image & open(const char * _filename) {
+      filename = _filename;
+      data.reset();
+      return *this;
+    }
     
     bool decode(const unsigned char * buffer, size_t size);
     void convert(InternalFormat target_format) {
@@ -33,8 +39,15 @@ namespace canvas {
       if (data.get()) {
 	return *data;
       } else {
-	return null_data;
+	return ImageData::nullImage;
       }
+    }
+
+    std::shared_ptr<ImageData> & getDataPtr() {
+      if (!filename.empty() && !data.get()) {
+	loadFile();
+      }
+      return data;
     }
 
   protected:
@@ -43,8 +56,6 @@ namespace canvas {
   private:
     std::string filename;
     std::shared_ptr<ImageData> data;
-
-    static ImageData null_data;
   };
 };
 #endif

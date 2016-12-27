@@ -9,8 +9,6 @@
 using namespace std;
 using namespace canvas;
 
-ImageData Image::null_data;
-
 bool
 Image::decode(const unsigned char * buffer, size_t size) {
   int w, h, channels;
