@@ -10,6 +10,8 @@
 namespace canvas {
   class ImageData {
   public:
+    static ImageData nullImage;
+
     static inline const ImageFormat & getImageFormat(InternalFormat format) {
       switch (format) {
       case RGB_ETC1: return ImageFormat::RGB_ETC1;
