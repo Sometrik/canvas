@@ -3,6 +3,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <iostream>
 #include <cassert>
 
 using namespace std;
@@ -50,7 +51,7 @@ Image::loadFile() {
   assert(!filename.empty());
   int w, h, channels;
   cerr << "trying to load " << filename << endl;
-  auto img_buffer = stbi_load(filename, &w, &h, &channels, 4);
+  auto img_buffer = stbi_load(filename.c_str(), &w, &h, &channels, 4);
   assert(img_buffer);
   cerr << "Image.cpp: loaded image, filename = " << filename << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
