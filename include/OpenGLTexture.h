@@ -26,7 +26,7 @@ namespace canvas {
 
     unsigned int getTextureId() const override { return texture_id; }
     
-    void updateData(const Image & image, unsigned int x, unsigned int y) override;
+    void updateData(const ImageData & image, unsigned int x, unsigned int y) override;
     void generateMipmaps() override;
 
     static size_t getNumTextures() { return total_textures; }
@@ -39,7 +39,7 @@ namespace canvas {
     static void setHasTexStorage(bool t) { has_tex_storage = t; }
 
   protected:
-    void updateTextureData(const Image & image, unsigned int x, unsigned int y);
+    void updateTextureData(const ImageData & image, unsigned int x, unsigned int y);
 
   private:
     unsigned int texture_id = 0;

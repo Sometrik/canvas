@@ -5,7 +5,7 @@
 #include "InternalFormat.h"
 
 namespace canvas {
-  class Image;
+  class ImageData;
   
   class Texture {
   public:
@@ -19,7 +19,7 @@ namespace canvas {
       internal_format(_internal_format) { }     
     virtual ~Texture() { }
 
-    virtual void updateData(const Image & image, unsigned int x, unsigned int y) = 0;
+    virtual void updateData(const ImageData & image, unsigned int x, unsigned int y) = 0;
     virtual void generateMipmaps() { }
     virtual unsigned int getTextureId() const { return 0; }
 

@@ -123,7 +123,7 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
 }
 
 Context &
-Context::drawImage(const Image & img, double x, double y, double w, double h) {
+Context::drawImage(const ImageData & img, double x, double y, double w, double h) {
   Point p = currentTransform.multiply(x, y);
   if (hasNativeShadows()) {
     getDefaultSurface().drawImage(img, p, w, h, getDisplayScale(), globalAlpha.getValue(), shadowBlur.getValue(), shadowOffsetX.getValue(), shadowOffsetY.getValue(), shadowColor.getValue(), clipPath, imageSmoothingEnabled.getValue());

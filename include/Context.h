@@ -1,15 +1,16 @@
 #ifndef _CANVAS_H_
 #define _CANVAS_H_
 
+#include <GraphicsState.h>
+
+#include <InternalFormat.h>
+#include <Color.h>
+#include <Surface.h>
+#include <ImageData.h>
+#include <HitRegion.h>
+
 #include <string>
 #include <memory>
-
-#include "InternalFormat.h"
-#include "Color.h"
-#include "Surface.h"
-#include "Image.h"
-#include "HitRegion.h"
-#include "GraphicsState.h"
 
 namespace canvas {
   class Context : public GraphicsState {
@@ -26,7 +27,7 @@ namespace canvas {
     }
     virtual ~Context() { }
 
-    virtual std::shared_ptr<Surface> createSurface(const Image & image) = 0;
+    virtual std::shared_ptr<Surface> createSurface(const ImageData & image) = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
     virtual void resize(unsigned int _width, unsigned int _height);
@@ -61,7 +62,7 @@ namespace canvas {
     Context & drawImage(Context & other, double x, double y, double w, double h) {
       return drawImage(other.getDefaultSurface(), x, y, w, h);
     }
-    virtual Context & drawImage(const Image & img, double x, double y, double w, double h);
+    virtual Context & drawImage(const ImageData & img, double x, double y, double w, double h);
     virtual Context & drawImage(Surface & img, double x, double y, double w, double h);
         
     Style & createLinearGradient(double x0, double y0, double x1, double y1) {
@@ -87,7 +88,7 @@ namespace canvas {
     const std::vector<HitRegion> & getHitRegions() const { return hit_regions; }
     
 #if 0
-    Style & createPattern(const Image & image, const char * repeat) {
+    Style & createPattern(const ImageData & image, const char * repeat) {
       
     }
     Style & createRadialGradient(double x0, double y0, double r0, double x1, double y1, double r1) {

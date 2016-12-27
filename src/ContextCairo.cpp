@@ -26,7 +26,7 @@ static pair<cairo_surface_t *, unsigned int *> initializeSurfaceFromData(Interna
   assert(stride == 4 * width);
   size_t numPixels = width * height;
   unsigned int * storage = new unsigned int[numPixels];
-  ImageFormat fd = Image::getImageFormat(_format);
+  ImageFormat fd = ImageData::getImageFormat(_format);
   if (fd.getBytesPerPixel() == 4) {
     if (flip_channels) {
       for (unsigned int i = 0; i < numPixels; i++) {
@@ -61,7 +61,7 @@ CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_he
   }
 }
 
-CairoSurface::CairoSurface(const Image & image)
+CairoSurface::CairoSurface(const ImageData & image)
   : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getInternalFormat())
 {
   auto p = initializeSurfaceFromData(image.getInternalFormat(), image.getWidth(), image.getHeight(), image.getData(), false);
@@ -312,7 +312,7 @@ CairoSurface::drawImage(Surface & _img, const Point & p, double w, double h, flo
 }
 
 void
-CairoSurface::drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
+CairoSurface::drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
   CairoSurface img(_img);
   drawNativeSurface(img, p, w, h, displayScale, globalAlpha, clipPath, imageSmoothingEnabled);
 }

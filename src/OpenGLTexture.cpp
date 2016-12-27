@@ -1,7 +1,7 @@
 #include <OpenGLTexture.h>
 
 #include <TextureRef.h>
-#include <Image.h>
+#include <ImageData.h>
 #include <Surface.h>
 
 #define GL_GLEXT_PROTOTYPES
@@ -132,7 +132,7 @@ static GLenum getOpenGLFilterType(FilterMode mode) {
 }
 
 void
-OpenGLTexture::updateTextureData(const Image & image, unsigned int x, unsigned int y) {
+OpenGLTexture::updateTextureData(const ImageData & image, unsigned int x, unsigned int y) {
   unsigned int offset = 0;
   unsigned int current_width = image.getWidth(), current_height = image.getHeight();
   auto fd = getFormatDescription(getInternalFormat());
@@ -167,7 +167,7 @@ OpenGLTexture::updateTextureData(const Image & image, unsigned int x, unsigned i
 }
 
 void
-OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
+OpenGLTexture::updateData(const ImageData & image, unsigned int x, unsigned int y) {
   if (!global_init) {
     global_init = true;
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -199,7 +199,7 @@ OpenGLTexture::updateData(const Image & image, unsigned int x, unsigned int y) {
 
     if (x != 0 || y != 0 || image.getWidth() != getActualWidth() || image.getHeight() != getActualHeight()) {
       int levels = has_mipmaps ? getMipmapLevels() : 1;
-      Image img(getInternalFormat(), getActualWidth(), getActualHeight(), levels);
+      ImageData img(getInternalFormat(), getActualWidth(), getActualHeight(), levels);
       updateTextureData(img, 0, 0);	
     }
   }

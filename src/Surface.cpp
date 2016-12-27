@@ -1,7 +1,7 @@
 #include <Surface.h>
 
-#include "Color.h"
-#include "Image.h"
+#include <Color.h>
+#include <ImageData.h>
 
 #include <cstring>
 #include <vector>
@@ -303,13 +303,13 @@ Surface::multiply(const Color & color) {
 }
 #endif
 	       
-std::shared_ptr<Image>
+std::shared_ptr<ImageData>
 Surface::createImage() {
 
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
   
-  shared_ptr<Image> image(new Image(buffer, getFormat(), getActualWidth(), getActualHeight()));
+  auto image = std::make_shared<ImageData>(buffer, getFormat(), getActualWidth(), getActualHeight());
   releaseMemory();
   
   return image;

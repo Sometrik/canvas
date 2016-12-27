@@ -16,7 +16,7 @@
 
 namespace canvas {
   class Context;
-  class Image;
+  class ImageData;
 
   enum RenderMode {
     FILL = 1,
@@ -65,7 +65,7 @@ namespace canvas {
     virtual TextMetrics measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float displayScale) = 0;
 	  
     virtual void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) = 0;
-    virtual void drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) = 0;
+    virtual void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) = 0;
     
     // void colorFill(const Color & color);
     void slowBlur(float hradius, float vradius);
@@ -74,7 +74,7 @@ namespace canvas {
 
     // void multiply(const Color & color);
     
-    std::shared_ptr<Image> createImage();
+    std::shared_ptr<ImageData> createImage();
 
     unsigned int getLogicalWidth() const { return logical_width; }
     unsigned int getLogicalHeight() const { return logical_height; }

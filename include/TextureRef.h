@@ -55,7 +55,7 @@ namespace canvas {
       }
     }
   
-    void updateData(const Image & image, unsigned int x, unsigned int y) {
+    void updateData(const ImageData & image, unsigned int x, unsigned int y) {
       if (data) data->updateData(image, x, y);
     }
     void generateMipmaps() {
