@@ -12,6 +12,18 @@ namespace canvas {
     Image(const char * _filename) : filename(_filename) { }
     
     bool decode(const unsigned char * buffer, size_t size);
+    void convert(InternalFormat target_format) {
+      if (!filename.empty() && !data.get()) {
+	loadFile();
+      }
+      if (data.get()) data = data->convert(target_format);
+    }
+    void scale(unsigned int target_width, unsigned int target_height, unsigned int target_levels = 1) {
+      if (!filename.empty() && !data.get()) {
+	loadFile();
+      }
+      if (data.get()) data = data->scale(target_width, target_height, target_levels);
+    }
 
     const ImageData & getData() {
       if (!filename.empty() && !data.get()) {
