@@ -10,6 +10,7 @@ namespace canvas {
   public:
     Image() { }
     Image(const char * _filename) : filename(_filename) { }
+    Image(const std::shared_ptr<ImageData> & _data) : data(_data) { }
     
     bool decode(const unsigned char * buffer, size_t size);
     void convert(InternalFormat target_format) {
