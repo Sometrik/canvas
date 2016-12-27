@@ -1,5 +1,5 @@
-#ifndef _IMAGE_H_
-#define _IMAGE_H_
+#ifndef _IMAGEDATA_H_
+#define _IMAGEDATA_H_
 
 #include <cstring>
 #include <memory>
@@ -8,7 +8,7 @@
 #include "InternalFormat.h"
 
 namespace canvas {
-  class Image {
+  class ImageData {
   public:
     static inline const ImageFormat & getImageFormat(InternalFormat format) {
       switch (format) {
@@ -31,9 +31,9 @@ namespace canvas {
       return ImageFormat::UNDEF;
     }
 
-  Image() : width(0), height(0), levels(0), data(0), format(NO_FORMAT), quality(0) { }
-  Image(const char * _filename);
-  Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0)
+  ImageData() : width(0), height(0), levels(0), data(0), format(NO_FORMAT), quality(0) { }
+  ImageData(const char * _filename);
+  ImageData(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0)
     : width(_width), height(_height), levels(_levels), format(_format), quality(_quality)
     {
       size_t s = calculateSize();
@@ -44,9 +44,9 @@ namespace canvas {
 	memcpy(data, _data, s);
       }
     }
-    Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0);
-    Image(const Image & other)
-      : width(other.getWidth()), height(other.getHeight()), levels(other.levels), format(other.format), quality(other.getQuality()), filename(other.filename)
+    ImageData(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0);
+    ImageData(const ImageData & other)
+      : width(other.getWidth()), height(other.getHeight()), levels(other.levels), format(other.format), quality(other.getQuality())
     {
       size_t s = calculateSize();
       data = new unsigned char[s];
@@ -56,17 +56,17 @@ namespace canvas {
 	memset(data, 0, s);
       }
     }
-    ~Image() {
+    ~ImageData() {
       delete[] data;
     }
 
-    Image & operator=(const Image & other) = delete;
+    ImageData & operator=(const ImageData & other) = delete;
     
     bool decode(const unsigned char * buffer, size_t size);
 
-    std::shared_ptr<Image> convert(InternalFormat target_format) const;
-    std::shared_ptr<Image> scale(unsigned int target_width, unsigned int target_height, unsigned int target_levels = 1) const;
-    std::shared_ptr<Image> createMipmaps(unsigned int levels) const;
+    std::shared_ptr<ImageData> convert(InternalFormat target_format) const;
+    std::shared_ptr<ImageData> scale(unsigned int target_width, unsigned int target_height, unsigned int target_levels = 1) const;
+    std::shared_ptr<ImageData> createMipmaps(unsigned int levels) const;
 
     void setQuality(short _quality) { quality = _quality; }
     bool isValid() const { return width != 0 && height != 0 && format != NO_FORMAT; }
@@ -118,7 +118,6 @@ namespace canvas {
     unsigned char * data = 0;
     InternalFormat format;
     short quality;
-    std::string filename;
     static bool etc1_initialized;
   };
 };

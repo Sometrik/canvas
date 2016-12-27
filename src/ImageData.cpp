@@ -1,4 +1,4 @@
-#include <Image.h>
+#include <ImageData.h>
 
 #include <cassert>
 #include <iostream>
@@ -15,15 +15,15 @@
 using namespace std;
 using namespace canvas;
 
-bool Image::etc1_initialized = false;
+bool ImageData::etc1_initialized = false;
 
-Image::Image(const char * _filename)
-  : width(0), height(0), levels(1), data(0), format(NO_FORMAT), quality(0), filename(_filename) {
+ImageData::ImageData(const char * filename)
+  : width(0), height(0), levels(1), data(0), format(NO_FORMAT), quality(0) {
   int w, h, channels;
   cerr << "trying to load " << filename << endl;
   auto img_buffer = stbi_load(filename.c_str(), &w, &h, &channels, 4);
   assert(img_buffer);
-  cerr << "Image.cpp: loaded image, filename = " << filename << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
+  cerr << "ImageData.cpp: loaded image, filename = " << filename << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
 
   width = w;
@@ -47,7 +47,7 @@ Image::Image(const char * _filename)
   stbi_image_free(img_buffer);  
 }
   
-Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) : width(_width), height(_height), levels(_levels), format(_format), quality(_quality) {
+ImageData::ImageData(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) : width(_width), height(_height), levels(_levels), format(_format), quality(_quality) {
   size_t s = calculateSize();
 
   auto & fd = getImageFormat(format);
@@ -84,14 +84,14 @@ Image::Image(InternalFormat _format, unsigned int _width, unsigned int _height, 
 }
 
 bool
-Image::decode(const unsigned char * buffer, size_t size) {
+ImageData::decode(const unsigned char * buffer, size_t size) {
   int w, h, channels;
   auto img_buffer = stbi_load_from_memory(buffer, size, &w, &h, &channels, 4);
   if (!img_buffer) {
     cerr << "Image decoding failed: " << stbi_failure_reason() << endl;
     return false;
   }
-  cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
+  cerr << "ImageData.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
 
   width = w;
@@ -117,8 +117,8 @@ Image::decode(const unsigned char * buffer, size_t size) {
   return true;
 }
 
-std::shared_ptr<Image>
-Image::convert(InternalFormat target_format) const {
+std::shared_ptr<ImageData>
+ImageData::convert(InternalFormat target_format) const {
   auto & fd = getImageFormat(format);
   auto & target_fd = getImageFormat(target_format);
   
@@ -189,7 +189,7 @@ Image::convert(InternalFormat target_format) const {
       target_width = (target_width + 1) / 2;
       target_height = (target_height + 1) / 2;
     }
-    return make_shared<Image>(output_data.get(), target_format, width, height, levels);
+    return make_shared<ImageData>(output_data.get(), target_format, width, height, levels);
   } else if (target_fd.getNumChannels() == 2 && target_fd.getBytesPerPixel() == 1) {
     assert(levels == 1);
     
@@ -209,7 +209,7 @@ Image::convert(InternalFormat target_format) const {
       *output_data++ = (alpha << 4) | lum;
     }
 
-    return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight());
+    return make_shared<ImageData>(tmp.get(), target_format, getWidth(), getHeight());
   } else {
     assert(target_fd.getBytesPerPixel() == 2);
     unsigned int target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
@@ -251,12 +251,12 @@ Image::convert(InternalFormat target_format) const {
       }
     }
     
-    return make_shared<Image>(tmp.get(), target_format, getWidth(), getHeight(), getLevels());
+    return make_shared<ImageData>(tmp.get(), target_format, getWidth(), getHeight(), getLevels());
   }
 }
 
-std::shared_ptr<Image>
-Image::scale(unsigned int target_base_width, unsigned int target_base_height, unsigned int target_levels) const {
+std::shared_ptr<ImageData>
+ImageData::scale(unsigned int target_base_width, unsigned int target_base_height, unsigned int target_levels) const {
   auto & fd = getImageFormat(format);
   assert(fd.getBytesPerPixel() == 4);
   assert(!fd.getCompression());
@@ -331,11 +331,11 @@ Image::scale(unsigned int target_base_width, unsigned int target_base_height, un
       target_height /= 2;
     }
   }
-  return make_shared<Image>(output_data.get(), getInternalFormat(), target_base_width, target_base_height, target_levels);
+  return make_shared<ImageData>(output_data.get(), getInternalFormat(), target_base_width, target_base_height, target_levels);
 }
 
-std::shared_ptr<Image>
-Image::createMipmaps(unsigned int target_levels) const {
+std::shared_ptr<ImageData>
+ImageData::createMipmaps(unsigned int target_levels) const {
   auto & fd = getImageFormat(format);
   assert(fd.getBytesPerPixel() == 4);
   assert(!fd.getCompression());
@@ -367,5 +367,5 @@ Image::createMipmaps(unsigned int target_levels) const {
     target_width /= 2;
     target_height /= 2;
   }
-  return make_shared<Image>(output_data.get(), getInternalFormat(), width, height, target_levels);
+  return make_shared<ImageData>(output_data.get(), getInternalFormat(), width, height, target_levels);
 }
