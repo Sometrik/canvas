@@ -32,7 +32,6 @@ namespace canvas {
     }
 
   ImageData() : width(0), height(0), levels(0), data(0), format(NO_FORMAT), quality(0) { }
-  ImageData(const char * _filename);
   ImageData(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0)
     : width(_width), height(_height), levels(_levels), format(_format), quality(_quality)
     {
@@ -62,8 +61,6 @@ namespace canvas {
 
     ImageData & operator=(const ImageData & other) = delete;
     
-    bool decode(const unsigned char * buffer, size_t size);
-
     std::shared_ptr<ImageData> convert(InternalFormat target_format) const;
     std::shared_ptr<ImageData> scale(unsigned int target_width, unsigned int target_height, unsigned int target_levels = 1) const;
     std::shared_ptr<ImageData> createMipmaps(unsigned int levels) const;

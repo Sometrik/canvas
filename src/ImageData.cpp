@@ -9,43 +9,10 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 using namespace std;
 using namespace canvas;
 
 bool ImageData::etc1_initialized = false;
-
-ImageData::ImageData(const char * filename)
-  : width(0), height(0), levels(1), data(0), format(NO_FORMAT), quality(0) {
-  int w, h, channels;
-  cerr << "trying to load " << filename << endl;
-  auto img_buffer = stbi_load(filename, &w, &h, &channels, 4);
-  assert(img_buffer);
-  cerr << "ImageData.cpp: loaded image, filename = " << filename << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
-  assert(w && h && channels);    
-
-  width = w;
-  height = h;
-  format = channels == 4 ? RGBA8 : RGB8;
-
-  size_t numPixels = width * height;
-  data = new unsigned char[4 * numPixels];
-  unsigned int * storage = (unsigned int *)data;
-  for (unsigned int i = 0; i < numPixels; i++) {
-    unsigned char r = img_buffer[4 * i + 0];
-    unsigned char g = img_buffer[4 * i + 1];
-    unsigned char b = img_buffer[4 * i + 2];
-    unsigned char a = img_buffer[4 * i + 3];
-    if (a) {
-      storage[i] = (0xff * b / a) + ((0xff * g / a) << 8) + ((0xff * r / a) << 16) + (a << 24);
-    } else {
-      storage[i] = 0;
-    }
-  }
-  stbi_image_free(img_buffer);  
-}
   
 ImageData::ImageData(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) : width(_width), height(_height), levels(_levels), format(_format), quality(_quality) {
   size_t s = calculateSize();
@@ -81,40 +48,6 @@ ImageData::ImageData(InternalFormat _format, unsigned int _width, unsigned int _
   } else {
     assert(0);
   }
-}
-
-bool
-ImageData::decode(const unsigned char * buffer, size_t size) {
-  int w, h, channels;
-  auto img_buffer = stbi_load_from_memory(buffer, size, &w, &h, &channels, 4);
-  if (!img_buffer) {
-    cerr << "Image decoding failed: " << stbi_failure_reason() << endl;
-    return false;
-  }
-  cerr << "ImageData.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
-  assert(w && h && channels);    
-
-  width = w;
-  height = h;
-  format = channels == 4 ? RGBA8 : RGB8;
-
-  size_t numPixels = width * height;
-  data = new unsigned char[4 * numPixels];
-  unsigned int * storage = (unsigned int *)data;
-  for (unsigned int i = 0; i < numPixels; i++) {
-    unsigned char r = img_buffer[4 * i + 0];
-    unsigned char g = img_buffer[4 * i + 1];
-    unsigned char b = img_buffer[4 * i + 2];
-    unsigned char a = img_buffer[4 * i + 3];
-    if (a) {
-      storage[i] = (0xff * b / a) + ((0xff * g / a) << 8) + ((0xff * r / a) << 16) + (a << 24);
-    } else {
-      storage[i] = 0;
-    }
-  }
-  stbi_image_free(img_buffer);
-
-  return true;
 }
 
 std::shared_ptr<ImageData>
