@@ -6,7 +6,7 @@
 #include <InternalFormat.h>
 #include <Color.h>
 #include <Surface.h>
-#include <ImageData.h>
+#include <Image.h>
 #include <HitRegion.h>
 
 #include <string>
@@ -62,8 +62,11 @@ namespace canvas {
     Context & drawImage(Context & other, double x, double y, double w, double h) {
       return drawImage(other.getDefaultSurface(), x, y, w, h);
     }
+    Context & drawImage(Image & img, double x, double y, double w, double h) {
+      return drawImage(img.getData(), x, y, w, h);
+    }
     virtual Context & drawImage(const ImageData & img, double x, double y, double w, double h);
-    virtual Context & drawImage(Surface & img, double x, double y, double w, double h);
+    virtual Context & drawImage(Surface & img, double x, double y, double w, double h);    
         
     Style & createLinearGradient(double x0, double y0, double x1, double y1) {
       current_linear_gradient.setType(Style::LINEAR_GRADIENT);
