@@ -199,43 +199,7 @@ ImageData::scale(unsigned int target_base_width, unsigned int target_base_height
   // cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
   unsigned int target_offset = 0, target_width = target_base_width, target_height = target_base_height;
-#if 1
   stbir_resize_uint8(data, getWidth(), getHeight(), 0, output_data.get(), target_width, target_height, 0, fd.getBytesPerPixel());
-
-#else
-  for (int y = 0; y < int(target_height); y++) {
-    for (int x = 0; x < int(target_width); x++) {
-      int red = 0, green = 0, blue = 0, alpha = 0, n = 0;
-      int y0 = y * getHeight() / target_height;
-      int y1 = (y + 1) * getHeight() / target_height;
-      int x0 = x * getWidth() / target_width;
-      int x1 = (x + 1) * getWidth() / target_width;
-      if (y0 == y1 && y1 < height) y1++;
-      if (x0 == x1 && x1 < width) x1++;
-      for (int j = y0; j < y1; j++) {
-	for (int k = x0; k < x1; k++) {
-          int offset = (j * getWidth() + k) * 4;
-          assert(offset + 4 <= input_size);
-          red += data[offset++];
-	  green += data[offset++];
-	  blue += data[offset++];
-	  alpha += data[offset++];
-	  n++;
-	}
-      }
-      if (n) {
-        red /= n;
-        green /= n;
-        blue /= n;
-        alpha /= n;
-      }
-      output_data[target_offset++] = (unsigned char)(red);
-      output_data[target_offset++] = (unsigned char)(green);
-      output_data[target_offset++] = (unsigned char)(blue);
-      output_data[target_offset++] = (unsigned char)(alpha);
-    }
-  }
-#endif
 
   if (target_levels > 1) {
     unsigned int source_width = target_width, source_height = target_height;
