@@ -186,13 +186,13 @@ class AndroidPaint {
     cache->getJNIEnv()->CallVoidMethod(getObject(), cache->paintSetShadowMethod, shadowBlur, shadowOffsetX, shadowOffsetY, getAndroidColor(shadowColor, globalAlpha));
   }
 
-  void setFont(const Font & font) {
+  void setFont(const Font & font, float displayScale) {
     create();
     JNIEnv * env = cache->getJNIEnv();
 
     if (font.size != current_font_size) {
       current_font_size = font.size;
-      env->CallVoidMethod(obj, cache->paintSetTextSizeMethod, font.size);
+      env->CallVoidMethod(obj, cache->paintSetTextSizeMethod, font.size * displayScale);
     }
 
     int textProperty = 0;
@@ -335,7 +335,7 @@ public:
     paint.setRenderMode(mode);
     paint.setStyle(style);
     paint.setGlobalAlpha(globalAlpha);
-    paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);       
+    paint.setShadow(shadowBlur * displayScale, shadowOffsetX * displayScale, shadowOffsetY * displayScale, shadowColor);       
     if (mode == STROKE) paint.setLineWidth(lineWidth);
 
 
@@ -349,11 +349,11 @@ public:
     for (auto pc : path.getData()) {
       switch (pc.type) {
       case PathComponent::MOVE_TO: {
-        env->CallVoidMethod(jpath, cache->pathMoveToMethod, pc.x0, pc.y0);
+        env->CallVoidMethod(jpath, cache->pathMoveToMethod, pc.x0 * displayScale, pc.y0 * displayScale);
       }
         break;
       case PathComponent::LINE_TO: {
-        env->CallVoidMethod(jpath, cache->pathLineToMethod, pc.x0, pc.y0);
+        env->CallVoidMethod(jpath, cache->pathLineToMethod, pc.x0 * displayScale, pc.y0 * displayScale);
       }
         break;
       case PathComponent::ARC: {
@@ -420,10 +420,10 @@ public:
     checkForCanvas();
 
     paint.setRenderMode(mode);
-    paint.setFont(font);
+    paint.setFont(font, displayScale);
     paint.setStyle(style);
     paint.setGlobalAlpha(globalAlpha);
-    paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+    paint.setShadow(shadowBlur * displayScale, shadowOffsetX * displayScale, shadowOffsetY * displayScale, shadowColor);
     paint.setTextAlign(textAlign);
     if (mode == STROKE) paint.setLineWidth(lineWidth);
 
@@ -433,17 +433,19 @@ public:
     env->DeleteLocalRef(convertableString);
     env->DeleteLocalRef(bytes);
 
+    float descent = paint.getTextDescent();
+    float ascent = paint.getTextAscent();
+
     if (textBaseline == TextBaseline::MIDDLE || textBaseline == TextBaseline::TOP) {
-      float descent = paint.getTextDescent();
-      float ascent = paint.getTextAscent();
+      double x = p.x * displayScale, y = p.y * displayScale;
       
       if (textBaseline == TextBaseline::MIDDLE) {
-        env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, jtext, p.x, p.y - (descent + ascent) / 2, paint.getObject());
+        env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, jtext, x, y - (descent + ascent) / 2, paint.getObject());
       } else if (textBaseline == TextBaseline::TOP) {
-        env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, jtext, p.x, p.y - (descent + ascent), paint.getObject());
+        env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, jtext, x, y - (descent + ascent), paint.getObject());
       }
     } else {
-      env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, jtext, p.x, p.y, paint.getObject());
+      env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, jtext, x, y, paint.getObject());
     }
 
     env->DeleteLocalRef(jtext);
@@ -453,7 +455,7 @@ public:
   TextMetrics measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float displayScale) override {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Measuring text");
 
-    paint.setFont(font);
+    paint.setFont(font, displayScale);
     
     float textWidth = paint.measureText(text);   
     float descent = paint.getTextDescent();
@@ -470,7 +472,7 @@ public:
     ascent -= baseline;
     descent -= baseline;
 
-    return TextMetrics(textWidth, descent, ascent);
+    return TextMetrics(textWidth, descent / displayScale, ascent / displayScale);
   }
 
   void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
@@ -481,7 +483,7 @@ public:
       env->PushLocalFrame(15);
       checkForCanvas();
       paint.setGlobalAlpha(globalAlpha);
-      paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+      paint.setShadow(shadowBlur * displayScale, shadowOffsetX * displayScale, shadowOffsetY * displayScale, shadowColor);
 
       jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
       env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, paint.getObject());
@@ -503,7 +505,7 @@ public:
     checkForCanvas();
 
     paint.setGlobalAlpha(globalAlpha);
-    paint.setShadow(shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor);
+    paint.setShadow(shadowBlur * displayScale, shadowOffsetX * displayScale, shadowOffsetY * displayScale, shadowColor);
     
     jobject drawableBitmap = imageToBitmap(_img);
 
