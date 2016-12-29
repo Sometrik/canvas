@@ -581,7 +581,7 @@ private:
 
 class AndroidContextFactory: public ContextFactory {
 public:
- AndroidContextFactory(jobject _assetManager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale = 1.0f) :
+ AndroidContextFactory(jobject _assetManager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale) :
       ContextFactory(_displayScale), cache(_cache) {
   }
   std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling = false) override {

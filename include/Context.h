@@ -115,7 +115,7 @@ namespace canvas {
     
   class ContextFactory {
   public:
-    ContextFactory(float _display_scale = 1.0f) : display_scale(_display_scale) { }
+    ContextFactory(float _display_scale) : display_scale(_display_scale) { }
     virtual ~ContextFactory() { }
     virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) = 0;
     virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
