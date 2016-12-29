@@ -35,7 +35,7 @@ Image::decode(const unsigned char * buffer, size_t size) {
   size_t numPixels = w * h;
 
   if (channels == 2 || channels == 3 || channels == 4) {
-    unsigned int * storage = new unsigned int[numPixels];
+    std::unique_ptr<unsigned int[]> storage(new unsigned int[numPixels]);
     for (unsigned int i = 0; i < numPixels; i++) {
       unsigned char r = img_buffer[channels * i + 0];
       unsigned char g = channels >= 2 ? img_buffer[channels * i + 1] : r;
@@ -47,8 +47,7 @@ Image::decode(const unsigned char * buffer, size_t size) {
 	storage[i] = 0;
       }
     }
-    data = std::make_shared<ImageData>((unsigned char *)storage, format, w, h);
-    delete[] storage;
+    data = std::make_shared<ImageData>((unsigned char *)storage.get(), format, w, h);
   } else {
     data = std::make_shared<ImageData>((unsigned char *)img_buffer, format, w, h);
   }
