@@ -140,17 +140,15 @@ private:
 };
 
 class AndroidPaint {
-public:
-  AndroidPaint(AndroidCache * _cache) : cache(_cache) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidPaint created");
-  }
-
+ public:
+ AndroidPaint(AndroidCache * _cache) : cache(_cache) { }
+  
   ~AndroidPaint() {
     if (is_valid) {
       cache->getJNIEnv()->DeleteGlobalRef(obj);
     }
   }
-    
+  
   void setRenderMode(RenderMode mode) {
     create();
     auto * env = cache->getJNIEnv();
@@ -273,16 +271,16 @@ public:
   }
 
  private:
-   AndroidCache * cache;
-   jobject obj;
-   float globalAlpha = 1.0f;
-   float current_font_size = 0;
-   int current_font_property = 0;
-   std::string current_font_family;
-   int current_text_property;
-   TextAlign currentTextAlign = ALIGN_LEFT;
-   bool is_valid = false;
- };
+  AndroidCache * cache;
+  jobject obj;
+  float globalAlpha = 1.0f;
+  float current_font_size = 0;
+  int current_font_property = 0;
+  std::string current_font_family;
+  int current_text_property;
+  TextAlign currentTextAlign = ALIGN_LEFT;
+  bool is_valid = false;
+};
 
 class AndroidSurface: public Surface {
 public:
