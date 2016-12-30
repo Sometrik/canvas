@@ -287,7 +287,7 @@ public:
   friend class ContextAndroid;
 
   AndroidSurface(AndroidCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format);
-  AndroidSurface(AndroidCache * _cache, const Image & image);
+  AndroidSurface(AndroidCache * _cache, const ImageData & image);
   AndroidSurface(AndroidCache * _cache, const std::string & filename);
   AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size); // Create a bitmap from bytearray
 
@@ -495,7 +495,7 @@ public:
     }
   }
 
-  void drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
+  void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (Image) called");
 
