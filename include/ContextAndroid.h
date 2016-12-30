@@ -435,10 +435,9 @@ public:
 
     float descent = paint.getTextDescent();
     float ascent = paint.getTextAscent();
+    double x = p.x * displayScale, y = p.y * displayScale;
 
     if (textBaseline == TextBaseline::MIDDLE || textBaseline == TextBaseline::TOP) {
-      double x = p.x * displayScale, y = p.y * displayScale;
-      
       if (textBaseline == TextBaseline::MIDDLE) {
         env->CallVoidMethod(canvas, cache->canvasTextDrawMethod, jtext, x, y - (descent + ascent) / 2, paint.getObject());
       } else if (textBaseline == TextBaseline::TOP) {
