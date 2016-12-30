@@ -87,7 +87,7 @@ namespace canvas {
 
   class CairoContextFactory : public ContextFactory {
   public:
-    CairoContextFactory() { }
+   CairoContextFactory() : ContextFactory(1.0f) { }
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format, bool apply_scaling) override { return std::shared_ptr<Context>(new ContextCairo(width, height, image_format)); }
     std::shared_ptr<Surface> createSurface(const std::string & filename) override { return std::shared_ptr<Surface>(new CairoSurface(filename)); }
     std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format, bool apply_scaling) override {
