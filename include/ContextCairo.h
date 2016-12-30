@@ -88,12 +88,15 @@ namespace canvas {
   class CairoContextFactory : public ContextFactory {
   public:
    CairoContextFactory() : ContextFactory(1.0f) { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format, bool apply_scaling) override { return std::shared_ptr<Context>(new ContextCairo(width, height, image_format)); }
-    std::shared_ptr<Surface> createSurface(const std::string & filename) override { return std::shared_ptr<Surface>(new CairoSurface(filename)); }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format, bool apply_scaling) override {
-      unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
-      unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
-      return std::shared_ptr<Surface>(new CairoSurface(width, height, aw, ah, image_format));
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format) override {
+      return std::make_shared<ContextCairo>(width, height, image_format);
+    }
+    std::shared_ptr<Surface> createSurface(const std::string & filename) override {
+      return std::make_shared<CairoSurface>(filename);
+    }
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format) override {
+      unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
+      return std::make_shared<CairoSurface>(width, height, aw, ah, image_format);
     }
   };
 };
