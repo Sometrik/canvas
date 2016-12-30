@@ -551,7 +551,7 @@ public:
       Context(_displayScale), cache(_cache), default_surface(_cache, _width, _height, (unsigned int) (_width * _displayScale), (unsigned int) (_height * _displayScale), format) {
   }
 
-  std::shared_ptr<Surface> createSurface(const Image & image) {
+  std::shared_ptr<Surface> createSurface(const ImageData & image) override {
     return std::shared_ptr<Surface>(new AndroidSurface(cache, image));
   }
   std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {

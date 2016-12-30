@@ -115,7 +115,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
   env->PopLocalFrame(NULL);
 }
 
-AndroidSurface::AndroidSurface(AndroidCache * _cache, const Image & image)
+AndroidSurface::AndroidSurface(AndroidCache * _cache, const ImageData & image)
   : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), RGBA8), cache(_cache), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
 
