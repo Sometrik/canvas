@@ -327,7 +327,6 @@ public:
   void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
 
     JNIEnv * env = cache->getJNIEnv();
-    env->PushLocalFrame(15);
 
     checkForCanvas();
 
@@ -391,7 +390,6 @@ public:
     // Draw path to canvas
     env->CallVoidMethod(canvas, cache->canvasPathDrawMethod, jpath, paint.getObject());
     env->DeleteLocalRef(jpath);
-    env->PopLocalFrame(NULL);
   }
 
   void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat format) override {
@@ -413,8 +411,6 @@ public:
 
 
     JNIEnv * env = cache->getJNIEnv();
-
-    env->PushLocalFrame(15);
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "RenderText called");
     checkForCanvas();
@@ -448,7 +444,6 @@ public:
     }
 
     env->DeleteLocalRef(jtext);
-    env->PopLocalFrame(NULL);
   }
 
   TextMetrics measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float displayScale) override {
@@ -479,7 +474,6 @@ public:
     AndroidSurface * native_surface = dynamic_cast<canvas::AndroidSurface *>(&_img);
     if (native_surface) {
       JNIEnv * env = cache->getJNIEnv();
-      env->PushLocalFrame(15);
       checkForCanvas();
       paint.setGlobalAlpha(globalAlpha);
       paint.setShadow(shadowBlur * displayScale, shadowOffsetX * displayScale, shadowOffsetY * displayScale, shadowColor);
@@ -487,7 +481,6 @@ public:
       jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
       env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, paint.getObject());
       env->DeleteLocalRef(dstRect);
-      env->PopLocalFrame(NULL);
     } else {
       auto img = native_surface->createImage();
       drawImage(*img, p, w, h, displayScale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, imageSmoothingEnabled);
@@ -499,7 +492,6 @@ public:
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "DrawImage (Image) called");
 
     JNIEnv * env = cache->getJNIEnv();
-    env->PushLocalFrame(15);
 
     checkForCanvas();
 
@@ -512,7 +504,6 @@ public:
     jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
     env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, NULL, dstRect, paint.getObject());
     env->DeleteLocalRef(drawableBitmap);
-    env->PopLocalFrame(NULL);
   }
 
   jobject imageToBitmap(const ImageData & _img);

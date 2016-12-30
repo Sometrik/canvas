@@ -93,7 +93,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
   // creates an empty canvas
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidSurface widthheight constructor called");
   JNIEnv * env = cache->getJNIEnv();
-  env->PushLocalFrame(15);
 
   //set bitmap config according to internalformat
   jobject argbObject;
@@ -112,7 +111,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
 
   bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject));
   env->DeleteLocalRef(argbObject);
-  env->PopLocalFrame(NULL);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const ImageData & image)
@@ -120,11 +118,9 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const ImageData & image)
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
 
   JNIEnv * env = cache->getJNIEnv();
-  env->PushLocalFrame(15);
 
   // creates a surface with width, height and contents from image
   bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
-  env->PopLocalFrame(NULL);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filename)
@@ -132,8 +128,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
   JNIEnv * env = cache->getJNIEnv();
-  env->PushLocalFrame(15);
-
 
   //Get inputStream from the picture(filename)
   jobject inputStream = env->CallObjectMethod(cache->getAssetManager(), cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
@@ -151,7 +145,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
 
   env->DeleteLocalRef(inputStream);
   env->DeleteLocalRef(factoryOptions);
-  env->PopLocalFrame(NULL);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size)
@@ -160,8 +153,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
 
   JNIEnv * env = cache->getJNIEnv();
-  env->PushLocalFrame(15); 
-
   int arraySize = size;
   
   __android_log_print(ANDROID_LOG_INFO, "Sometrik", "size = %i", size);
@@ -183,7 +174,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
   env->DeleteLocalRef(argbObject);
   env->DeleteLocalRef(firstBitmap);
   env->DeleteLocalRef(array);
-  env->PopLocalFrame(NULL);
 }
 
 jobject
@@ -191,7 +181,6 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", " ImageToBitmap called");
 
   JNIEnv * env = cache->getJNIEnv();
-  env->PushLocalFrame(15);
 
   const unsigned char * buf = _img.getData();
   int length = _img.calculateOffset(1);
@@ -207,7 +196,6 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
   
   env->DeleteLocalRef(argbObject);
   env->DeleteLocalRef(jarray);
-  env->PopLocalFrame(NULL);
 
   return drawableBitmap;
 }
