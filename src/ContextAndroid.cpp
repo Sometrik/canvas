@@ -187,7 +187,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
 }
 
 jobject
-AndroidSurface::imageToBitmap(const Image & _img) {
+AndroidSurface::imageToBitmap(const ImageData & _img) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", " ImageToBitmap called");
 
   JNIEnv * env = cache->getJNIEnv();

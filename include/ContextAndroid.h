@@ -515,7 +515,7 @@ public:
     env->PopLocalFrame(NULL);
   }
 
-  jobject imageToBitmap(const Image & _img);
+  jobject imageToBitmap(const ImageData & _img);
   
   void checkForCanvas() {
     if (!canvasCreated) {
