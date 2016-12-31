@@ -23,11 +23,11 @@ static cairo_format_t getCairoFormat(InternalFormat format) {
 static pair<cairo_surface_t *, unsigned int *> initializeSurfaceFromData(InternalFormat _format, unsigned int width, unsigned int height, const unsigned char * data, bool flip_channels) {
   cairo_format_t format = getCairoFormat(_format);
   unsigned int stride = cairo_format_stride_for_width(format, width);
-  assert(stride == 4 * width);
   size_t numPixels = width * height;
   unsigned int * storage = new unsigned int[numPixels];
   ImageFormat fd = ImageData::getImageFormat(_format);
   if (fd.getBytesPerPixel() == 4) {
+    assert(stride == 4 * width);
     if (flip_channels) {
       for (unsigned int i = 0; i < numPixels; i++) {
 	storage[i] = (data[4 * i + 2]) + (data[4 * i + 1] << 8) + (data[4 * i + 0] << 16) + (data[4 * i + 3] << 24);
