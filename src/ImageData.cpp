@@ -56,7 +56,6 @@ ImageData::convert(InternalFormat target_format) const {
   auto & fd = getImageFormat(format);
   auto & target_fd = getImageFormat(target_format);
   
-  assert(fd.getBytesPerPixel() == 4);
   assert(!fd.getCompression());
 
   if (target_fd.getCompression() == ImageFormat::DXT1 || target_fd.getCompression() == ImageFormat::ETC1 || target_fd.getCompression() == ImageFormat::RGTC1 || target_fd.getCompression() == ImageFormat::RGTC2) {
@@ -82,26 +81,30 @@ ImageData::convert(InternalFormat target_format) const {
 	for (unsigned int col = 0; col < cols; col++) {
 	  for (unsigned int y = 0; y < 4; y++) {
 	    for (unsigned int x = 0; x < 4; x++) {
-	      int source_offset = base_source_offset + ((row * 4 + y) * target_width + col * 4 + x) * 4;
+	      int source_offset = base_source_offset + ((row * 4 + y) * target_width + col * 4 + x) * fd.getBytesPerPixel();
+	      unsigned char r = data[source_offset++];
+	      unsigned char g = fd.getBytesPerPixel() >= 2 ? data[source_offset++] : r;
+	      unsigned char b = fd.getBytesPerPixel() >= 3 ? data[source_offset++] : g;
+	      unsigned char a = fd.getBytesPerPixel() >= 4 ? data[source_offset++] : 0xff;
 	      if (target_fd.getCompression() == ImageFormat::ETC1) {
 		int offset = (y * 4 + x) * 4;
-		input_block[offset++] = data[source_offset++];
-		input_block[offset++] = data[source_offset++];
-		input_block[offset++] = data[source_offset++];
+		input_block[offset++] = r;
+		input_block[offset++] = g;
+		input_block[offset++] = b;
 		input_block[offset++] = 255; // data[source_offset++];
 	      } else if (target_fd.getCompression() == ImageFormat::DXT1) {
 		int offset = (y * 4 + x) * 4;
-		input_block[offset++] = data[source_offset + 2];
-		input_block[offset++] = data[source_offset + 1];
-		input_block[offset++] = data[source_offset + 0];
+		input_block[offset++] = b;
+		input_block[offset++] = g;
+		input_block[offset++] = r;
 		input_block[offset++] = 255; // data[source_offset++];
 	      } else if (target_fd.getCompression() == ImageFormat::RGTC1) {
 		int offset = y * 4 + x;
-		input_block[offset] = data[source_offset + 0];		
+		input_block[offset] = r;
 	      } else {
 		int offset = y * 4 + x;
-		input_block[offset] = data[source_offset + 0];
-		input_block[offset + 16] = data[source_offset + 3];
+		input_block[offset] = r;
+		input_block[offset + 16] = a;
 	      }
 	    }
 	  }
@@ -130,17 +133,16 @@ ImageData::convert(InternalFormat target_format) const {
     unsigned int n = width * height;
     std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_fd.getBytesPerPixel() * n]);
     unsigned char * output_data = (unsigned char *)tmp.get();
-    const unsigned int * input_data = (const unsigned int *)data;
     
     for (unsigned int i = 0; i < n; i++) {
-      int v = input_data[i];
-      int red = RGBA_TO_RED(v);
-      int green = RGBA_TO_GREEN(v);
-      int blue = RGBA_TO_BLUE(v);
-      int alpha = RGBA_TO_ALPHA(v) >> 4;
-      int lum = ((red + green + blue) / 3) >> 4;
+      unsigned int input_offset = i * fd.getBytesPerPixel();
+      unsigned char r = data[input_offset++];
+      unsigned char g = fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r;
+      unsigned char b = fd.getBytesPerPixel() >= 2 ? data[input_offset++] : g;
+      unsigned char a = (fd.getBytesPerPixel() >= 3 ? data[input_offset++] : 0xff) >> 4;
+      int lum = ((r + g + b) / 3) >> 4;
       if (lum >= 16) lum = 15;
-      *output_data++ = (alpha << 4) | lum;
+      *output_data++ = (a << 4) | lum;
     }
 
     return make_shared<ImageData>(tmp.get(), target_format, getWidth(), getHeight());
@@ -149,39 +151,38 @@ ImageData::convert(InternalFormat target_format) const {
     unsigned int target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
     std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_size]);
     unsigned short * output_data = (unsigned short *)tmp.get();
-    const unsigned int * input_data = (const unsigned int *)data;
     unsigned int n = calculateSize() / fd.getBytesPerPixel();
     if (target_fd.getNumChannels() == 2) {
       for (unsigned int i = 0; i < n; i++) {
-	int v = input_data[i];
-	int red = RGBA_TO_RED(v);
-	int green = RGBA_TO_GREEN(v);
-	int blue = RGBA_TO_BLUE(v);
-	int alpha = RGBA_TO_ALPHA(v);
-	int lum = (red + green + blue) / 3;
+	unsigned int input_offset = i * fd.getBytesPerPixel();
+	unsigned char r = data[input_offset++];
+	unsigned char g = fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r;
+	unsigned char b = fd.getBytesPerPixel() >= 2 ? data[input_offset++] : g;
+	unsigned char a = fd.getBytesPerPixel() >= 3 ? data[input_offset++] : 0xff;
+	int lum = (r + g + b) / 3;
 	if (lum >= 255) lum = 255;
-	*output_data++ = (alpha << 8) | lum;
+	*output_data++ = (a << 8) | lum;
       }
     } else if (target_fd.getNumChannels() == 3) {
       for (unsigned int i = 0; i < n; i++) {
-	int v = input_data[i];
-	int red = RGBA_TO_RED(v) >> 3;
-	int green = RGBA_TO_GREEN(v) >> 2;
-	int blue = RGBA_TO_BLUE(v) >> 3;	
+	unsigned int input_offset = i * fd.getBytesPerPixel();
+	unsigned char r = data[input_offset++] >> 3;
+	unsigned char g = (fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r) >> 2;
+	unsigned char b = (fd.getBytesPerPixel() >= 2 ? data[input_offset++] : g) >> 3;
 #ifdef __APPLE__
-	*output_data++ = PACK_RGB565(blue, green, red);
+	*output_data++ = PACK_RGB565(b, g, r);
 #else
-	*output_data++ = PACK_RGB565(red, green, blue);
+	*output_data++ = PACK_RGB565(r, g, b);
 #endif
       }
     } else {
       for (unsigned int i = 0; i < n; i++) {
-	int v = input_data[i];
-	int red = RGBA_TO_RED(v) >> 4;
-	int green = RGBA_TO_GREEN(v) >> 4;
-	int blue = RGBA_TO_BLUE(v) >> 4;
-	int alpha = RGBA_TO_ALPHA(v) >> 4;
-	*output_data++ = (red << 12) | (green << 8) | (blue << 4) | alpha;
+	unsigned int input_offset = i * fd.getBytesPerPixel();
+	unsigned char r = data[input_offset++] >> 4;
+	unsigned char g = (fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r) >> 4;
+	unsigned char b = (fd.getBytesPerPixel() >= 2 ? data[input_offset++] : g) >> 4;
+	unsigned char a = (fd.getBytesPerPixel() >= 3 ? data[input_offset++] : 0xff) >> 4;
+	*output_data++ = (r << 12) | (g << 8) | (b << 4) | a;
       }
     }
     
