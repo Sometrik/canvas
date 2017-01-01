@@ -1,6 +1,5 @@
 #include <OpenGLTexture.h>
 
-#include <TextureRef.h>
 #include <ImageData.h>
 #include <Surface.h>
 
@@ -244,18 +243,13 @@ OpenGLTexture::releaseTextures() {
   }
 }
 
-TextureRef
+std::shared_ptr<Texture>
 OpenGLTexture::createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels) {
   assert(_internal_format);
-  return TextureRef(_logical_width, _logical_height, _actual_width, _actual_height, new OpenGLTexture(_logical_width, _logical_height, _actual_width, _actual_height, min_filter, mag_filter, _internal_format, mipmap_levels));
+  return std::make_shared<OpenGLTexture>(_logical_width, _logical_height, _actual_width, _actual_height, min_filter, mag_filter, _internal_format, mipmap_levels);
 }
 
-TextureRef
+std::shared_ptr<Texture>
 OpenGLTexture::createTexture(Surface & surface) {
-  return TextureRef( surface.getLogicalWidth(),
-		     surface.getLogicalHeight(),
-		     surface.getActualWidth(),
-		     surface.getActualHeight(),
-		     new OpenGLTexture(surface)
-		     );
+  return std::make_shared<OpenGLTexture>(surface);
 }
