@@ -146,6 +146,23 @@ ImageData::convert(InternalFormat target_format) const {
     }
 
     return make_shared<ImageData>(tmp.get(), target_format, getWidth(), getHeight());
+  } else if (target_fd.getNumChannels() == 1) {
+    assert(levels == 1);
+    
+    unsigned int n = width * height;
+    std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_fd.getBytesPerPixel() * n]);
+    unsigned char * output_data = (unsigned char *)tmp.get();
+    
+    for (unsigned int i = 0; i < n; i++) {
+      unsigned int input_offset = i * fd.getBytesPerPixel();
+      unsigned char r = data[input_offset++];
+      unsigned char g = fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r;
+      unsigned char b = fd.getBytesPerPixel() >= 2 ? data[input_offset++] : g;
+      unsigned char a = fd.getBytesPerPixel() >= 3 ? data[input_offset++] : 0xff;
+      *output_data++ = (r + g + b) / 3;
+    }
+
+    return make_shared<ImageData>(tmp.get(), target_format, getWidth(), getHeight());
   } else {
     assert(target_fd.getBytesPerPixel() == 2);
     unsigned int target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
