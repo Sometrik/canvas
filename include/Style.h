@@ -1,14 +1,14 @@
 #ifndef _CANVAS_STYLE_H_
 #define _CANVAS_STYLE_H_
 
-#include "Attribute.h"
+#include <Attribute.h>
+
+#include <Color.h>
+#include <Filter.h>
 
 #include <string>
 #include <map>
 #include <memory>
-
-#include "Color.h"
-#include "Filter.h"
 
 namespace canvas {
   class Style : public Attribute {
@@ -27,15 +27,30 @@ namespace canvas {
       colors(other.colors),
       filter(other.filter) { }
     Style(const Style & other) = delete;
-#if 0
-    Style(const std::string & s);
-    Style(const Color & _color);
-#endif
-    Style & operator=(const std::string & s);
-    Style & operator=(const Color & _color);
 
-    GraphicsState & operator()(const std::string & s);
-    GraphicsState & operator()(const Color & _color);
+    Style & operator=(const std::string & s) {
+      color = s;
+      type = SOLID;
+      return *this;
+    }
+
+    Style & operator=(const Color & _color) {
+      color = _color;
+      type = SOLID;
+      return *this;
+    }
+
+    GraphicsState & operator()(const std::string & s) {
+      color = s;
+      type = SOLID;
+      return *context;
+    }
+    
+    GraphicsState & operator()(const Color & _color) {
+      color = _color;
+      type = SOLID;
+      return *context;
+    }
 
     StyleType getType() const { return type; }
     void setType(StyleType _type) { type = _type; }
