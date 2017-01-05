@@ -36,15 +36,10 @@ namespace canvas {
     int getUpdateCursor() const { return update_cursor; }
     void setUpdateCursor(int c) { update_cursor = c; }
     
-  protected:
-    void incRefcnt() { ++refcnt; }
-    int decRefcnt();
-
   private:
     Texture(const Texture & other);
     Texture & operator=(const Texture & other);
 
-    int refcnt = 0;
     unsigned int logical_width, logical_height, actual_width, actual_height, mipmap_levels;
     FilterMode min_filter;
     FilterMode mag_filter;
