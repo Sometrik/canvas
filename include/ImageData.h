@@ -28,7 +28,9 @@ namespace canvas {
       case RGB565: return ImageFormat::RGB565;
       case RGBA4: return ImageFormat::RGBA4;
       case RGBA_DXT5: return ImageFormat::RGBA_DXT5;
-      case NO_FORMAT: return ImageFormat::UNDEF;
+      case NO_FORMAT:
+      case RGBA5551: // not yet supported
+	return ImageFormat::UNDEF;
       }
       return ImageFormat::UNDEF;
     }

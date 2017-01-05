@@ -18,7 +18,8 @@ namespace canvas {
     RGB_ETC1,
     LUMINANCE_ALPHA,
     LA44, // not a real OpenGL format
-    R32F
+    R32F,
+    RGBA5551
   };
 };
 
