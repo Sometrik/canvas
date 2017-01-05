@@ -28,7 +28,7 @@ Image::decode(const unsigned char * buffer, size_t size) {
     cerr << "Image decoding failed: " << stbi_failure_reason() << endl;
     return false;
   }
-  cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
+  // cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
 
   InternalFormat format = getFormatFromChannelCount(channels);
@@ -63,7 +63,7 @@ Image::loadFile() {
   cerr << "trying to load " << filename << endl;
   auto img_buffer = stbi_load(filename.c_str(), &w, &h, &channels, 0);
   assert(img_buffer);
-  cerr << "Image.cpp: loaded image, filename = " << filename << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
+  // cerr << "Image.cpp: loaded image, filename = " << filename << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
 
   InternalFormat format = getFormatFromChannelCount(channels);
