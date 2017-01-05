@@ -199,7 +199,7 @@ ImageData::convert(InternalFormat target_format) const {
 	unsigned char g = (fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r) >> 4;
 	unsigned char b = (fd.getBytesPerPixel() >= 2 ? data[input_offset++] : g) >> 4;
 	unsigned char a = (fd.getBytesPerPixel() >= 3 ? data[input_offset++] : 0xff) >> 4;
-	*output_data++ = (r << 12) | (g << 8) | (b << 4) | a;
+	*output_data++ = (b << 12) | (g << 8) | (r << 4) | a;
       }
     }
     
@@ -214,30 +214,32 @@ ImageData::scale(unsigned int target_base_width, unsigned int target_base_height
   assert(!fd.getCompression());
   size_t input_size = calculateSize();
   size_t target_size = calculateOffset(target_base_width, target_base_height, target_levels, format);
-  // cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
+  cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
   unsigned int target_offset = 0, target_width = target_base_width, target_height = target_base_height;
   stbir_resize_uint8(data, getWidth(), getHeight(), 0, output_data.get(), target_width, target_height, 0, fd.getBytesPerPixel());
 
   if (target_levels > 1) {
-    assert(fd.getBytesPerPixel() == 4);
+    cerr << "creating mipmaps for format, channels = " << fd.getNumChannels() << ", bpp = " << fd.getBytesPerPixel() << endl;
 
     unsigned int source_width = target_width, source_height = target_height;
     target_width /= 2;
     target_height /= 2;
+
+    unsigned int nch = fd.getBytesPerPixel();
     
     for (unsigned int level = 1; level < target_levels; level++) {
       unsigned char * source_data = output_data.get() + calculateOffset(target_base_width, target_base_height, level - 1, format);
       unsigned char * target_data = output_data.get() + calculateOffset(target_base_width, target_base_height, level, format);
       for (int y = 0; y < target_height; y++) {               
 	for (int x = 0; x < target_width; x++) {
-	  unsigned int source_offset = (2 * y * source_width + 2 * x) * 4;
-	  unsigned int target_offset = (y * target_width + x) * 4;
-	  for (unsigned int c = 0; c < 4; c++) {
+	  unsigned int source_offset = (2 * y * source_width + 2 * x) * nch;
+	  unsigned int target_offset = (y * target_width + x) * nch;
+	  for (unsigned int c = 0; c < nch; c++) {
 	    target_data[target_offset] = ((int)source_data[source_offset]  + 
-					  (int)source_data[source_offset + 4]  + 
-					  (int)source_data[source_offset + 4 + 4 * source_width] +
-					  (int)source_data[source_offset + 4 * source_width]) / 4; 
+					  (int)source_data[source_offset + nch]  + 
+					  (int)source_data[source_offset + nch + nch * source_width] +
+					  (int)source_data[source_offset + nch * source_width]) / 4; 
 	    source_offset++;
 	    target_offset++;
 	  }
