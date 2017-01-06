@@ -41,9 +41,7 @@ namespace canvas {
     
     bool isPointInPath(const Path2D & path, double x, double y) { return false; }
     
-    TextMetrics measureText(const std::string & text) {
-      return getDefaultSurface().measureText(font, text, textBaseline.getValue(), getDisplayScale());
-    }
+    TextMetrics measureText(const std::string & text);
     
     Context & fillRect(double x, double y, double w, double h);
     Context & strokeRect(double x, double y, double w, double h);
@@ -102,6 +100,7 @@ namespace canvas {
     Context & renderPath(RenderMode mode, const Path2D & path, const Style & style, Operator op = SOURCE_OVER);
     Context & renderText(RenderMode mode, const Style & style, const std::string & text, const Point & p, Operator op = SOURCE_OVER);
     virtual bool hasNativeShadows() const { return false; }
+    virtual bool hasNativeEmoticons() const { return false; }
 
     bool hasShadow() const { return shadowBlur.getValue() > 0.0f || shadowOffsetX.getValue() != 0 || shadowOffsetY.getValue() != 0; }
     

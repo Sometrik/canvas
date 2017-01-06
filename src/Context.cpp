@@ -163,3 +163,8 @@ Context::restore() {
   }
   return *this;
 }
+
+TextMetrics
+Context::measureText(const std::string & text) {
+  return getDefaultSurface().measureText(font, text, textBaseline.getValue(), getDisplayScale());
+}
