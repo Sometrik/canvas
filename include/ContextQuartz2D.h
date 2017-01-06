@@ -317,6 +317,7 @@ namespace canvas {
     
   protected:
     bool hasNativeShadows() const override { return true; }
+    bool hasNativeEmoticons() const override { return true; }
     
   private:
     Quartz2DCache * cache;
