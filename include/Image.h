@@ -10,14 +10,11 @@ namespace canvas {
   public:
     Image() { }
     Image(const char * _filename) : filename(_filename) { }
+    Image(const std::string & _filename) : filename(_filename) { }
     Image(const std::shared_ptr<ImageData> & _data) : data(_data) { }
 
-    Image & open(const char * _filename) {
-      filename = _filename;
-      data.reset();
-      return *this;
-    }
-    
+    virtual ~Image() { }
+
     bool decode(const unsigned char * buffer, size_t size);
     void convert(InternalFormat target_format) {
       if (!filename.empty() && !data.get()) {
@@ -51,7 +48,12 @@ namespace canvas {
     }
 
   protected:
-    void loadFile();
+    static std::shared_ptr<ImageData> loadFromMemory(const unsigned char * buffer, size_t size);
+    static std::shared_ptr<ImageData> loadFromFile(const std::string & filename);
+    virtual void loadFile() {
+      data = loadFromFile(filename);
+      if (!data.get()) filename.clear();
+    }
     
   private:
     std::string filename;

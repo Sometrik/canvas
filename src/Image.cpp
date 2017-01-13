@@ -22,11 +22,17 @@ static InternalFormat getFormatFromChannelCount(int channels) {
 
 bool
 Image::decode(const unsigned char * buffer, size_t size) {
+  data = loadFromMemory(buffer, size);
+  return data.get() != 0;
+}
+
+std::shared_ptr<ImageData>
+Image::loadFromMemory(const unsigned char * buffer, size_t size) {
   int w, h, channels;
   auto img_buffer = stbi_load_from_memory(buffer, size, &w, &h, &channels, 0);
   if (!img_buffer) {
     cerr << "Image decoding failed: " << stbi_failure_reason() << endl;
-    return false;
+    return std::shared_ptr<ImageData>(0);
   }
   // cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
@@ -34,6 +40,7 @@ Image::decode(const unsigned char * buffer, size_t size) {
   InternalFormat format = getFormatFromChannelCount(channels);
   size_t numPixels = w * h;
 
+  std::shared_ptr<ImageData> data;
   if (channels == 2 || channels == 3 || channels == 4) {
     std::unique_ptr<unsigned int[]> storage(new unsigned int[numPixels]);
     for (unsigned int i = 0; i < numPixels; i++) {
@@ -53,22 +60,26 @@ Image::decode(const unsigned char * buffer, size_t size) {
   }
   stbi_image_free(img_buffer);
   
-  return true;
+  return data;
 }
 
-void
-Image::loadFile() {
+std::shared_ptr<ImageData>
+Image::loadFromFile(const std::string & filename) {
   assert(!filename.empty());
   int w, h, channels;
   cerr << "trying to load " << filename << endl;
   auto img_buffer = stbi_load(filename.c_str(), &w, &h, &channels, 0);
-  assert(img_buffer);
+  if (!img_buffer) {
+    cerr << "image loading failed\n";
+    return std::shared_ptr<ImageData>(0);
+  }
   // cerr << "Image.cpp: loaded image, filename = " << filename << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
 
   InternalFormat format = getFormatFromChannelCount(channels);
   size_t numPixels = w * h;
 
+  std::shared_ptr<ImageData> data;
   if (channels == 2 || channels == 3 || channels == 4) {
     unsigned int * storage = new unsigned int[numPixels];
     for (unsigned int i = 0; i < numPixels; i++) {
@@ -89,4 +100,6 @@ Image::loadFile() {
   }
   
   stbi_image_free(img_buffer);
+
+  return data;
 }
