@@ -6,9 +6,6 @@
 #include <TextBaseline.h>
 #include <TextAlign.h>
 #include <Path2D.h>
-#include <ColorAttribute.h>
-#include <FloatAttribute.h>
-#include <BoolAttribute.h>
 #include <Matrix.h>
 
 #include <cmath>
@@ -118,17 +115,17 @@ namespace canvas {
     }
     const Matrix & getTransform() { return currentTransform; }
     
-    FloatAttribute lineWidth;
+    Attribute<float> lineWidth;
     Style fillStyle;
     Style strokeStyle;
-    FloatAttribute shadowBlur;
-    ColorAttribute shadowColor;
-    FloatAttribute shadowOffsetX, shadowOffsetY;
-    FloatAttribute globalAlpha;
+    Attribute<float> shadowBlur;
+    Attribute<Color> shadowColor;
+    Attribute<float> shadowOffsetX, shadowOffsetY;
+    Attribute<float> globalAlpha;
     Font font;
     TextBaselineAttribute textBaseline;
     TextAlignAttribute textAlign;
-    BoolAttribute imageSmoothingEnabled;
+    Attribute<bool> imageSmoothingEnabled;
     Path2D currentPath, clipPath;
     Matrix currentTransform;
   };
