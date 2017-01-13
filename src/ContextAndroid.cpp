@@ -222,7 +222,8 @@ static int android_close(void* cookie) {
 
 class AndroidImage : public Image {
 public:
-  AndroidImage(const std::string & filename, jobject) : Image(filename) { }
+  AndroidImage(AndroidCache * _cache, const std::string & filename, float _display_scale)
+    : Image(filename, display_scale), cache(_cache) { }
   
   void loadImage() override {
     JNIEnv * env = cache->getJNIEnv();
@@ -252,5 +253,5 @@ private:
 
 std::shared_ptr<Image>
 AndroidContextFactory::loadImage(const std::string & filename) {
-  return std::make_shared<AndroidImage>(cache.get(), filename);
+  return std::make_shared<AndroidImage>(cache.get(), filename, getDisplayScale());
 }

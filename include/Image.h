@@ -8,9 +8,11 @@
 namespace canvas {
   class Image {
   public:
-    Image() { }
-    Image(const char * _filename) : filename(_filename) { }
-    Image(const std::string & _filename) : filename(_filename) { }
+    Image(float _display_scale) : display_scale(_display_scale) { }
+    Image(const char * _filename, float _display_scale)
+      : filename(_filename), display_scale(_display_scale) { }
+    Image(const std::string & _filename, float _display_scale)
+      : filename(_filename), display_scale(_display_scale) { }
     Image(const std::shared_ptr<ImageData> & _data) : data(_data) { }
 
     virtual ~Image() { }
@@ -26,7 +28,11 @@ namespace canvas {
       if (!filename.empty() && !data.get()) {
 	loadFile();
       }
-      if (data.get()) data = data->scale(target_width, target_height, target_levels);
+      if (data.get()) {
+	unsigned int width = (unsigned int)(target_width * display_scale);
+	unsigned int height = (unsigned int)(target_height * display_scale);
+	data = data->scale(width, height, target_levels);
+      }
     }
 
     const ImageData & getData() {
@@ -58,6 +64,7 @@ namespace canvas {
   private:
     std::string filename;
     std::shared_ptr<ImageData> data;
+    float display_scale;
   };
 };
 #endif

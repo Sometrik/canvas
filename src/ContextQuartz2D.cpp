@@ -293,7 +293,8 @@ Quartz2DSurface::drawImage(const Image & _img, const Point & p, double w, double
 
 class Quartz2DImage : public Image {
 public:
-  Quartz2DImage(const std::string & filename) : Image(filename) { }
+  Quartz2DImage(const std::string & _filename, float _display_scale)
+    : Image(_filename, _display_scale) { }
   
   void loadImage() override {
     // Get a reference to the main bundle
@@ -318,5 +319,5 @@ public:
 
 std::shared_ptr<Image>
 Quartz2DContextFactory::loadImage(const std::string & filename) {
-  return std::make_shared<Quartz2DImage>(filename);
+  return std::make_shared<Quartz2DImage>(filename, getDisplayScale());
 }

@@ -190,7 +190,7 @@ namespace canvas {
       return std::make_shared<GDIPlusSurface>(width, height, aw, ah, image_format);
     }
     std::shared_ptr<Image> loadImage(const std::string & filename) {
-      return std::make_shared<Image>(filename);
+      return std::make_shared<Image>(filename, getDisplayScale());
     }
   };
 };

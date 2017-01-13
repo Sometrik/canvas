@@ -91,15 +91,12 @@ namespace canvas {
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format) override {
       return std::make_shared<ContextCairo>(width, height, image_format);
     }
-    std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-      return std::make_shared<CairoSurface>(filename);
-    }
     std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format) override {
       unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
       return std::make_shared<CairoSurface>(width, height, aw, ah, image_format);
     }
     std::shared_ptr<Image> loadImage(const std::string & filename) {
-      return std::make_shared<Image>(filename);
+      return std::make_shared<Image>(filename, getDisplayScale());
     }
   };
 };
