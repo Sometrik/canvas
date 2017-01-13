@@ -185,12 +185,12 @@ namespace canvas {
     std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format) override {
       return std::make_shared<ContextGDIPlus>(width, height, image_format, getDisplayScale()));
     }
-    std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-      return std::make_shared<GDIPlusSurface>(filename);
-    }
     std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format) override {
       unsigned int aw = width * getDisplayScale() : width, ah = height * getDisplayScale();
       return std::make_shared<GDIPlusSurface>(width, height, aw, ah, image_format);
+    }
+    std::shared_ptr<Image> loadImage(const std::string & filename) {
+      return std::make_shared<Image>(filename);
     }
   };
 };

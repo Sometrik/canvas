@@ -577,13 +577,12 @@ public:
   std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format) override {
     return std::make_shared<ContextAndroid>(cache.get(), width, height, format, getDisplayScale());
   }
-  std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-    return std::make_shared<AndroidSurface>(cache.get(), filename);
-  }
   std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format) override {
     unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
     return std::make_shared<AndroidSurface>(cache.get(), width, height, aw, ah, format);
   }
+
+  std::shared_ptr<Image> loadImage(const std::string & filename) override;
 
 private:
   std::shared_ptr<AndroidCache> cache;

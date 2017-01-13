@@ -1,5 +1,8 @@
 #include "ContextAndroid.h"
 
+#include <android/asset_manager.h>
+#include <errno.h>
+
 using namespace std;
 using namespace canvas;
 
@@ -198,4 +201,56 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
   env->DeleteLocalRef(jarray);
 
   return drawableBitmap;
+}
+
+static int android_read(void* cookie, char* buf, int size) {
+  return AAsset_read((AAsset*)cookie, buf, size);
+}
+
+static int android_write(void* cookie, const char* buf, int size) {
+  return EACCES; // can't provide write access to the apk
+}
+
+static fpos_t android_seek(void* cookie, fpos_t offset, int whence) {
+  return AAsset_seek((AAsset*)cookie, offset, whence);
+}
+
+static int android_close(void* cookie) {
+  AAsset_close((AAsset*)cookie);
+  return 0;
+}
+
+class AndroidImage : public Image {
+public:
+  AndroidImage(const std::string & filename, jobject) : Image(filename) { }
+  
+  void loadImage() override {
+    JNIEnv * env = cache->getJNIEnv();
+    jobject & assetManager = cache->getAssetManager();
+    AAssetManager * manager = AAssetManager_fromJava(env, assetManager);
+    AAsset * asset = AAssetManager_open(android_asset_manager, filename.c_str(), 0);
+    if (asset) {
+      FILE * in = funopen(asset, android_read, android_write, android_seek, android_close);
+
+      basic_string<unsigned char> s;
+      while (!feof(in)) {
+	char b[256];
+	size_t n = fread(b, 1, 256, in);
+	s += basic_string<unsigned char>(b, n);
+      }
+
+      data = loadFromMemory(s.data(), s.size());
+    } else {
+      data = std::shared_ptr<ImageData>(0);
+    }
+    if (!data.get()) filename.clear();
+  }
+
+private:
+  AndroidCache * cache;
+};
+
+std::shared_ptr<Image>
+AndroidContextFactory::loadImage(const std::string & filename) {
+  return std::make_shared<AndroidImage>(cache.get(), filename);
 }

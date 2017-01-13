@@ -98,5 +98,8 @@ namespace canvas {
       unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
       return std::make_shared<CairoSurface>(width, height, aw, ah, image_format);
     }
+    std::shared_ptr<Image> loadImage(const std::string & filename) {
+      return std::make_shared<Image>(filename);
+    }
   };
 };

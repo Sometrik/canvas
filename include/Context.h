@@ -29,7 +29,6 @@ namespace canvas {
 
     virtual std::shared_ptr<Surface> createSurface(const ImageData & image) = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) = 0;
-    virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
     virtual void resize(unsigned int _width, unsigned int _height);
         
     Context & stroke() { return renderPath(STROKE, currentPath, strokeStyle); }
@@ -117,8 +116,8 @@ namespace canvas {
     ContextFactory(float _display_scale) : display_scale(_display_scale) { }
     virtual ~ContextFactory() { }
     virtual std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format = RGBA8) = 0;
-    virtual std::shared_ptr<Surface> createSurface(const std::string & filename) = 0;
     virtual std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format = RGBA8) = 0;
+    virtual std::shared_ptr<Image> loadImage(const std::string & filename) = 0;
     
     float getDisplayScale() const { return display_scale; }
     

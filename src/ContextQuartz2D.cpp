@@ -290,3 +290,33 @@ Quartz2DSurface::drawImage(const Image & _img, const Point & p, double w, double
     CGContextRestoreGState(gc);
   }
 }
+
+class Quartz2DImage : public Image {
+public:
+  Quartz2DImage(const std::string & filename) : Image(filename) { }
+  
+  void loadImage() override {
+    // Get a reference to the main bundle
+    CFBundleRef mainBundle = CFBundleGetMainBundle();
+  
+    // Get a reference to the file's URL
+    CFURLRef imageURL = CFBundleCopyResourceURL(mainBundle, filename.c_str(), NULL, NULL);
+
+    // Convert the URL reference into a string reference
+    CFStringRef imagePath = CFURLCopyFileSystemPath(imageURL, kCFURLPOSIXPathStyle);
+    
+    // Get the system encoding method
+    CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
+    
+    // Convert the string reference into a C string
+    const char *path = CFStringGetCStringPtr(imagePath, encodingMethod);
+
+    data = loadFromFile(path);
+    if (!data.get()) filename.clear();
+  }  
+};
+
+std::shared_ptr<Image>
+Quartz2DContextFactory::loadImage(const std::string & filename) {
+  return std::make_shared<Quartz2DImage>(filename);
+}

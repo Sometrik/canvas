@@ -326,33 +326,20 @@ namespace canvas {
 
   class Quartz2DContextFactory : public ContextFactory {
   public:
-    Quartz2DContextFactory(float _display_scale, std::shared_ptr<FilenameConverter> & _converter) : ContextFactory(_display_scale), converter(_converter) { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) override {
-      std::shared_ptr<Context> ptr(new ContextQuartz2D(&cache, width, height, format, apply_scaling ? getDisplayScale() : 1.0f));
-      return ptr;
+    Quartz2DContextFactory(float _display_scale) : ContextFactory(_display_scale) { }
+    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format) override {
+      return std::make_shared<ContextQuartz2D>(&cache, width, height, format, getDisplayScale());
     }
-    std::shared_ptr<Surface> createSurface(const std::string & filename) override {
-      std::string filename2;
-      if (converter->convert(filename, filename2)) {
-        std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, filename2));
-        return ptr;
-      } else {
-        return createSurface(16, 16, RGBA8, false);
-      }
+    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format) override {
+      unsigned int aw = width * getDisplayScale();
+      unsigned int ah = height * getDisplayScale();
+      return std::make_shared<Quartz2DSurface>(&cache, width, height, aw, ah, format));
     }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format, bool apply_scaling) override {
-      unsigned int aw = apply_scaling ? width * getDisplayScale() : width;
-      unsigned int ah = apply_scaling ? height * getDisplayScale() : height;
-      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, width, height, aw, ah, format));
-      return ptr;
-    }
-    std::shared_ptr<Surface> createSurface(const unsigned char * buffer, size_t size) override {
-      std::shared_ptr<Surface> ptr(new Quartz2DSurface(&cache, buffer, size));
-      return ptr;
-    }
+
+    std::shared_ptr<Image> loadImage(const std::string & filename) override;
+
   private:
     Quartz2DCache cache;
-    std::shared_ptr<FilenameConverter> converter;
   };
 };
 
