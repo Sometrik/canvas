@@ -15,19 +15,21 @@ namespace canvas {
     BOTTOM
   };
   
-  class TextBaselineAttribute : public Attribute {
+  class TextBaselineAttribute : public AttributeBase {
   public:
-    TextBaselineAttribute(GraphicsState * _context, TextBaseline _value = ALPHABETIC) : Attribute(_context), value(_value) { }
-    TextBaselineAttribute(GraphicsState * _context, const TextBaselineAttribute & other) : Attribute(_context), value(other.value) { }
-  TextBaselineAttribute(GraphicsState * _context, const std::string & _value) : Attribute(_context) { setValue(_value.c_str()); }
-  TextBaselineAttribute(GraphicsState * _context, const char * _value) : Attribute(_context) { setValue(_value); }
+    TextBaselineAttribute(GraphicsState * _context, TextBaseline _value = ALPHABETIC) : AttributeBase(_context), value(_value) { }
+  TextBaselineAttribute(GraphicsState * _context, const std::string & _value) : AttributeBase(_context) { setValue(_value.c_str()); }
+  TextBaselineAttribute(GraphicsState * _context, const char * _value) : AttributeBase(_context) { setValue(_value); }
+
+  TextBaselineAttribute(const TextBaselineAttribute & other)
+    : AttributeBase(other), value(other.value) { }
 
     TextBaselineAttribute & operator=(const TextBaselineAttribute & other) { value = other.value; return *this; }
     TextBaselineAttribute & operator=(const TextBaseline & _value) { value = _value; return *this; }
     TextBaselineAttribute & operator=(const std::string & _value) { setValue(_value.c_str()); return *this; }
     TextBaselineAttribute & operator=(const char * _value) { setValue(_value); return *this; }
 
-    TextBaseline getValue() const { return value; }
+    TextBaseline get() const { return value; }
 
   private:
     void setValue(const char * _value) {

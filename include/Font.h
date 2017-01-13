@@ -5,7 +5,7 @@
 #include <FontWeight.h>
 
 namespace canvas {
-  class Font : public Attribute {
+  class Font : public AttributeBase {
   public:
     enum Style {
       NORMAL_STYLE = 1,
@@ -20,9 +20,9 @@ namespace canvas {
       NORMAL_VARIANT,
       SMALL_CAPS
     };
-  Font(GraphicsState * _context) : Attribute(_context) { }
-  Font(GraphicsState * _context, const Font & other)
-    : Attribute(_context),
+  Font(GraphicsState * _context) : AttributeBase(_context) { }
+  Font(const Font & other)
+    : AttributeBase(other),
       family(other.family),
       size(other.size),
       style(other.style),
