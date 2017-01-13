@@ -26,45 +26,6 @@ namespace canvas {
       textAlign(this),
       imageSmoothingEnabled(this, true)
       { }
-    GraphicsState(const GraphicsState & other)
-      : lineWidth(this, other.lineWidth),
-      fillStyle(this, other.fillStyle),
-      strokeStyle(this, other.strokeStyle),
-      shadowBlur(this, other.shadowBlur),
-      shadowColor(this, other.shadowColor),
-      shadowOffsetX(this, other.shadowOffsetX),
-      shadowOffsetY(this, other.shadowOffsetY),    
-      globalAlpha(this, other.globalAlpha),
-      font(this, other.font),
-      textBaseline(this, other.textBaseline),
-      textAlign(this, other.textAlign),     
-      imageSmoothingEnabled(this, other.imageSmoothingEnabled),
-      currentPath(other.currentPath),
-      clipPath(other.clipPath),
-      currentTransform(other.currentTransform) {
-
-    }
-      
-    GraphicsState & operator=(const GraphicsState & other) {
-      if (this != &other) {
-	lineWidth = other.lineWidth;
-	fillStyle = other.fillStyle;
-	strokeStyle = other.strokeStyle;
-	shadowBlur = other.shadowBlur;
-	shadowColor = other.shadowColor;
-	shadowOffsetX = other.shadowOffsetX;
-	shadowOffsetY = other.shadowOffsetY;
-	globalAlpha = other.globalAlpha;
-	font = other.font;
-	textBaseline = other.textBaseline;
-	textAlign = other.textAlign;
-	imageSmoothingEnabled = other.imageSmoothingEnabled;
-	currentPath = other.currentPath;
-	clipPath = other.clipPath;
-	currentTransform = other.currentTransform;
-      }
-      return *this;
-    }
 
     GraphicsState & arc(double x, double y, double r, double a0, double a1, bool t = false) { currentPath.arc(currentTransform.multiply(x, y), r, currentTransform.transformAngle(a0), currentTransform.transformAngle(a1), t); return *this; }
     GraphicsState & moveTo(double x, double y) { currentPath.moveTo(currentTransform.multiply(x, y)); return *this; }
