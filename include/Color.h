@@ -29,6 +29,9 @@ namespace canvas {
   private:
     void setValue(const std::string & s);
   };
+
+  // shim for Attribute<Color>
+  inline void assignValue(Color & a, const std::string & b) { a = b; }
 };
 
 #endif
