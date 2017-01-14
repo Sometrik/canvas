@@ -11,7 +11,7 @@
 #include <memory>
 
 namespace canvas {
-  class Style : public Attribute {
+  class Style : public AttributeBase {
   public:
     enum StyleType {
       SOLID = 1,
@@ -20,13 +20,12 @@ namespace canvas {
       PATTERN,
       FILTER
     };
-    Style(GraphicsState * _context) : Attribute(_context) { }
-    Style(GraphicsState * _context, const Style & other)
-      : Attribute(_context),
+    Style(GraphicsState * _context) : AttributeBase(_context) { }
+    Style(const Style & other)
+      : AttributeBase(other),
       type(other.type),
       colors(other.colors),
       filter(other.filter) { }
-    Style(const Style & other) = delete;
 
     Style & operator=(const std::string & s) {
       color = s;
@@ -43,13 +42,13 @@ namespace canvas {
     GraphicsState & operator()(const std::string & s) {
       color = s;
       type = SOLID;
-      return *context;
+      return getContext();
     }
     
     GraphicsState & operator()(const Color & _color) {
       color = _color;
       type = SOLID;
-      return *context;
+      return getContext();
     }
 
     StyleType getType() const { return type; }
