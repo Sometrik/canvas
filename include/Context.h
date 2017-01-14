@@ -101,7 +101,7 @@ namespace canvas {
     virtual bool hasNativeShadows() const { return false; }
     virtual bool hasNativeEmoticons() const { return false; }
 
-    bool hasShadow() const { return shadowBlur.getValue() > 0.0f || shadowOffsetX.getValue() != 0 || shadowOffsetY.getValue() != 0; }
+    bool hasShadow() const { return shadowBlur.get() > 0.0f || shadowOffsetX.get() != 0 || shadowOffsetY.get() != 0; }
     
   private:
     float display_scale;
