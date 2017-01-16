@@ -2,6 +2,7 @@
 #define _ATTRIBUTE_H_
 
 #include <string>
+#include <stdlib.h>
 
 namespace canvas {
   class GraphicsState;
