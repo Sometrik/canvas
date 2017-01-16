@@ -1,6 +1,7 @@
 #include "ContextAndroid.h"
 
 #include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
 #include <errno.h>
 
 using namespace std;
@@ -223,28 +224,31 @@ static int android_close(void* cookie) {
 class AndroidImage : public Image {
 public:
   AndroidImage(AndroidCache * _cache, const std::string & filename, float _display_scale)
-    : Image(filename, display_scale), cache(_cache) { }
-  
-  void loadImage() override {
+    : Image(filename, _display_scale), cache(_cache) {
+
     JNIEnv * env = cache->getJNIEnv();
     jobject & assetManager = cache->getAssetManager();
-    AAssetManager * manager = AAssetManager_fromJava(env, assetManager);
+
+    AAssetManager * android_asset_manager = AAssetManager_fromJava(env, assetManager);
     AAsset * asset = AAssetManager_open(android_asset_manager, filename.c_str(), 0);
+    std::shared_ptr<ImageData> data;
     if (asset) {
       FILE * in = funopen(asset, android_read, android_write, android_seek, android_close);
 
       basic_string<unsigned char> s;
       while (!feof(in)) {
-	char b[256];
-	size_t n = fread(b, 1, 256, in);
-	s += basic_string<unsigned char>(b, n);
+        unsigned char b[256];
+        size_t n = fread(b, 1, 256, in);
+        s += basic_string<unsigned char>(b, n);
       }
 
       data = loadFromMemory(s.data(), s.size());
     } else {
       data = std::shared_ptr<ImageData>(0);
     }
-    if (!data.get()) filename.clear();
+    if (!data.get()) {
+      filename.clear();
+    }
   }
 
 private:
