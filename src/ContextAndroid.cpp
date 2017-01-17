@@ -224,7 +224,11 @@ static int android_close(void* cookie) {
 class AndroidImage : public Image {
 public:
   AndroidImage(AndroidCache * _cache, const std::string & filename, float _display_scale)
-    : Image(filename, _display_scale), cache(_cache) {
+    : Image(filename, _display_scale), cache(_cache) { }
+
+
+
+  void loadFile() override {
 
     JNIEnv * env = cache->getJNIEnv();
     jobject & assetManager = cache->getAssetManager();
