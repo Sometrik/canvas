@@ -53,6 +53,8 @@ namespace canvas {
       return data;
     }
 
+    std::string getFilename(){ return filename; }
+
   protected:
     static std::shared_ptr<ImageData> loadFromMemory(const unsigned char * buffer, size_t size);
     static std::shared_ptr<ImageData> loadFromFile(const std::string & filename);

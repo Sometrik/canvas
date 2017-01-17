@@ -234,7 +234,7 @@ public:
     jobject & assetManager = cache->getAssetManager();
 
     AAssetManager * android_asset_manager = AAssetManager_fromJava(env, assetManager);
-    AAsset * asset = AAssetManager_open(android_asset_manager, filename.c_str(), 0);
+    AAsset * asset = AAssetManager_open(android_asset_manager, getFilename().c_str(), 0);
     std::shared_ptr<ImageData> data;
     if (asset) {
       FILE * in = funopen(asset, android_read, android_write, android_seek, android_close);
