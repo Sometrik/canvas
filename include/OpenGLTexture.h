@@ -8,6 +8,8 @@
 #include <cstddef>
 
 namespace canvas {
+  class Image;
+  class ImageData;
   class Surface;
 
   class OpenGLTexture : public Texture {
@@ -23,6 +25,7 @@ namespace canvas {
     }
 
     OpenGLTexture(Surface & surface);
+    OpenGLTexture(unsigned int _logical_width, unsigned int _logical_height, const ImageData & image);
 
     unsigned int getTextureId() const override { return texture_id; }
     
@@ -32,8 +35,9 @@ namespace canvas {
     static size_t getNumTextures() { return total_textures; }
     static const std::vector<unsigned int> & getFreedTextures() { return freed_textures; }
     static void releaseTextures();
-    static std::shared_ptr<Texture> createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels = 8);
-    static std::shared_ptr<Texture> createTexture(Surface & surface);
+    static std::unique_ptr<Texture> createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels = 8);
+    static std::unique_ptr<Texture> createTexture(Surface & surface);
+    static std::unique_ptr<Texture> createTexture(Image & image);
 
     static bool hasTexStorage() { return has_tex_storage; }
     static void setHasTexStorage(bool t) { has_tex_storage = t; }

@@ -1,6 +1,6 @@
 #include <OpenGLTexture.h>
 
-#include <ImageData.h>
+#include <Image.h>
 #include <Surface.h>
 
 #define GL_GLEXT_PROTOTYPES
@@ -76,6 +76,19 @@ OpenGLTexture::OpenGLTexture(Surface & surface)
   assert(getActualHeight() > 0);
   auto image = surface.createImage();
   updateData(*image, 0, 0);
+}
+
+OpenGLTexture::OpenGLTexture(unsigned int _logical_width, unsigned int _logical_height, const ImageData & image)
+  : Texture(_logical_width, _logical_height,
+	    image.getWidth(), image.getHeight(),
+	    NEAREST, NEAREST, image.getInternalFormat(), 1)
+{
+  assert(getInternalFormat());
+  assert(getLogicalWidth() > 0);
+  assert(getLogicalHeight() > 0);
+  assert(getActualWidth() > 0);
+  assert(getActualHeight() > 0);
+  updateData(image, 0, 0);
 }
 
 static format_description_s getFormatDescription(InternalFormat internal_format) {
@@ -243,13 +256,21 @@ OpenGLTexture::releaseTextures() {
   }
 }
 
-std::shared_ptr<Texture>
+std::unique_ptr<Texture>
 OpenGLTexture::createTexture(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, FilterMode min_filter, FilterMode mag_filter, InternalFormat _internal_format, unsigned int mipmap_levels) {
   assert(_internal_format);
-  return std::make_shared<OpenGLTexture>(_logical_width, _logical_height, _actual_width, _actual_height, min_filter, mag_filter, _internal_format, mipmap_levels);
+  return std::unique_ptr<Texture>(new OpenGLTexture(_logical_width, _logical_height, _actual_width, _actual_height, min_filter, mag_filter, _internal_format, mipmap_levels));
 }
 
-std::shared_ptr<Texture>
+std::unique_ptr<Texture>
 OpenGLTexture::createTexture(Surface & surface) {
-  return std::make_shared<OpenGLTexture>(surface);
+  return std::unique_ptr<Texture>(new OpenGLTexture(surface));
+}
+
+std::unique_ptr<Texture>
+OpenGLTexture::createTexture(Image & image) {
+  auto & data = image.getData();
+  unsigned int lw = (unsigned int)(data.getWidth() * image.getDisplayScale());
+  unsigned int lh = (unsigned int)(data.getHeight() * image.getDisplayScale());
+  return std::unique_ptr<Texture>(new OpenGLTexture(lw, lh, data));
 }
