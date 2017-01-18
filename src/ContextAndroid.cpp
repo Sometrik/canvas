@@ -250,6 +250,9 @@ public:
     } else {
       data = std::shared_ptr<ImageData>(0);
     }
+    if (!data.get()) {
+      getFilename().clear();
+    }
   }
 
 private:
