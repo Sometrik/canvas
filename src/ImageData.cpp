@@ -51,7 +51,7 @@ ImageData::ImageData(InternalFormat _format, unsigned int _width, unsigned int _
   }
 }
 
-std::shared_ptr<ImageData>
+std::unique_ptr<ImageData>
 ImageData::convert(InternalFormat target_format) const {
   auto & fd = getImageFormat(format);
   auto & target_fd = getImageFormat(target_format);
@@ -126,7 +126,7 @@ ImageData::convert(InternalFormat target_format) const {
       target_width = (target_width + 1) / 2;
       target_height = (target_height + 1) / 2;
     }
-    return make_shared<ImageData>(output_data.get(), target_format, width, height, levels);
+    return unique_ptr<ImageData>(new ImageData(output_data.get(), target_format, width, height, levels));
   } else if (target_fd.getNumChannels() == 2 && target_fd.getBytesPerPixel() == 1) {
     assert(levels == 1);
     
@@ -145,7 +145,7 @@ ImageData::convert(InternalFormat target_format) const {
       *output_data++ = (a << 4) | lum;
     }
 
-    return make_shared<ImageData>(tmp.get(), target_format, getWidth(), getHeight());
+    return unique_ptr<ImageData>(new ImageData(tmp.get(), target_format, getWidth(), getHeight()));
   } else if (target_fd.getNumChannels() == 1) {
     assert(levels == 1);
     
@@ -162,7 +162,7 @@ ImageData::convert(InternalFormat target_format) const {
       *output_data++ = (r + g + b) / 3;
     }
 
-    return make_shared<ImageData>(tmp.get(), target_format, getWidth(), getHeight());
+    return unique_ptr<ImageData>(new ImageData(tmp.get(), target_format, getWidth(), getHeight()));
   } else {
     assert(target_fd.getBytesPerPixel() == 2);
     unsigned int target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
@@ -203,11 +203,11 @@ ImageData::convert(InternalFormat target_format) const {
       }
     }
     
-    return make_shared<ImageData>(tmp.get(), target_format, getWidth(), getHeight(), getLevels());
+    return unique_ptr<ImageData>(new ImageData(tmp.get(), target_format, getWidth(), getHeight(), getLevels()));
   }
 }
 
-std::shared_ptr<ImageData>
+std::unique_ptr<ImageData>
 ImageData::scale(unsigned int target_base_width, unsigned int target_base_height, unsigned int target_levels) const {
   auto & fd = getImageFormat(format);
   assert(fd.getBytesPerPixel() == 1 || fd.getBytesPerPixel() == 4);
@@ -251,10 +251,10 @@ ImageData::scale(unsigned int target_base_width, unsigned int target_base_height
       target_height /= 2;
     }
   }
-  return make_shared<ImageData>(output_data.get(), getInternalFormat(), target_base_width, target_base_height, target_levels);
+  return unique_ptr<ImageData>(new ImageData(output_data.get(), getInternalFormat(), target_base_width, target_base_height, target_levels));
 }
 
-std::shared_ptr<ImageData>
+std::unique_ptr<ImageData>
 ImageData::createMipmaps(unsigned int target_levels) const {
   auto & fd = getImageFormat(format);
   assert(fd.getBytesPerPixel() == 4);
@@ -287,5 +287,5 @@ ImageData::createMipmaps(unsigned int target_levels) const {
     target_width /= 2;
     target_height /= 2;
   }
-  return make_shared<ImageData>(output_data.get(), getInternalFormat(), width, height, target_levels);
+  return unique_ptr<ImageData>(new ImageData(output_data.get(), getInternalFormat(), width, height, target_levels));
 }

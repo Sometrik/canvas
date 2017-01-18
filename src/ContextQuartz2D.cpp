@@ -317,7 +317,7 @@ public:
   }  
 };
 
-std::shared_ptr<Image>
+std::unique_ptr<Image>
 Quartz2DContextFactory::loadImage(const std::string & filename) {
-  return std::make_shared<Quartz2DImage>(filename, getDisplayScale());
+  return std::unique_ptr<Image>(new Quartz2DImage>(filename, getDisplayScale()));
 }

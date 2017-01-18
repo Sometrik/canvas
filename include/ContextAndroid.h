@@ -551,14 +551,14 @@ public:
       Context(_displayScale), cache(_cache), default_surface(_cache, _width, _height, (unsigned int) (_width * _displayScale), (unsigned int) (_height * _displayScale), format) {
   }
 
-  std::shared_ptr<Surface> createSurface(const ImageData & image) override {
-    return std::shared_ptr<Surface>(new AndroidSurface(cache, image));
+  std::unique_ptr<Surface> createSurface(const ImageData & image) override {
+    return std::unique_ptr<Surface>(new AndroidSurface(cache, image));
   }
-  std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {
-    return std::shared_ptr<Surface>(new AndroidSurface(cache, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _format));
+  std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {
+    return std::unique_ptr<Surface>(new AndroidSurface(cache, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _format));
   }
-  std::shared_ptr<Surface> createSurface(const std::string & filename) {
-    return std::shared_ptr<Surface>(new AndroidSurface(cache, filename));
+  std::unique_ptr<Surface> createSurface(const std::string & filename) {
+    return std::unique_ptr<Surface>(new AndroidSurface(cache, filename));
   }
 
   Surface & getDefaultSurface() override {
@@ -583,15 +583,15 @@ public:
  AndroidContextFactory(jobject _assetManager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale) :
       ContextFactory(_displayScale), cache(_cache) {
   }
-  std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format) override {
-    return std::make_shared<ContextAndroid>(cache.get(), width, height, format, getDisplayScale());
+  std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format) override {
+    return std::unique_ptr<Context>(new ContextAndroid(cache.get(), width, height, format, getDisplayScale()));
   }
-  std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format) override {
+  std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format) override {
     unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
-    return std::make_shared<AndroidSurface>(cache.get(), width, height, aw, ah, format);
+    return std::unique_ptr<Surface>(new AndroidSurface(cache.get(), width, height, aw, ah, format));
   }
 
-  std::shared_ptr<Image> loadImage(const std::string & filename) override;
+  std::unique_ptr<Image> loadImage(const std::string & filename) override;
 
 private:
   std::shared_ptr<AndroidCache> cache;

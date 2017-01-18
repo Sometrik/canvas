@@ -68,14 +68,11 @@ namespace canvas {
 	{ 
 	}
     
-    std::shared_ptr<Surface> createSurface(const ImageData & image) {
-      return std::shared_ptr<Surface>(new CairoSurface(image));
+    std::unique_ptr<Surface> createSurface(const ImageData & image) {
+      return std::unique_ptr<Surface>(new CairoSurface(image));
     }
-    std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat format) {
-      return std::shared_ptr<Surface>(new CairoSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), format));
-    }
-    std::shared_ptr<Surface> createSurface(const std::string & filename) {
-      return std::shared_ptr<Surface>(new CairoSurface(filename));
+    std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat format) {
+      return std::unique_ptr<Surface>(new CairoSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), format));
     }
 
     CairoSurface & getDefaultSurface() { return default_surface; }
@@ -88,15 +85,15 @@ namespace canvas {
   class CairoContextFactory : public ContextFactory {
   public:
    CairoContextFactory() : ContextFactory(1.0f) { }
-    std::shared_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format) override {
-      return std::make_shared<ContextCairo>(width, height, image_format);
+    std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format) override {
+      return std::unique_ptr<Context>(new ContextCairo(width, height, image_format));
     }
-    std::shared_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format) override {
+    std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format) override {
       unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
-      return std::make_shared<CairoSurface>(width, height, aw, ah, image_format);
+      return std::unique_ptr<Surface>(new CairoSurface(width, height, aw, ah, image_format));
     }
-    std::shared_ptr<Image> loadImage(const std::string & filename) {
-      return std::make_shared<Image>(filename, getDisplayScale());
+    std::unique_ptr<Image> loadImage(const std::string & filename) {
+      return std::unique_ptr<Image>(new Image(filename, getDisplayScale()));
     }
   };
 };

@@ -13,7 +13,6 @@ namespace canvas {
       : filename(_filename), display_scale(_display_scale) { }
     Image(const std::string & _filename, float _display_scale)
       : filename(_filename), display_scale(_display_scale) { }
-    Image(const std::shared_ptr<ImageData> & _data) : data(_data) { }
 
     virtual ~Image() { }
 
@@ -46,18 +45,21 @@ namespace canvas {
       }
     }
 
+#if 0
     std::shared_ptr<ImageData> & getDataPtr() {
       if (!filename.empty() && !data.get()) {
 	loadFile();
       }
       return data;
     }
+#endif
 
-    std::string getFilename(){ return filename; }
+    std::string getFilename() const { return filename; }
+    float getDisplayScale() const { return display_scale; }
 
   protected:
-    static std::shared_ptr<ImageData> loadFromMemory(const unsigned char * buffer, size_t size);
-    static std::shared_ptr<ImageData> loadFromFile(const std::string & filename);
+    static std::unique_ptr<ImageData> loadFromMemory(const unsigned char * buffer, size_t size);
+    static std::unique_ptr<ImageData> loadFromFile(const std::string & filename);
     virtual void loadFile() {
       data = loadFromFile(filename);
       if (!data.get()) filename.clear();
@@ -65,7 +67,7 @@ namespace canvas {
     
   private:
     std::string filename;
-    std::shared_ptr<ImageData> data;
+    std::unique_ptr<ImageData> data;
     float display_scale;
   };
 };

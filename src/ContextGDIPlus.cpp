@@ -114,7 +114,7 @@ static Gdiplus::Color toGDIColor(const Color & input, float globalAlpha = 1.0f) 
 
 GDIPlusSurface::GDIPlusSurface(const std::string & filename) : Surface(0, 0, 0, 0, false) {
   std::wstring tmp = convert_to_wstring(filename);
-  bitmap = std::shared_ptr<Gdiplus::Bitmap>(Gdiplus::Bitmap::FromFile(tmp.data()));
+  bitmap = std::unique_ptr<Gdiplus::Bitmap>(Gdiplus::Bitmap::FromFile(tmp.data()));
   Surface::resize(bitmap->GetWidth(), bitmap->GetHeight(), bitmap->GetWidth(), bitmap->GetHeight(), true);
 }
 

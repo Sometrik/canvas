@@ -235,7 +235,7 @@ public:
 
     AAssetManager * android_asset_manager = AAssetManager_fromJava(env, assetManager);
     AAsset * asset = AAssetManager_open(android_asset_manager, getFilename().c_str(), 0);
-    std::shared_ptr<ImageData> data;
+    std::unique_ptr<ImageData> data;
     if (asset) {
       FILE * in = funopen(asset, android_read, android_write, android_seek, android_close);
 
@@ -248,7 +248,7 @@ public:
 
       data = loadFromMemory(s.data(), s.size());
     } else {
-      data = std::shared_ptr<ImageData>(0);
+      data = std::unique_ptr<ImageData>(0);
     }
     if (!data.get()) {
       getFilename().clear();
@@ -259,7 +259,7 @@ private:
   AndroidCache * cache;
 };
 
-std::shared_ptr<Image>
+std::unique_ptr<Image>
 AndroidContextFactory::loadImage(const std::string & filename) {
-  return std::make_shared<AndroidImage>(cache.get(), filename, getDisplayScale());
+  return std::unique_ptr<Image>(new AndroidImage(cache.get(), filename, getDisplayScale()));
 }

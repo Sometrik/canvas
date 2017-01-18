@@ -26,13 +26,13 @@ Image::decode(const unsigned char * buffer, size_t size) {
   return data.get() != 0;
 }
 
-std::shared_ptr<ImageData>
+std::unique_ptr<ImageData>
 Image::loadFromMemory(const unsigned char * buffer, size_t size) {
   int w, h, channels;
   auto img_buffer = stbi_load_from_memory(buffer, size, &w, &h, &channels, 0);
   if (!img_buffer) {
     cerr << "Image decoding failed: " << stbi_failure_reason() << endl;
-    return std::shared_ptr<ImageData>(0);
+    return std::unique_ptr<ImageData>(nullptr);
   }
   // cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
@@ -40,7 +40,7 @@ Image::loadFromMemory(const unsigned char * buffer, size_t size) {
   InternalFormat format = getFormatFromChannelCount(channels);
   size_t numPixels = w * h;
 
-  std::shared_ptr<ImageData> data;
+  std::unique_ptr<ImageData> data;
   if (channels == 2 || channels == 3 || channels == 4) {
     std::unique_ptr<unsigned int[]> storage(new unsigned int[numPixels]);
     for (unsigned int i = 0; i < numPixels; i++) {
@@ -54,16 +54,16 @@ Image::loadFromMemory(const unsigned char * buffer, size_t size) {
 	storage[i] = 0;
       }
     }
-    data = std::make_shared<ImageData>((unsigned char *)storage.get(), format, w, h);
+    data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)storage.get(), format, w, h));
   } else {
-    data = std::make_shared<ImageData>((unsigned char *)img_buffer, format, w, h);
+    data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)img_buffer, format, w, h));
   }
   stbi_image_free(img_buffer);
   
   return data;
 }
 
-std::shared_ptr<ImageData>
+std::unique_ptr<ImageData>
 Image::loadFromFile(const std::string & filename) {
   assert(!filename.empty());
   int w, h, channels;
@@ -71,7 +71,7 @@ Image::loadFromFile(const std::string & filename) {
   auto img_buffer = stbi_load(filename.c_str(), &w, &h, &channels, 0);
   if (!img_buffer) {
     cerr << "image loading failed\n";
-    return std::shared_ptr<ImageData>(0);
+    return std::unique_ptr<ImageData>(nullptr);
   }
   // cerr << "Image.cpp: loaded image, filename = " << filename << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
@@ -79,7 +79,7 @@ Image::loadFromFile(const std::string & filename) {
   InternalFormat format = getFormatFromChannelCount(channels);
   size_t numPixels = w * h;
 
-  std::shared_ptr<ImageData> data;
+  std::unique_ptr<ImageData> data;
   if (channels == 2 || channels == 3 || channels == 4) {
     unsigned int * storage = new unsigned int[numPixels];
     for (unsigned int i = 0; i < numPixels; i++) {
@@ -93,10 +93,10 @@ Image::loadFromFile(const std::string & filename) {
 	storage[i] = 0;
       }
     }
-    data = std::make_shared<ImageData>((unsigned char *)storage, format, w, h);
+    data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)storage, format, w, h));
     delete[] storage;
   } else {
-    data = std::make_shared<ImageData>((unsigned char *)img_buffer, format, w, h);
+    data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)img_buffer, format, w, h));
   }
   
   stbi_image_free(img_buffer);

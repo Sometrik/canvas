@@ -74,7 +74,7 @@ namespace canvas {
 
     // void multiply(const Color & color);
     
-    std::shared_ptr<ImageData> createImage();
+    std::unique_ptr<ImageData> createImage();
 
     unsigned int getLogicalWidth() const { return logical_width; }
     unsigned int getLogicalHeight() const { return logical_height; }

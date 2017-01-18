@@ -65,9 +65,9 @@ namespace canvas {
 
     ImageData & operator=(const ImageData & other) = delete;
     
-    std::shared_ptr<ImageData> convert(InternalFormat target_format) const;
-    std::shared_ptr<ImageData> scale(unsigned int target_width, unsigned int target_height, unsigned int target_levels = 1) const;
-    std::shared_ptr<ImageData> createMipmaps(unsigned int levels) const;
+    std::unique_ptr<ImageData> convert(InternalFormat target_format) const;
+    std::unique_ptr<ImageData> scale(unsigned int target_width, unsigned int target_height, unsigned int target_levels = 1) const;
+    std::unique_ptr<ImageData> createMipmaps(unsigned int levels) const;
 
     void setQuality(short _quality) { quality = _quality; }
     bool isValid() const { return width != 0 && height != 0 && format != NO_FORMAT; }
