@@ -238,7 +238,16 @@ class AndroidPaint {
 
   float measureText(const std::string & text) {    
     create();
-    return cache->getJNIEnv()->CallFloatMethod(obj, cache->measureTextMethod, cache->getJNIEnv()->NewStringUTF(text.c_str()));
+
+    JNIEnv * env = cache->getJNIEnv();
+    jstring convertableString = env->NewStringUTF(text.c_str());
+    jobject bytes = env->CallObjectMethod(convertableString, cache->stringGetBytesMethod);
+    jobject jtext = env->NewObject(cache->stringClass, cache->stringConstructor, bytes, cache->charsetString);
+    float measure = env->CallFloatMethod(obj, cache->measureTextMethod, cache->getJNIEnv()->NewStringUTF(text.c_str()));
+    env->DeleteLocalRef(convertableString);
+    env->DeleteLocalRef(bytes);
+    env->DeleteLocalRef(jtext);
+    return measure;
   }
   float getTextDescent() {
     create();
@@ -548,7 +557,7 @@ public:
   std::shared_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {
     return std::shared_ptr<Surface>(new AndroidSurface(cache, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _format));
   }
-  std::shared_ptr<Surface> createSurface(const std::string & filename) override {
+  std::shared_ptr<Surface> createSurface(const std::string & filename) {
     return std::shared_ptr<Surface>(new AndroidSurface(cache, filename));
   }
 
