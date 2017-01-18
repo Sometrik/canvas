@@ -69,21 +69,6 @@ CairoSurface::CairoSurface(const ImageData & image)
   storage = p.second;
 }
 
-CairoSurface::CairoSurface(const std::string & filename) : Surface(0, 0, 0, 0, RGBA8) {
-  surface = cairo_image_surface_create_from_png(filename.c_str());
-  assert(surface);
-  unsigned int w = cairo_image_surface_get_width(surface), h = cairo_image_surface_get_height(surface);
-  cairo_status_t r = cairo_surface_status(surface);
-  if (r != CAIRO_STATUS_SUCCESS) {
-    cerr << "failed to load bitmap " << filename << ", r = " << int(r) << endl;
-  }
-  bool a = cairo_image_surface_get_format(surface) == CAIRO_FORMAT_ARGB32;
-  // if (a) cerr << "has alpha!\n";
-  // else cerr << "no alpha\n";
-  Surface::resize(w, h, w, h, a ? RGBA8 : RGB8);
-  // cerr << "internal format = " << int(getFormat()) << endl;
-}
-
 CairoSurface::~CairoSurface() {
   if (cr) {
     cairo_destroy(cr);

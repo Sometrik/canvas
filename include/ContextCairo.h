@@ -11,7 +11,6 @@ namespace canvas {
 
     CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat image_format);
     CairoSurface(const ImageData & image);
-    CairoSurface(const std::string & filename);
     CairoSurface(const CairoSurface & other) = delete;
     CairoSurface(const unsigned char * buffer, size_t size);
     ~CairoSurface();

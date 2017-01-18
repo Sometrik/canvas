@@ -166,9 +166,6 @@ namespace canvas {
     std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat image_format) {
       return std::unique_ptr<Surface>(new GDIPlusSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), image_format));
     }
-    std::unique_ptr<Surface> createSurface(const std::string & filename) {
-      return std::unique_ptr<Surface>(new GDIPlusSurface(filename));
-    }
 
     GDIPlusSurface & getDefaultSurface() { return default_surface; }
     const GDIPlusSurface & getDefaultSurface() const { return default_surface; }

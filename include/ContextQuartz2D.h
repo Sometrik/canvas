@@ -307,10 +307,6 @@ namespace canvas {
     std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {
       return std::unique_ptr<Surface>(new Quartz2DSurface(cache, _width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _format));
     }
-      std::unique_ptr<Surface> createSurface(const std::string & filename) override {
-          return std::unique_ptr<Surface>(new Quartz2DSurface(cache, filename));
-      }
-    // void clearRect(double x, double y, double w, double h) { }
         
     Surface & getDefaultSurface() override { return default_surface; }
     const Surface & getDefaultSurface() const override { return default_surface; }

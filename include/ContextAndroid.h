@@ -557,9 +557,6 @@ public:
   std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {
     return std::unique_ptr<Surface>(new AndroidSurface(cache, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _format));
   }
-  std::unique_ptr<Surface> createSurface(const std::string & filename) {
-    return std::unique_ptr<Surface>(new AndroidSurface(cache, filename));
-  }
 
   Surface & getDefaultSurface() override {
     return default_surface;
