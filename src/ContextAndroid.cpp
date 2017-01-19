@@ -248,7 +248,7 @@ public:
 
       data = loadFromMemory(s.data(), s.size());
     } else {
-      data = std::unique_ptr<ImageData>(0);
+      data = std::unique_ptr<ImageData>(nullptr);
     }
     if (!data.get()) {
       getFilename().clear();
