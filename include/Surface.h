@@ -17,6 +17,7 @@
 namespace canvas {
   class Context;
   class ImageData;
+  class Image;
 
   enum RenderMode {
     FILL = 1,
@@ -74,7 +75,7 @@ namespace canvas {
 
     // void multiply(const Color & color);
     
-    std::unique_ptr<ImageData> createImage();
+    std::unique_ptr<Image> createImage(float display_scale);
 
     unsigned int getLogicalWidth() const { return logical_width; }
     unsigned int getLogicalHeight() const { return logical_height; }

@@ -290,8 +290,8 @@ CairoSurface::drawImage(Surface & _img, const Point & p, double w, double h, flo
   if (cs_ptr) {
     drawNativeSurface(*cs_ptr, p, w, h, displayScale, globalAlpha, clipPath, imageSmoothingEnabled);    
   } else {
-    auto img = _img.createImage();
-    CairoSurface cs(*img);
+    auto img = _img.createImage(displayScale);
+    CairoSurface cs(img->getData());
     drawNativeSurface(cs, p, w, h, displayScale, globalAlpha, clipPath, imageSmoothingEnabled);
   }
 }

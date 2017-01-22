@@ -74,8 +74,8 @@ OpenGLTexture::OpenGLTexture(Surface & surface)
   assert(getLogicalHeight() > 0);
   assert(getActualWidth() > 0);
   assert(getActualHeight() > 0);
-  auto image = surface.createImage();
-  updateData(*image, 0, 0);
+  auto image = surface.createImage(1.0f);
+  updateData(image->getData(), 0, 0);
 }
 
 OpenGLTexture::OpenGLTexture(unsigned int _logical_width, unsigned int _logical_height, const ImageData & image)

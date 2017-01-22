@@ -491,8 +491,8 @@ public:
       env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, paint.getObject());
       env->DeleteLocalRef(dstRect);
     } else {
-      auto img = native_surface->createImage();
-      drawImage(*img, p, w, h, displayScale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, imageSmoothingEnabled);
+      auto img = native_surface->createImage(displayScale);
+      drawImage(img->getData(), p, w, h, displayScale, globalAlpha, shadowBlur, shadowOffsetX, shadowOffsetY, shadowColor, clipPath, imageSmoothingEnabled);
     }
   }
 

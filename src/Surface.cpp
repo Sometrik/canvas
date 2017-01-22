@@ -1,7 +1,7 @@
 #include <Surface.h>
 
 #include <Color.h>
-#include <ImageData.h>
+#include <Image.h>
 
 #include <cstring>
 #include <vector>
@@ -303,13 +303,13 @@ Surface::multiply(const Color & color) {
 }
 #endif
 	       
-std::unique_ptr<ImageData>
-Surface::createImage() {
+std::unique_ptr<Image>
+Surface::createImage(float display_scale) {
 
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
   
-  auto image = std::unique_ptr<ImageData>(new ImageData(buffer, getFormat(), getActualWidth(), getActualHeight()));
+  auto image = std::unique_ptr<Image>(new Image(buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
   releaseMemory();
   
   return image;
