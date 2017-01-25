@@ -14,6 +14,7 @@ public:
   AndroidCache(JNIEnv * _env, jobject _assetManager);
 
   ~AndroidCache() {
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor of AndroidCache on ContextAndroid");
     JNIEnv * env = getJNIEnv();
     env->DeleteGlobalRef(assetManager);
     env->DeleteGlobalRef(typefaceClass);
@@ -32,7 +33,7 @@ public:
     env->DeleteGlobalRef(fileClass);
     env->DeleteGlobalRef(fileInputStreamClass);
     env->DeleteGlobalRef(stringClass);
-    env->DeleteLocalRef(charsetString);
+    env->DeleteGlobalRef(charsetString);
   }
 
   JNIEnv * getJNIEnv() {
@@ -144,6 +145,7 @@ class AndroidPaint {
  AndroidPaint(AndroidCache * _cache) : cache(_cache) { }
   
   ~AndroidPaint() {
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor on AndroidPaint");
     if (is_valid) {
       cache->getJNIEnv()->DeleteGlobalRef(obj);
     }
