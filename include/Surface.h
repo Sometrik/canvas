@@ -50,10 +50,6 @@ namespace canvas {
       format = _format;
     }
 
-    virtual void flush() { }
-    virtual void markDirty() { }
-
-    // virtual Surface * copy() = 0;
     virtual void * lockMemory(bool write_access = false) = 0;
     virtual void * lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height);
     virtual void releaseMemory() {
@@ -68,12 +64,9 @@ namespace canvas {
     virtual void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) = 0;
     virtual void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) = 0;
     
-    // void colorFill(const Color & color);
     void slowBlur(float hradius, float vradius);
     void blur(float r);
     void colorize(const Color & color, Surface & target);
-
-    // void multiply(const Color & color);
     
     std::unique_ptr<Image> createImage(float display_scale);
 
@@ -82,7 +75,6 @@ namespace canvas {
     unsigned int getActualWidth() const { return actual_width; }
     unsigned int getActualHeight() const { return actual_height; }
     InternalFormat getFormat() const { return format; }
-    // bool hasAlpha() const { return format == RGBA8 || format == RGBA4; }
 
     void setMagFilter(FilterMode mode) { mag_filter = mode; }
     void setMinFilter(FilterMode mode) { min_filter = mode; }
