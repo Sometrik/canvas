@@ -14,6 +14,7 @@ public:
   AndroidCache(JNIEnv * _env, jobject _assetManager);
 
   ~AndroidCache() {
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor of AndroidCache on ContextAndroid");
     JNIEnv * env = getJNIEnv();
     env->DeleteGlobalRef(assetManager);
     env->DeleteGlobalRef(typefaceClass);
@@ -32,7 +33,7 @@ public:
     env->DeleteGlobalRef(fileClass);
     env->DeleteGlobalRef(fileInputStreamClass);
     env->DeleteGlobalRef(stringClass);
-    env->DeleteLocalRef(charsetString);
+    env->DeleteGlobalRef(charsetString);
   }
 
   JNIEnv * getJNIEnv() {
@@ -144,6 +145,7 @@ class AndroidPaint {
  AndroidPaint(AndroidCache * _cache) : cache(_cache) { }
   
   ~AndroidPaint() {
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor on AndroidPaint");
     if (is_valid) {
       cache->getJNIEnv()->DeleteGlobalRef(obj);
     }
@@ -383,9 +385,7 @@ public:
 
         jobject jrect = env->NewObject(cache->rectFClass, cache->rectFConstructor, left, top, right, bottom);
 
-        jmethodID pathArcToMethod = env->GetMethodID(cache->pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
-
-        env->CallVoidMethod(jpath, pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
+        env->CallVoidMethod(jpath, cache->pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
         env->DeleteLocalRef(jrect);
       }
         break;
