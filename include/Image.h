@@ -48,15 +48,6 @@ namespace canvas {
       }
     }
 
-#if 0
-    std::shared_ptr<ImageData> & getDataPtr() {
-      if (!filename.empty() && !data.get()) {
-	loadFile();
-      }
-      return data;
-    }
-#endif
-
     std::string getFilename() const { return filename; }
     float getDisplayScale() const { return display_scale; }
 
