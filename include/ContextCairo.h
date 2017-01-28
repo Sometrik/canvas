@@ -36,7 +36,9 @@ namespace canvas {
     TextMetrics measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float displayScale);
     void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true);
     void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true);
-    
+
+    std::unique_ptr<Image> createImage(float display_scale) override;
+      
   protected:
     void initializeContext() {
       if (!cr) {
@@ -91,8 +93,8 @@ namespace canvas {
       unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
       return std::unique_ptr<Surface>(new CairoSurface(width, height, aw, ah, image_format));
     }
-    std::unique_ptr<Image> loadImage(const std::string & filename) {
-      return std::unique_ptr<Image>(new Image(filename, getDisplayScale()));
-    }
+    std::unique_ptr<Image> loadImage(const std::string & filename) override;
+    std::unique_ptr<Image> createImage() override;
+    std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) override;
   };
 };

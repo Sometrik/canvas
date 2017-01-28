@@ -118,6 +118,8 @@ namespace canvas {
     virtual std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format = RGBA8) = 0;
     virtual std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format = RGBA8) = 0;
     virtual std::unique_ptr<Image> loadImage(const std::string & filename) = 0;
+    virtual std::unique_ptr<Image> createImage() = 0;
+    virtual std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) = 0;
     
     float getDisplayScale() const { return display_scale; }
     

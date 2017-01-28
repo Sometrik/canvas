@@ -302,18 +302,6 @@ Surface::multiply(const Color & color) {
   releaseMemory();
 }
 #endif
-	       
-std::unique_ptr<Image>
-Surface::createImage(float display_scale) {
-
-  unsigned char * buffer = (unsigned char *)lockMemory(false);
-  assert(buffer);
-  
-  auto image = std::unique_ptr<Image>(new Image(buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
-  releaseMemory();
-  
-  return image;
-}
 
 void *
 Surface::lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height) {

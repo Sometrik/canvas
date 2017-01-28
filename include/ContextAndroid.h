@@ -515,6 +515,9 @@ public:
     env->DeleteLocalRef(drawableBitmap);
   }
 
+  std::unique_ptr<Image> createImage(float display_scale) override;
+
+ protected:
   jobject imageToBitmap(const ImageData & _img);
   
   void checkForCanvas() {
@@ -528,12 +531,14 @@ public:
     }
   }
 
+#if 0
   jobject getBitmap() {
     return bitmap;
   }
   jobject getCanvas() {
     return canvas;
   }
+#endif
 
 private:
   jobject bitmap;
@@ -589,6 +594,8 @@ public:
   }
 
   std::unique_ptr<Image> loadImage(const std::string & filename) override;
+  std::unique_ptr<Image> createImage() override;
+  std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) override;
 
 private:
   std::shared_ptr<AndroidCache> cache;

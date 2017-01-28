@@ -54,14 +54,12 @@ namespace canvas {
   protected:
     static std::unique_ptr<ImageData> loadFromMemory(const unsigned char * buffer, size_t size);
     static std::unique_ptr<ImageData> loadFromFile(const std::string & filename);
-    virtual void loadFile() {
-      data = loadFromFile(filename);
-      if (!data.get()) filename.clear();
-    }
+    virtual void loadFile() = 0;
     
-  private:
     std::string filename;
     std::unique_ptr<ImageData> data;
+
+  private:
     float display_scale;
   };
 };

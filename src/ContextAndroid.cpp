@@ -223,11 +223,15 @@ static int android_close(void* cookie) {
 
 class AndroidImage : public Image {
 public:
-  AndroidImage(AndroidCache * _cache, const std::string & filename, float _display_scale)
+  AndroidImage(AndroidCache * _cache, float _display_scale)
+    : Image(_display_scale), cache(_cache) { }
+
+    AndroidImage(AndroidCache * _cache, const std::string & filename, float _display_scale)
     : Image(filename, _display_scale), cache(_cache) { }
 
+  AndroidImage(AndroidCache * _cache, const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality, float _display_scale) : Image(_data, _format, _width, _height, _levels, _quality, _display_scale), cache(_cache) { }
 
-
+protected:
   void loadFile() override {
 
     JNIEnv * env = cache->getJNIEnv();
@@ -262,4 +266,25 @@ private:
 std::unique_ptr<Image>
 AndroidContextFactory::loadImage(const std::string & filename) {
   return std::unique_ptr<Image>(new AndroidImage(cache.get(), filename, getDisplayScale()));
+}
+
+std::unique_ptr<Image>
+AndroidContextFactory::createImage() override {
+  return std::unique_ptr<Image>(new AndroidImage(cache.get(), getDisplayScale()));
+}
+
+std::unique_ptr<Image>
+AndroidContextFactory::createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) {
+  return std::unique_ptr<Image>(new AndroidImage(_data, _format, _width, _height, _levels, _quality, getDisplayScale()));
+}
+
+std::unique_ptr<Image>
+AndroidSurface::createImage(float display_scale) {
+  unsigned char * buffer = (unsigned char *)lockMemory(false);
+  assert(buffer);
+
+  auto image = std::unique_ptr<Image>(new AndroidImage(cache, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
+  releaseMemory();
+  
+  return image;
 }

@@ -301,3 +301,43 @@ CairoSurface::drawImage(const ImageData & _img, const Point & p, double w, doubl
   CairoSurface img(_img);
   drawNativeSurface(img, p, w, h, displayScale, globalAlpha, clipPath, imageSmoothingEnabled);
 }
+
+class CairoImage : public Image {
+public:
+  CairoImage(float _display_scale) : Image(_display_scale) { }
+  CairoImage(const std::string & filename, float _display_scale) : Image(filename, _display_scale) { }
+  CairoImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality, float _display_scale) : Image(_data, _format, _width, _height, _levels, _quality, _display_scale) { }
+  
+protected:
+  void loadFile() override {
+    data = loadFromFile(filename);
+    if (!data.get()) filename.clear();
+  }
+};
+
+
+std::unique_ptr<Image>
+CairoContextFactory::loadImage(const std::string & filename) {
+  return std::unique_ptr<Image>(new CairoImage(filename, getDisplayScale()));
+}
+
+std::unique_ptr<Image>
+CairoContextFactory::createImage() {
+  return std::unique_ptr<Image>(new CairoImage(getDisplayScale()));
+}
+
+std::unique_ptr<Image>
+CairoContextFactory::createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) {
+  return std::unique_ptr<Image>(new CairoImage(_data, _format, _width, _height, _levels, _quality, getDisplayScale()));
+}
+
+std::unique_ptr<Image>
+CairoSurface::createImage(float display_scale) {
+  unsigned char * buffer = (unsigned char *)lockMemory(false);
+  assert(buffer);
+
+  auto image = std::unique_ptr<Image>(new CairoImage(buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
+  releaseMemory();
+  
+  return image;
+}

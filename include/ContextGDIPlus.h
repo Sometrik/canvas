@@ -186,7 +186,7 @@ namespace canvas {
       unsigned int aw = width * getDisplayScale() : width, ah = height * getDisplayScale();
       return std::make_unique<GDIPlusSurface>(width, height, aw, ah, image_format);
     }
-    std::unique_ptr<Image> loadImage(const std::string & filename) {
+    std::unique_ptr<Image> loadImage(const std::string & filename) override {
       return std::make_unique<Image>(filename, getDisplayScale());
     }
   };
