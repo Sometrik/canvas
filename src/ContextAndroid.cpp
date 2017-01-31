@@ -3,7 +3,7 @@
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 #include <errno.h>
-#include <assert.h>
+#include <cassert>
 
 using namespace std;
 using namespace canvas;
