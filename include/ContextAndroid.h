@@ -488,7 +488,7 @@ public:
       paint.setShadow(shadowBlur * displayScale, shadowOffsetX * displayScale, shadowOffsetY * displayScale, shadowColor);
 
       jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
-      env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, native_surface->getBitmap(), NULL, dstRect, paint.getObject());
+      env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, bitmap, NULL, dstRect, paint.getObject());
       env->DeleteLocalRef(dstRect);
     } else {
       auto img = native_surface->createImage(displayScale);
