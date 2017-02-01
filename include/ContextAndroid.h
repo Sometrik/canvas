@@ -245,7 +245,7 @@ class AndroidPaint {
     jstring convertableString = env->NewStringUTF(text.c_str());
     jobject bytes = env->CallObjectMethod(convertableString, cache->stringGetBytesMethod);
     jobject jtext = env->NewObject(cache->stringClass, cache->stringConstructor, bytes, cache->charsetString);
-    float measure = env->CallFloatMethod(obj, cache->measureTextMethod, cache->getJNIEnv()->NewStringUTF(text.c_str()));
+    float measure = env->CallFloatMethod(obj, cache->measureTextMethod, convertableString);
     env->DeleteLocalRef(convertableString);
     env->DeleteLocalRef(bytes);
     env->DeleteLocalRef(jtext);
