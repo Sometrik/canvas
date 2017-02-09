@@ -49,7 +49,11 @@ Image::loadFromMemory(const unsigned char * buffer, size_t size) {
       unsigned char b = channels >= 3 ? img_buffer[channels * i + 2] : g;
       unsigned char a = channels == 4 ? img_buffer[channels * i + 3] : 0xff;
       if (a) {
+#ifdef __APPLE__
+	storage[i] = (0xff * r / a) + ((0xff * g / a) << 8) + ((0xff * b / a) << 16) + (a << 24);
+#else
 	storage[i] = (0xff * b / a) + ((0xff * g / a) << 8) + ((0xff * r / a) << 16) + (a << 24);
+#endif
       } else {
 	storage[i] = 0;
       }
@@ -88,7 +92,11 @@ Image::loadFromFile(const std::string & filename) {
       unsigned char b = channels >= 3 ? img_buffer[channels * i + 2] : g;
       unsigned char a = channels == 4 ? img_buffer[channels * i + 3] : 0xff;
       if (a) {
+#ifdef __APPLE__
+	storage[i] = (0xff * r / a) + ((0xff * g / a) << 8) + ((0xff * b / a) << 16) + (a << 24);
+#else
 	storage[i] = (0xff * b / a) + ((0xff * g / a) << 8) + ((0xff * r / a) << 16) + (a << 24);
+#endif
       } else {
 	storage[i] = 0;
       }
