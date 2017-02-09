@@ -49,6 +49,8 @@ namespace canvas {
     }
 
     std::string getFilename() const { return filename; }
+
+    void setDisplayScale(float f) { display_scale = f; }
     float getDisplayScale() const { return display_scale; }
 
   protected:
