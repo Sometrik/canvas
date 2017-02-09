@@ -8,7 +8,7 @@
 using namespace canvas;
 using namespace std;
 
-Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const Image & image)
+Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, const ImageData & image)
   : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getImageFormat().hasAlpha() ? RGBA8 : RGB8), cache(_cache) {
   assert(getActualWidth() && getActualHeight());
   size_t bitmapByteCount = 4 * getActualWidth() * getActualHeight();
@@ -25,7 +25,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const Image & image)
   }
 }
 
-Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & filename)
+Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, const std::string & filename)
   : Surface(0, 0, 0, 0, RGBA8), cache(_cache) {
   CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
   CGImageRef img;
@@ -65,7 +65,7 @@ Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const std::string & fil
   CGDataProviderRelease(provider);
 }
 
-Quartz2DSurface::Quartz2DSurface(Quartz2DCache * _cache, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, RGBA8), cache(_cache) {
+Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, RGBA8), cache(_cache) {
   CGImageRef img = 0;
   CGDataProviderRef provider = 0;
   if (isPNG(buffer, size)) {
@@ -253,7 +253,7 @@ Quartz2DSurface::resize(unsigned int _logical_width, unsigned int _logical_heigh
 }
 
 void
-Quartz2DSurface::drawImage(const Image & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
+Quartz2DSurface::drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
   initializeContext();
   bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
   if (has_shadow || !clipPath.empty()) {
@@ -293,15 +293,28 @@ Quartz2DSurface::drawImage(const Image & _img, const Point & p, double w, double
 
 class Quartz2DImage : public Image {
 public:
-  Quartz2DImage(const std::string & _filename, float _display_scale)
-    : Image(_filename, _display_scale) { }
+  Quartz2DImage(FilenameConverter * _converter, float _display_scale)
+    : Image(_display_scale), converter(_converter) { }
+
+  Quartz2DImage(FilenameConverter * _converter, const std::string & _filename, float _display_scale)
+    : Image(_filename, _display_scale),
+      converter(_converter) { }
+
+  Quartz2DImage(FilenameConverter * _converter, const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality, float _display_scale) : Image(_data, _format, _width, _height, _levels, _quality, _display_scale), converter(_converter) { }
   
-  void loadImage() override {
+  void loadFile() override {
+#if 0
+    // Create CFString
+    CFStringRef filename2 = CFStringCreateWithCString(NULL, filename.c_str(), kCFStringEncodingUTF8);
+
     // Get a reference to the main bundle
     CFBundleRef mainBundle = CFBundleGetMainBundle();
-  
+    if (!mainBundle) {
+      cerr << "failed to get main bundle, err = " << fnfErr << endl;
+    }
+    
     // Get a reference to the file's URL
-    CFURLRef imageURL = CFBundleCopyResourceURL(mainBundle, filename.c_str(), NULL, NULL);
+    CFURLRef imageURL = CFBundleCopyResourceURL(mainBundle, filename2, NULL, NULL);
 
     // Convert the URL reference into a string reference
     CFStringRef imagePath = CFURLCopyFileSystemPath(imageURL, kCFURLPOSIXPathStyle);
@@ -311,13 +324,40 @@ public:
     
     // Convert the string reference into a C string
     const char *path = CFStringGetCStringPtr(imagePath, encodingMethod);
-
+#else
+    string path;
+    converter->convert(filename, path);
+#endif
     data = loadFromFile(path);
     if (!data.get()) filename.clear();
-  }  
+  }
+      
+    private:
+      FilenameConverter * converter;
 };
 
 std::unique_ptr<Image>
 Quartz2DContextFactory::loadImage(const std::string & filename) {
-  return std::unique_ptr<Image>(new Quartz2DImage>(filename, getDisplayScale()));
+  return std::unique_ptr<Image>(new Quartz2DImage(converter, filename, getDisplayScale()));
+}
+
+std::unique_ptr<Image>
+Quartz2DContextFactory::createImage() {
+  return std::unique_ptr<Image>(new Quartz2DImage(converter, getDisplayScale()));
+}
+
+std::unique_ptr<Image>
+Quartz2DContextFactory::createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) {
+  return std::unique_ptr<Image>(new Quartz2DImage(converter, _data, _format, _width, _height, _levels, _quality, getDisplayScale()));
+}
+
+std::unique_ptr<Image>
+Quartz2DSurface::createImage(float display_scale) {
+  unsigned char * buffer = (unsigned char *)lockMemory(false);
+  assert(buffer);
+
+  auto image = std::unique_ptr<Image>(new Quartz2DImage(0, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
+  releaseMemory();
+  
+  return image;
 }
