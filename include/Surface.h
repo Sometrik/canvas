@@ -38,9 +38,7 @@ namespace canvas {
     
     Surface(const Surface & other) = delete;
     Surface & operator=(const Surface & other) = delete;
-    virtual ~Surface() {
-      delete[] scaled_buffer;
-    }
+    virtual ~Surface() = default;
 
     virtual void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) {
       logical_width = _logical_width;
@@ -51,11 +49,11 @@ namespace canvas {
     }
 
     virtual void * lockMemory(bool write_access = false) = 0;
+    virtual void releaseMemory() = 0;
+
+#if 0
     virtual void * lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height);
-    virtual void releaseMemory() {
-      delete[] scaled_buffer;
-      scaled_buffer = 0;
-    }
+#endif
 
     virtual void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) = 0;
     virtual void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) = 0;
@@ -96,7 +94,6 @@ namespace canvas {
     FilterMode min_filter = LINEAR;
     InternalFormat format;
     InternalFormat target_format = NO_FORMAT;
-    unsigned int * scaled_buffer = 0;
   };
 };
 

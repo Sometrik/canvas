@@ -303,6 +303,7 @@ Surface::multiply(const Color & color) {
 }
 #endif
 
+#if 0
 void *
 Surface::lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height) {
   unsigned int * buffer = (unsigned int *)lockMemory();
@@ -320,6 +321,7 @@ Surface::lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int requir
 
   return scaled_buffer;
 }
+#endif
 
 bool
 Surface::isPNG(const unsigned char * buffer, size_t size) {
