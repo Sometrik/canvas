@@ -48,9 +48,6 @@ namespace canvas {
       format = _format;
     }
 
-    virtual void * lockMemory(bool write_access = false) = 0;
-    virtual void releaseMemory() = 0;
-
 #if 0
     virtual void * lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height);
 #endif
@@ -82,6 +79,9 @@ namespace canvas {
     InternalFormat getTargetFormat() const { return target_format ? target_format : getFormat(); }
     
   protected:
+    virtual void * lockMemory(bool write_access = false) = 0;
+    virtual void releaseMemory() = 0;
+
     static bool isPNG(const unsigned char * buffer, size_t size);
     static bool isJPEG(const unsigned char * buffer, size_t size);
     static bool isGIF(const unsigned char * buffer, size_t size);
