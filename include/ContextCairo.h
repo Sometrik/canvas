@@ -15,20 +15,6 @@ namespace canvas {
     CairoSurface(const unsigned char * buffer, size_t size);
     ~CairoSurface();
     
-    void flush();
-    void markDirty();
-    void * lockMemory(bool write_access = false) {
-      flush();
-      locked_for_write = write_access;
-      return cairo_image_surface_get_data(surface);
-    }
-    void releaseMemory() {
-      Surface::releaseMemory();
-      if (locked_for_write) {
-	locked_for_write = false;
-	markDirty();
-      }
-    }
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format);
 
     void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath);
@@ -40,6 +26,21 @@ namespace canvas {
     std::unique_ptr<Image> createImage(float display_scale) override;
       
   protected:
+    void flush();
+    void markDirty();
+
+    void * lockMemory(bool write_access = false) override {
+      flush();
+      locked_for_write = write_access;
+      return cairo_image_surface_get_data(surface);
+    }
+    void releaseMemory() override {
+      if (locked_for_write) {
+	locked_for_write = false;
+	markDirty();
+      }
+    }
+
     void initializeContext() {
       if (!cr) {
 	if (!surface) {
