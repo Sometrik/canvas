@@ -319,22 +319,6 @@ public:
     }
   }
 
-  void * lockMemory(bool write_access = false) override {
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "lockMemory called");
-
-    JNIEnv * env = cache->getJNIEnv();
-
-    uint32_t *pixels;
-    AndroidBitmap_lockPixels(env, bitmap, reinterpret_cast<void **>(&pixels));
-
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "pixels = %p", pixels);
-    return pixels;
-  }
-
-  void releaseMemory() override {
-    // is there AndroidBitmap_releasePixels?
-  }
-
   void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
 
     JNIEnv * env = cache->getJNIEnv();
@@ -518,6 +502,20 @@ public:
   std::unique_ptr<Image> createImage(float display_scale) override;
 
  protected:
+  void * lockMemory(bool write_access = false) override {
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "lockMemory called");
+
+    JNIEnv * env = cache->getJNIEnv();
+
+    uint32_t *pixels;
+    AndroidBitmap_lockPixels(env, bitmap, reinterpret_cast<void **>(&pixels));
+
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "pixels = %p", pixels);
+    return pixels;
+  }
+
+  void releaseMemory() override { }
+
   jobject imageToBitmap(const ImageData & _img);
   
   void checkForCanvas() {
