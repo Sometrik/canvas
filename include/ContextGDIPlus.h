@@ -65,34 +65,6 @@ namespace canvas {
       bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, _has_alpha ? PixelFormat32bppPARGB : PixelFormat32bppRGB ));
       g = std::unique_ptr<Gdiplus::Graphics>(0);
     }
-    void flush() { }
-    void markDirty() { }
-
-    void * lockMemory(bool write_access = false) {
-      if (bitmap.get()) {
-	flush();
-	Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-	bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), hasAlpha() ? PixelFormat32bppPARGB : PixelFormat32bppRGB, &data);
-	return data.Scan0;
-      } else {
-	return 0;
-      }
-    }
-
-#if 0
-    void * lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height) {
-      flush();
-      Gdiplus::Rect rect(x0, y0, required_width, required_height);
-      bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppPARGB, &data);
-      return data.Scan0;
-    }
-#endif
-      
-    void releaseMemory() {
-      Surface::releaseMemory();
-      bitmap->UnlockBits(&data);
-      markDirty();
-    }
 
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p,, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
     TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
@@ -119,6 +91,28 @@ namespace canvas {
     }
 
   protected:
+    void * lockMemory(bool write_access = false) {
+      if (bitmap.get()) {
+	Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+	bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), hasAlpha() ? PixelFormat32bppPARGB : PixelFormat32bppRGB, &data);
+	return data.Scan0;
+      } else {
+	return 0;
+      }
+    }
+
+#if 0
+    void * lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height) {
+      Gdiplus::Rect rect(x0, y0, required_width, required_height);
+      bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppPARGB, &data);
+      return data.Scan0;
+    }
+#endif
+      
+    void releaseMemory() {
+      bitmap->UnlockBits(&data);
+    }
+
     void initializeContext() {
       if (!g.get()) {
 	if (!bitmap.get()) {
