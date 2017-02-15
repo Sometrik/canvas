@@ -75,7 +75,7 @@ namespace canvas {
     unsigned int getHeight() const { return height; }
     unsigned int getLevels() const { return levels; }
     InternalFormat getInternalFormat() const { return format; }
-    ImageFormat getImageFormat() const { return getImageFormat(format); }
+    const ImageFormat & getImageFormat() const { return getImageFormat(format); }
     short getQuality() const { return quality; }
     const unsigned char * getData() const { return data; }
     const unsigned char * getDataForLevel(unsigned int level) {
@@ -83,7 +83,7 @@ namespace canvas {
     }
 
     static size_t calculateOffset(unsigned int width, unsigned int height, unsigned int level, InternalFormat input_format) {
-      ImageFormat format = getImageFormat(input_format);
+      auto & format = getImageFormat(input_format);
       size_t s = 0;
       if (format.getCompression() == ImageFormat::ETC1 || format.getCompression() == ImageFormat::DXT1 || format.getCompression() == ImageFormat::RGTC1) {
 	for (unsigned int l = 0; l < level; l++) {
