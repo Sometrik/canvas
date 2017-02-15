@@ -3,6 +3,8 @@
 #include <cassert>
 #include <iostream>
 
+#include <FloydSteinberg.h>
+
 #include "rg_etc1.h"
 #include "dxt.h"
 
@@ -163,6 +165,14 @@ ImageData::convert(InternalFormat target_format) const {
     }
 
     return unique_ptr<ImageData>(new ImageData(tmp.get(), target_format, getWidth(), getHeight()));
+  } else if (target_fd.getNumChannels() == 4) {
+    assert(target_fd.getBytesPerPixel() == 2);
+    FloydSteinberg fs(this, RGBA4);
+    return fs.apply();
+  } else if (target_fd.getNumChannels() == 3) {
+    assert(target_fd.getBytesPerPixel() == 2);
+    FloydSteinberg fs(this, RGB565);
+    return fs.apply();
   } else {
     assert(target_fd.getBytesPerPixel() == 2);
     unsigned int target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
@@ -179,18 +189,6 @@ ImageData::convert(InternalFormat target_format) const {
 	int lum = (r + g + b) / 3;
 	if (lum >= 255) lum = 255;
 	*output_data++ = (a << 8) | lum;
-      }
-    } else if (target_fd.getNumChannels() == 3) {
-      for (unsigned int i = 0; i < n; i++) {
-	unsigned int input_offset = i * fd.getBytesPerPixel();
-	unsigned char r = data[input_offset++] >> 3;
-	unsigned char g = (fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r) >> 2;
-	unsigned char b = (fd.getBytesPerPixel() >= 2 ? data[input_offset++] : g) >> 3;
-#ifdef __APPLE__
-	*output_data++ = PACK_RGB565(b, g, r);
-#else
-	*output_data++ = PACK_RGB565(r, g, b);
-#endif
       }
     } else {
       for (unsigned int i = 0; i < n; i++) {
