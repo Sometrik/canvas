@@ -22,32 +22,32 @@ ImageData::ImageData(InternalFormat _format, unsigned int _width, unsigned int _
 
   auto & fd = getImageFormat(format);
   
-  data = new unsigned char[s];
+  data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
   if (fd.getCompression() == ImageFormat::ETC1) {
     for (unsigned int i = 0; i < s; i += 8) {
-      *(unsigned int *)(data + i + 0) = 0x00000000;
-      *(unsigned int *)(data + i + 4) = 0xffffffff;
+      *(unsigned int *)(data.get() + i + 0) = 0x00000000;
+      *(unsigned int *)(data.get() + i + 4) = 0xffffffff;
     }
   } else if (fd.getCompression() == ImageFormat::DXT1) {
     for (unsigned int i = 0; i < s; i += 8) {
-      *(unsigned int *)(data + i + 0) = 0x00000000;
-      *(unsigned int *)(data + i + 4) = 0xaaaaaaaa;
+      *(unsigned int *)(data.get() + i + 0) = 0x00000000;
+      *(unsigned int *)(data.get() + i + 4) = 0xaaaaaaaa;
     }
   } else if (fd.getCompression() == ImageFormat::RGTC1) {
     for (unsigned int i = 0; i < s; i += 8) {
-      *(unsigned int *)(data + i + 0) = 0x00000003; // doesn't work on big endian
-      *(unsigned int *)(data + i + 4) = 0x00000000;
+      *(unsigned int *)(data.get() + i + 0) = 0x00000003; // doesn't work on big endian
+      *(unsigned int *)(data.get() + i + 4) = 0x00000000;
     }
   } else if (fd.getCompression() == ImageFormat::RGTC2) {
     for (unsigned int i = 0; i < s; i += 16) {
-      *(unsigned int *)(data + i + 0) = 0x00000003;
-      *(unsigned int *)(data + i + 4) = 0x00000000;
-      *(unsigned int *)(data + i + 4) = 0x00000003;
-      *(unsigned int *)(data + i + 8) = 0x00000000;
+      *(unsigned int *)(data.get() + i + 0) = 0x00000003;
+      *(unsigned int *)(data.get() + i + 4) = 0x00000000;
+      *(unsigned int *)(data.get() + i + 4) = 0x00000003;
+      *(unsigned int *)(data.get() + i + 8) = 0x00000000;
     }
   } else if (!fd.getCompression()) {
     cerr << "clearing memory for " << s << " bytes\n";
-    memset(data, 0, s);      
+    memset(data.get(), 0, s);
   } else {
     assert(0);
   }
@@ -219,7 +219,7 @@ ImageData::scale(unsigned int target_base_width, unsigned int target_base_height
   cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
   unsigned int target_offset = 0, target_width = target_base_width, target_height = target_base_height;
-  stbir_resize_uint8(data, getWidth(), getHeight(), 0, output_data.get(), target_width, target_height, 0, fd.getBytesPerPixel());
+  stbir_resize_uint8(data.get(), getWidth(), getHeight(), 0, output_data.get(), target_width, target_height, 0, fd.getBytesPerPixel());
 
   if (target_levels > 1) {
     cerr << "creating mipmaps for format, channels = " << fd.getNumChannels() << ", bpp = " << fd.getBytesPerPixel() << endl;
@@ -264,7 +264,7 @@ ImageData::createMipmaps(unsigned int target_levels) const {
   assert(levels == 1);
   size_t target_size = calculateOffset(target_levels);
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
-  memcpy(output_data.get(), data, calculateOffset(1));
+  memcpy(output_data.get(), data.get(), calculateOffset(1));
   unsigned int source_width = width, source_height = height;
   unsigned int target_width = width / 2, target_height = height / 2;
   for (unsigned int level = 1; level < target_levels; level++) {

@@ -35,16 +35,16 @@ namespace canvas {
       return ImageFormat::UNDEF;
     }
 
-  ImageData() : width(0), height(0), levels(0), data(0), format(NO_FORMAT), quality(0) { }
+  ImageData() : width(0), height(0), levels(0), format(NO_FORMAT), quality(0) { }
   ImageData(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0)
     : width(_width), height(_height), levels(_levels), format(_format), quality(_quality)
     {
       size_t s = calculateSize();
-      data = new unsigned char[s];
+      data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
       if (!_data) {
-	memset(data, 0, s);
+	memset(data.get(), 0, s);
       } else {
-	memcpy(data, _data, s);
+	memcpy(data.get(), _data, s);
       }
     }
     ImageData(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1, short _quality = 0);
@@ -52,15 +52,12 @@ namespace canvas {
       : width(other.getWidth()), height(other.getHeight()), levels(other.levels), format(other.format), quality(other.getQuality())
     {
       size_t s = calculateSize();
-      data = new unsigned char[s];
+      data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
       if (other.getData()) {
-	memcpy(data, other.getData(), s);
+	memcpy(data.get(), other.getData(), s);
       } else {
-	memset(data, 0, s);
+	memset(data.get(), 0, s);
       }
-    }
-    ~ImageData() {
-      delete[] data;
     }
 
     ImageData & operator=(const ImageData & other) = delete;
@@ -77,9 +74,9 @@ namespace canvas {
     InternalFormat getInternalFormat() const { return format; }
     const ImageFormat & getImageFormat() const { return getImageFormat(format); }
     short getQuality() const { return quality; }
-    const unsigned char * getData() const { return data; }
+    const unsigned char * getData() const { return data.get(); }
     const unsigned char * getDataForLevel(unsigned int level) {
-      return data + calculateOffset(level);
+      return data.get() + calculateOffset(level);
     }
 
     static size_t calculateOffset(unsigned int width, unsigned int height, unsigned int level, InternalFormat input_format) {
@@ -116,7 +113,7 @@ namespace canvas {
     
   private:
     unsigned int width, height, levels;
-    unsigned char * data = 0;
+    std::unique_ptr<unsigned char[]> data;
     InternalFormat format;
     short quality;
     static bool etc1_initialized;
