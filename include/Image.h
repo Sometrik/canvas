@@ -17,7 +17,7 @@ namespace canvas {
     : data(new ImageData(_data, _format, _width, _height, _levels, _quality)),
       display_scale(_display_scale) { }
 
-    virtual ~Image() { }
+    virtual ~Image() = default;
 
     bool decode(const unsigned char * buffer, size_t size);
     void convert(InternalFormat target_format) {
