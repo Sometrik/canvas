@@ -151,13 +151,13 @@ Surface::slowBlur(float hradius, float vradius) {
     if (hradius > 0.0f) {
       vector<int> hkernel = make_kernel(hradius);
       unsigned short hsize = hkernel.size();
+
       int htotal = 0;
-      for (vector<int>::iterator it = hkernel.begin(); it != hkernel.end(); it++) {
-	htotal += *it;
-      }
+      for (auto & a : hkernel) htotal += a;
+
       memset(tmp, 0, actual_width * actual_height * 4);
       for (unsigned int row = 0; row < actual_height; row++) {
-	for (unsigned int col = 0; col + hsize < actual_width; col++) {
+	for (unsigned int col = 0; col + hsize <= actual_width; col++) {
 	  int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
 	  for (unsigned int i = 0; i < hsize; i++) {
 	    unsigned char * ptr = buffer + (row * actual_width + col + i) * 4;
@@ -179,14 +179,13 @@ Surface::slowBlur(float hradius, float vradius) {
     if (vradius > 0) {
       vector<int> vkernel = make_kernel(vradius);
       unsigned short vsize = vkernel.size();
+
       int vtotal = 0;
-      for (vector<int>::iterator it = vkernel.begin(); it != vkernel.end(); it++) {
-	vtotal += *it;
-      }
+      for (auto & a : vkernel) vtotal += a;
       
       memset(buffer, 0, actual_width * actual_height * 4);
       for (unsigned int col = 0; col < actual_width; col++) {
-	for (unsigned int row = 0; row + vsize < actual_height; row++) {
+	for (unsigned int row = 0; row + vsize <= actual_height; row++) {
 	  int c0 = 0, c1 = 0, c2 = 0, c3 = 0;
 	  for (unsigned int i = 0; i < vsize; i++) {
 	    unsigned char * ptr = tmp + ((row + i) * actual_width + col) * 4;
@@ -211,17 +210,17 @@ Surface::slowBlur(float hradius, float vradius) {
     if (hradius > 0.0f) {
       vector<int> hkernel = make_kernel(hradius);
       unsigned short hsize = hkernel.size();
+
       int htotal = 0;
-      for (vector<int>::iterator it = hkernel.begin(); it != hkernel.end(); it++) {
-	htotal += *it;
-      }
+      for (auto & a : hkernel) htotal += a;
+
       memset(tmp, 0, actual_width * actual_height);
       for (unsigned int row = 0; row < actual_height; row++) {
-	for (unsigned int col = 0; col + hsize < actual_width; col++) {
+	for (unsigned int col = 0; col + hsize <= actual_width; col++) {
 	  int c0 = 0;
 	  for (unsigned int i = 0; i < hsize; i++) {
 	    unsigned char * ptr = buffer + (row * actual_width + col + i);
-	    c0 += *ptr * hkernel[i];	    
+	    c0 += *ptr * hkernel[i];
 	  }
 	  unsigned char * ptr = tmp + (row * actual_width + col + hsize / 2);
 	  *ptr = (unsigned char)(c0 / htotal);	  
@@ -234,17 +233,15 @@ Surface::slowBlur(float hradius, float vradius) {
       vector<int> vkernel = make_kernel(vradius);
       unsigned short vsize = vkernel.size();
       int vtotal = 0;
-      for (vector<int>::iterator it = vkernel.begin(); it != vkernel.end(); it++) {
-	vtotal += *it;
-      }
+      for (auto & a : vkernel) vtotal += a;
       
       memset(buffer, 0, actual_width * actual_height);
       for (unsigned int col = 0; col < actual_width; col++) {
-	for (unsigned int row = 0; row + vsize < actual_height; row++) {
+	for (unsigned int row = 0; row + vsize <= actual_height; row++) {
 	  int c0 = 0;
 	  for (unsigned int i = 0; i < vsize; i++) {
 	    unsigned char * ptr = tmp + ((row + i) * actual_width + col);
-	    c0 += *ptr++ * vkernel[i];
+	    c0 += *ptr * vkernel[i];
 	  }
 	  unsigned char * ptr = buffer + ((row + vsize / 2) * actual_width + col);
 	  *ptr = (unsigned char)(c0 / vtotal);
