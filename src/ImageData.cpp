@@ -160,7 +160,6 @@ ImageData::convert(InternalFormat target_format) const {
       unsigned char r = data[input_offset++];
       unsigned char g = fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r;
       unsigned char b = fd.getBytesPerPixel() >= 2 ? data[input_offset++] : g;
-      unsigned char a = fd.getBytesPerPixel() >= 3 ? data[input_offset++] : 0xff;
       *output_data++ = (r + g + b) / 3;
     }
 
@@ -216,7 +215,7 @@ ImageData::scale(unsigned int target_base_width, unsigned int target_base_height
   assert(!fd.getCompression());
   size_t input_size = calculateSize();
   size_t target_size = calculateOffset(target_base_width, target_base_height, target_levels, format);
-  cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
+  // cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
   unsigned int target_offset = 0, target_width = target_base_width, target_height = target_base_height;
   stbir_resize_uint8(data.get(), getWidth(), getHeight(), 0, output_data.get(), target_width, target_height, 0, fd.getBytesPerPixel());
