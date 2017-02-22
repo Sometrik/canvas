@@ -1113,8 +1113,10 @@ static unsigned char *stbi__load_and_postprocess_8bit(stbi__context *s, int *x, 
    if (result == NULL)
       return NULL;
 
+   if (ri.bits_per_channel != 8 && ri.bits_per_channel != 16) {
+      return NULL;
+   }
    if (ri.bits_per_channel != 8) {
-      STBI_ASSERT(ri.bits_per_channel == 16);
       result = stbi__convert_16_to_8((stbi__uint16 *) result, *x, *y, req_comp == 0 ? *comp : req_comp);
       ri.bits_per_channel = 8;
    }
