@@ -270,20 +270,21 @@ Quartz2DSurface::drawImage(const ImageData & _img, const Point & p, double w, do
   CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), format.getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
   auto f = (format.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
   CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), cache->getColorSpace(), f, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
-  assert(img);
-  flipY();
-  if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
-  CGContextDrawImage(gc, CGRectMake(displayScale * p.x, getActualHeight() - 1 - displayScale * (p.y + h), displayScale * w, displayScale * h), img);
-  if (globalAlpha < 1.0f) CGContextSetAlpha(gc, 1.0f);
-  flipY();
+  if (img) {
+    flipY();
+    if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
+    CGContextDrawImage(gc, CGRectMake(displayScale * p.x, getActualHeight() - 1 - displayScale * (p.y + h), displayScale * w, displayScale * h), img);
+    if (globalAlpha < 1.0f) CGContextSetAlpha(gc, 1.0f);
+    flipY();
   
 #ifdef MEMDEBUG
-  if (CFGetRetainCount(img) != 1) std::cerr << "leaking memory O!\n";
+    if (CFGetRetainCount(img) != 1) std::cerr << "leaking memory O!\n";
 #endif
-  CGImageRelease(img);
+    CGImageRelease(img);
 #ifdef MEMDEBUG
-  if (CFGetRetainCount(provider) != 1) std::cerr << "leaking memory P!\n";
+    if (CFGetRetainCount(provider) != 1) std::cerr << "leaking memory P!\n";
 #endif
+  }
   CGDataProviderRelease(provider);
   if (has_shadow || !clipPath.empty()) {
     CGContextRestoreGState(gc);
