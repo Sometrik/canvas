@@ -211,7 +211,6 @@ ImageData::convert(InternalFormat target_format) const {
 std::unique_ptr<ImageData>
 ImageData::scale(unsigned int target_base_width, unsigned int target_base_height, unsigned int target_levels) const {
   auto & fd = getImageFormat(format);
-  assert(fd.getBytesPerPixel() == 1 || fd.getBytesPerPixel() == 4);
   assert(!fd.getCompression());
   size_t input_size = calculateSize();
   size_t target_size = calculateOffset(target_base_width, target_base_height, target_levels, format);
