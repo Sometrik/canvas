@@ -14,9 +14,9 @@ FloydSteinberg::apply() {
   unsigned short * output_data = (unsigned short *)tmp.get();
   unsigned int n = target_size / 2;
 
-  for (unsigned int y = 0; y < height; y++) {
-    for (unsigned int x = 0; x < width; x++) {
-      unsigned int input_offset = 4 * (y * width + x);
+  for (int y = 0; y < (int)height; y++) {
+    for (int x = 0; x < (int)width; x++) {
+      auto input_offset = 4 * (y * width + x);
       unsigned char old_r = input_data[input_offset++];
       unsigned char old_g = input_data[input_offset++];
       unsigned char old_b = input_data[input_offset++];
@@ -50,10 +50,10 @@ FloydSteinberg::apply() {
 #endif
       }
 
-      if (x + 1 < width) addError(x + 1, y,     7.0f/16.0f, r_error, g_error, b_error, a_error);
-      if (x > 0 && y + 1 < height) addError(x - 1, y + 1, 3.0f/16.0f, r_error, g_error, b_error, a_error);
-      if (y + 1 < height) addError(x,     y + 1, 5.0f/16.0f, r_error, g_error, b_error, a_error);
-      if (x + 1 < width && y + 1 < height) addError(x + 1, y + 1, 1.0f/16.0f, r_error, g_error, b_error, a_error);
+      addError(x + 1, y,     7.0f/16.0f, r_error, g_error, b_error, a_error);
+      addError(x - 1, y + 1, 3.0f/16.0f, r_error, g_error, b_error, a_error);
+      addError(x,     y + 1, 5.0f/16.0f, r_error, g_error, b_error, a_error);
+      addError(x + 1, y + 1, 1.0f/16.0f, r_error, g_error, b_error, a_error);
     }
   }
   
