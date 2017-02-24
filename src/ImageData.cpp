@@ -174,12 +174,12 @@ ImageData::convert(InternalFormat target_format) const {
     return fs.apply();
   } else {
     assert(target_fd.getBytesPerPixel() == 2);
-    unsigned int target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
+    auto target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
     std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_size]);
     unsigned short * output_data = (unsigned short *)tmp.get();
-    unsigned int n = calculateSize() / fd.getBytesPerPixel();
+    auto n = calculateSize() / fd.getBytesPerPixel();
     if (target_fd.getNumChannels() == 2) {
-      for (unsigned int i = 0; i < n; i++) {
+      for (auto i = 0; i < n; i++) {
 	unsigned int input_offset = i * fd.getBytesPerPixel();
 	unsigned char r = data[input_offset++];
 	unsigned char g = fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r;
@@ -190,7 +190,7 @@ ImageData::convert(InternalFormat target_format) const {
 	*output_data++ = (a << 8) | lum;
       }
     } else {
-      for (unsigned int i = 0; i < n; i++) {
+      for (auto i = 0; i < n; i++) {
 	unsigned int input_offset = i * fd.getBytesPerPixel();
 	unsigned char r = data[input_offset++] >> 4;
 	unsigned char g = (fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r) >> 4;
@@ -212,11 +212,10 @@ std::unique_ptr<ImageData>
 ImageData::scale(unsigned int target_base_width, unsigned int target_base_height, unsigned int target_levels) const {
   auto & fd = getImageFormat(format);
   assert(!fd.getCompression());
-  size_t input_size = calculateSize();
   size_t target_size = calculateOffset(target_base_width, target_base_height, target_levels, format);
   // cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
-  unsigned int target_offset = 0, target_width = target_base_width, target_height = target_base_height;
+  unsigned int target_width = target_base_width, target_height = target_base_height;
   stbir_resize_uint8(data.get(), getWidth(), getHeight(), 0, output_data.get(), target_width, target_height, 0, fd.getBytesPerPixel());
 
   if (target_levels > 1) {
