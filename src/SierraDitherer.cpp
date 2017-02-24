@@ -14,9 +14,9 @@ SierraDitherer::apply() {
   unsigned short * output_data = (unsigned short *)tmp.get();
   unsigned int n = target_size / 2;
 
-  for (unsigned int y = 0; y < height; y++) {
-    for (unsigned int x = 0; x < width; x++) {
-      unsigned int input_offset = 4 * (y * width + x);
+  for (int y = 0; y < int(height); y++) {
+    for (int x = 0; x < int(width); x++) {
+      auto input_offset = 4 * (y * width + x);
       unsigned char old_r = input_data[input_offset++];
       unsigned char old_g = input_data[input_offset++];
       unsigned char old_b = input_data[input_offset++];
