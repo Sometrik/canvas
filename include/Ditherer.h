@@ -17,7 +17,7 @@ namespace canvas {
 
   protected:
     inline void addError(int x, int y, float weight, unsigned char r_error, unsigned char g_error, unsigned char b_error, unsigned char a_error) {
-      if (x >= 0 && y >= 0 && x < width && y < width) {
+      if (x >= 0 && y >= 0 && x < width && y < height) {
 	unsigned int offset = 4 * (y * width + x);
 	int r = int(input_data[offset++] + weight * r_error);
 	int g = int(input_data[offset++] + weight * g_error);
