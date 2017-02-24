@@ -3,7 +3,7 @@
 #include <cassert>
 #include <iostream>
 
-#include <FloydSteinberg.h>
+#include <StuckiDitherer.h>
 
 #include "rg_etc1.h"
 #include "dxt.h"
@@ -166,12 +166,12 @@ ImageData::convert(InternalFormat target_format) const {
     return unique_ptr<ImageData>(new ImageData(tmp.get(), target_format, getWidth(), getHeight()));
   } else if (target_fd.getNumChannels() == 4) {
     assert(target_fd.getBytesPerPixel() == 2);
-    FloydSteinberg fs(this, RGBA4);
-    return fs.apply();
+    StuckiDitherer d(*this, RGBA4);
+    return d.apply();
   } else if (target_fd.getNumChannels() == 3) {
     assert(target_fd.getBytesPerPixel() == 2);
-    FloydSteinberg fs(this, RGB565);
-    return fs.apply();
+    StuckiDitherer d(*this, RGB565);
+    return d.apply();
   } else {
     assert(target_fd.getBytesPerPixel() == 2);
     auto target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);

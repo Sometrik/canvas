@@ -1,4 +1,4 @@
-#include "FloydSteinberg.h"
+#include "StuckiDitherer.h"
 
 #include <ImageData.h>
 
@@ -8,14 +8,14 @@ using namespace std;
 using namespace canvas;
   
 unique_ptr<ImageData>
-FloydSteinberg::apply() {  
+StuckiDitherer::apply() {  
   auto target_size = width * height * 2;
   std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_size]);
   unsigned short * output_data = (unsigned short *)tmp.get();
   unsigned int n = target_size / 2;
 
-  for (int y = 0; y < (int)height; y++) {
-    for (int x = 0; x < (int)width; x++) {
+  for (int y = 0; y < int(height); y++) {
+    for (int x = 0; x < int(width); x++) {
       auto input_offset = 4 * (y * width + x);
       unsigned char old_r = input_data[input_offset++];
       unsigned char old_g = input_data[input_offset++];
@@ -50,10 +50,18 @@ FloydSteinberg::apply() {
 #endif
       }
 
-      addError(x + 1, y,     7.0f/16.0f, r_error, g_error, b_error, a_error);
-      addError(x - 1, y + 1, 3.0f/16.0f, r_error, g_error, b_error, a_error);
-      addError(x,     y + 1, 5.0f/16.0f, r_error, g_error, b_error, a_error);
-      addError(x + 1, y + 1, 1.0f/16.0f, r_error, g_error, b_error, a_error);
+      addError(x + 1, y,     8.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x + 2, y,     4.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x - 2, y + 1, 2.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x - 1, y + 1, 4.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x,     y + 1, 8.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x + 1, y + 1, 4.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x + 2, y + 1, 2.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x - 2, y + 2, 1.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x - 1, y + 2, 2.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x,     y + 2, 4.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x + 1, y + 2, 2.0f/42.0f, r_error, g_error, b_error, a_error);
+      addError(x + 2, y + 2, 1.0f/42.0f, r_error, g_error, b_error, a_error);
     }
   }
   
