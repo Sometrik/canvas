@@ -244,45 +244,48 @@ public:
 
 protected:
   void loadFile() override {
-    AAsset * asset = AAssetManager_open(asset_manager, getFilename().c_str(), 0);
     std::unique_ptr<ImageData> data;
-    if (asset) {
-      FILE * in = funopen(asset, android_read, android_write, android_seek, android_close);
+    if (asset_manager) {
+      AAsset * asset = AAssetManager_open(asset_manager, getFilename().c_str(), 0);
+      if (asset) {
+        FILE * in = funopen(asset, android_read, android_write, android_seek, android_close);
 
-      basic_string<unsigned char> s;
-      while (!feof(in)) {
-        unsigned char b[256];
-        size_t n = fread(b, 1, 256, in);
-        s += basic_string<unsigned char>(b, n);
+        basic_string<unsigned char> s;
+        while (!feof(in)) {
+          unsigned char b[256];
+          size_t n = fread(b, 1, 256, in);
+          s += basic_string<unsigned char>(b, n);
+        }
+        fclose(in);
+
+        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "image %s loaded successfully: %d", getFilename().c_str(), int(s.size()));
+
+        data = loadFromMemory(s.data(), s.size());
       }
-      fclose(in);
-
-      data = loadFromMemory(s.data(), s.size());
-    } else {
-      data = std::unique_ptr<ImageData>(nullptr);
     }
     if (!data.get()) {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "image %s loading FAILED", getFilename().c_str());
       getFilename().clear();
     }
   }
 
 private:
-  AndroidCache * cache;
+  AAssetManager * asset_manager;
 };
 
 std::unique_ptr<Image>
 AndroidContextFactory::loadImage(const std::string & filename) {
-  return std::unique_ptr<Image>(new AndroidImage(cache.get(), filename, getDisplayScale()));
+  return std::unique_ptr<Image>(new AndroidImage(asset_manager, filename, getDisplayScale()));
 }
 
 std::unique_ptr<Image>
 AndroidContextFactory::createImage() {
-  return std::unique_ptr<Image>(new AndroidImage(cache.get(), getDisplayScale()));
+  return std::unique_ptr<Image>(new AndroidImage(asset_manager, getDisplayScale()));
 }
 
 std::unique_ptr<Image>
 AndroidContextFactory::createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) {
-  return std::unique_ptr<Image>(new AndroidImage(cache.get(), _data, _format, _width, _height, _levels, _quality, getDisplayScale()));
+  return std::unique_ptr<Image>(new AndroidImage(asset_manager, _data, _format, _width, _height, _levels, _quality, getDisplayScale()));
 }
 
 std::unique_ptr<Image>
@@ -290,7 +293,7 @@ AndroidSurface::createImage(float display_scale) {
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
 
-  auto image = std::unique_ptr<Image>(new AndroidImage(cache, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
+  auto image = std::unique_ptr<Image>(new AndroidImage(0, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
   releaseMemory();
   
   return image;
