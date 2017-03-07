@@ -263,6 +263,7 @@ protected:
         size_t n = fread(b, 1, 256, in);
         s += basic_string<unsigned char>(b, n);
       }
+      fclose(in);
 
       data = loadFromMemory(s.data(), s.size());
     } else {
