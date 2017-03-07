@@ -195,6 +195,7 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
   const unsigned char * buf = _img.getData();
   int length = _img.calculateOffset(1);
 
+  __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Image Width = %u", _img.getWidth());
   __android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
 
   jbyteArray jarray = env->NewByteArray(length);
@@ -210,7 +211,6 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "printing trace");
     env->CallVoidMethod(error, cache->getStackTraceMethod);
     throw(error);
-  }
   env->CallStaticVoidMethod(cache->frameClass, cache->errorMethod, error);
   env->DeleteLocalRef(error);
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "clearing");
