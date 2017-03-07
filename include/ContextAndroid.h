@@ -614,8 +614,10 @@ private:
 
 class AndroidContextFactory: public ContextFactory {
 public:
- AndroidContextFactory(jobject _assetManager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale) :
-      ContextFactory(_displayScale), cache(_cache) {
+ AndroidContextFactory(jobject assetManager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale) :
+      ContextFactory(_displayScale), cache(_cache) {	
+    JNIEnv * env = cache->getJNIEnv();
+    asset_manager = AAssetManager_fromJava(env, assetManager);
   }
   std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format) override {
     return std::unique_ptr<Context>(new ContextAndroid(cache.get(), width, height, format, getDisplayScale()));
@@ -631,6 +633,7 @@ public:
 
 private:
   std::shared_ptr<AndroidCache> cache;
+  AAssetManager * asset_manager;
 };
 }
 ;

@@ -242,22 +242,17 @@ static int android_close(void* cookie) {
 
 class AndroidImage : public Image {
 public:
-  AndroidImage(AndroidCache * _cache, float _display_scale)
-    : Image(_display_scale), cache(_cache) { }
+  AndroidImage(AAssetManager * _asset_manager, float _display_scale)
+    : Image(_display_scale), asset_manager(_asset_manager) { }
 
-    AndroidImage(AndroidCache * _cache, const std::string & filename, float _display_scale)
-    : Image(filename, _display_scale), cache(_cache) { }
+    AndroidImage(AAssetManager * _asset_manager, const std::string & filename, float _display_scale)
+      : Image(filename, _display_scale), asset_manager(_asset_manager) { }
 
-  AndroidImage(AndroidCache * _cache, const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality, float _display_scale) : Image(_data, _format, _width, _height, _levels, _quality, _display_scale), cache(_cache) { }
+  AndroidImage(AAssetManager * _asset_manager, const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality, float _display_scale) : Image(_data, _format, _width, _height, _levels, _quality, _display_scale), asset_manager(_asset_manager) { }
 
 protected:
   void loadFile() override {
-
-    JNIEnv * env = cache->getJNIEnv();
-    jobject & assetManager = cache->getAssetManager();
-
-    AAssetManager * android_asset_manager = AAssetManager_fromJava(env, assetManager);
-    AAsset * asset = AAssetManager_open(android_asset_manager, getFilename().c_str(), 0);
+    AAsset * asset = AAssetManager_open(asset_manager, getFilename().c_str(), 0);
     std::unique_ptr<ImageData> data;
     if (asset) {
       FILE * in = funopen(asset, android_read, android_write, android_seek, android_close);
