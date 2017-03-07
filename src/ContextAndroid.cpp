@@ -16,7 +16,8 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   JNIEnv * env = getJNIEnv();
 
   assetManager = _env->NewGlobalRef(_assetManager);
-  
+
+  frameClass = (jclass) env->NewGlobalRef(env->FindClass("com/sometrik/framework/FrameWork"));
   typefaceClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Typeface"));
   canvasClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Canvas"));
   assetManagerClass = (jclass) env->NewGlobalRef(env->FindClass("android/content/res/AssetManager"));
@@ -37,6 +38,7 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   fileInputStreamClass = (jclass) env->NewGlobalRef(env->FindClass("java/io/FileInputStream"));
   stringClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/String"));
   charsetString = (jstring) env->NewGlobalRef(env->NewStringUTF("UTF-8"));
+  throwableClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/Throwable"));
 
   measureAscentMethod = env->GetMethodID(paintClass, "ascent", "()F");
   measureDescentMethod = env->GetMethodID(paintClass, "descent", "()F");
@@ -54,6 +56,7 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   paintSetStrokeJoinMethod = env->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V");
   canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
   factoryDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
+  factoryByteDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
   factoryDecodeMethod2 = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory$Options;)Landroid/graphics/Bitmap;");
   bitmapCopyMethod = env->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
   paintConstructor = env->GetMethodID(paintClass, "<init>", "()V");
@@ -81,6 +84,8 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   stringConstructor = env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V");
   stringGetBytesMethod = env->GetMethodID(stringClass, "getBytes", "()[B");
   stringConstructor2 = env->GetMethodID(stringClass, "<init>", "()V");
+  errorMethod = env->GetStaticMethodID(frameClass, "handleNativeException", "(Ljava/lang/Throwable;)V");
+  getStackTraceMethod = env->GetMethodID(throwableClass, "printStackTrace", "()V");
 
   optionsMutableField = env->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
   alignEnumRight = env->GetStaticFieldID(alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
@@ -192,12 +197,25 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
 
   __android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
 
-
   jbyteArray jarray = env->NewByteArray(length);
   env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
-  
+
   jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-  jobject drawableBitmap = env->CallObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
+//  jobject drawableBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
+  jobject drawableBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryByteDecodeMethod, jarray, length, env->GetArrayLength(jarray));
+
+  if (env->ExceptionCheck()) {
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "exception on imageToBitmap");
+    jthrowable error = env->ExceptionOccurred();
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "printing trace");
+    env->CallVoidMethod(error, cache->getStackTraceMethod);
+    throw(error);
+  }
+  env->CallStaticVoidMethod(cache->frameClass, cache->errorMethod, error);
+  env->DeleteLocalRef(error);
+  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "clearing");
+  env->ExceptionClear();
+}
   
   env->DeleteLocalRef(argbObject);
   env->DeleteLocalRef(jarray);

@@ -106,7 +106,11 @@ public:
   jmethodID stringConstructor;
   jmethodID stringConstructor2;
   jmethodID stringGetBytesMethod;
+  jmethodID errorMethod;
+  jmethodID getStackTraceMethod;
+  jmethodID factoryByteDecodeMethod;
 
+  jclass frameClass;
   jclass typefaceClass;
   jclass rectFClass;
   jclass rectClass;
@@ -124,6 +128,7 @@ public:
   jclass fileInputStreamClass;
   jclass stringClass;
   jstring charsetString;
+  jclass throwableClass;
   
   jfieldID field_argb_8888;
   jfieldID field_rgb_565;
@@ -268,6 +273,7 @@ class AndroidPaint {
  protected:
   void create() {
     if (!is_valid) {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "ChakaBoint2");
       is_valid = true;
       JNIEnv * env = cache->getJNIEnv();
       obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
@@ -491,11 +497,39 @@ public:
     paint.setGlobalAlpha(globalAlpha);
     paint.setShadow(shadowBlur * displayScale, shadowOffsetX * displayScale, shadowOffsetY * displayScale, shadowColor);
     
+
+
+    if (env->ExceptionCheck()) {
+      jthrowable error = env->ExceptionOccurred();
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "error1");
+      env->CallStaticVoidMethod(cache->frameClass, cache->errorMethod, error);
+      env->DeleteLocalRef(error);
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "clearing");
+      env->ExceptionClear();
+      return;
+    }
+
+
     jobject drawableBitmap = imageToBitmap(_img);
+
+
+    if (env->ExceptionCheck()) {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "error2");
+      jthrowable error = env->ExceptionOccurred();
+      env->CallStaticVoidMethod(cache->frameClass, cache->errorMethod, error);
+      env->DeleteLocalRef(error);
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "clearing");
+      env->ExceptionClear();
+      return;
+    }
 
     // Create new Canvas from the mutable bitmap
     jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
-    env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, NULL, dstRect, paint.getObject());
+
+    jobject dstRect2 = env->NewObject(cache->rectClass, cache->rectConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
+
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating bitmap");
+    env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, dstRect2, dstRect, paint.getObject());
     env->DeleteLocalRef(drawableBitmap);
   }
 
