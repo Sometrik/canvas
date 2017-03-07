@@ -1,7 +1,5 @@
 #include "ContextAndroid.h"
 
-#include <android/asset_manager.h>
-#include <android/asset_manager_jni.h>
 #include <errno.h>
 #include <cassert>
 
@@ -160,12 +158,8 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size)
   : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
 
-  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");
-
   JNIEnv * env = cache->getJNIEnv();
   int arraySize = size;
-  
-  __android_log_print(ANDROID_LOG_INFO, "Sometrik", "size = %i", size);
   
   jbyteArray array = env->NewByteArray(arraySize);
   env->SetByteArrayRegion(array, 0, arraySize, (const jbyte*) buffer);
@@ -179,8 +173,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
   int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
   Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
   
-  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndrodiSurface constructor (buffer)  called");  
-
   env->DeleteLocalRef(argbObject);
   env->DeleteLocalRef(firstBitmap);
   env->DeleteLocalRef(array);
