@@ -244,7 +244,6 @@ public:
 
 protected:
   void loadFile() override {
-    std::unique_ptr<ImageData> data;
     if (asset_manager) {
       AAsset * asset = AAssetManager_open(asset_manager, getFilename().c_str(), 0);
       if (asset) {
@@ -261,6 +260,8 @@ protected:
         __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "image %s loaded successfully: %d", getFilename().c_str(), int(s.size()));
 
         data = loadFromMemory(s.data(), s.size());
+        __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Image Width = %u", data->getWidth());
+        __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Image height = %u", data->getHeight());
       }
     }
     if (!data.get()) {
