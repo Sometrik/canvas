@@ -195,18 +195,18 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
 
   jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
 //  jobject drawableBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
-  jobject drawableBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryByteDecodeMethod, jarray, length, env->GetArrayLength(jarray));
+  jobject drawableBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryByteDecodeMethod, jarray, length, env->GetArrayLength(jarray) + 1);
 
   if (env->ExceptionCheck()) {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "exception on imageToBitmap");
     jthrowable error = env->ExceptionOccurred();
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "printing trace");
-    env->CallVoidMethod(error, cache->getStackTraceMethod);
-    throw(error);
+    env->ExceptionClear();
+//    env->CallVoidMethod(error, cache->getStackTraceMethod);
+//    throw(error);
   env->CallStaticVoidMethod(cache->frameClass, cache->errorMethod, error);
-  env->DeleteLocalRef(error);
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "clearing");
-  env->ExceptionClear();
+  env->DeleteLocalRef(error);
 }
   
   env->DeleteLocalRef(argbObject);
