@@ -292,11 +292,12 @@ AndroidContextFactory::createImage(const unsigned char * _data, InternalFormat _
 
 std::unique_ptr<Image>
 AndroidSurface::createImage(float display_scale) {
+  std::unique_ptr<Image> image;
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
-
-  auto image = std::unique_ptr<Image>(new AndroidImage(0, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
-  releaseMemory();
-  
+  if (buffer) {
+    image = std::unique_ptr<Image>(new AndroidImage(0, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
+    releaseMemory();
+  }
   return image;
 }
