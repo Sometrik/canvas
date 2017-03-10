@@ -162,12 +162,18 @@ class AndroidPaint {
     create();
     auto * env = cache->getJNIEnv();
     switch (mode) {
-    case STROKE:
-      env->CallVoidMethod(obj, cache->paintSetStyleMethod, env->GetStaticObjectField(cache->paintStyleClass, cache->paintStyleEnumStroke));
+    case STROKE: {
+      jobject styleObject = env->GetStaticObjectField(cache->paintStyleClass, cache->paintStyleEnumStroke);
+      env->CallVoidMethod(obj, cache->paintSetStyleMethod, styleObject);
+      env->DeleteLocalRef(styleObject);
       break;
-    case FILL:
-      env->CallVoidMethod(obj, cache->paintSetStyleMethod, env->GetStaticObjectField(cache->paintStyleClass, cache->paintStyleEnumFill));
+    }
+    case FILL: {
+      jobject styleObject = env->GetStaticObjectField(cache->paintStyleClass, cache->paintStyleEnumFill);
+      env->CallVoidMethod(obj, cache->paintSetStyleMethod, styleObject);
+      env->DeleteLocalRef(styleObject);
       break;
+    }
     }
   }
 
@@ -280,7 +286,9 @@ class AndroidPaint {
       JNIEnv * env = cache->getJNIEnv();
       obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
       env->CallVoidMethod(obj, cache->paintSetAntiAliasMethod, JNI_TRUE);
-      env->CallVoidMethod(obj, cache->paintSetStrokeJoinMethod, env->GetStaticObjectField(env->FindClass("android/graphics/Paint$Join"), env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Join"), "ROUND", "Landroid/graphics/Paint$Join;")));
+      jclass joinClass = env->FindClass("android/graphics/Paint$Join");
+      env->CallVoidMethod(obj, cache->paintSetStrokeJoinMethod, env->GetStaticObjectField(joinClass, env->GetStaticFieldID(joinClass, "ROUND", "Landroid/graphics/Paint$Join;")));
+      env->DeleteLocalRef(joinClass);
     }
   }
   
@@ -319,6 +327,8 @@ public:
     if (env->GetObjectRefType(bitmap) == 2) {
       env->DeleteGlobalRef(bitmap);
     }
+
+    paint = NULL;
 
     if (canvasCreated) {
       if (env->GetObjectRefType(canvas) == 2) {
@@ -391,6 +401,8 @@ public:
     // Draw path to canvas
     env->CallVoidMethod(canvas, cache->canvasPathDrawMethod, jpath, paint.getObject());
     env->DeleteLocalRef(jpath);
+
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "renderPath done");
   }
 
   void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat format) override {
@@ -514,14 +526,8 @@ public:
 
     jobject drawableBitmap = imageToBitmap(_img);
 
-
-    if (env->ExceptionCheck()) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "error2");
-      jthrowable error = env->ExceptionOccurred();
-      env->CallStaticVoidMethod(cache->frameClass, cache->errorMethod, error);
-      env->DeleteLocalRef(error);
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "clearing");
-      env->ExceptionClear();
+    if (!drawableBitmap){
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "null bitmap");
       return;
     }
 
@@ -533,6 +539,8 @@ public:
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating bitmap");
     env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, dstRect2, dstRect, paint.getObject());
     env->DeleteLocalRef(drawableBitmap);
+    env->DeleteLocalRef(dstRect);
+    env->DeleteLocalRef(dstRect2);
   }
 
   std::unique_ptr<Image> createImage(float display_scale) override;
