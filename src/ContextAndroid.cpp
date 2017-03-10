@@ -190,13 +190,13 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
   __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Image Width = %u", _img.getWidth());
   __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Image height = %u", _img.getHeight());
   __android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
-  __android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", _img.getInternalFormat());
+  __android_log_print(ANDROID_LOG_INFO, "Sometrik", "internalFormat = %i", _img.getInternalFormat());
 
-  jbyteArray jarray = env->NewByteArray(length);
-  env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
+  jintArray jarray = env->NewIntArray(length / sizeof(int));
+  env->SetIntArrayRegion(jarray, 0, length / sizeof(int), (jint*) (buf));
   jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-//  jobject drawableBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
-  jobject drawableBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryByteDecodeMethod, jarray, length, env->GetArrayLength(jarray));
+  jobject drawableBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
+//  jobject drawableBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryByteDecodeMethod, jarray, 0, length);
 
   if (env->ExceptionCheck()) {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "exception on imageToBitmap");
