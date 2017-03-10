@@ -224,10 +224,11 @@ class AndroidPaint {
     if (font.family != current_font_family || textProperty != current_text_property) {
       current_font_family = font.family;
       current_text_property = textProperty;
-      
-      jobject typef = env->CallStaticObjectMethod(cache->typefaceClass, cache->typefaceCreator, env->NewStringUTF(font.family.c_str()), textProperty);
+      jstring jfamily = env->NewStringUTF(font.family.c_str());
+      jobject typef = env->CallStaticObjectMethod(cache->typefaceClass, cache->typefaceCreator, jfamily, textProperty);
       env->CallObjectMethod(obj, cache->setTypefaceMethod, typef);
       env->DeleteLocalRef(typef);
+      env->DeleteLocalRef(jfamily);
     }    
   }
 
@@ -237,14 +238,23 @@ class AndroidPaint {
       currentTextAlign = textAlign;
       JNIEnv * env = cache->getJNIEnv();
       switch (textAlign) {
-      case ALIGN_LEFT:
-        env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft));
+      case ALIGN_LEFT: {
+        jobject alignObject =  env->GetStaticObjectField(cache->alignClass, cache->alignEnumLeft);
+        env->CallVoidMethod(obj, cache->textAlignMethod, alignObject);
+        env->DeleteLocalRef(alignObject);
         break;
-      case ALIGN_RIGHT:
-        env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumRight));
+      }
+      case ALIGN_RIGHT: {
+        jobject alignObject = env->GetStaticObjectField(cache->alignClass, cache->alignEnumRight);
+        env->CallVoidMethod(obj, cache->textAlignMethod, alignObject);
+        env->DeleteLocalRef(alignObject);
         break;
-      case ALIGN_CENTER:
-        env->CallVoidMethod(obj, cache->textAlignMethod, env->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter));
+      }
+      case ALIGN_CENTER: {
+        jobject alignObject = env->GetStaticObjectField(cache->alignClass, cache->alignEnumCenter);
+        env->CallVoidMethod(obj, cache->textAlignMethod, alignObject);
+        env->DeleteLocalRef(alignObject);
+      }
       default:
         break;
       }
@@ -287,8 +297,10 @@ class AndroidPaint {
       obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
       env->CallVoidMethod(obj, cache->paintSetAntiAliasMethod, JNI_TRUE);
       jclass joinClass = env->FindClass("android/graphics/Paint$Join");
-      env->CallVoidMethod(obj, cache->paintSetStrokeJoinMethod, env->GetStaticObjectField(joinClass, env->GetStaticFieldID(joinClass, "ROUND", "Landroid/graphics/Paint$Join;")));
+      jobject joinFieldObject = env->GetStaticObjectField(joinClass, env->GetStaticFieldID(joinClass, "ROUND", "Landroid/graphics/Paint$Join;"));
+      env->CallVoidMethod(obj, cache->paintSetStrokeJoinMethod, joinFieldObject);
       env->DeleteLocalRef(joinClass);
+      env->DeleteLocalRef(joinFieldObject);
     }
   }
   

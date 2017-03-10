@@ -192,7 +192,6 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
 
   jbyteArray jarray = env->NewByteArray(length);
   env->SetByteArrayRegion(jarray, 0, length, (jbyte*) (buf));
-
   jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
 //  jobject drawableBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, _img.getWidth(), _img.getHeight(), argbObject);
   jobject drawableBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryByteDecodeMethod, jarray, length, env->GetArrayLength(jarray) + 1);
