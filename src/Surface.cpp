@@ -123,18 +123,20 @@ Surface::blur(float r) {
   auto bxs = boxesForGauss(r, 3);
 
   int w = getActualWidth(), h = getActualHeight();
-  unsigned char * scl = (unsigned char *)lockMemory(true);  
-  unsigned char * tcl = new unsigned char[w * h * 4];
+  unsigned char * scl = (unsigned char *)lockMemory(true);
+  if (scl) {
+    unsigned char * tcl = new unsigned char[w * h * 4];
 
-  cerr << "boxes: " << bxs[0] << ", " << bxs[1] << ", " << bxs[2] << endl;
+    cerr << "boxes: " << bxs[0] << ", " << bxs[1] << ", " << bxs[2] << endl;
   
-  boxBlur_4(scl, tcl, w, h, (bxs[0]-1) / 2);
-  boxBlur_4(tcl, scl, w, h, (bxs[1]-1) / 2);
-  boxBlur_4(scl, tcl, w, h, (bxs[2]-1) / 2);
+    boxBlur_4(scl, tcl, w, h, (bxs[0]-1) / 2);
+    boxBlur_4(tcl, scl, w, h, (bxs[1]-1) / 2);
+    boxBlur_4(scl, tcl, w, h, (bxs[2]-1) / 2);
 
-  memcpy(scl, tcl, w * h * 4);
-  delete[] tcl;
-  releaseMemory();
+    memcpy(scl, tcl, w * h * 4);
+    delete[] tcl;
+    releaseMemory();
+  }
 }
 
 void
@@ -145,6 +147,9 @@ Surface::slowBlur(float hradius, float vradius) {
 
   unsigned char * buffer = (unsigned char *)lockMemory(true);
   assert(buffer);
+  if (!buffer) {
+    return;
+  }
 
   if (format == RGBA8) {
     unsigned char * tmp = new unsigned char[actual_width * actual_height * 4];
@@ -265,18 +270,20 @@ Surface::colorize(const Color & input_color, Surface & target) {
   assert(getFormat() == R8 && target.getFormat() == RGBA8);
   assert(getActualWidth() == target.getActualWidth() && getActualHeight() == target.getActualHeight());
   unsigned char * buffer = (unsigned char *)lockMemory(false);
-  unsigned char * target_buffer = (unsigned char *)target.lockMemory(true);
-
-  for (unsigned int i = 0; i < actual_width * actual_height; i++) {
-    float input_alpha = buffer[i] / 255.0f;
-    target_buffer[4 * i + 0] = (unsigned char)(color.red * input_alpha * 255);
-    target_buffer[4 * i + 1] = (unsigned char)(color.green * input_alpha * 255);
-    target_buffer[4 * i + 2] = (unsigned char)(color.blue * input_alpha * 255);
-    target_buffer[4 * i + 3] = (unsigned char)(color.alpha * input_alpha * 255);
+  if (buffer) {
+    unsigned char * target_buffer = (unsigned char *)target.lockMemory(true);
+    if (target_buffer) {
+      for (unsigned int i = 0; i < actual_width * actual_height; i++) {
+        float input_alpha = buffer[i] / 255.0f;
+        target_buffer[4 * i + 0] = (unsigned char)(color.red * input_alpha * 255);
+        target_buffer[4 * i + 1] = (unsigned char)(color.green * input_alpha * 255);
+        target_buffer[4 * i + 2] = (unsigned char)(color.blue * input_alpha * 255);
+        target_buffer[4 * i + 3] = (unsigned char)(color.alpha * input_alpha * 255);
+      }
+      target.releaseMemory();
+    }
+    releaseMemory();
   }
-  
-  releaseMemory();
-  target.releaseMemory();
 }
 
 #if 0
@@ -285,18 +292,20 @@ Surface::multiply(const Color & color) {
   assert(getFormat() == RGBA8);
   unsigned char * buffer = (unsigned char *)lockMemory(true);
   assert(buffer);
-  unsigned int red = toByte(color.red);
-  unsigned int green = toByte(color.green);
-  unsigned int blue = toByte(color.blue);
-  unsigned int alpha = toByte(color.alpha);
-  for (unsigned int i = 0; i < actual_width * actual_height; i++) {
-    unsigned char * ptr = buffer + (i * 4);
-    ptr[0] = (unsigned char)(ptr[0] * red / 255);
-    ptr[1] = (unsigned char)(ptr[1] * green / 255);
-    ptr[2] = (unsigned char)(ptr[2] * blue / 255);
-    ptr[3] = (unsigned char)(ptr[3] * alpha / 255);
+  if (buffer) {
+    unsigned int red = toByte(color.red);
+    unsigned int green = toByte(color.green);
+    unsigned int blue = toByte(color.blue);
+    unsigned int alpha = toByte(color.alpha);
+    for (unsigned int i = 0; i < actual_width * actual_height; i++) {
+      unsigned char * ptr = buffer + (i * 4);
+      ptr[0] = (unsigned char)(ptr[0] * red / 255);
+      ptr[1] = (unsigned char)(ptr[1] * green / 255);
+      ptr[2] = (unsigned char)(ptr[2] * blue / 255);
+      ptr[3] = (unsigned char)(ptr[3] * alpha / 255);
+    }
+    releaseMemory();
   }
-  releaseMemory();
 }
 #endif
 
