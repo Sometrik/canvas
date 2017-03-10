@@ -314,8 +314,7 @@ class AndroidPaint {
   }
   
   static int getAndroidColor(const Color & color, float globalAlpha = 1.0f) {
-    return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
-    return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
+   return (int(color.alpha * globalAlpha * 0xff) << 24) | (int(color.red * 0xff) << 16) | (int(color.green * 0xff) << 8) | int(color.blue * 0xff);
   }
 
  private:
@@ -598,14 +597,17 @@ public:
 
     JNIEnv * env = cache->getJNIEnv();
 
-    uint32_t *pixels;
+    uint32_t *pixels = 0;
     AndroidBitmap_lockPixels(env, bitmap, reinterpret_cast<void **>(&pixels));
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "pixels = %p", pixels);
     return pixels;
   }
 
-  void releaseMemory() override { }
+  void releaseMemory() override {
+    JNIEnv * env = cache->getJNIEnv();
+    AndroidBitmap_unlockPixels(env, bitmap);
+  }
 
   jobject imageToBitmap(const ImageData & _img);
   
