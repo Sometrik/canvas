@@ -184,8 +184,16 @@ class AndroidPaint {
 
   void setStyle(const Style & style) {
     create();
+
     JNIEnv * env = cache->getJNIEnv();
-    env->CallVoidMethod(obj, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
+    switch (style.getType()) {
+    case Style::SOLID:
+      env->CallVoidMethod(obj, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
+      break;
+    case Style::LINEAR_GRADIENT:
+
+      break;
+    }
   }
 
   void setGlobalAlpha(float alpha) {
@@ -337,17 +345,44 @@ public:
 
     JNIEnv * env = cache->getJNIEnv();
 
-    if (env->GetObjectRefType(bitmap) == 2) {
+    switch (env->GetObjectRefType(bitmap)){
+    case 0:
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "invalid ref type on bitmap deletion");
+      break;
+    case 1:
+      env->DeleteLocalRef(bitmap);
+      break;
+    case 2:
       env->DeleteGlobalRef(bitmap);
+      break;
+    case 3:
+      env->DeleteWeakGlobalRef(bitmap);
+      break;
+    }
+
+
+    switch (env->GetObjectRefType(canvas)){
+    case 0:
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "invalid ref type on canvas deletion");
+      break;
+    case 1:
+      env->DeleteLocalRef(canvas);
+      break;
+    case 2:
+      env->DeleteGlobalRef(canvas);
+      break;
+    case 3:
+      env->DeleteWeakGlobalRef(canvas);
+      break;
     }
 
     paint = NULL;
 
-    if (canvasCreated) {
-      if (env->GetObjectRefType(canvas) == 2) {
-        env->DeleteGlobalRef(canvas);
-      }
-    }
+//    if (canvasCreated) {
+//      if (env->GetObjectRefType(canvas) == 2) {
+//        env->DeleteGlobalRef(canvas);
+//      }
+//    }
   }
 
   void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
@@ -545,15 +580,14 @@ public:
     }
 
     // Create new Canvas from the mutable bitmap
+    jobject srcRect = env->NewObject(cache->rectClass, cache->rectConstructor, 0, 0, _img.getWidth(), _img.getHeight());
     jobject dstRect = env->NewObject(cache->rectFClass, cache->rectFConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
 
-    jobject dstRect2 = env->NewObject(cache->rectClass, cache->rectConstructor, displayScale * p.x, displayScale * p.y, displayScale * (p.x + w), displayScale * (p.y + h));
-
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating bitmap");
-    env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, dstRect2, dstRect, paint.getObject());
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "drawing the bitmap");
+    env->CallVoidMethod(canvas, cache->canvasBitmapDrawMethod2, drawableBitmap, srcRect, dstRect, paint.getObject());
     env->DeleteLocalRef(drawableBitmap);
+    env->DeleteLocalRef(srcRect);
     env->DeleteLocalRef(dstRect);
-    env->DeleteLocalRef(dstRect2);
   }
 
   std::unique_ptr<Image> createImage(float display_scale) override;
