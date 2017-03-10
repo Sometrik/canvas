@@ -226,9 +226,10 @@ class AndroidPaint {
       current_text_property = textProperty;
       jstring jfamily = env->NewStringUTF(font.family.c_str());
       jobject typef = env->CallStaticObjectMethod(cache->typefaceClass, cache->typefaceCreator, jfamily, textProperty);
-      env->CallObjectMethod(obj, cache->setTypefaceMethod, typef);
+      jobject extratypef = env->CallObjectMethod(obj, cache->setTypefaceMethod, typef);
       env->DeleteLocalRef(typef);
       env->DeleteLocalRef(jfamily);
+      env->DeleteLocalRef(extratypef);
     }    
   }
 
