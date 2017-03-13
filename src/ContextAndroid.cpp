@@ -37,6 +37,9 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   stringClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/String"));
   charsetString = (jstring) env->NewGlobalRef(env->NewStringUTF("UTF-8"));
   throwableClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/Throwable"));
+  linearGradientClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/LinearGradient"));
+  shaderTileModeClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Shader$TileMode"));
+  shaderTileModeMirrorField = env->GetStaticFieldID(shaderTileModeClass, "MIRROR", "Landroid/graphics/Shader$TileMode;");
 
   measureAscentMethod = env->GetMethodID(paintClass, "ascent", "()F");
   measureDescentMethod = env->GetMethodID(paintClass, "descent", "()F");
@@ -84,6 +87,8 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   stringConstructor2 = env->GetMethodID(stringClass, "<init>", "()V");
   errorMethod = env->GetStaticMethodID(frameClass, "handleNativeException", "(Ljava/lang/Throwable;)V");
   getStackTraceMethod = env->GetMethodID(throwableClass, "printStackTrace", "()V");
+  paintSetShaderMethod = env->GetMethodID(paintClass, "setShader", "(Landroid/graphics/Shader;)Landroid/graphics/Shader;");
+  linearGradientConstructor = env->GetMethodID(linearGradientClass, "<init>", "(FFFF[I[FLandroid/graphics/Shader$TileMode;)V");
 
   optionsMutableField = env->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
   alignEnumRight = env->GetStaticFieldID(alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");

@@ -36,6 +36,7 @@ public:
     env->DeleteGlobalRef(fileInputStreamClass);
     env->DeleteGlobalRef(stringClass);
     env->DeleteGlobalRef(charsetString);
+    env->DeleteGlobalRef(linearGradientClass);
   }
 
   JNIEnv * getJNIEnv() {
@@ -111,6 +112,8 @@ public:
   jmethodID errorMethod;
   jmethodID getStackTraceMethod;
   jmethodID factoryByteDecodeMethod;
+  jmethodID paintSetShaderMethod;
+  jmethodID linearGradientConstructor;
 
   jclass frameClass;
   jclass typefaceClass;
@@ -131,6 +134,8 @@ public:
   jclass stringClass;
   jstring charsetString;
   jclass throwableClass;
+  jclass linearGradientClass;
+  jclass shaderTileModeClass;
   
   jfieldID field_argb_8888;
   jfieldID field_rgb_565;
@@ -141,6 +146,7 @@ public:
   jfieldID alignEnumCenter;
   jfieldID paintStyleEnumStroke;
   jfieldID paintStyleEnumFill;
+  jfieldID shaderTileModeMirrorField;
 
 private:
   jobject assetManager;
@@ -191,7 +197,9 @@ class AndroidPaint {
       env->CallVoidMethod(obj, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
       break;
     case Style::LINEAR_GRADIENT:
-
+      //Work in progress
+//      jobject linearGradient = env->NewObject(cache->linearGradientClass, cache->linearGradientConstructor, 0.0, 0.0, 0.0, 0.0, intArray, floatArray, shaderTileModeMirrorField);
+//      env->CallObjectMethod(obj, cache->paintSetShaderMethod, linearGradient);
       break;
     }
   }
