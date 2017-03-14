@@ -186,7 +186,7 @@ class AndroidPaint {
     cache->getJNIEnv()->CallVoidMethod(obj, cache->paintSetStrokeWidthMethod, lineWidth);
   }
 
-  void setStyle(const Style & style) {
+  void setStyle(const Style & style, float displayScale) {
     create();
 
     JNIEnv * env = cache->getJNIEnv();
@@ -201,10 +201,10 @@ class AndroidPaint {
 
         int colorOne = getAndroidColor(it0->second);
         int colorTwo = getAndroidColor(it1->second);
-	float x0 = style.x0 * display_scale;
-	float y0 = style.y0 * display_scale;
-	float x1 = style.x1 * display_scale;
-	float y1 = style.y1 * display_scale;
+	float x0 = style.x0 * displayScale;
+	float y0 = style.y0 * displayScale;
+	float x1 = style.x1 * displayScale;
+	float y1 = style.y1 * displayScale;
         jobject tileFieldObject = env->GetStaticObjectField(cache->shaderTileModeClass, cache->shaderTileModeMirrorField);
         jobject linearGradient = env->NewObject(cache->linearGradientClass, cache->linearGradientConstructor, x0, y0, x1, y1, colorOne, colorTwo, tileFieldObject);
         jobject resultGradient = env->CallObjectMethod(obj, cache->paintSetShaderMethod, linearGradient);
@@ -412,7 +412,7 @@ public:
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "renderPath called");
     paint.setRenderMode(mode);
-    paint.setStyle(style);
+    paint.setStyle(style, displayScale);
     paint.setGlobalAlpha(globalAlpha);
     paint.setShadow(shadowBlur * displayScale, shadowOffsetX * displayScale, shadowOffsetY * displayScale, shadowColor);       
     if (mode == STROKE) paint.setLineWidth(lineWidth);
@@ -497,7 +497,7 @@ public:
 
     paint.setRenderMode(mode);
     paint.setFont(font, displayScale);
-    paint.setStyle(style);
+    paint.setStyle(style, displayScale);
     paint.setGlobalAlpha(globalAlpha);
     paint.setShadow(shadowBlur * displayScale, shadowOffsetX * displayScale, shadowOffsetY * displayScale, shadowColor);
     paint.setTextAlign(textAlign);
