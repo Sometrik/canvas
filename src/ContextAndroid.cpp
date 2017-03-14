@@ -88,7 +88,7 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   errorMethod = env->GetStaticMethodID(frameClass, "handleNativeException", "(Ljava/lang/Throwable;)V");
   getStackTraceMethod = env->GetMethodID(throwableClass, "printStackTrace", "()V");
   paintSetShaderMethod = env->GetMethodID(paintClass, "setShader", "(Landroid/graphics/Shader;)Landroid/graphics/Shader;");
-  linearGradientConstructor = env->GetMethodID(linearGradientClass, "<init>", "(FFFF[I[FLandroid/graphics/Shader$TileMode;)V");
+  linearGradientConstructor = env->GetMethodID(linearGradientClass, "<init>", "(FFFFIILandroid/graphics/Shader$TileMode;)V");
 
   optionsMutableField = env->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
   alignEnumRight = env->GetStaticFieldID(alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");

@@ -41,8 +41,6 @@ public:
 
   JNIEnv * getJNIEnv() {
 
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Canvas getJNIENv called");
-
     if (javaVM == NULL) {
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "VM is null");
     }
@@ -197,9 +195,19 @@ class AndroidPaint {
       env->CallVoidMethod(obj, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
       break;
     case Style::LINEAR_GRADIENT:
-      //Work in progress
-//      jobject linearGradient = env->NewObject(cache->linearGradientClass, cache->linearGradientConstructor, 0.0, 0.0, 0.0, 0.0, intArray, floatArray, shaderTileModeMirrorField);
-//      env->CallObjectMethod(obj, cache->paintSetShaderMethod, linearGradient);
+      const std::map<float, Color> & colors = style.getColors();
+      if (!colors.empty()) {
+        std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
+
+        int colorOne = getAndroidColor(colors.at(0.0));
+        int colorTwo = getAndroidColor(colors.at(1.0));
+        jobject tileFieldObject = env->GetStaticObjectField(cache->shaderTileModeClass, cache->shaderTileModeMirrorField);
+        jobject linearGradient = env->NewObject(cache->linearGradientClass, cache->linearGradientConstructor, 0.0, 0.0, 1.0, 1.0, colorOne, colorTwo, tileFieldObject);
+        jobject resultGradient = env->CallObjectMethod(obj, cache->paintSetShaderMethod, linearGradient);
+        env->DeleteLocalRef(tileFieldObject);
+        env->DeleteLocalRef(linearGradient);
+        env->DeleteLocalRef(resultGradient);
+      }
       break;
     }
   }
