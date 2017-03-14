@@ -199,10 +199,14 @@ class AndroidPaint {
       if (!colors.empty()) {
         std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
 
-        int colorOne = getAndroidColor(colors.at(0.0));
-        int colorTwo = getAndroidColor(colors.at(1.0));
+        int colorOne = getAndroidColor(it0->second);
+        int colorTwo = getAndroidColor(it1->second);
+	float x0 = style.x0 * display_scale;
+	float y0 = style.y0 * display_scale;
+	float x1 = style.x1 * display_scale;
+	float y1 = style.y1 * display_scale;
         jobject tileFieldObject = env->GetStaticObjectField(cache->shaderTileModeClass, cache->shaderTileModeMirrorField);
-        jobject linearGradient = env->NewObject(cache->linearGradientClass, cache->linearGradientConstructor, 0.0, 0.0, 1.0, 1.0, colorOne, colorTwo, tileFieldObject);
+        jobject linearGradient = env->NewObject(cache->linearGradientClass, cache->linearGradientConstructor, x0, y0, x1, y1, colorOne, colorTwo, tileFieldObject);
         jobject resultGradient = env->CallObjectMethod(obj, cache->paintSetShaderMethod, linearGradient);
         env->DeleteLocalRef(tileFieldObject);
         env->DeleteLocalRef(linearGradient);
