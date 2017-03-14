@@ -49,7 +49,7 @@ Image::loadFromMemory(const unsigned char * buffer, size_t size) {
       unsigned char b = channels >= 3 ? img_buffer[channels * i + 2] : g;
       unsigned char a = channels == 4 ? img_buffer[channels * i + 3] : 0xff;
       if (a) {
-#ifdef __APPLE__
+#if defined __APPLE__ || defined __ANDROID__
 	storage[i] = (0xff * r / a) + ((0xff * g / a) << 8) + ((0xff * b / a) << 16) + (a << 24);
 #else
 	storage[i] = (0xff * b / a) + ((0xff * g / a) << 8) + ((0xff * r / a) << 16) + (a << 24);
@@ -85,14 +85,14 @@ Image::loadFromFile(const std::string & filename) {
 
   std::unique_ptr<ImageData> data;
   if (channels == 2 || channels == 3 || channels == 4) {
-    unsigned int * storage = new unsigned int[numPixels];
+    std::unique_ptr<unsigned int[]> storage(new unsigned int[numPixels]);
     for (unsigned int i = 0; i < numPixels; i++) {
       unsigned char r = img_buffer[channels * i + 0];
       unsigned char g = channels >= 2 ? img_buffer[channels * i + 1] : r;
       unsigned char b = channels >= 3 ? img_buffer[channels * i + 2] : g;
       unsigned char a = channels == 4 ? img_buffer[channels * i + 3] : 0xff;
       if (a) {
-#ifdef __APPLE__
+#if defined __APPLE__ || defined __ANDROID__
 	storage[i] = (0xff * r / a) + ((0xff * g / a) << 8) + ((0xff * b / a) << 16) + (a << 24);
 #else
 	storage[i] = (0xff * b / a) + ((0xff * g / a) << 8) + ((0xff * r / a) << 16) + (a << 24);
@@ -101,8 +101,7 @@ Image::loadFromFile(const std::string & filename) {
 	storage[i] = 0;
       }
     }
-    data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)storage, format, w, h));
-    delete[] storage;
+    data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)storage.get(), format, w, h));
   } else {
     data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)img_buffer, format, w, h));
   }

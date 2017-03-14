@@ -196,7 +196,7 @@ ImageData::convert(InternalFormat target_format) const {
 	unsigned char g = (fd.getBytesPerPixel() >= 1 ? data[input_offset++] : r) >> 4;
 	unsigned char b = (fd.getBytesPerPixel() >= 2 ? data[input_offset++] : g) >> 4;
 	unsigned char a = (fd.getBytesPerPixel() >= 3 ? data[input_offset++] : 0xff) >> 4;
-#ifdef __APPLE__
+#if defined __APPLE__ || defined __ANDROID__
 	*output_data++ = (r << 12) | (g << 8) | (b << 4) | a;
 #else
 	*output_data++ = (b << 12) | (g << 8) | (r << 4) | a;

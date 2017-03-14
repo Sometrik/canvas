@@ -31,7 +31,7 @@ SierraDitherer::apply() {
 	b_error = old_b - (b << 4);
 	a_error = old_a - (a << 4);
 	
-#ifdef __APPLE__
+#if defined __APPLE__ || defined __ANDROID__
 	*output_data++ = (r << 12) | (g << 8) | (b << 4) | a;
 #else
 	*output_data++ = (b << 12) | (g << 8) | (r << 4) | a;
@@ -43,7 +43,7 @@ SierraDitherer::apply() {
 	b_error = old_b - (b << 3);
 	a_error = 0;
 
-#ifdef __APPLE__
+#if defined __APPLE__ || defined __ANDROID__
 	*output_data++ = PACK_RGB565(b, g, r);
 #else
 	*output_data++ = PACK_RGB565(r, g, b);
