@@ -122,7 +122,9 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
     argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
   }
 
-  bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject));
+  jobject localBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
+  bitmap = (jobject) env->NewGlobalRef(localBitmap);
+  env->DeleteLocalRef(localBitmap);
   env->DeleteLocalRef(argbObject);
 }
 
@@ -133,7 +135,9 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const ImageData & image)
   JNIEnv * env = cache->getJNIEnv();
 
   // creates a surface with width, height and contents from image
-  bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
+  jobject localBitmap = imageToBitmap(image);
+  bitmap = (jobject) env->NewGlobalRef(localBitmap);
+  env->DeleteLocalRef(localBitmap);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filename)
@@ -150,7 +154,9 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   env->SetBooleanField(factoryOptions, cache->optionsMutableField, JNI_TRUE);
   
   //Create a bitmap from the inputStream
-  bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, factoryOptions));
+  jobject localBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, factoryOptions);
+  bitmap = (jobject) env->NewGlobalRef(localBitmap);
+  env->DeleteLocalRef(localBitmap);
   
   int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
   int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
@@ -172,7 +178,9 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
   
   //make this with factory options instead
   jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-  bitmap = (jobject) env->NewGlobalRef(env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE));
+  jobject localBitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE);
+  bitmap = (jobject) env->NewGlobalRef(localBitmap);
+  env->DeleteLocalRef(localBitmap);
   
   int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
   int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);

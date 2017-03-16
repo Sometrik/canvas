@@ -41,22 +41,13 @@ public:
 
   JNIEnv * getJNIEnv() {
 
-    if (javaVM == NULL) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "VM is null");
-    }
-
     JNIEnv *Myenv = NULL;
-//    javaVM->GetEnv((void**) &Myenv, JNI_VERSION_1_6);
 
     JavaVMAttachArgs args;
     args.version = JNI_VERSION_1_6; // choose your JNI version
     args.name = NULL; // you might want to give the java thread a name
     args.group = NULL; // you might want to assign the java thread to a ThreadGroup
     javaVM->AttachCurrentThread(&Myenv, &args);
-
-    if (Myenv == NULL) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Env is null");
-    }
 
     return Myenv;
   }
@@ -198,6 +189,7 @@ class AndroidPaint {
       const std::map<float, Color> & colors = style.getColors();
       if (!colors.empty()) {
         std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
+        it1--;
 
         int colorOne = getAndroidColor(it0->second);
         int colorTwo = getAndroidColor(it1->second);
@@ -636,8 +628,10 @@ public:
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating canvas");
       //Create new Canvas from the mutable bitmap
       JNIEnv * env = cache->getJNIEnv();
-      canvas = (jobject) env->NewGlobalRef(env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap));
+      jobject localCanvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
+      canvas = (jobject) env->NewGlobalRef(localCanvas);
       canvasCreated = true;
+      env->DeleteLocalRef(localCanvas);
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
     }
   }
