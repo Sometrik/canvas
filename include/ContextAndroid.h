@@ -630,8 +630,8 @@ public:
       JNIEnv * env = cache->getJNIEnv();
       jobject localCanvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
       canvas = (jobject) env->NewGlobalRef(localCanvas);
-      canvasCreated = true;
       env->DeleteLocalRef(localCanvas);
+      canvasCreated = true;
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
     }
   }

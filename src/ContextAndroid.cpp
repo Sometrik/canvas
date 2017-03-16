@@ -135,8 +135,8 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const ImageData & image)
   JNIEnv * env = cache->getJNIEnv();
 
   // creates a surface with width, height and contents from image
-  jobject localBitmap = imageToBitmap(image);
-  bitmap = (jobject) env->NewGlobalRef(localBitmap);
+  jobject localBitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
+  bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
   env->DeleteLocalRef(localBitmap);
 }
 
