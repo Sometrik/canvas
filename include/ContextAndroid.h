@@ -475,7 +475,9 @@ public:
       env->DeleteGlobalRef(canvas);
       canvasCreated = false;
     }
-    env->DeleteGlobalRef(bitmap);
+    if (bitmap) {
+      env->DeleteGlobalRef(bitmap);
+    }
     bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, bitmap, _actual_width, _actual_height, JNI_FALSE));
   }
 

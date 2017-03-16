@@ -104,28 +104,34 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
 AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format)
   : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format), cache(_cache), paint(_cache) {
   // creates an empty canvas
-  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidSurface widthheight constructor called");
-  JNIEnv * env = cache->getJNIEnv();
 
-  //set bitmap config according to internalformat
-  jobject argbObject;
+  if (_actual_width && _actual_height) {
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidSurface widthheight constructor called");
+    JNIEnv * env = cache->getJNIEnv();
 
+    //set bitmap config according to internalformat
+    jobject argbObject;
 
-  if (_format == LUMINANCE_ALPHA) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to alpha 8");
-    argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_alpha_8);
-  } else if (_format == RGB565) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb565");
-    argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_rgb_565);
-  } else {
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
-    argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+    if (_format == LUMINANCE_ALPHA) {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to alpha 8");
+      argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_alpha_8);
+    } else if (_format == RGB565) {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb565");
+      argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_rgb_565);
+    } else {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
+      argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+    }
+
+    jobject localBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
+    if (localBitmap) {
+      bitmap = (jobject) env->NewGlobalRef(localBitmap);
+      env->DeleteLocalRef(localBitmap);
+    } else {
+      bitmap = 0;
+    }
+    env->DeleteLocalRef(argbObject);
   }
-
-  jobject localBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
-  bitmap = (jobject) env->NewGlobalRef(localBitmap);
-  env->DeleteLocalRef(localBitmap);
-  env->DeleteLocalRef(argbObject);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const ImageData & image)
@@ -136,8 +142,10 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const ImageData & image)
 
   // creates a surface with width, height and contents from image
   jobject localBitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
-  bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
-  env->DeleteLocalRef(localBitmap);
+  if (localBitmap) {
+    bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
+    env->DeleteLocalRef(localBitmap);
+  }
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filename)
