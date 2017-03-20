@@ -86,6 +86,7 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   stringConstructor = env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V");
   stringGetBytesMethod = env->GetMethodID(stringClass, "getBytes", "()[B");
   stringConstructor2 = env->GetMethodID(stringClass, "<init>", "()V");
+  stringByteConstructor = env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V");
   errorMethod = env->GetStaticMethodID(frameClass, "handleNativeException", "(Ljava/lang/Throwable;)V");
   getStackTraceMethod = env->GetMethodID(throwableClass, "printStackTrace", "()V");
   paintSetShaderMethod = env->GetMethodID(paintClass, "setShader", "(Landroid/graphics/Shader;)Landroid/graphics/Shader;");

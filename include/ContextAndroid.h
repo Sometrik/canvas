@@ -98,6 +98,7 @@ public:
   jmethodID stringConstructor;
   jmethodID stringConstructor2;
   jmethodID stringGetBytesMethod;
+  jmethodID stringByteConstructor;
   jmethodID errorMethod;
   jmethodID getStackTraceMethod;
   jmethodID factoryByteDecodeMethod;
@@ -286,13 +287,27 @@ class AndroidPaint {
     create();
 
     JNIEnv * env = cache->getJNIEnv();
-    jstring convertableString = env->NewStringUTF(text.c_str());
+
+    char tab2[1024];
+    strcpy(tab2, text.c_str());
+
+    int size = 16;
+    jbyteArray array = env->NewByteArray(size);
+    env->SetByteArrayRegion(array, 0, size, (const jbyte*) tab2);
+
+
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating string from bytes");
+    jstring convertableString = (jstring) env->NewObject(cache->stringClass, cache->stringByteConstructor, array, cache->charsetString);
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "created");
+
+//    jstring convertableString = env->NewStringUTF(text.c_str());
     jobject bytes = env->CallObjectMethod(convertableString, cache->stringGetBytesMethod);
     jobject jtext = env->NewObject(cache->stringClass, cache->stringConstructor, bytes, cache->charsetString);
     float measure = env->CallFloatMethod(obj, cache->measureTextMethod, convertableString);
     env->DeleteLocalRef(convertableString);
     env->DeleteLocalRef(bytes);
     env->DeleteLocalRef(jtext);
+    env->DeleteLocalRef(jbyteArray);
     return measure;
   }
   float getTextDescent() {
@@ -312,7 +327,6 @@ class AndroidPaint {
  protected:
   void create() {
     if (!is_valid) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "ChakaBoint2");
       is_valid = true;
       JNIEnv * env = cache->getJNIEnv();
       obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
@@ -388,12 +402,6 @@ public:
     }
 
     paint = NULL;
-
-//    if (canvasCreated) {
-//      if (env->GetObjectRefType(canvas) == 2) {
-//        env->DeleteGlobalRef(canvas);
-//      }
-//    }
   }
 
   void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
@@ -470,15 +478,47 @@ public:
 
     JNIEnv * env = cache->getJNIEnv();
 
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
-    if (canvasCreated){
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called Start");
+    if (canvasCreated) {
       env->DeleteGlobalRef(canvas);
       canvasCreated = false;
     }
-    if (bitmap) {
-      env->DeleteGlobalRef(bitmap);
+    if (bitmap != 0) {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
+      jobject localBitmap = bitmap;
+      if (localBitmap == NULL || localBitmap == 0) {
+        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "localBitmap is null");
+      }
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
+      bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, localBitmap, _actual_width, _actual_height, JNI_FALSE));
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
+      env->DeleteLocalRef(localBitmap);
+    } else {
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating new bitmap on resize");
+      jobject argbObject;
+      if (format == LUMINANCE_ALPHA) {
+        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to alpha 8");
+        argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_alpha_8);
+      } else if (format == RGB565) {
+        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb565");
+        argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_rgb_565);
+      } else {
+        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
+        argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+      }
+
+      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating new bitmap on resize 2");
+      jobject localBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
+      if (localBitmap) {
+        bitmap = (jobject) env->NewGlobalRef(localBitmap);
+        env->DeleteLocalRef(localBitmap);
+      } else {
+        bitmap = 0;
+      }
+      env->DeleteLocalRef(argbObject);
     }
-    bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, bitmap, _actual_width, _actual_height, JNI_FALSE));
+
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize done");
   }
 
   void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
@@ -626,7 +666,7 @@ public:
   jobject imageToBitmap(const ImageData & _img);
   
   void checkForCanvas() {
-    if (!canvasCreated) {
+    if (!canvasCreated && bitmap != 0) {
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating canvas");
       //Create new Canvas from the mutable bitmap
       JNIEnv * env = cache->getJNIEnv();
@@ -648,7 +688,7 @@ public:
 #endif
 
 private:
-  jobject bitmap;
+  jobject bitmap = 0;
   jobject canvas;
 
   bool canvasCreated = false;
