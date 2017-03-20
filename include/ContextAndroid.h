@@ -295,19 +295,15 @@ class AndroidPaint {
     jbyteArray array = env->NewByteArray(size);
     env->SetByteArrayRegion(array, 0, size, (const jbyte*) tab2);
 
-
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating string from bytes");
     jstring convertableString = (jstring) env->NewObject(cache->stringClass, cache->stringByteConstructor, array, cache->charsetString);
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "created");
 
-//    jstring convertableString = env->NewStringUTF(text.c_str());
     jobject bytes = env->CallObjectMethod(convertableString, cache->stringGetBytesMethod);
     jobject jtext = env->NewObject(cache->stringClass, cache->stringConstructor, bytes, cache->charsetString);
     float measure = env->CallFloatMethod(obj, cache->measureTextMethod, convertableString);
     env->DeleteLocalRef(convertableString);
     env->DeleteLocalRef(bytes);
     env->DeleteLocalRef(jtext);
-    env->DeleteLocalRef(jbyteArray);
+    env->DeleteLocalRef(array);
     return measure;
   }
   float getTextDescent() {
@@ -537,11 +533,15 @@ public:
     paint.setTextAlign(textAlign);
     if (mode == STROKE) paint.setLineWidth(lineWidth);
 
-    jstring convertableString = env->NewStringUTF(text.c_str());
-    jobject bytes = env->CallObjectMethod(convertableString, cache->stringGetBytesMethod);
-    jobject jtext = env->NewObject(cache->stringClass, cache->stringConstructor, bytes, cache->charsetString);
-    env->DeleteLocalRef(convertableString);
-    env->DeleteLocalRef(bytes);
+    char tab2[1024];
+    strcpy(tab2, text.c_str());
+
+    int size = 16;
+    jbyteArray array = env->NewByteArray(size);
+    env->SetByteArrayRegion(array, 0, size, (const jbyte*) tab2);
+
+    jstring jtext = (jstring) env->NewObject(cache->stringClass, cache->stringByteConstructor, array, cache->charsetString);
+    env->DeleteLocalRef(array);
 
     float descent = paint.getTextDescent();
     float ascent = paint.getTextAscent();
