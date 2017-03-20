@@ -155,7 +155,9 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   JNIEnv * env = cache->getJNIEnv();
 
   //Get inputStream from the picture(filename)
-  jobject inputStream = env->CallObjectMethod(cache->getAssetManager(), cache->managerOpenMethod, env->NewStringUTF(filename.c_str()));
+  jstring jfilename = env->NewStringUTF(filename.c_str());
+  jobject inputStream = env->CallObjectMethod(cache->getAssetManager(), cache->managerOpenMethod, jfilename);
+  env->DeleteLocalRef(jfilename);
   
   //Create BitmapFactory options to make the created bitmap mutable straight away
   jobject factoryOptions = env->NewObject(cache->bitmapOptionsClass, cache->bitmapOptionsConstructor);
