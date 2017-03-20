@@ -96,6 +96,8 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
   alignEnumRight = env->GetStaticFieldID(alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
   alignEnumLeft = env->GetStaticFieldID(alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
   alignEnumCenter = env->GetStaticFieldID(alignClass, "CENTER", "Landroid/graphics/Paint$Align;");
+  factoryOptions = env->NewGlobalRef(env->NewObject(bitmapOptionsClass, bitmapOptionsConstructor));
+  env->SetBooleanField(factoryOptions, optionsMutableField, JNI_TRUE);
 
   paintStyleEnumStroke = env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;");
   paintStyleEnumFill = env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "FILL", "Landroid/graphics/Paint$Style;");
@@ -162,11 +164,9 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   env->DeleteLocalRef(jfilename);
   
   //Create BitmapFactory options to make the created bitmap mutable straight away
-  jobject factoryOptions = env->NewObject(cache->bitmapOptionsClass, cache->bitmapOptionsConstructor);
-  env->SetBooleanField(factoryOptions, cache->optionsMutableField, JNI_TRUE);
   
   //Create a bitmap from the inputStream
-  jobject localBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, factoryOptions);
+  jobject localBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, cache->getFactoryOptions());
   bitmap = (jobject) env->NewGlobalRef(localBitmap);
   env->DeleteLocalRef(localBitmap);
   
@@ -175,7 +175,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
 
   env->DeleteLocalRef(inputStream);
-  env->DeleteLocalRef(factoryOptions);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size)

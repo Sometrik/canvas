@@ -18,6 +18,7 @@ public:
   ~AndroidCache() {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor of AndroidCache on ContextAndroid");
     JNIEnv * env = getJNIEnv();
+    env->DeleteGlobalRef(factoryOptions);
     env->DeleteGlobalRef(assetManager);
     env->DeleteGlobalRef(typefaceClass);
     env->DeleteGlobalRef(rectFClass);
@@ -53,6 +54,9 @@ public:
   }
   jobject & getAssetManager() {
     return assetManager;
+  }
+  jobject & getFactoryOptions(){
+    return factoryOptions;
   }
 
   jmethodID paintSetStyleMethod;
@@ -139,6 +143,7 @@ public:
   jfieldID shaderTileModeMirrorField;
 
 private:
+  jobject factoryOptions;
   jobject assetManager;
   JavaVM * javaVM;
 };
@@ -183,10 +188,7 @@ class AndroidPaint {
 
     JNIEnv * env = cache->getJNIEnv();
     switch (style.getType()) {
-    case Style::SOLID:
-      env->CallVoidMethod(obj, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
-      break;
-    case Style::LINEAR_GRADIENT:
+    case Style::LINEAR_GRADIENT: {
       const std::map<float, Color> & colors = style.getColors();
       if (!colors.empty()) {
         std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
@@ -205,6 +207,11 @@ class AndroidPaint {
         env->DeleteLocalRef(linearGradient);
         env->DeleteLocalRef(resultGradient);
       }
+      break;
+    }
+    default:
+    case Style::SOLID:
+      env->CallVoidMethod(obj, cache->paintSetColorMethod, getAndroidColor(style.color, globalAlpha));
       break;
     }
   }
