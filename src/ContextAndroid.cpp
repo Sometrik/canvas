@@ -204,6 +204,11 @@ jobject
 AndroidSurface::imageToBitmap(const ImageData & _img) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", " ImageToBitmap called");
 
+//  if (_img.getInternalFormat() != InternalFormat::RGBA4 || _img.getInternalFormat() != InternalFormat::RGBA8 || _img.getInternalFormat() != InternalFormat::RGBA_DXT5){
+//    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Wrong internalFormat detected. Converting");
+//    _img.convert(InternalFormat::RGBA8);
+//  }
+
   JNIEnv * env = cache->getJNIEnv();
 
   const unsigned char * buf = _img.getData();

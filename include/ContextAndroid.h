@@ -295,12 +295,8 @@ class AndroidPaint {
 
     JNIEnv * env = cache->getJNIEnv();
 
-    char tab2[1024];
-    strcpy(tab2, text.c_str());
-
-    int size = 16;
-    jbyteArray array = env->NewByteArray(size);
-    env->SetByteArrayRegion(array, 0, size, (const jbyte*) tab2);
+    jbyteArray array = env->NewByteArray(text.size());
+    env->SetByteArrayRegion(array, 0, text.size(), (const jbyte*) text.c_str());
 
     jstring convertableString = (jstring) env->NewObject(cache->stringClass, cache->stringByteConstructor, array, cache->charsetString);
 
@@ -540,12 +536,8 @@ public:
     paint.setTextAlign(textAlign);
     if (mode == STROKE) paint.setLineWidth(lineWidth);
 
-    char tab2[1024];
-    strcpy(tab2, text.c_str());
-
-    int size = 16;
-    jbyteArray array = env->NewByteArray(size);
-    env->SetByteArrayRegion(array, 0, size, (const jbyte*) tab2);
+    jbyteArray array = env->NewByteArray(text.size());
+    env->SetByteArrayRegion(array, 0, text.size(), (const jbyte*) text.c_str());
 
     jstring jtext = (jstring) env->NewObject(cache->stringClass, cache->stringByteConstructor, array, cache->charsetString);
     env->DeleteLocalRef(array);
