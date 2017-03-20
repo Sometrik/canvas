@@ -163,8 +163,6 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   jobject inputStream = env->CallObjectMethod(cache->getAssetManager(), cache->managerOpenMethod, jfilename);
   env->DeleteLocalRef(jfilename);
   
-  //Create BitmapFactory options to make the created bitmap mutable straight away
-  
   //Create a bitmap from the inputStream
   jobject localBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, cache->getFactoryOptions());
   bitmap = (jobject) env->NewGlobalRef(localBitmap);
