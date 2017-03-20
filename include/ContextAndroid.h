@@ -581,7 +581,7 @@ public:
     ascent -= baseline;
     descent -= baseline;
 
-    return TextMetrics(textWidth, descent / displayScale, ascent / displayScale);
+    return TextMetrics(textWidth / displayScale, descent / displayScale, ascent / displayScale);
   }
 
   void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override {
