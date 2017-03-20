@@ -185,8 +185,10 @@ class AndroidPaint {
 
   void setStyle(const Style & style, float displayScale) {
     create();
-
     JNIEnv * env = cache->getJNIEnv();
+    jobject resultGradient = env->CallObjectMethod(obj, cache->paintSetShaderMethod, NULL);
+    env->DeleteLocalRef(resultGradient);
+
     switch (style.getType()) {
     case Style::LINEAR_GRADIENT: {
       const std::map<float, Color> & colors = style.getColors();
