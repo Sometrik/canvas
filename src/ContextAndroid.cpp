@@ -110,7 +110,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
   // creates an empty canvas
 
   if (_actual_width && _actual_height) {
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidSurface widthheight constructor called");
+    __android_log_print(ANDROID_LOG_INFO, "Sometrik", "AndroidSurface widthheight constructor called with width : height %u : %u", _actual_width, _actual_height);
     JNIEnv * env = cache->getJNIEnv();
 
     //set bitmap config according to internalformat
@@ -204,10 +204,10 @@ jobject
 AndroidSurface::imageToBitmap(const ImageData & _img) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", " ImageToBitmap called");
 
-//  if (_img.getInternalFormat() != InternalFormat::RGBA4 || _img.getInternalFormat() != InternalFormat::RGBA8 || _img.getInternalFormat() != InternalFormat::RGBA_DXT5){
-//    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Wrong internalFormat detected. Converting");
-//    _img.convert(InternalFormat::RGBA8);
-//  }
+  if (_img.getInternalFormat() != InternalFormat::RGBA4 && _img.getInternalFormat() != InternalFormat::RGBA8 && _img.getInternalFormat() != InternalFormat::RGBA_DXT5){
+    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Wrong internalFormat detected. Converting");
+    _img.convert(InternalFormat::RGBA8);
+  }
 
   JNIEnv * env = cache->getJNIEnv();
 
