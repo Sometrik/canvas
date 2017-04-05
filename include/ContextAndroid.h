@@ -755,11 +755,8 @@ private:
 
 class AndroidContextFactory: public ContextFactory {
 public:
-  AndroidContextFactory(jobject assetManager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale) :
-      ContextFactory(_displayScale), cache(_cache) {
-    JNIEnv * env = cache->createJNIEnv();
-    asset_manager = AAssetManager_fromJava(env, assetManager);
-    cache->getJavaVM()->DetachCurrentThread();
+  AndroidContextFactory(jobject _assetManager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale) :
+    ContextFactory(_displayScale), cache(_cache), assetManager(_assetManager) {
   }
 
   std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format) override {
@@ -774,9 +771,20 @@ public:
   std::unique_ptr<Image> createImage() override;
   std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) override;
 
+ protected:
+  AAssetManager * getAssetManager() {
+    if (!asset_manager) {
+      JNIEnv * env = cache->createJNIEnv();
+      asset_manager = AAssetManager_fromJava(env, assetManager);
+      cache->getJavaVM()->DetachCurrentThread();
+    }
+    return asset_manager;
+  }
+
 private:
   std::shared_ptr<AndroidCache> cache;
-  AAssetManager * asset_manager;
+  jobject assetManager;
+  AAssetManager * asset_manager = 0;
 };
 }
 ;

@@ -302,17 +302,17 @@ private:
 
 std::unique_ptr<Image>
 AndroidContextFactory::loadImage(const std::string & filename) {
-  return std::unique_ptr<Image>(new AndroidImage(asset_manager, filename, getDisplayScale()));
+  return std::unique_ptr<Image>(new AndroidImage(getAssetManager(), filename, getDisplayScale()));
 }
 
 std::unique_ptr<Image>
 AndroidContextFactory::createImage() {
-  return std::unique_ptr<Image>(new AndroidImage(asset_manager, getDisplayScale()));
+  return std::unique_ptr<Image>(new AndroidImage(getAssetManager(), getDisplayScale()));
 }
 
 std::unique_ptr<Image>
 AndroidContextFactory::createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) {
-  return std::unique_ptr<Image>(new AndroidImage(asset_manager, _data, _format, _width, _height, _levels, _quality, getDisplayScale()));
+  return std::unique_ptr<Image>(new AndroidImage(0, _data, _format, _width, _height, _levels, _quality, getDisplayScale()));
 }
 
 std::unique_ptr<Image>
