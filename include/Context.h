@@ -126,6 +126,27 @@ namespace canvas {
   private:
     float display_scale;
   };
+
+  class NullContext : public Context {
+  public:
+    NullContext() { }
+  };
+
+#if 0
+  class NullContextFactory : public ContextFactory {
+  public:
+    NullContextFactory() : ContextFactory(1.0f) { }
+    std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format = RGBA8) {
+      return std::unique_ptr<Context>(new NullContext);
+    }
+    std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format = RGBA8) {
+      
+    }
+    virtual std::unique_ptr<Image> loadImage(const std::string & filename) = 0;
+    virtual std::unique_ptr<Image> createImage() = 0;
+    virtual std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) = 0;
+  };
+#endif  
 };
 
 #endif
