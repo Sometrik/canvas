@@ -6,101 +6,99 @@
 using namespace std;
 using namespace canvas;
 
-AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) {
+AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) : myEnv(_env){
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java is being initialized");
 
-  _env->GetJavaVM(&javaVM);
-  
-  JNIEnv * env = getJNIEnv();
+  myEnv->GetJavaVM(&javaVM);
 
-  assetManager = _env->NewGlobalRef(_assetManager);
+  assetManager = myEnv->NewGlobalRef(_assetManager);
 
-  frameClass = (jclass) env->NewGlobalRef(env->FindClass("com/sometrik/framework/FrameWork"));
-  typefaceClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Typeface"));
-  canvasClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Canvas"));
-  assetManagerClass = (jclass) env->NewGlobalRef(env->FindClass("android/content/res/AssetManager"));
-  factoryClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/BitmapFactory"));
-  bitmapClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Bitmap"));
-  paintClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Paint"));
-  pathClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Path"));
-  paintStyleClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Paint$Style"));
-  alignClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Paint$Align"));
-  bitmapConfigClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Bitmap$Config"));
-  field_argb_8888 = env->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
-  field_rgb_565 = env->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
-  field_alpha_8 = env->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
-  rectFClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/RectF"));
-  rectClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Rect"));
-  bitmapOptionsClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/BitmapFactory$Options"));
-  fileClass = (jclass) env->NewGlobalRef(env->FindClass("java/io/File"));
-  fileInputStreamClass = (jclass) env->NewGlobalRef(env->FindClass("java/io/FileInputStream"));
-  stringClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/String"));
-  charsetString = (jstring) env->NewGlobalRef(env->NewStringUTF("UTF-8"));
-  throwableClass = (jclass) env->NewGlobalRef(env->FindClass("java/lang/Throwable"));
-  linearGradientClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/LinearGradient"));
-  shaderTileModeClass = (jclass) env->NewGlobalRef(env->FindClass("android/graphics/Shader$TileMode"));
-  shaderTileModeMirrorField = env->GetStaticFieldID(shaderTileModeClass, "MIRROR", "Landroid/graphics/Shader$TileMode;");
+  frameClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("com/sometrik/framework/FrameWork"));
+  typefaceClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Typeface"));
+  canvasClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Canvas"));
+  assetManagerClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/content/res/AssetManager"));
+  factoryClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/BitmapFactory"));
+  bitmapClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Bitmap"));
+  paintClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Paint"));
+  pathClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Path"));
+  paintStyleClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Paint$Style"));
+  alignClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Paint$Align"));
+  bitmapConfigClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Bitmap$Config"));
+  field_argb_8888 = myEnv->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
+  field_rgb_565 = myEnv->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
+  field_alpha_8 = myEnv->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
+  rectFClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/RectF"));
+  rectClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Rect"));
+  bitmapOptionsClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/BitmapFactory$Options"));
+  fileClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("java/io/File"));
+  fileInputStreamClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("java/io/FileInputStream"));
+  stringClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("java/lang/String"));
+  charsetString = (jstring) myEnv->NewGlobalRef(myEnv->NewStringUTF("UTF-8"));
+  throwableClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("java/lang/Throwable"));
+  linearGradientClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/LinearGradient"));
+  shaderTileModeClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Shader$TileMode"));
+  shaderTileModeMirrorField = myEnv->GetStaticFieldID(shaderTileModeClass, "MIRROR", "Landroid/graphics/Shader$TileMode;");
 
-  measureAscentMethod = env->GetMethodID(paintClass, "ascent", "()F");
-  measureDescentMethod = env->GetMethodID(paintClass, "descent", "()F");
-  measureTextMethod = env->GetMethodID(paintClass, "measureText", "(Ljava/lang/String;)F");
-  setAlphaMethod = env->GetMethodID(paintClass, "setAlpha", "(I)V");
-  setTypefaceMethod = env->GetMethodID(paintClass, "setTypeface", "(Landroid/graphics/Typeface;)Landroid/graphics/Typeface;");
-  typefaceCreator = env->GetStaticMethodID(typefaceClass, "create", "(Ljava/lang/String;I)Landroid/graphics/Typeface;");
-  managerOpenMethod = env->GetMethodID(assetManagerClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
-  bitmapCreateMethod = env->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-  bitmapCreateMethod2 = env->GetStaticMethodID(bitmapClass, "createBitmap", "([IIILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-  bitmapCreateScaledMethod = env->GetStaticMethodID(bitmapClass, "createScaledBitmap", "(Landroid/graphics/Bitmap;IIZ)Landroid/graphics/Bitmap;");
-  textAlignMethod = env->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
-  paintSetColorMethod = env->GetMethodID(paintClass, "setColor", "(I)V");
-  paintSetStyleMethod = env->GetMethodID(paintClass, "setStyle", "(Landroid/graphics/Paint$Style;)V");
-  paintSetStrokeWidthMethod = env->GetMethodID(paintClass, "setStrokeWidth", "(F)V");
-  paintSetStrokeJoinMethod = env->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V");
-  canvasConstructor = env->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
-  factoryDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
-  factoryByteDecodeMethod = env->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
-  factoryDecodeMethod2 = env->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory$Options;)Landroid/graphics/Bitmap;");
-  bitmapCopyMethod = env->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
-  paintConstructor = env->GetMethodID(paintClass, "<init>", "()V");
-  paintSetAntiAliasMethod = env->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
-  pathMoveToMethod = env->GetMethodID(pathClass, "moveTo", "(FF)V");
-  pathConstructor = env->GetMethodID(pathClass, "<init>", "()V");
-  textAlignMethod = env->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
-  canvasTextDrawMethod = env->GetMethodID(canvasClass, "drawText", "(Ljava/lang/String;FFLandroid/graphics/Paint;)V");
-  pathLineToMethod = env->GetMethodID(pathClass, "lineTo", "(FF)V");
-  pathCloseMethod = env->GetMethodID(pathClass, "close", "()V");
-  pathArcToMethod = env->GetMethodID(pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
-  canvasPathDrawMethod = env->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
-  rectFConstructor = env->GetMethodID(rectFClass, "<init>", "(FFFF)V");
-  rectConstructor = env->GetMethodID(rectClass, "<init>", "(IIII)V");
-  paintSetShadowMethod = env->GetMethodID(paintClass, "setShadowLayer", "(FFFI)V");
-  paintSetTextSizeMethod = env->GetMethodID(paintClass, "setTextSize", "(F)V");
-  canvasBitmapDrawMethod = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;FFLandroid/graphics/Paint;)V");
-  canvasBitmapDrawMethod2 = env->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;Landroid/graphics/Rect;Landroid/graphics/RectF;Landroid/graphics/Paint;)V");
-  factoryDecodeByteMethod = env->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
-  bitmapGetWidthMethod = env->GetMethodID(bitmapClass, "getWidth", "()I");
-  bitmapGetHeightMethod = env->GetMethodID(bitmapClass, "getHeight", "()I");
-  bitmapOptionsConstructor = env->GetMethodID(bitmapOptionsClass, "<init>", "()V");
-  fileConstructor = env->GetMethodID(fileClass, "<init>", "(Ljava/lang/String;)V");
-  fileInputStreamConstructor = env->GetMethodID(fileInputStreamClass, "<init>", "(Ljava/io/File;)V");
-  stringConstructor = env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V");
-  stringGetBytesMethod = env->GetMethodID(stringClass, "getBytes", "()[B");
-  stringConstructor2 = env->GetMethodID(stringClass, "<init>", "()V");
-  stringByteConstructor = env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V");
-  errorMethod = env->GetStaticMethodID(frameClass, "handleNativeException", "(Ljava/lang/Throwable;)V");
-  getStackTraceMethod = env->GetMethodID(throwableClass, "printStackTrace", "()V");
-  paintSetShaderMethod = env->GetMethodID(paintClass, "setShader", "(Landroid/graphics/Shader;)Landroid/graphics/Shader;");
-  linearGradientConstructor = env->GetMethodID(linearGradientClass, "<init>", "(FFFFIILandroid/graphics/Shader$TileMode;)V");
+  measureAscentMethod = myEnv->GetMethodID(paintClass, "ascent", "()F");
+  measureDescentMethod = myEnv->GetMethodID(paintClass, "descent", "()F");
+  measureTextMethod = myEnv->GetMethodID(paintClass, "measureText", "(Ljava/lang/String;)F");
+  setAlphaMethod = myEnv->GetMethodID(paintClass, "setAlpha", "(I)V");
+  setTypefaceMethod = myEnv->GetMethodID(paintClass, "setTypeface", "(Landroid/graphics/Typeface;)Landroid/graphics/Typeface;");
+  typefaceCreator = myEnv->GetStaticMethodID(typefaceClass, "create", "(Ljava/lang/String;I)Landroid/graphics/Typeface;");
+  managerOpenMethod = myEnv->GetMethodID(assetManagerClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
+  bitmapCreateMethod = myEnv->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+  bitmapCreateMethod2 = myEnv->GetStaticMethodID(bitmapClass, "createBitmap", "([IIILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+  bitmapCreateScaledMethod = myEnv->GetStaticMethodID(bitmapClass, "createScaledBitmap", "(Landroid/graphics/Bitmap;IIZ)Landroid/graphics/Bitmap;");
+  textAlignMethod = myEnv->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
+  paintSetColorMethod = myEnv->GetMethodID(paintClass, "setColor", "(I)V");
+  paintSetStyleMethod = myEnv->GetMethodID(paintClass, "setStyle", "(Landroid/graphics/Paint$Style;)V");
+  paintSetStrokeWidthMethod = myEnv->GetMethodID(paintClass, "setStrokeWidth", "(F)V");
+  paintSetStrokeJoinMethod = myEnv->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V");
+  canvasConstructor = myEnv->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
+  factoryDecodeMethod = myEnv->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
+  factoryByteDecodeMethod = myEnv->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
+  factoryDecodeMethod2 = myEnv->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory$Options;)Landroid/graphics/Bitmap;");
+  bitmapCopyMethod = myEnv->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
+  paintConstructor = myEnv->GetMethodID(paintClass, "<init>", "()V");
+  paintSetAntiAliasMethod = myEnv->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
+  pathMoveToMethod = myEnv->GetMethodID(pathClass, "moveTo", "(FF)V");
+  pathConstructor = myEnv->GetMethodID(pathClass, "<init>", "()V");
+  textAlignMethod = myEnv->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
+  canvasTextDrawMethod = myEnv->GetMethodID(canvasClass, "drawText", "(Ljava/lang/String;FFLandroid/graphics/Paint;)V");
+  pathLineToMethod = myEnv->GetMethodID(pathClass, "lineTo", "(FF)V");
+  pathCloseMethod = myEnv->GetMethodID(pathClass, "close", "()V");
+  pathArcToMethod = myEnv->GetMethodID(pathClass, "arcTo", "(Landroid/graphics/RectF;FF)V");
+  canvasPathDrawMethod = myEnv->GetMethodID(canvasClass, "drawPath", "(Landroid/graphics/Path;Landroid/graphics/Paint;)V");
+  rectFConstructor = myEnv->GetMethodID(rectFClass, "<init>", "(FFFF)V");
+  rectConstructor = myEnv->GetMethodID(rectClass, "<init>", "(IIII)V");
+  paintSetShadowMethod = myEnv->GetMethodID(paintClass, "setShadowLayer", "(FFFI)V");
+  paintSetTextSizeMethod = myEnv->GetMethodID(paintClass, "setTextSize", "(F)V");
+  canvasBitmapDrawMethod = myEnv->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;FFLandroid/graphics/Paint;)V");
+  canvasBitmapDrawMethod2 = myEnv->GetMethodID(canvasClass, "drawBitmap", "(Landroid/graphics/Bitmap;Landroid/graphics/Rect;Landroid/graphics/RectF;Landroid/graphics/Paint;)V");
+  factoryDecodeByteMethod = myEnv->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
+  bitmapGetWidthMethod = myEnv->GetMethodID(bitmapClass, "getWidth", "()I");
+  bitmapGetHeightMethod = myEnv->GetMethodID(bitmapClass, "getHeight", "()I");
+  bitmapOptionsConstructor = myEnv->GetMethodID(bitmapOptionsClass, "<init>", "()V");
+  fileConstructor = myEnv->GetMethodID(fileClass, "<init>", "(Ljava/lang/String;)V");
+  fileInputStreamConstructor = myEnv->GetMethodID(fileInputStreamClass, "<init>", "(Ljava/io/File;)V");
+  stringConstructor = myEnv->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V");
+  stringGetBytesMethod = myEnv->GetMethodID(stringClass, "getBytes", "()[B");
+  stringConstructor2 = myEnv->GetMethodID(stringClass, "<init>", "()V");
+  stringByteConstructor = myEnv->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V");
+  errorMethod = myEnv->GetStaticMethodID(frameClass, "handleNativeException", "(Ljava/lang/Throwable;)V");
+  getStackTraceMethod = myEnv->GetMethodID(throwableClass, "printStackTrace", "()V");
+  paintSetShaderMethod = myEnv->GetMethodID(paintClass, "setShader", "(Landroid/graphics/Shader;)Landroid/graphics/Shader;");
+  linearGradientConstructor = myEnv->GetMethodID(linearGradientClass, "<init>", "(FFFFIILandroid/graphics/Shader$TileMode;)V");
 
-  optionsMutableField = env->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
-  alignEnumRight = env->GetStaticFieldID(alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
-  alignEnumLeft = env->GetStaticFieldID(alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
-  alignEnumCenter = env->GetStaticFieldID(alignClass, "CENTER", "Landroid/graphics/Paint$Align;");
-  factoryOptions = env->NewGlobalRef(env->NewObject(bitmapOptionsClass, bitmapOptionsConstructor));
-  env->SetBooleanField(factoryOptions, optionsMutableField, JNI_TRUE);
+  optionsMutableField = myEnv->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
+  alignEnumRight = myEnv->GetStaticFieldID(alignClass, "RIGHT", "Landroid/graphics/Paint$Align;");
+  alignEnumLeft = myEnv->GetStaticFieldID(alignClass, "LEFT", "Landroid/graphics/Paint$Align;");
+  alignEnumCenter = myEnv->GetStaticFieldID(alignClass, "CENTER", "Landroid/graphics/Paint$Align;");
+  factoryOptions = myEnv->NewGlobalRef(myEnv->NewObject(bitmapOptionsClass, bitmapOptionsConstructor));
+  myEnv->SetBooleanField(factoryOptions, optionsMutableField, JNI_TRUE);
 
-  paintStyleEnumStroke = env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;");
-  paintStyleEnumFill = env->GetStaticFieldID(env->FindClass("android/graphics/Paint$Style"), "FILL", "Landroid/graphics/Paint$Style;");
+  paintStyleEnumStroke = myEnv->GetStaticFieldID(myEnv->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;");
+  paintStyleEnumFill = myEnv->GetStaticFieldID(myEnv->FindClass("android/graphics/Paint$Style"), "FILL", "Landroid/graphics/Paint$Style;");
 
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java successfully initialized");
 }
@@ -111,7 +109,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
 
   if (_actual_width && _actual_height) {
     __android_log_print(ANDROID_LOG_INFO, "Sometrik", "AndroidSurface widthheight constructor called with width : height %u : %u", _actual_width, _actual_height);
-    JNIEnv * env = cache->getJNIEnv();
+    JNIEnv * env = getEnv();
 
     //set bitmap config according to internalformat
     jobject argbObject;
@@ -142,7 +140,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const ImageData & image)
   : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), RGBA8), cache(_cache), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
 
-  JNIEnv * env = cache->getJNIEnv();
+  JNIEnv * env = getEnv();
 
   // creates a surface with width, height and contents from image
   jobject localBitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
@@ -156,7 +154,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
-  JNIEnv * env = cache->getJNIEnv();
+  JNIEnv * env = getEnv();
 
   //Get inputStream from the picture(filename)
   jstring jfilename = env->NewStringUTF(filename.c_str());
@@ -178,7 +176,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size)
   : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
 
-  JNIEnv * env = cache->getJNIEnv();
+  JNIEnv * env = getEnv();
   int arraySize = size;
   
   jbyteArray array = env->NewByteArray(arraySize);
@@ -209,7 +207,7 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
     _img.convert(InternalFormat::RGBA8);
   }
 
-  JNIEnv * env = cache->getJNIEnv();
+  JNIEnv * env = getEnv();
 
   const unsigned char * buf = _img.getData();
   int length = _img.calculateOffset(1);
