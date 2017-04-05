@@ -51,6 +51,9 @@ public:
 
     return env;
   }
+
+  JavaVM * getJavaVM(){ return javaVM; }
+
   jobject & getAssetManager() {
     return assetManager;
   }
@@ -752,10 +755,13 @@ private:
 
 class AndroidContextFactory: public ContextFactory {
 public:
- AndroidContextFactory(JNIEnv * env, jobject assetManager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale) :
+  AndroidContextFactory(jobject assetManager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale) :
       ContextFactory(_displayScale), cache(_cache) {
+    JNIEnv * env = cache->createJNIEnv();
     asset_manager = AAssetManager_fromJava(env, assetManager);
+    cache->getJavaVM()->DetachCurrentThread();
   }
+
   std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format) override {
     return std::unique_ptr<Context>(new ContextAndroid(cache.get(), width, height, format, getDisplayScale()));
   }
