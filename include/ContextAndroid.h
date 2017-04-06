@@ -345,10 +345,8 @@ class AndroidPaint {
   
   JNIEnv * getEnv() {
     if (stored_env != 0){
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik Paint", "Returning stored env");
       return stored_env;
     } else {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik Paint", "Getting new Env");
       stored_env = cache->createJNIEnv();
       return stored_env;
     }
@@ -776,7 +774,7 @@ public:
     if (!asset_manager) {
       JNIEnv * env = cache->createJNIEnv();
       asset_manager = AAssetManager_fromJava(env, assetManager);
-      cache->getJavaVM()->DetachCurrentThread();
+//      cache->getJavaVM()->DetachCurrentThread();
     }
     return asset_manager;
   }
