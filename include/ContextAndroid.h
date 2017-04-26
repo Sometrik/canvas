@@ -423,8 +423,6 @@ public:
     JNIEnv * env = getEnv();
 
     checkForCanvas();
-
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "renderPath called");
     paint.setRenderMode(mode);
     paint.setStyle(style, displayScale);
     paint.setGlobalAlpha(globalAlpha);
@@ -482,8 +480,6 @@ public:
     // Draw path to canvas
     env->CallVoidMethod(canvas, cache->canvasPathDrawMethod, jpath, paint.getObject());
     env->DeleteLocalRef(jpath);
-
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "renderPath done");
   }
 
   void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat format) override {
@@ -539,8 +535,6 @@ public:
 
 
     JNIEnv * env = getEnv();
-
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "RenderText called");
     checkForCanvas();
 
     paint.setRenderMode(mode);
@@ -575,7 +569,6 @@ public:
   }
 
   TextMetrics measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float displayScale) override {
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Measuring text");
 
     paint.setFont(font, displayScale);
     
