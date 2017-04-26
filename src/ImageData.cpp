@@ -42,8 +42,8 @@ ImageData::ImageData(InternalFormat _format, unsigned int _width, unsigned int _
     for (unsigned int i = 0; i < s; i += 16) {
       *(unsigned int *)(data.get() + i + 0) = 0x00000003;
       *(unsigned int *)(data.get() + i + 4) = 0x00000000;
-      *(unsigned int *)(data.get() + i + 4) = 0x00000003;
-      *(unsigned int *)(data.get() + i + 8) = 0x00000000;
+      *(unsigned int *)(data.get() + i + 8) = 0x00000003;
+      *(unsigned int *)(data.get() + i + 12) = 0x00000000;
     }
   } else if (!fd.getCompression()) {
     cerr << "clearing memory for " << s << " bytes\n";
