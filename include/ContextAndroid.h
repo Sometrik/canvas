@@ -494,14 +494,11 @@ public:
       canvasCreated = false;
     }
     if (bitmap != 0) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
       jobject localBitmap = bitmap;
       if (localBitmap == NULL || localBitmap == 0) {
         __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "localBitmap is null");
       }
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
       bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, localBitmap, _actual_width, _actual_height, JNI_FALSE));
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called");
       env->DeleteLocalRef(localBitmap);
     } else {
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating new bitmap on resize");
@@ -517,18 +514,16 @@ public:
         argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
       }
 
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating new bitmap on resize 2");
       jobject localBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
       if (localBitmap) {
-        bitmap = (jobject) env->NewGlobalRef(localBitmap);
-        env->DeleteLocalRef(localBitmap);
+//        bitmap = (jobject) env->NewGlobalRef(localBitmap);
+//        env->DeleteLocalRef(localBitmap);
+        bitmap = makeGlobalReference(localBitmap);
       } else {
         bitmap = 0;
       }
       env->DeleteLocalRef(argbObject);
     }
-
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize done");
   }
 
   void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override {
@@ -692,6 +687,13 @@ public:
       canvasCreated = true;
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
     }
+  }
+
+  jobject makeGlobalReference(jobject localReference) {
+    JNIEnv * env = getEnv();
+    jobject globalRefence = (jobject) env->NewGlobalRef(localReference);
+    env->DeleteLocalRef(localReference);
+    return globalRefence;
   }
 
 #if 0
