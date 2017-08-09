@@ -109,7 +109,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
 
   if (_actual_width && _actual_height) {
     __android_log_print(ANDROID_LOG_INFO, "Sometrik", "AndroidSurface widthheight constructor called with width : height %u : %u", _actual_width, _actual_height);
-    JNIEnv * env = getEnv();
+    JNIEnv * env = cache->getEnv();
 
     //set bitmap config according to internalformat
     jobject argbObject;
@@ -140,7 +140,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const ImageData & image)
   : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), RGBA8), cache(_cache), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
 
-  JNIEnv * env = getEnv();
+  JNIEnv * env = cache->getEnv();
 
   // creates a surface with width, height and contents from image
   jobject localBitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
@@ -154,7 +154,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
-  JNIEnv * env = getEnv();
+  JNIEnv * env = cache->getEnv();
 
   //Get inputStream from the picture(filename)
   jstring jfilename = env->NewStringUTF(filename.c_str());
@@ -176,7 +176,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size)
   : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
 
-  JNIEnv * env = getEnv();
+  JNIEnv * env = cache->getEnv();
   int arraySize = size;
   
   jbyteArray array = env->NewByteArray(arraySize);
@@ -207,7 +207,7 @@ AndroidSurface::imageToBitmap(const ImageData & _img) {
     _img.convert(InternalFormat::RGBA8);
   }
 
-  JNIEnv * env = getEnv();
+  JNIEnv * env = cache->getEnv();
 
   const unsigned char * buf = _img.getData();
   int length = _img.calculateOffset(1);
