@@ -40,8 +40,9 @@ public:
   }
 
   JNIEnv * getEnv() {
-    javaVM->GetEnv((void**)&myEnv, JNI_VERSION_1_6);
-    return myEnv;
+    JNIEnv * env = 0;
+    javaVM->GetEnv((void**)&env, JNI_VERSION_1_6);
+    return env;
   }
 
   JavaVM * getJavaVM(){ return javaVM; }
