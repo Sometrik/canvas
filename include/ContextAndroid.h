@@ -12,32 +12,9 @@
 
 namespace canvas {
 class AndroidCache {
-public:
-  AndroidCache(JNIEnv * _env, jobject _assetManager);
-
-  ~AndroidCache() {
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor of AndroidCache on ContextAndroid");
-    myEnv->DeleteGlobalRef(factoryOptions);
-    myEnv->DeleteGlobalRef(assetManager);
-    myEnv->DeleteGlobalRef(typefaceClass);
-    myEnv->DeleteGlobalRef(rectFClass);
-    myEnv->DeleteGlobalRef(rectClass);
-    myEnv->DeleteGlobalRef(canvasClass);
-    myEnv->DeleteGlobalRef(paintClass);
-    myEnv->DeleteGlobalRef(pathClass);
-    myEnv->DeleteGlobalRef(bitmapClass);
-    myEnv->DeleteGlobalRef(assetManagerClass);
-    myEnv->DeleteGlobalRef(factoryClass);
-    myEnv->DeleteGlobalRef(paintStyleClass);
-    myEnv->DeleteGlobalRef(alignClass);
-    myEnv->DeleteGlobalRef(bitmapConfigClass);
-    myEnv->DeleteGlobalRef(bitmapOptionsClass);
-    myEnv->DeleteGlobalRef(fileClass);
-    myEnv->DeleteGlobalRef(fileInputStreamClass);
-    myEnv->DeleteGlobalRef(stringClass);
-    myEnv->DeleteGlobalRef(charsetString);
-    myEnv->DeleteGlobalRef(linearGradientClass);
-  }
+  public:
+    AndroidCache(JNIEnv * myEnv, jobject _assetManager);
+    ~AndroidCache();
 
   JNIEnv * getEnv() {
     JNIEnv * env = 0;
@@ -125,7 +102,7 @@ public:
   jclass throwableClass;
   jclass linearGradientClass;
   jclass shaderTileModeClass;
-  
+
   jfieldID field_argb_8888;
   jfieldID field_rgb_565;
   jfieldID optionsMutableField;
@@ -141,7 +118,6 @@ private:
   jobject factoryOptions;
   jobject assetManager;
   JavaVM * javaVM;
-  JNIEnv * myEnv;
 };
 
 class AndroidPaint {
@@ -721,10 +697,11 @@ private:
   AndroidSurface default_surface;
 };
 
+
 class AndroidContextFactory: public ContextFactory {
 public:
-  AndroidContextFactory(AAssetManager * _asset_manager, const std::shared_ptr<AndroidCache> & _cache, float _displayScale) :
-    ContextFactory(_displayScale), cache(_cache), asset_manager(_asset_manager) {
+  AndroidContextFactory(AAssetManager * _asset_manager, float _displayScale) :
+    ContextFactory(_displayScale), asset_manager(_asset_manager) {
   }
 
   std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format) override {
@@ -739,8 +716,10 @@ public:
   std::unique_ptr<Image> createImage() override;
   std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) override;
 
+  static void initialize(JNIEnv * env, jobject & manager);
+
 private:
-  std::shared_ptr<AndroidCache> cache;
+  static std::shared_ptr<AndroidCache> cache;
   AAssetManager * asset_manager = 0;
 };
 }

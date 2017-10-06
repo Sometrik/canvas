@@ -6,9 +6,7 @@
 using namespace std;
 using namespace canvas;
 
-AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) : myEnv(_env){
-  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java is being initialized");
-
+AndroidCache::AndroidCache(JNIEnv * myEnv, jobject _assetManager) {
   myEnv->GetJavaVM(&javaVM);
 
   assetManager = myEnv->NewGlobalRef(_assetManager);
@@ -99,8 +97,30 @@ AndroidCache::AndroidCache(JNIEnv * _env, jobject _assetManager) : myEnv(_env){
 
   paintStyleEnumStroke = myEnv->GetStaticFieldID(myEnv->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;");
   paintStyleEnumFill = myEnv->GetStaticFieldID(myEnv->FindClass("android/graphics/Paint$Style"), "FILL", "Landroid/graphics/Paint$Style;");
+}
 
-  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "AndroidCache java successfully initialized");
+AndroidCache::~AndroidCache() {
+  auto myEnv = getEnv();
+  myEnv->DeleteGlobalRef(factoryOptions);
+  myEnv->DeleteGlobalRef(assetManager);
+  myEnv->DeleteGlobalRef(typefaceClass);
+  myEnv->DeleteGlobalRef(rectFClass);
+  myEnv->DeleteGlobalRef(rectClass);
+  myEnv->DeleteGlobalRef(canvasClass);
+  myEnv->DeleteGlobalRef(paintClass);
+  myEnv->DeleteGlobalRef(pathClass);
+  myEnv->DeleteGlobalRef(bitmapClass);
+  myEnv->DeleteGlobalRef(assetManagerClass);
+  myEnv->DeleteGlobalRef(factoryClass);
+  myEnv->DeleteGlobalRef(paintStyleClass);
+  myEnv->DeleteGlobalRef(alignClass);
+  myEnv->DeleteGlobalRef(bitmapConfigClass);
+  myEnv->DeleteGlobalRef(bitmapOptionsClass);
+  myEnv->DeleteGlobalRef(fileClass);
+  myEnv->DeleteGlobalRef(fileInputStreamClass);
+  myEnv->DeleteGlobalRef(stringClass);
+  myEnv->DeleteGlobalRef(charsetString);
+  myEnv->DeleteGlobalRef(linearGradientClass);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format)
@@ -301,6 +321,20 @@ private:
 };
 
 std::unique_ptr<Image>
+AndroidSurface::createImage(float display_scale) {
+  std::unique_ptr<Image> image;
+  unsigned char * buffer = (unsigned char *)lockMemory(false);
+  assert(buffer);
+  if (buffer) {
+    image = std::unique_ptr<Image>(new AndroidImage(0, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
+    releaseMemory();
+  }
+  return image;
+}
+
+std::shared_ptr<AndroidCache> AndroidContextFactory::cache;
+
+std::unique_ptr<Image>
 AndroidContextFactory::loadImage(const std::string & filename) {
   return std::unique_ptr<Image>(new AndroidImage(asset_manager, filename, getDisplayScale()));
 }
@@ -315,14 +349,7 @@ AndroidContextFactory::createImage(const unsigned char * _data, InternalFormat _
   return std::unique_ptr<Image>(new AndroidImage(0, _data, _format, _width, _height, _levels, _quality, getDisplayScale()));
 }
 
-std::unique_ptr<Image>
-AndroidSurface::createImage(float display_scale) {
-  std::unique_ptr<Image> image;
-  unsigned char * buffer = (unsigned char *)lockMemory(false);
-  assert(buffer);
-  if (buffer) {
-    image = std::unique_ptr<Image>(new AndroidImage(0, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
-    releaseMemory();
-  }
-  return image;
+void
+AndroidContextFactory::initialize(JNIEnv * env, jobject & manager) {
+  cache = std::make_shared<AndroidCache>(env, manager);
 }
