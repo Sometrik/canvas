@@ -1,16 +1,15 @@
 #ifndef _SURFACE_H_
 #define _SURFACE_H_
 
-#include "Color.h"
-#include "FilterMode.h"
-#include "InternalFormat.h"
-#include "Path2D.h"
-#include "Style.h"
-#include "Font.h"
-#include "TextBaseline.h"
-#include "TextAlign.h"
-#include "TextMetrics.h"
-#include "Operator.h"
+#include <Color.h>
+#include <InternalFormat.h>
+#include <Path2D.h>
+#include <Style.h>
+#include <Font.h>
+#include <TextBaseline.h>
+#include <TextAlign.h>
+#include <TextMetrics.h>
+#include <Operator.h>
 
 #include <memory>
 
@@ -70,12 +69,8 @@ namespace canvas {
     unsigned int getActualHeight() const { return actual_height; }
     InternalFormat getFormat() const { return format; }
 
-    void setMagFilter(FilterMode mode) { mag_filter = mode; }
-    void setMinFilter(FilterMode mode) { min_filter = mode; }
     void setTargetFormat(InternalFormat format) { target_format = format; }
 
-    FilterMode getMagFilter() const { return mag_filter; }
-    FilterMode getMinFilter() const { return min_filter; }
     InternalFormat getTargetFormat() const { return target_format ? target_format : getFormat(); }
     
   protected:
@@ -90,8 +85,6 @@ namespace canvas {
 
   private:
     unsigned int logical_width, logical_height, actual_width, actual_height;
-    FilterMode mag_filter = LINEAR;
-    FilterMode min_filter = LINEAR;
     InternalFormat format;
     InternalFormat target_format = NO_FORMAT;
   };
