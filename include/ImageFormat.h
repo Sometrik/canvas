@@ -15,9 +15,9 @@
 #define RGB565_TO_GREEN(v) (((v >> 5) & 0x3f) * 255 / 63)
 #define RGB565_TO_BLUE(v) ((v & 0x1f) * 255 / 31)
 
-#define PACK_RGB565(r, g, b) (r + (g << 5) + (b << 11))
-#define PACK_RGB24(r, g, b) (r + (g << 8) + (b << 16))
-#define PACK_RGBA32(r, g, b, a) (r + (g << 8) + (b << 16) + (a << 24))
+#define PACK_RGB565(r, g, b) ((r) | ((g) << 5) | ((b) << 11))
+#define PACK_RGB24(r, g, b) ((r) | ((g) << 8) | ((b) << 16))
+#define PACK_RGBA32(r, g, b, a) ((r) | ((g) << 8) | ((b) << 16) | ((a) << 24))
 
 namespace canvas {
   class ImageFormat {
