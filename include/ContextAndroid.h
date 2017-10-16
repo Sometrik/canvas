@@ -626,6 +626,7 @@ public:
   }
 
   jobject imageToBitmap(const ImageData & _img);
+  jobject imageToBitmapRGBA8(const ImageData & img);
 
   void checkForCanvas() {
     if (!canvasCreated && bitmap != 0) {
