@@ -7,49 +7,41 @@
 using namespace std;
 using namespace canvas;
 
-FloydSteinberg::FloydSteinberg(const ImageData & input_image, InternalFormat _target_format)
-  : target_format(_target_format) {
-  width = input_image.getWidth();
-  height = input_image.getHeight();
-  input_data = std::unique_ptr<unsigned char[]>(new unsigned char[width * height * 4]);
-  auto tmp = input_data.get();
-  
-  auto data = input_image.getData();
-
-  auto & fd = input_image.getImageFormat();
-  unsigned int n = width * height;
-
-  if (fd.getBytesPerPixel() == 4) {
-    memcpy(tmp, data, 4 * n);
-  } else if (fd.getBytesPerPixel() == 3) {
-    for (unsigned int offset = 0; offset < 3 * n; ) {
-      *tmp++ = data[offset++];
-      *tmp++ = data[offset++];
-      *tmp++ = data[offset++];
-      *tmp++ = 0xff;
-    }
-  } else if (fd.getBytesPerPixel() == 1) {
-    for (unsigned int offset = 0; offset < n; ) {
-      unsigned char v = data[offset++];
-      *tmp++ = v;
-      *tmp++ = v;
-      *tmp++ = v;
-      *tmp++ = 0xff;
-    }
-  }
+static inline void addErrorAlpha(unsigned int * input_data, unsigned int width, unsigned int x, unsigned int y, int weight, unsigned int error) {
+  unsigned int offset = y * width + x;
+  unsigned int value = input_data[offset];
+  int r = RGBA_TO_RED(value) + weight * RGBA_TO_RED(error) / 16;
+  int g = RGBA_TO_GREEN(value) + weight * RGBA_TO_GREEN(error) / 16;
+  int b = RGBA_TO_BLUE(value) + weight * RGBA_TO_BLUE(error) / 16;
+  int a = RGBA_TO_ALPHA(value) + weight * RGBA_TO_ALPHA(error) / 16;
+  if (r > 0xff) r = 0xff;
+  if (g > 0xff) g = 0xff;
+  if (b > 0xff) b = 0xff;
+  if (a > 0xff) a = 0xff;
+  input_data[offset] = PACK_RGBA32(r, g, b, a);
 }
 
-std::unique_ptr<ImageData>
-FloydSteinberg::apply() {
+static inline void addError(unsigned int * input_data, unsigned int width, unsigned int x, unsigned int y, int weight, unsigned int error) {
+  unsigned int offset = y * width + x;
+  unsigned int value = input_data[offset];
+  int r = RGBA_TO_RED(value) + weight * RGBA_TO_RED(error) / 16;
+  int g = RGBA_TO_GREEN(value) + weight * RGBA_TO_GREEN(error) / 16;
+  int b = RGBA_TO_BLUE(value) + weight * RGBA_TO_BLUE(error) / 16;
+  if (r > 0xff) r = 0xff;
+  if (g > 0xff) g = 0xff;
+  if (b > 0xff) b = 0xff;
+  input_data[offset] = PACK_RGBA32(r, g, b, 0);
+}
+
+static std::unique_ptr<ImageData> apply2(unsigned int * input_data, unsigned int width, unsigned int height, InternalFormat target_format) {
+  unsigned int * input = input_data;
   auto target_size = width * height * 2;
   std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_size]);
   unsigned short * output_data = (unsigned short *)tmp.get();
-  unsigned int n = target_size / 2;
-  unsigned int * input = (unsigned int *)input_data.get();
 
   if (target_format == RGBA4) {
-    for (unsigned int y = 0; y < (int)height; y++) {
-      for (unsigned int x = 0; x < (int)width; x++, input++) {
+    for (unsigned int y = 0; y < height; y++) {
+      for (unsigned int x = 0; x < width; x++, input++) {
         unsigned int v = *input;
         unsigned int error = v & 0x0f0f0f0f;
 #if defined __APPLE__ || defined __ANDROID__
@@ -57,15 +49,15 @@ FloydSteinberg::apply() {
 #else
         *output_data++ = ((RGBA_TO_BLUE(v) >> 4) << 12) | ((RGBA_TO_GREEN(v) >> 4) << 8) | ((RGBA_TO_RED(v) >> 4) << 4) | (RGBA_TO_ALPHA(v) >> 4);
 #endif
-        if (x + 1 < width) addErrorAlpha(x + 1, y,     7, 16, error);
-        if (x > 0 && y + 1 < height) addErrorAlpha(x - 1, y + 1, 3, 16, error);
-        if (y + 1 < height) addErrorAlpha(x,     y + 1, 5, 16, error);
-        if (x + 1 < width && y + 1 < height) addErrorAlpha(x + 1, y + 1, 1, 16, error);
+        if (x + 1 < width) addErrorAlpha(input_data, width, x + 1, y, 7, error);
+        if (x > 0 && y + 1 < height) addErrorAlpha(input_data, width, x - 1, y + 1, 3, error);
+        if (y + 1 < height) addErrorAlpha(input_data, width, x, y + 1, 5, error);
+        if (x + 1 < width && y + 1 < height) addErrorAlpha(input_data, width, x + 1, y + 1, 1, error);
       }
     }
   } else {
-    for (unsigned int y = 0; y < (int)height; y++) {
-      for (unsigned int x = 0; x < (int)width; x++, input++) {
+    for (unsigned int y = 0; y < height; y++) {
+      for (unsigned int x = 0; x < width; x++, input++) {
         unsigned int v = *input;
         unsigned int error = v & 0x07030700;
 #if defined __APPLE__ || defined __ANDROID__
@@ -73,13 +65,47 @@ FloydSteinberg::apply() {
 #else
         *output_data++ = PACK_RGB565(RGBA_TO_RED(v) >> 3, RGBA_TO_GREEN(v) >> 2, RGBA_TO_BLUE(v) >> 3);
 #endif
-        if (x + 1 < width) addError(x + 1, y,     7, 16, error);
-        if (x > 0 && y + 1 < height) addError(x - 1, y + 1, 3, 16, error);
-        if (y + 1 < height) addError(x,     y + 1, 5, 16, error);
-        if (x + 1 < width && y + 1 < height) addError(x + 1, y + 1, 1, 16, error);
+        if (x + 1 < width) addError(input_data, width, x + 1, y, 7, error);
+        if (x > 0 && y + 1 < height) addError(input_data, width, x - 1, y + 1, 3, error);
+        if (y + 1 < height) addError(input_data, width, x, y + 1, 5, error);
+        if (x + 1 < width && y + 1 < height) addError(input_data, width, x + 1, y + 1, 1, error);
       }
     }
   }
 
   return std::unique_ptr<ImageData>(new ImageData(tmp.get(), target_format, width, height));
+}
+
+std::unique_ptr<ImageData>
+FloydSteinberg::apply(const ImageData & input_image) const {
+  unsigned int width = input_image.getWidth();
+  unsigned int height = input_image.getHeight();
+
+  auto data = input_image.getData();
+  auto & fd = input_image.getImageFormat();
+
+  auto input_data = std::unique_ptr<unsigned int[]>(new unsigned int[width * height]);
+
+  if (fd.getBytesPerPixel() == 4) {
+    memcpy(input_data.get(), data, 4 * width * height);
+  } if (fd.getBytesPerPixel() == 3) {
+    auto tmp = (unsigned char *)input_data.get();
+    for (unsigned int offset = 0; offset < 3 * width * height; ) {
+      *tmp++ = data[offset++];
+      *tmp++ = data[offset++];
+      *tmp++ = data[offset++];
+      *tmp++ = 0xff;
+    }
+  } else if (fd.getBytesPerPixel() == 1) {
+    auto tmp = (unsigned char *)input_data.get();
+    for (unsigned int offset = 0; offset < width * height; ) {
+      unsigned char v = data[offset++];
+      *tmp++ = v;
+      *tmp++ = v;
+      *tmp++ = v;
+      *tmp++ = 0xff;
+    }
+  }
+
+  return apply2(input_data.get(), width, height, target_format);
 }

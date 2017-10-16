@@ -166,12 +166,12 @@ ImageData::convert(InternalFormat target_format) const {
     return unique_ptr<ImageData>(new ImageData(tmp.get(), target_format, getWidth(), getHeight()));
   } else if (target_fd.getNumChannels() == 4) {
     assert(target_fd.getBytesPerPixel() == 2);
-    FloydSteinberg d(*this, RGBA4);
-    return d.apply();
+    FloydSteinberg d(RGBA4);
+    return d.apply(*this);
   } else if (target_fd.getNumChannels() == 3) {
     assert(target_fd.getBytesPerPixel() == 2);
-    FloydSteinberg d(*this, RGB565);
-    return d.apply();
+    FloydSteinberg d(RGB565);
+    return d.apply(*this);
   } else {
     assert(target_fd.getBytesPerPixel() == 2);
     auto target_size = calculateSize(getWidth(), getHeight(), getLevels(), target_format);
