@@ -108,8 +108,8 @@ namespace canvas {
     static size_t calculateSize(unsigned int width, unsigned int height, unsigned int levels, InternalFormat format) { return calculateOffset(width, height, levels, format); }
     size_t calculateSize() const { return calculateOffset(width, height, levels, format); }
 
-    PackedImageData createPackedImageData() {
-      
+    std::unique_ptr<PackedImageData> createPackedImageData() const {
+      return std::unique_ptr<PackedImageData>(new PackedImageData(data.get(), format, width, height, levels));
     }
 
   protected:

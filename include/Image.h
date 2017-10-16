@@ -13,8 +13,8 @@ namespace canvas {
       : filename(_filename), display_scale(_display_scale) { }
     Image(const std::string & _filename, float _display_scale)
       : filename(_filename), display_scale(_display_scale) { }
-  Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality, float _display_scale)
-    : data(new ImageData(_data, _format, _width, _height, _levels, _quality)),
+  Image(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, float _display_scale)
+    : data(new ImageData(_data, _format, _width, _height, _levels)),
       display_scale(_display_scale) { }
 
     virtual ~Image() = default;

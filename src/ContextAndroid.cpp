@@ -289,7 +289,7 @@ public:
     AndroidImage(AAssetManager * _asset_manager, const std::string & filename, float _display_scale)
       : Image(filename, _display_scale), asset_manager(_asset_manager) { }
 
-  AndroidImage(AAssetManager * _asset_manager, const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality, float _display_scale) : Image(_data, _format, _width, _height, _levels, _quality, _display_scale), asset_manager(_asset_manager) { }
+  AndroidImage(AAssetManager * _asset_manager, const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, float _display_scale) : Image(_data, _format, _width, _height, _levels, _display_scale), asset_manager(_asset_manager) { }
 
 protected:
   void loadFile() override {
@@ -329,7 +329,7 @@ AndroidSurface::createImage(float display_scale) {
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
   if (buffer) {
-    image = std::unique_ptr<Image>(new AndroidImage(0, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
+    image = std::unique_ptr<Image>(new AndroidImage(0, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, display_scale));
     releaseMemory();
   }
   return image;
@@ -348,8 +348,8 @@ AndroidContextFactory::createImage() {
 }
 
 std::unique_ptr<Image>
-AndroidContextFactory::createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) {
-  return std::unique_ptr<Image>(new AndroidImage(0, _data, _format, _width, _height, _levels, _quality, getDisplayScale()));
+AndroidContextFactory::createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels) {
+  return std::unique_ptr<Image>(new AndroidImage(0, _data, _format, _width, _height, _levels, getDisplayScale()));
 }
 
 void

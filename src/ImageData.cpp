@@ -17,7 +17,7 @@ using namespace canvas;
 ImageData ImageData::nullImage;
 bool ImageData::etc1_initialized = false;
   
-ImageData::ImageData(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) : width(_width), height(_height), levels(_levels), format(_format), quality(_quality) {
+ImageData::ImageData(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels) : width(_width), height(_height), levels(_levels), format(_format) {
   size_t s = calculateSize();
 
   auto & fd = getImageFormat(format);
