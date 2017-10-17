@@ -23,28 +23,34 @@ static pair<cairo_surface_t *, unsigned int *> initializeSurfaceFromData(unsigne
   cairo_format_t format = getCairoFormat(num_channels);
   unsigned int stride = cairo_format_stride_for_width(format, width);
   size_t numPixels = width * height;
-  unsigned int * storage = new unsigned int[numPixels];
-  if (num_channels == 4) {
+  unsigned int * storage;
+  if (num_channels == 1) {
+    storage = new unsigned int[(numPixels + 3) / 4];
+    memcpy(storage, data, numPixels);  
+  } else {
+    storage = new unsigned int[numPixels];
     assert(stride == 4 * width);
-    if (flip_channels) {
+    if (num_channels == 4) {
+      if (flip_channels) {
+	for (unsigned int i = 0; i < numPixels; i++) {
+	  storage[i] = (data[4 * i + 2]) | (data[4 * i + 1] << 8) | (data[4 * i + 0] << 16) | (data[4 * i + 3] << 24);
+	}
+      } else {
+	memcpy(storage, data, numPixels * 4);
+      }
+    } else if (num_channels == 3) {
       for (unsigned int i = 0; i < numPixels; i++) {
-	storage[i] = (data[4 * i + 2]) + (data[4 * i + 1] << 8) + (data[4 * i + 0] << 16) + (data[4 * i + 3] << 24);
+	storage[i] = data[3 * i + 2] + (data[3 * i + 1] << 8) + (data[3 * i + 0] << 16);
       }
     } else {
-      memcpy(storage, data, numPixels * 4);
-    }
-  } else if (num_channels == 1) {
-    memcpy(storage, data, numPixels);    
-  } else {
-    for (unsigned int i = 0; i < numPixels; i++) {
-      storage[i] = data[3 * i + 2] + (data[3 * i + 1] << 8) + (data[3 * i + 0] << 16);
+      assert(0);
     }
   }
   cairo_surface_t * surface = cairo_image_surface_create_for_data((unsigned char*)storage,
-								format,
-								width,
-								height,
-								stride);
+								  format,
+								  width,
+								  height,
+								  stride);
   assert(surface);
   return std::pair<cairo_surface_t *, unsigned int *>(surface, storage);
 }
