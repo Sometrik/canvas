@@ -59,8 +59,7 @@ namespace canvas {
     virtual void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) = 0;
     virtual std::unique_ptr<Image> createImage(float display_scale) = 0;
 
-    void slowBlur(float hradius, float vradius);
-    void blur(float r);
+    void blur(float hradius, float vradius);
     void colorize(const Color & color, Surface & target);
     
     unsigned int getLogicalWidth() const { return logical_width; }
