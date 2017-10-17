@@ -32,7 +32,6 @@ AndroidCache::AndroidCache(JNIEnv * myEnv, jobject _assetManager) {
   fileInputStreamClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("java/io/FileInputStream"));
   stringClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("java/lang/String"));
   charsetString = (jstring) myEnv->NewGlobalRef(myEnv->NewStringUTF("UTF-8"));
-  throwableClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("java/lang/Throwable"));
   linearGradientClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/LinearGradient"));
   shaderTileModeClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Shader$TileMode"));
   shaderTileModeMirrorField = myEnv->GetStaticFieldID(shaderTileModeClass, "MIRROR", "Landroid/graphics/Shader$TileMode;");
@@ -83,8 +82,6 @@ AndroidCache::AndroidCache(JNIEnv * myEnv, jobject _assetManager) {
   stringGetBytesMethod = myEnv->GetMethodID(stringClass, "getBytes", "()[B");
   stringConstructor2 = myEnv->GetMethodID(stringClass, "<init>", "()V");
   stringByteConstructor = myEnv->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V");
-  errorMethod = myEnv->GetStaticMethodID(frameClass, "handleNativeException", "(Ljava/lang/Throwable;)V");
-  getStackTraceMethod = myEnv->GetMethodID(throwableClass, "printStackTrace", "()V");
   paintSetShaderMethod = myEnv->GetMethodID(paintClass, "setShader", "(Landroid/graphics/Shader;)Landroid/graphics/Shader;");
   linearGradientConstructor = myEnv->GetMethodID(linearGradientClass, "<init>", "(FFFFIILandroid/graphics/Shader$TileMode;)V");
 
@@ -241,14 +238,7 @@ AndroidSurface::imageToBitmap(const ImageData & img) {
 
   if (env->ExceptionCheck()) {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "exception on imageToBitmap");
-    jthrowable error = env->ExceptionOccurred();
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "printing trace");
     env->ExceptionClear();
-    //    env->CallVoidMethod(error, cache->getStackTraceMethod);
-    //    throw(error);
-    env->CallStaticVoidMethod(cache->frameClass, cache->errorMethod, error);
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "clearing");
-    env->DeleteLocalRef(error);
   }
   
   env->DeleteLocalRef(argbObject);

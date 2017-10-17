@@ -75,8 +75,6 @@ class AndroidCache {
   jmethodID stringConstructor2;
   jmethodID stringGetBytesMethod;
   jmethodID stringByteConstructor;
-  jmethodID errorMethod;
-  jmethodID getStackTraceMethod;
   jmethodID factoryByteDecodeMethod;
   jmethodID paintSetShaderMethod;
   jmethodID linearGradientConstructor;
@@ -99,7 +97,6 @@ class AndroidCache {
   jclass fileInputStreamClass;
   jclass stringClass;
   jstring charsetString;
-  jclass throwableClass;
   jclass linearGradientClass;
   jclass shaderTileModeClass;
 
@@ -563,18 +560,11 @@ public:
     paint.setGlobalAlpha(globalAlpha);
     paint.setShadow(shadowBlur * displayScale, shadowOffsetX * displayScale, shadowOffsetY * displayScale, shadowColor);
     
-
-
     if (env->ExceptionCheck()) {
-      jthrowable error = env->ExceptionOccurred();
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "error1");
-      env->CallStaticVoidMethod(cache->frameClass, cache->errorMethod, error);
-      env->DeleteLocalRef(error);
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "clearing");
       env->ExceptionClear();
       return;
     }
-
 
     jobject drawableBitmap = imageToBitmap(_img);
 
