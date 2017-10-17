@@ -60,7 +60,12 @@ namespace canvas {
     virtual void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) = 0;
     virtual std::unique_ptr<Image> createImage(float display_scale) = 0;
 
-    void blur(float hradius, float vradius);
+    std::unique_ptr<ImageData> blur(float hradius, float vradius) {
+      ImageData tmp((unsigned char *)lockMemory(false), getActualWidth(), getActualHeight(), getNumChannels());
+      auto r = tmp.blur(hradius, vradius);
+      releaseMemory();
+      return r;
+    }
     
     std::unique_ptr<ImageData> colorize(const Color & color) {
       ImageData tmp((unsigned char *)lockMemory(false), getActualWidth(), getActualHeight(), getNumChannels());

@@ -51,8 +51,8 @@ Context::renderText(RenderMode mode, const Style & style, const std::string & te
       shadow_style = shadowColor.get();
       shadow_style.color.alpha = 1.0f;
       shadow->renderText(mode, font, shadow_style, textBaseline.get(), textAlign.get(), text, Point(p.x + shadowOffsetX.get() + b, p.y + shadowOffsetY.get() + b), lineWidth.get(), op, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath);
-      shadow->blur(bs, bs);
-      auto shadow2 = shadow->colorize(shadowColor.get());
+      auto shadow1 = shadow->blur(bs, bs);
+      auto shadow2 = shadow1->colorize(shadowColor.get());
       getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
     }
     getDefaultSurface().renderText(mode, font, style, textBaseline.get(), textAlign.get(), text, p, lineWidth.get(), op, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath);
@@ -76,8 +76,8 @@ Context::renderPath(RenderMode mode, const Path2D & path, const Style & style, O
       tmp_clipPath.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
       
       shadow->renderPath(mode, tmp_path, shadow_style, lineWidth.get(), op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath);
-      shadow->blur(bs, bs);
-      auto shadow2 = shadow->colorize(shadowColor.get());
+      auto shadow1 = shadow->blur(bs, bs);
+      auto shadow2 = shadow1->colorize(shadowColor.get());
       getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
     }
     getDefaultSurface().renderPath(mode, path, style, lineWidth.get(), op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), clipPath);
@@ -98,8 +98,8 @@ Context::drawImage(Surface & img, double x, double y, double w, double h) {
 
       shadow->drawImage(img, Point(p.x + b + shadowOffsetX.get(), p.y + b + shadowOffsetY.get()), w, h, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath, imageSmoothingEnabled.get());
       // shadow->colorFill(shadowColor.get());
-      shadow->blur(bs, bs);
-      auto shadow2 = shadow->colorize(shadowColor.get());
+      auto shadow1 = shadow->blur(bs, bs);
+      auto shadow2 = shadow1->colorize(shadowColor.get());
       getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
     }
     getDefaultSurface().drawImage(img, p, w, h, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath, imageSmoothingEnabled.get());
@@ -119,8 +119,8 @@ Context::drawImage(const ImageData & img, double x, double y, double w, double h
       auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
       shadow->drawImage(img, Point(x + b + shadowOffsetX.get(), y + b + shadowOffsetY.get()), w, h, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath, imageSmoothingEnabled.get());
       // shadow->colorFill(shadowColor.get());
-      shadow->blur(bs, bs);
-      auto shadow2 = shadow->colorize(shadowColor.get());
+      auto shadow1 = shadow->blur(bs, bs);
+      auto shadow2 = shadow1->colorize(shadowColor.get());
       getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
     }
     getDefaultSurface().drawImage(img, p, w, h, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath, imageSmoothingEnabled.get());

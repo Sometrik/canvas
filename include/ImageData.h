@@ -46,6 +46,7 @@ namespace canvas {
     
     std::unique_ptr<ImageData> scale(unsigned int target_width, unsigned int target_height) const;
     std::unique_ptr<ImageData> colorize(const Color & color) const;
+    std::unique_ptr<ImageData> blur(float hradius, float vradius) const;
 
     bool isValid() const { return width != 0 && height != 0 && num_channels != 0; }
     unsigned int getWidth() const { return width; }
