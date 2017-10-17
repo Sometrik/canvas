@@ -333,7 +333,7 @@ class AndroidSurface: public Surface {
 public:
   friend class ContextAndroid;
 
-  AndroidSurface(AndroidCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format);
+  AndroidSurface(AndroidCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels);
   AndroidSurface(AndroidCache * _cache, const ImageData & image);
   AndroidSurface(AndroidCache * _cache, const std::string & filename);
   AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size); // Create a bitmap from bytearray
@@ -443,7 +443,7 @@ public:
   }
 
   void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels) override {
-    Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, format);
+    Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels);
     // do resize the surface and discard the old data
 
     JNIEnv * env = cache->getEnv();
@@ -462,7 +462,7 @@ public:
       env->DeleteLocalRef(localBitmap);
     } else {
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating new bitmap on resize");
-      jobject argbObject = createBitmapConfig(num_channels);      
+      jobject argbObject = createBitmapConfig(_num_channels);
       jobject localBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
       if (localBitmap) {
 //        bitmap = (jobject) env->NewGlobalRef(localBitmap);
@@ -660,15 +660,15 @@ private:
 
 class ContextAndroid: public Context {
 public:
-  ContextAndroid(AndroidCache * _cache, unsigned int _width, unsigned int _height, InternalFormat format, float _displayScale) :
-      Context(_displayScale), cache(_cache), default_surface(_cache, _width, _height, (unsigned int) (_width * _displayScale), (unsigned int) (_height * _displayScale), format) {
+  ContextAndroid(AndroidCache * _cache, unsigned int _width, unsigned int _height, unsigned int _num_channels, float _displayScale) :
+      Context(_displayScale), cache(_cache), default_surface(_cache, _width, _height, (unsigned int) (_width * _displayScale), (unsigned int) (_height * _displayScale), _num_channels) {
   }
 
   std::unique_ptr<Surface> createSurface(const ImageData & image) override {
     return std::unique_ptr<Surface>(new AndroidSurface(cache, image));
   }
-  std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat _format) override {
-    return std::unique_ptr<Surface>(new AndroidSurface(cache, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _format));
+  std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned int _num_channels) override {
+    return std::unique_ptr<Surface>(new AndroidSurface(cache, _width, _height, (unsigned int) (_width * getDisplayScale()), (unsigned int) (_height * getDisplayScale()), _num_channels));
   }
 
   Surface & getDefaultSurface() override {
@@ -695,17 +695,17 @@ public:
     ContextFactory(_displayScale), asset_manager(_asset_manager) {
   }
 
-  std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format) override {
-    return std::unique_ptr<Context>(new ContextAndroid(cache.get(), width, height, format, getDisplayScale()));
+  std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, unsigned int num_channels) override {
+    return std::unique_ptr<Context>(new ContextAndroid(cache.get(), width, height, num_channels, getDisplayScale()));
   }
-  std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format) override {
+  std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, unsigned int num_channels) override {
     unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
-    return std::unique_ptr<Surface>(new AndroidSurface(cache.get(), width, height, aw, ah, format));
+    return std::unique_ptr<Surface>(new AndroidSurface(cache.get(), width, height, aw, ah, num_channels));
   }
 
   std::unique_ptr<Image> loadImage(const std::string & filename) override;
   std::unique_ptr<Image> createImage() override;
-  std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height) override;
+  std::unique_ptr<Image> createImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels) override;
 
   static void initialize(JNIEnv * env, jobject & manager);
 

@@ -132,7 +132,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
     JNIEnv * env = cache->getEnv();
 
     //set bitmap config according to internalformat
-    jobject argbObject = getBitmapConfig(num_channels);
+    jobject argbObject = createBitmapConfig(_num_channels);
     
     jobject localBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
     if (localBitmap) {
@@ -207,6 +207,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
 
 jobject
 AndroidSurface::createBitmapConfig(unsigned int num_channels) {
+  JNIEnv * env = cache->getEnv();
   if (num_channels == 1) {
     return env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_alpha_8);
   } else {
@@ -228,9 +229,9 @@ AndroidSurface::imageToBitmap(const ImageData & img) {
     unique_ptr<unsigned int[]> tmp(new unsigned int[n]);
     for (unsigned int i = 0; i < n; i++) {
       unsigned char r = *input_data++;
-      unsigned char g = num_channels >= 2 ? *input_data++ : r;
-      unsigned char b = num_channels >= 3 ? *input_data++ : g;
-      unsigned char a = num_channels >= 4 ? *input_data++ : 0xff;
+      unsigned char g = img.getNumChannels() >= 2 ? *input_data++ : r;
+      unsigned char b = img.getNumChannels() >= 3 ? *input_data++ : g;
+      unsigned char a = img.getNumChannels() >= 4 ? *input_data++ : 0xff;
       tmp[i] = (r) | (g << 8) | (b << 16) | (a << 24);
     }
     env->SetIntArrayRegion(jarray, 0, n, (const jint*)tmp.get());
