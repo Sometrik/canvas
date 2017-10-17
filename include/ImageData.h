@@ -48,6 +48,8 @@ namespace canvas {
     unsigned int getWidth() const { return width; }
     unsigned int getHeight() const { return height; }
     unsigned int getNumChannels() const { return num_channels; }
+
+    unsigned char * getData() { return data.get(); }
     const unsigned char * getData() const { return data.get(); }
     
     static size_t calculateSize(unsigned int width, unsigned int height, unsigned int num_channels) { return width * height * num_channels; }
