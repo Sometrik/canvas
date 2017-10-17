@@ -76,12 +76,6 @@ namespace canvas {
     virtual void * lockMemory(bool write_access = false) = 0;
     virtual void releaseMemory() = 0;
 
-    static bool isPNG(const unsigned char * buffer, size_t size);
-    static bool isJPEG(const unsigned char * buffer, size_t size);
-    static bool isGIF(const unsigned char * buffer, size_t size);
-    static bool isBMP(const unsigned char * buffer, size_t size);
-    static bool isXML(const unsigned char * buffer, size_t size);
-
   private:
     unsigned int logical_width, logical_height, actual_width, actual_height, num_channels;
     InternalFormat target_format = NO_FORMAT;

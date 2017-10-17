@@ -60,6 +60,12 @@ namespace canvas {
       return std::unique_ptr<PackedImageData>(new PackedImageData(format, num_levels, *data));
     }
     
+    static bool isPNG(const unsigned char * buffer, size_t size);
+    static bool isJPEG(const unsigned char * buffer, size_t size);
+    static bool isGIF(const unsigned char * buffer, size_t size);
+    static bool isBMP(const unsigned char * buffer, size_t size);
+    static bool isXML(const unsigned char * buffer, size_t size);
+
   protected:
     static std::unique_ptr<ImageData> loadFromMemory(const unsigned char * buffer, size_t size);
     static std::unique_ptr<ImageData> loadFromFile(const std::string & filename);
