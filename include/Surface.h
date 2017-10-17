@@ -60,7 +60,7 @@ namespace canvas {
     virtual std::unique_ptr<Image> createImage(float display_scale) = 0;
 
     void blur(float hradius, float vradius);
-    void colorize(const Color & color, Surface & target);
+    std::unique_ptr<ImageData> colorize(const Color & color);
     
     unsigned int getLogicalWidth() const { return logical_width; }
     unsigned int getLogicalHeight() const { return logical_height; }
