@@ -20,3 +20,26 @@ ImageData::scale(unsigned int target_width, unsigned int target_height) const {
 
   return unique_ptr<ImageData>(new ImageData(output_data.get(), target_width, target_height, num_channels));
 }
+
+std::unique_ptr<ImageData>
+ImageData::colorize(const Color & color) const {
+  assert(num_channels == 1);
+
+  int red = int(255 * color.red * color.alpha);
+  int green = int(255 * color.green * color.alpha);
+  int blue = int(255 * color.blue * color.alpha);
+  int alpha = int(255 * color.alpha);
+
+  unique_ptr<ImageData> r(new ImageData(width, height, 4));
+
+  unsigned char * target_buffer = r->getData();
+  for (unsigned int i = 0; i < width * height; i++) {
+    unsigned char v = data[i];
+    target_buffer[4 * i + 0] = (unsigned char)(red * v / 255);
+    target_buffer[4 * i + 1] = (unsigned char)(green * v / 255);
+    target_buffer[4 * i + 2] = (unsigned char)(blue * v / 255);
+    target_buffer[4 * i + 3] = (unsigned char)(alpha * v / 255);
+  }
+
+  return r;
+}

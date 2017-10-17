@@ -1,6 +1,5 @@
 #include <Surface.h>
 
-#include <Color.h>
 #include <ImageData.h>
 
 #include <cstring>
@@ -152,31 +151,4 @@ Surface::blur(float hradius, float vradius) {
     delete[] tmp;    
   }
   releaseMemory();
-}
-
-std::unique_ptr<ImageData>
-Surface::colorize(const Color & input_color) {
-  Color color = input_color;
-  color.red *= color.alpha;
-  color.green *= color.alpha;
-  color.blue *= color.alpha;
-  
-  assert(num_channels == 1);
-  assert(getActualWidth() == target.getActualWidth() && getActualHeight() == target.getActualHeight());
-  unsigned char * buffer = (unsigned char *)lockMemory(false);
-
-  unique_ptr<ImageData> r;
-  if (buffer) {
-    r = unique_ptr<ImageData>(new ImageData(getActualWidth(), getActualHeight(), 4));
-    unsigned char * target_buffer = r->getData();
-    for (unsigned int i = 0; i < actual_width * actual_height; i++) {
-      float input_alpha = buffer[i] / 255.0f;
-      target_buffer[4 * i + 0] = (unsigned char)(color.red * input_alpha * 255);
-      target_buffer[4 * i + 1] = (unsigned char)(color.green * input_alpha * 255);
-      target_buffer[4 * i + 2] = (unsigned char)(color.blue * input_alpha * 255);
-      target_buffer[4 * i + 3] = (unsigned char)(color.alpha * input_alpha * 255);
-    }
-    releaseMemory();
-  }
-  return r;
 }

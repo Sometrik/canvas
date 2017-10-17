@@ -10,6 +10,7 @@
 #include <TextMetrics.h>
 #include <Operator.h>
 #include <InternalFormat.h>
+#include <ImageData.h>
 
 #include <memory>
 
@@ -60,8 +61,14 @@ namespace canvas {
     virtual std::unique_ptr<Image> createImage(float display_scale) = 0;
 
     void blur(float hradius, float vradius);
-    std::unique_ptr<ImageData> colorize(const Color & color);
     
+    std::unique_ptr<ImageData> colorize(const Color & color) {
+      ImageData tmp((unsigned char *)lockMemory(false), getActualWidth(), getActualHeight(), getNumChannels());
+      auto r = tmp.colorize(color);
+      releaseMemory();
+      return r;
+    }
+
     unsigned int getLogicalWidth() const { return logical_width; }
     unsigned int getLogicalHeight() const { return logical_height; }
     unsigned int getActualWidth() const { return actual_width; }
