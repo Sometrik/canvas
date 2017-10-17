@@ -34,11 +34,8 @@ static inline void addError(unsigned int * input_data, unsigned int width, unsig
   input_data[offset] = PACK_RGBA32(r, g, b, 0);
 }
 
-static std::unique_ptr<unsigned char[]> apply2(unsigned int * input_data, unsigned int width, unsigned int height, InternalFormat target_format) {
+static unsigned int apply2(unsigned int * input_data, unsigned int width, unsigned int height, InternalFormat target_format, unsigned short * output_data) {
   unsigned int * input = input_data;
-  auto target_size = width * height * 2;
-  std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_size]);
-  unsigned short * output_data = (unsigned short *)tmp.get();
 
   if (target_format == RGBA4) {
     for (unsigned int y = 0; y < height; y++) {
@@ -74,11 +71,11 @@ static std::unique_ptr<unsigned char[]> apply2(unsigned int * input_data, unsign
     }
   }
 
-  return tmp;
+  return width * height * 2;
 }
 
-std::unique_ptr<unsigned char[]>
-FloydSteinberg::apply(const ImageData & input_image) const {
+unsigned int
+FloydSteinberg::apply(const ImageData & input_image, unsigned char * output) const {
   unsigned int width = input_image.getWidth();
   unsigned int height = input_image.getHeight();
 
@@ -107,5 +104,5 @@ FloydSteinberg::apply(const ImageData & input_image) const {
     }
   }
 
-  return apply2(input_data.get(), width, height, target_format);
+  return apply2(input_data.get(), width, height, target_format, (unsigned short *)output);
 }

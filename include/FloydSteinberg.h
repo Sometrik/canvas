@@ -11,7 +11,7 @@ namespace canvas {
   public:
     FloydSteinberg(InternalFormat _target_format) : target_format(_target_format) { }
 
-    std::unique_ptr<unsigned char[]> apply(const ImageData & input_image) const;
+    unsigned int apply(const ImageData & input_image, unsigned char * output) const;
 
   private:
     InternalFormat target_format;

@@ -26,12 +26,23 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned int _levels, c
       assert(0);
     }
   }
+
+  size_t s = calculateSize();
+  data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+    
   if (format == RGBA4 || format == RGB565) {
     FloydSteinberg fs(format);
-    data = fs.apply(input);
+    unsigned int offset = fs.apply(input, data.get());
+    if (levels >= 2) {
+      auto img = input.scale((input.getWidth() + 1) / 2, (input.getHeight() + 1) / 2);
+      for (int l = 1; l < levels; l++) {
+	offset += fs.apply(*img, data.get() + offset);
+	if (l + 1 < levels) {
+	  img = img->scale((img->getWidth() + 1) / 2, (img->getHeight() + 1) / 2);
+	}
+      }
+    }
   } else {
-    size_t s = calculateSize();
-    data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
     const unsigned char * input_data = input.getData();
     unsigned char * output_data = (unsigned char *)data.get();
     unsigned int num_channels = input.getNumChannels();
