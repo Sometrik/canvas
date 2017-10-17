@@ -7,58 +7,52 @@
 #include <cstring>
 
 namespace canvas {
+  class ImageData;
+  
   class PackedImageData {
   public:
-  PackedImageData() : width(0), height(0), levels(0), quality(0), format(NO_FORMAT) { }
-
-  PackedImageData(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels = 1)
-    : width(_width), height(_height), levels(_levels), format(_format)
-    {
-      size_t s = calculateSize();
-      data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
-      if (!_data) {
-	memset(data.get(), 0, s);
-      } else {
-	memcpy(data.get(), _data, s);
-      }
-    }
-
+  PackedImageData() : format(NO_FORMAT), width(0), height(0), levels(0), quality(0) { }
+    PackedImageData(InternalFormat _format, unsigned int _levels, const ImageData & input);
+    PackedImageData(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels);
+  
     void setQuality(short _quality) { quality = _quality; }
     short getQuality() const { return quality; }
 
-        static inline const ImageFormat & getImageFormat(InternalFormat format) {
+    unsigned int getWidth() const { return width; }
+    unsigned int getHeight() const { return height; }
+    InternalFormat getInternalFormat() const { return format; }
+
+    static unsigned int getBytesPerPixel(InternalFormat format) {
       switch (format) {
-      case RGB_ETC1: return ImageFormat::RGB_ETC1;
-      case RGB_DXT1: return ImageFormat::RGB_DXT1;
-      case RED_RGTC1: return ImageFormat::RED_RGTC1;
-      case RG_RGTC2: return ImageFormat::RG_RGTC2;
-      case RGBA8: return ImageFormat::RGBA32;
-      case RGB8: return ImageFormat::RGB32;
-      case RGB8_24: return ImageFormat::RGB24;
-      case R8: return ImageFormat::LUM8;
-      case LA44: return ImageFormat::LA44;
-      case RG8: case LUMINANCE_ALPHA: return ImageFormat::LA88;
-      case R32F: return ImageFormat::FLOAT32;
-      case RGB565: return ImageFormat::RGB565;
-      case RGBA4: return ImageFormat::RGBA4;
-      case RGBA_DXT5: return ImageFormat::RGBA_DXT5;
-      case NO_FORMAT:
-      case RGBA5551: // not yet supported
-	return ImageFormat::UNDEF;
+      case NO_FORMAT: return 0;
+      case R8: return 1;
+      case RG8: return 2;
+      case RGB565: return 2;
+      case RGBA4: return 2;
+      case RGBA8: return 4;
+      case RGB8: return 4;
+      case RED_RGTC1: return 0; // n/a
+      case RG_RGTC2: return 0; // n/a
+      case RGB_DXT1: return 0; // n/a
+      case RGBA_DXT5: return 0; // n/a
+      case RGB_ETC1: return 0; // n/a
+      case LUMINANCE_ALPHA: return 2;
+      case LA44: return 1; // not a real OpenGL format
+      case R32F: return 4;
+      case RGBA5551: return 2;
       }
-      return ImageFormat::UNDEF;
+      return 0;
     }
 
-    static size_t calculateOffset(unsigned int width, unsigned int height, unsigned int level, InternalFormat input_format) {
-      auto & format = getImageFormat(input_format);
+    static size_t calculateOffset(unsigned int width, unsigned int height, unsigned int level, InternalFormat format) {
       size_t s = 0;
-      if (format.getCompression() == ImageFormat::ETC1 || format.getCompression() == ImageFormat::DXT1 || format.getCompression() == ImageFormat::RGTC1) {
+      if (format == RGB_ETC1 || format == RGB_DXT1 || format == RED_RGTC1) {
 	for (unsigned int l = 0; l < level; l++) {
 	  s += 8 * ((width + 3) / 4) * ((height + 3) / 4);
 	  width = (width + 1) / 2;
 	  height = (height + 1) / 2;
 	}
-      } else if (format.getCompression() == ImageFormat::RGTC2) {
+      } else if (format == RG_RGTC2) {
 	for (unsigned int l = 0; l < level; l++) {
 	  s += 16 * ((width + 3) / 4) * ((height + 3) / 4);
 	  width = (width + 1) / 2;
@@ -66,7 +60,7 @@ namespace canvas {
 	}
       } else {
 	for (unsigned int l = 0; l < level; l++) {
-	  s += width * height * format.getBytesPerPixel();
+	  s += width * height * getBytesPerPixel(format);
 	  width = (width + 1) / 2;
 	  height = (height + 1) / 2;
 	}
@@ -79,11 +73,17 @@ namespace canvas {
     static size_t calculateSize(unsigned int width, unsigned int height, unsigned int levels, InternalFormat format) { return calculateOffset(width, height, levels, format); }
     size_t calculateSize() const { return calculateOffset(width, height, levels, format); }
 
+    const unsigned char * getData() const { return data.get(); }
+    const unsigned char * getDataForLevel(unsigned int level) {
+      return data.get() + calculateOffset(level);
+    }
+
   private:
+    InternalFormat format;
     unsigned int width, height, levels;
     short quality;
     std::unique_ptr<unsigned char[]> data;
-    InternalFormat format;
+    static bool etc1_initialized;
   };
 };
 

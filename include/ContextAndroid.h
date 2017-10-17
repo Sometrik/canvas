@@ -104,7 +104,7 @@ class AndroidCache {
   jclass shaderTileModeClass;
 
   jfieldID field_argb_8888;
-  jfieldID field_rgb_565;
+  // jfieldID field_rgb_565;
   jfieldID optionsMutableField;
   jfieldID field_alpha_8;
   jfieldID alignEnumRight;
@@ -442,7 +442,7 @@ public:
     env->DeleteLocalRef(jpath);
   }
 
-  void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat format) override {
+  void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels) override {
     Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, format);
     // do resize the surface and discard the old data
 
@@ -462,18 +462,7 @@ public:
       env->DeleteLocalRef(localBitmap);
     } else {
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating new bitmap on resize");
-      jobject argbObject;
-      if (format == LUMINANCE_ALPHA) {
-        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to alpha 8");
-        argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_alpha_8);
-      } else if (format == RGB565) {
-        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb565");
-        argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_rgb_565);
-      } else {
-        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
-        argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-      }
-
+      jobject argbObject = createBitmapConfig(num_channels);      
       jobject localBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
       if (localBitmap) {
 //        bitmap = (jobject) env->NewGlobalRef(localBitmap);
@@ -625,6 +614,7 @@ public:
     AndroidBitmap_unlockPixels(env, bitmap);
   }
 
+  jobject createBitmapConfig(unsigned int num_channels);
   jobject imageToBitmap(const ImageData & _img);
   jobject imageToBitmapRGBA8(const ImageData & img);
 
@@ -715,7 +705,7 @@ public:
 
   std::unique_ptr<Image> loadImage(const std::string & filename) override;
   std::unique_ptr<Image> createImage() override;
-  std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels) override;
+  std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height) override;
 
   static void initialize(JNIEnv * env, jobject & manager);
 

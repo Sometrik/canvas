@@ -151,7 +151,7 @@ Surface::slowBlur(float hradius, float vradius) {
     return;
   }
 
-  if (format == RGBA8) {
+  if (num_channels == 4) {
     unsigned char * tmp = new unsigned char[actual_width * actual_height * 4];
     if (hradius > 0.0f) {
       vector<int> hkernel = make_kernel(hradius);
@@ -210,7 +210,7 @@ Surface::slowBlur(float hradius, float vradius) {
       memcpy(buffer, tmp, actual_width * actual_height * 4);
     }
     delete[] tmp;
-  } else if (format == R8) {
+  } else if (num_channels == 1) {
     unsigned char * tmp = new unsigned char[actual_width * actual_height];
     if (hradius > 0.0f) {
       vector<int> hkernel = make_kernel(hradius);
@@ -267,7 +267,7 @@ Surface::colorize(const Color & input_color, Surface & target) {
   color.green *= color.alpha;
   color.blue *= color.alpha;
   
-  assert(getFormat() == R8 && target.getFormat() == RGBA8);
+  assert(num_channels == 1 && target.getNumChannels() == 4);
   assert(getActualWidth() == target.getActualWidth() && getActualHeight() == target.getActualHeight());
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   if (buffer) {

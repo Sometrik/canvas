@@ -7,26 +7,24 @@
 using namespace canvas;
 using namespace std;
 
-static cairo_format_t getCairoFormat(InternalFormat format) {
-  switch (format) {
-  case R8: return CAIRO_FORMAT_A8;
-  case RGB565: return CAIRO_FORMAT_RGB16_565;
-  case RGBA8: return CAIRO_FORMAT_ARGB32;
-  case RGB8: return CAIRO_FORMAT_RGB24;
+static cairo_format_t getCairoFormat(unsigned int num_channels) {
+  switch (num_channels) {
+  case 1: return CAIRO_FORMAT_A8;
+  case 3: return CAIRO_FORMAT_RGB24;
+  case 4: return CAIRO_FORMAT_ARGB32;
   default:
-    cerr << "unable to convert internalformat " << int(format) << " for cairo\n";
+    cerr << "unable to create Cairo format for " << num_channels << " channel(s)\n";
     assert(0);
     return CAIRO_FORMAT_ARGB32;
   }
 }
 
-static pair<cairo_surface_t *, unsigned int *> initializeSurfaceFromData(InternalFormat _format, unsigned int width, unsigned int height, const unsigned char * data, bool flip_channels) {
-  cairo_format_t format = getCairoFormat(_format);
+static pair<cairo_surface_t *, unsigned int *> initializeSurfaceFromData(unsigned int width, unsigned int height, unsigned int num_channels, const unsigned char * data, bool flip_channels) {
+  cairo_format_t format = getCairoFormat(num_channels);
   unsigned int stride = cairo_format_stride_for_width(format, width);
   size_t numPixels = width * height;
   unsigned int * storage = new unsigned int[numPixels];
-  ImageFormat fd = ImageData::getImageFormat(_format);
-  if (fd.getBytesPerPixel() == 4) {
+  if (num_channels == 4) {
     assert(stride == 4 * width);
     if (flip_channels) {
       for (unsigned int i = 0; i < numPixels; i++) {
@@ -35,7 +33,7 @@ static pair<cairo_surface_t *, unsigned int *> initializeSurfaceFromData(Interna
     } else {
       memcpy(storage, data, numPixels * 4);
     }
-  } else if (fd.getBytesPerPixel() == 1) {
+  } else if (num_channels == 1) {
     memcpy(storage, data, numPixels);    
   } else {
     for (unsigned int i = 0; i < numPixels; i++) {
@@ -51,10 +49,10 @@ static pair<cairo_surface_t *, unsigned int *> initializeSurfaceFromData(Interna
   return std::pair<cairo_surface_t *, unsigned int *>(surface, storage);
 }
 
-CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _image_format)
-  : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _image_format) {
+CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels)
+  : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels) {
   if (_actual_width && _actual_height) {
-    surface = cairo_image_surface_create(getCairoFormat(_image_format), _actual_width, _actual_height);
+    surface = cairo_image_surface_create(getCairoFormat(_num_channels), _actual_width, _actual_height);
     assert(surface);
   } else {
     surface = 0;
@@ -62,9 +60,9 @@ CairoSurface::CairoSurface(unsigned int _logical_width, unsigned int _logical_he
 }
 
 CairoSurface::CairoSurface(const ImageData & image)
-  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getInternalFormat())
+  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getNumChannels())
 {
-  auto p = initializeSurfaceFromData(image.getInternalFormat(), image.getWidth(), image.getHeight(), image.getData(), false);
+  auto p = initializeSurfaceFromData(image.getWidth(), image.getHeight(), image.getNumChannels(), image.getData(), false);
   surface = p.first;
   storage = p.second;
 }
@@ -92,14 +90,14 @@ CairoSurface::markDirty() {
 }
 
 void
-CairoSurface::resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) {
-  Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _format);
+CairoSurface::resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels) {
+  Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels);
   if (cr) {
     cairo_destroy(cr);
     cr = 0;
   }
   if (surface) cairo_surface_destroy(surface);  
-  surface = cairo_image_surface_create(getCairoFormat(getFormat()), _actual_width, _actual_height);
+  surface = cairo_image_surface_create(getCairoFormat(_num_channels), _actual_width, _actual_height);
   assert(surface);
 } 
 
@@ -306,7 +304,7 @@ class CairoImage : public Image {
 public:
   CairoImage(float _display_scale) : Image(_display_scale) { }
   CairoImage(const std::string & filename, float _display_scale) : Image(filename, _display_scale) { }
-  CairoImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, float _display_scale) : Image(_data, _format, _width, _height, _levels, _display_scale) { }
+  CairoImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels, float _display_scale) : Image(_data, _width, _height, _num_channels, _display_scale) { }
   
 protected:
   void loadFile() override {
@@ -327,8 +325,8 @@ CairoContextFactory::createImage() {
 }
 
 std::unique_ptr<Image>
-CairoContextFactory::createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels) {
-  return std::unique_ptr<Image>(new CairoImage(_data, _format, _width, _height, _levels, getDisplayScale()));
+CairoContextFactory::createImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels) {
+  return std::unique_ptr<Image>(new CairoImage(_data, _width, _height, _num_channels, getDisplayScale()));
 }
 
 std::unique_ptr<Image>
@@ -336,7 +334,7 @@ CairoSurface::createImage(float display_scale) {
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
 
-  auto image = std::unique_ptr<Image>(new CairoImage(buffer, getFormat(), getActualWidth(), getActualHeight(), 1, display_scale));
+  auto image = std::unique_ptr<Image>(new CairoImage(buffer, getActualWidth(), getActualHeight(), getNumChannels(), display_scale));
   releaseMemory();
   
   return image;

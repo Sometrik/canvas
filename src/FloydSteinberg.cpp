@@ -1,6 +1,7 @@
 #include "FloydSteinberg.h"
 
 #include <ImageData.h>
+#include <ImageFormat.h>
 
 #include <cassert>
 
@@ -33,7 +34,7 @@ static inline void addError(unsigned int * input_data, unsigned int width, unsig
   input_data[offset] = PACK_RGBA32(r, g, b, 0);
 }
 
-static std::unique_ptr<ImageData> apply2(unsigned int * input_data, unsigned int width, unsigned int height, InternalFormat target_format) {
+static std::unique_ptr<unsigned char[]> apply2(unsigned int * input_data, unsigned int width, unsigned int height, InternalFormat target_format) {
   unsigned int * input = input_data;
   auto target_size = width * height * 2;
   std::unique_ptr<unsigned char[]> tmp(new unsigned char[target_size]);
@@ -73,22 +74,21 @@ static std::unique_ptr<ImageData> apply2(unsigned int * input_data, unsigned int
     }
   }
 
-  return std::unique_ptr<ImageData>(new ImageData(tmp.get(), target_format, width, height));
+  return tmp;
 }
 
-std::unique_ptr<ImageData>
+std::unique_ptr<unsigned char[]>
 FloydSteinberg::apply(const ImageData & input_image) const {
   unsigned int width = input_image.getWidth();
   unsigned int height = input_image.getHeight();
 
   auto data = input_image.getData();
-  auto & fd = input_image.getImageFormat();
 
   auto input_data = std::unique_ptr<unsigned int[]>(new unsigned int[width * height]);
 
-  if (fd.getBytesPerPixel() == 4) {
+  if (input_image.getNumChannels() == 4) {
     memcpy(input_data.get(), data, 4 * width * height);
-  } if (fd.getBytesPerPixel() == 3) {
+  } if (input_image.getNumChannels() == 3) {
     auto tmp = (unsigned char *)input_data.get();
     for (unsigned int offset = 0; offset < 3 * width * height; ) {
       *tmp++ = data[offset++];
@@ -96,7 +96,7 @@ FloydSteinberg::apply(const ImageData & input_image) const {
       *tmp++ = data[offset++];
       *tmp++ = 0xff;
     }
-  } else if (fd.getBytesPerPixel() == 1) {
+  } else if (input_image.getNumChannels() == 1) {
     auto tmp = (unsigned char *)input_data.get();
     for (unsigned int offset = 0; offset < width * height; ) {
       unsigned char v = data[offset++];

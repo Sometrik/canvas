@@ -2,7 +2,6 @@
 #define _SURFACE_H_
 
 #include <Color.h>
-#include <InternalFormat.h>
 #include <Path2D.h>
 #include <Style.h>
 #include <Font.h>
@@ -10,6 +9,7 @@
 #include <TextAlign.h>
 #include <TextMetrics.h>
 #include <Operator.h>
+#include <InternalFormat.h>
 
 #include <memory>
 
@@ -27,24 +27,24 @@ namespace canvas {
   public:
     friend class Context;
 
-  Surface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) :      
+  Surface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels) :
     logical_width(_logical_width),
       logical_height(_logical_height),
       actual_width(_actual_width),
       actual_height(_actual_height),
-      format(_format) {
-      }
+      num_channels(_num_channels)
+	{ }
     
     Surface(const Surface & other) = delete;
     Surface & operator=(const Surface & other) = delete;
     virtual ~Surface() = default;
 
-    virtual void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) {
+    virtual void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels) {
       logical_width = _logical_width;
       logical_height = _logical_height;
       actual_width = _actual_width;
       actual_height = _actual_height;
-      format = _format;
+      num_channels = _num_channels;
     }
 
 #if 0
@@ -67,11 +67,10 @@ namespace canvas {
     unsigned int getLogicalHeight() const { return logical_height; }
     unsigned int getActualWidth() const { return actual_width; }
     unsigned int getActualHeight() const { return actual_height; }
-    InternalFormat getFormat() const { return format; }
+    unsigned int getNumChannels() const { return num_channels; }
 
     void setTargetFormat(InternalFormat format) { target_format = format; }
-
-    InternalFormat getTargetFormat() const { return target_format ? target_format : getFormat(); }
+    InternalFormat getTargetFormat() const { return target_format; }
     
   protected:
     virtual void * lockMemory(bool write_access = false) = 0;
@@ -84,8 +83,7 @@ namespace canvas {
     static bool isXML(const unsigned char * buffer, size_t size);
 
   private:
-    unsigned int logical_width, logical_height, actual_width, actual_height;
-    InternalFormat format;
+    unsigned int logical_width, logical_height, actual_width, actual_height, num_channels;
     InternalFormat target_format = NO_FORMAT;
   };
 };

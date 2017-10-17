@@ -23,7 +23,7 @@ AndroidCache::AndroidCache(JNIEnv * myEnv, jobject _assetManager) {
   alignClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Paint$Align"));
   bitmapConfigClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Bitmap$Config"));
   field_argb_8888 = myEnv->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
-  field_rgb_565 = myEnv->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
+  // field_rgb_565 = myEnv->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
   field_alpha_8 = myEnv->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
   rectFClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/RectF"));
   rectClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Rect"));
@@ -123,8 +123,8 @@ AndroidCache::~AndroidCache() {
   myEnv->DeleteGlobalRef(linearGradientClass);
 }
 
-AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format)
-  : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _format), cache(_cache), paint(_cache) {
+AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels)
+  : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels), cache(_cache), paint(_cache) {
   // creates an empty canvas
 
   if (_actual_width && _actual_height) {
@@ -132,19 +132,8 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
     JNIEnv * env = cache->getEnv();
 
     //set bitmap config according to internalformat
-    jobject argbObject;
-
-    if (_format == LUMINANCE_ALPHA) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to alpha 8");
-      argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_alpha_8);
-    } else if (_format == RGB565) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb565");
-      argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_rgb_565);
-    } else {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "setting imageformat to argb8888");
-      argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
-    }
-
+    jobject argbObject = getBitmapConfig(num_channels);
+    
     jobject localBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
     if (localBitmap) {
       bitmap = (jobject) env->NewGlobalRef(localBitmap);
@@ -157,21 +146,19 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const ImageData & image)
-  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), RGBA8), cache(_cache), paint(_cache) {
-  __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface Image constructor");
-
+  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getNumChannels() == 1 ? 1 : 4), cache(_cache), paint(_cache) {
   JNIEnv * env = cache->getEnv();
 
   // creates a surface with width, height and contents from image
   jobject localBitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
   if (localBitmap) {
-    bitmap = (jobject) env->NewGlobalRef(imageToBitmap(image));
+    bitmap = (jobject) env->NewGlobalRef(localBitmap);
     env->DeleteLocalRef(localBitmap);
   }
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filename)
-  : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
+  : Surface(0, 0, 0, 0, 0), cache(_cache), paint(_cache) {
   __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Surface filename constructor");
 
   JNIEnv * env = cache->getEnv();
@@ -188,13 +175,13 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
   
   int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
   int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
-  Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
+  Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, 4);
 
   env->DeleteLocalRef(inputStream);
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buffer, size_t size)
-  : Surface(0, 0, 0, 0, RGBA8), cache(_cache), paint(_cache) {
+  : Surface(0, 0, 0, 0, 0), cache(_cache), paint(_cache) {
 
   JNIEnv * env = cache->getEnv();
   int arraySize = size;
@@ -204,14 +191,14 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
   jobject firstBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeByteMethod, array, 0, arraySize);
   
   //make this with factory options instead
-  jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+  jobject argbObject = createBitmapConfig(4);
   jobject localBitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE);
   bitmap = (jobject) env->NewGlobalRef(localBitmap);
   env->DeleteLocalRef(localBitmap);
   
   int bitmapWidth = env->CallIntMethod(bitmap, cache->bitmapGetWidthMethod);
   int bitmapHeigth = env->CallIntMethod(bitmap, cache->bitmapGetHeightMethod);
-  Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, RGBA8);
+  Surface::resize(bitmapWidth, bitmapHeigth, bitmapWidth, bitmapHeigth, 4);
   
   env->DeleteLocalRef(argbObject);
   env->DeleteLocalRef(firstBitmap);
@@ -219,32 +206,37 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
 }
 
 jobject
-AndroidSurface::imageToBitmap(const ImageData & img) {
-  if (img.getInternalFormat() != InternalFormat::RGBA8) {
-    auto tmp = img.convert(InternalFormat::RGBA8);
-    return imageToBitmapRGBA8(*tmp);
+AndroidSurface::createBitmapConfig(unsigned int num_channels) {
+  if (num_channels == 1) {
+    return env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_alpha_8);
   } else {
-    return imageToBitmapRGBA8(img);
+    return env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
   }
 }
 
 jobject
-AndroidSurface::imageToBitmapRGBA8(const ImageData & img) {
+AndroidSurface::imageToBitmap(const ImageData & img) {
   JNIEnv * env = cache->getEnv();
 
-  const unsigned char * buf = img.getData();
-  size_t length = img.calculateOffset(1);
-
-  __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Image Width = %u", img.getWidth());
-  __android_log_print(ANDROID_LOG_INFO, "Sometrik", "Image height = %u", img.getHeight());
-  __android_log_print(ANDROID_LOG_INFO, "Sometrik", "length = %i", length);
-  __android_log_print(ANDROID_LOG_INFO, "Sometrik", "internalFormat = %i", img.getInternalFormat());
-
-  jintArray jarray = env->NewIntArray(length / sizeof(int));
-  env->SetIntArrayRegion(jarray, 0, length / sizeof(int), (jint*) (buf));
-  jobject argbObject = env->GetStaticObjectField(cache->bitmapConfigClass, cache->field_argb_8888);
+  unsigned int n = img.getWidth() * img.getHeight();
+  
+  jintArray jarray = env->NewIntArray(n);
+  if (img.getNumChannels() == 4) {
+    env->SetIntArrayRegion(jarray, 0, n, (const jint*)img.getData());
+  } else {
+    const unsigned char * input_data = img.getData();
+    unique_ptr<unsigned int[]> tmp(new unsigned int[n]);
+    for (unsigned int i = 0; i < n; i++) {
+      unsigned char r = *input_data++;
+      unsigned char g = num_channels >= 2 ? *input_data++ : r;
+      unsigned char b = num_channels >= 3 ? *input_data++ : g;
+      unsigned char a = num_channels >= 4 ? *input_data++ : 0xff;
+      tmp[i] = (r) | (g << 8) | (b << 16) | (a << 24);
+    }
+    env->SetIntArrayRegion(jarray, 0, n, (const jint*)tmp.get());
+  }
+  jobject argbObject = createBitmapConfig(4);
   jobject drawableBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod2, jarray, img.getWidth(), img.getHeight(), argbObject);
-//  jobject drawableBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryByteDecodeMethod, jarray, 0, length);
 
   if (env->ExceptionCheck()) {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "exception on imageToBitmap");
@@ -289,7 +281,7 @@ public:
     AndroidImage(AAssetManager * _asset_manager, const std::string & filename, float _display_scale)
       : Image(filename, _display_scale), asset_manager(_asset_manager) { }
 
-  AndroidImage(AAssetManager * _asset_manager, const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, float _display_scale) : Image(_data, _format, _width, _height, _levels, _display_scale), asset_manager(_asset_manager) { }
+  AndroidImage(AAssetManager * _asset_manager, const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels, float _display_scale) : Image(_data, _width, _height, _num_channels, _display_scale), asset_manager(_asset_manager) { }
 
 protected:
   void loadFile() override {
@@ -329,7 +321,7 @@ AndroidSurface::createImage(float display_scale) {
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
   if (buffer) {
-    image = std::unique_ptr<Image>(new AndroidImage(0, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, display_scale));
+    image = std::unique_ptr<Image>(new AndroidImage(0, buffer, getActualWidth(), getActualHeight(), getNumChannels(), display_scale));
     releaseMemory();
   }
   return image;
@@ -348,8 +340,8 @@ AndroidContextFactory::createImage() {
 }
 
 std::unique_ptr<Image>
-AndroidContextFactory::createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels) {
-  return std::unique_ptr<Image>(new AndroidImage(0, _data, _format, _width, _height, _levels, getDisplayScale()));
+AndroidContextFactory::createImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels) {
+  return std::unique_ptr<Image>(new AndroidImage(0, _data, _width, _height, _num_channels, getDisplayScale()));
 }
 
 void

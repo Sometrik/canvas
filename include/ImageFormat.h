@@ -19,6 +19,7 @@
 #define PACK_RGB24(r, g, b) ((r) | ((g) << 8) | ((b) << 16))
 #define PACK_RGBA32(r, g, b, a) ((r) | ((g) << 8) | ((b) << 16) | ((a) << 24))
 
+#if 0
 namespace canvas {
   class ImageFormat {
   public:
@@ -90,5 +91,6 @@ namespace canvas {
     }
   };
 };
+#endif
 
 #endif

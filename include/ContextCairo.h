@@ -9,13 +9,13 @@ namespace canvas {
   public:
     friend class ContextCairo;
 
-    CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat image_format);
+    CairoSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels);
     CairoSurface(const ImageData & image);
     CairoSurface(const CairoSurface & other) = delete;
     CairoSurface(const unsigned char * buffer, size_t size);
     ~CairoSurface();
     
-    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format);
+    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels) override;
 
     void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath);
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath);
@@ -64,17 +64,17 @@ namespace canvas {
 
   class ContextCairo : public Context {
   public:
-  ContextCairo(unsigned int _width, unsigned int _height, InternalFormat image_format, float _displayScale = 1.0f)
+  ContextCairo(unsigned int _width, unsigned int _height, unsigned int _num_channels = 4, float _displayScale = 1.0f)
       : Context(_displayScale),
-      default_surface(_width, _height, (unsigned int)(_displayScale * _width), (unsigned int)(_displayScale * _height), image_format)
+      default_surface(_width, _height, (unsigned int)(_displayScale * _width), (unsigned int)(_displayScale * _height), _num_channels)
 	{ 
 	}
     
     std::unique_ptr<Surface> createSurface(const ImageData & image) {
       return std::unique_ptr<Surface>(new CairoSurface(image));
     }
-    std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat format) {
-      return std::unique_ptr<Surface>(new CairoSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), format));
+    std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned int _num_channels = 4) {
+      return std::unique_ptr<Surface>(new CairoSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), _num_channels));
     }
 
     CairoSurface & getDefaultSurface() { return default_surface; }
@@ -87,15 +87,15 @@ namespace canvas {
   class CairoContextFactory : public ContextFactory {
   public:
    CairoContextFactory() : ContextFactory(1.0f) { }
-    std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format) override {
-      return std::unique_ptr<Context>(new ContextCairo(width, height, image_format));
+    std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, unsigned int num_channels) override {
+      return std::unique_ptr<Context>(new ContextCairo(width, height, num_channels));
     }
-    std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format) override {
+    std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, unsigned int num_channels) override {
       unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
-      return std::unique_ptr<Surface>(new CairoSurface(width, height, aw, ah, image_format));
+      return std::unique_ptr<Surface>(new CairoSurface(width, height, aw, ah, num_channels));
     }
     std::unique_ptr<Image> loadImage(const std::string & filename) override;
     std::unique_ptr<Image> createImage() override;
-    std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels) override;
+    std::unique_ptr<Image> createImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels) override;
   };
 };

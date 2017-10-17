@@ -2,7 +2,6 @@
 #define _FLOYDSTEINBERG_H_
 
 #include <InternalFormat.h>
-#include <ImageFormat.h>
 #include <memory>
 
 namespace canvas {
@@ -12,7 +11,7 @@ namespace canvas {
   public:
     FloydSteinberg(InternalFormat _target_format) : target_format(_target_format) { }
 
-    std::unique_ptr<ImageData> apply(const ImageData & input_image) const;
+    std::unique_ptr<unsigned char[]> apply(const ImageData & input_image) const;
 
   private:
     InternalFormat target_format;
