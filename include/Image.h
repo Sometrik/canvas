@@ -14,21 +14,13 @@ namespace canvas {
       : filename(_filename), display_scale(_display_scale) { }
     Image(const std::string & _filename, float _display_scale)
       : filename(_filename), display_scale(_display_scale) { }
-  Image(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels, float _display_scale)
-    : data(new ImageData(_data, _width, _height, _num_channels)),
-      display_scale(_display_scale) { }
+    Image(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels, float _display_scale)
+      : data(new ImageData(_data, _width, _height, _num_channels)),
+        display_scale(_display_scale) { }
 
     virtual ~Image() = default;
 
-    bool decode(const unsigned char * buffer, size_t size);
-#if 0
-    void convert(InternalFormat target_format) {
-      if (!filename.empty() && !data.get()) {
-	loadFile();
-      }
-      if (data.get()) data = data->convert(target_format);
-    }
-#endif
+    void decode(const unsigned char * buffer, size_t size);
     void scale(unsigned int target_width, unsigned int target_height) {
       if (!filename.empty() && !data.get()) {
 	loadFile();
