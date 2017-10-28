@@ -58,15 +58,14 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned int _levels, c
 	  unsigned char g = num_channels >= 2 ? *input_data++ : r;
 	  unsigned char b = num_channels >= 3 ? *input_data++ : g;
 	  unsigned char a = num_channels >= 4 ? *input_data++ : 0xff;
-#if 1
-	  // defined __APPLE__ || defined __ANDROID__
-	  *output_data++ = b;
-	  *output_data++ = g;
-	  *output_data++ = r;
+#if defined __APPLE__ || defined __ANDROID__
+          *output_data++ = r;
+          *output_data++ = g;
+          *output_data++ = b;
 #else
-	  *output_data++ = r;
-	  *output_data++ = g;
-	  *output_data++ = b;
+          *output_data++ = b;
+          *output_data++ = g;
+          *output_data++ = r;
 #endif
 	  *output_data++ = a;
 	}	
