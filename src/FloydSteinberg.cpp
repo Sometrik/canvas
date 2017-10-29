@@ -86,21 +86,16 @@ FloydSteinberg::apply(const ImageData & input_image, unsigned char * output) con
   if (input_image.getNumChannels() == 4) {
     memcpy(input_data.get(), data, 4 * width * height);
   } if (input_image.getNumChannels() == 3) {
-    auto tmp = (unsigned char *)input_data.get();
-    for (unsigned int offset = 0; offset < 3 * width * height; ) {
-      *tmp++ = data[offset++];
-      *tmp++ = data[offset++];
-      *tmp++ = data[offset++];
-      *tmp++ = 0xff;
+    auto tmp = input_data.get();
+    for (unsigned int offset = 0; offset < 3 * width * height; offset += 3) {
+      *tmp++ = (data[offset] << 24) | (data[offset + 1] << 16) |
+	(data[offset + 2] << 8) | 0xff;      
     }
   } else if (input_image.getNumChannels() == 1) {
-    auto tmp = (unsigned char *)input_data.get();
+    auto tmp = input_data.get();
     for (unsigned int offset = 0; offset < width * height; ) {
       unsigned char v = data[offset++];
-      *tmp++ = v;
-      *tmp++ = v;
-      *tmp++ = v;
-      *tmp++ = 0xff;
+      *tmp++ = (v << 24) | (v << 16) | (v << 8) | 0xff;      
     }
   }
 
