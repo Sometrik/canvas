@@ -24,11 +24,15 @@ namespace canvas {
       GraphicsState::operator=(other);
       return *this;
     }
-    virtual ~Context() { }
+    virtual ~Context() = default;
 
     virtual std::unique_ptr<Surface> createSurface(const ImageData & image) = 0;
-
     virtual std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned int _num_channels) = 0;
+    virtual Surface & getDefaultSurface() = 0;
+    virtual const Surface & getDefaultSurface() const = 0;
+
+    virtual bool hasNativeShadows() const { return false; }
+    virtual bool hasNativeEmoticons() const { return false; }
 
     virtual void resize(unsigned int _width, unsigned int _height) {
       getDefaultSurface().resize(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), getDefaultSurface().getNumChannels());
@@ -82,9 +86,6 @@ namespace canvas {
     Context & fillText(const std::string & text, double x, double y) { return renderText(FILL, fillStyle, text, currentTransform.multiply(x, y)); }
     Context & strokeText(const std::string & text, double x, double y) { return renderText(STROKE, strokeStyle, text, currentTransform.multiply(x, y)); }
     
-    virtual Surface & getDefaultSurface() = 0;
-    virtual const Surface & getDefaultSurface() const = 0;
-
     unsigned int getWidth() const { return getDefaultSurface().getLogicalWidth(); }
     unsigned int getHeight() const { return getDefaultSurface().getLogicalHeight(); }
     unsigned int getActualWidth() const { return getDefaultSurface().getActualWidth(); }
@@ -215,8 +216,6 @@ namespace canvas {
       }
       return *this;
     }
-    virtual bool hasNativeShadows() const { return false; }
-    virtual bool hasNativeEmoticons() const { return false; }
 
     bool hasShadow() const { return shadowBlur.get() > 0.0f || shadowOffsetX.get() != 0 || shadowOffsetY.get() != 0; }
     
