@@ -44,33 +44,25 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned int _levels, c
     }
   } else {
     const unsigned char * input_data = input.getData();
-    unsigned char * output_data = (unsigned char *)data.get();
     unsigned int num_channels = input.getNumChannels();
     
     if (format == RGB8 || format == RGBA8) {
+      unsigned int * output_data = (unsigned int *)data.get();
       assert(levels == 1);
       if (num_channels == 4) {
 	memcpy(output_data, input_data, s);
-      } else {
-	unsigned int n = width * height;
-	for (unsigned int i = 0; i < n; i++) {
-	  unsigned char r = *input_data++;
-	  unsigned char g = num_channels >= 2 ? *input_data++ : r;
-	  unsigned char b = num_channels >= 3 ? *input_data++ : g;
-	  unsigned char a = num_channels >= 4 ? *input_data++ : 0xff;
-#if defined __APPLE__ || defined __ANDROID__
-          *output_data++ = r;
-          *output_data++ = g;
-          *output_data++ = b;
-#else
-          *output_data++ = b;
-          *output_data++ = g;
-          *output_data++ = r;
-#endif
-	  *output_data++ = a;
-	}	
+      } else if (num_channels == 3) {
+	for (unsigned int i = 0; i < 3 * width * height; i += 3) {
+	  *output_data++ = (0xff << 24) | (input_data[i] << 16) | (input_data[i + 1] << 8) | (input_data[i + 2]);
+	}
+      } else if (num_channels == 1) {
+	for (unsigned int i = 0; i < width * height; i++) {
+	  unsigned char v = input_data[i];
+	  *output_data++ = (v << 24) | (v << 16) | (v << 8) | 0xff;
+	}
       }
     } else if (format == LA44) {
+      unsigned char * output_data = (unsigned char *)data.get();
       assert(levels == 1);
       unsigned int n = width * height;
       
