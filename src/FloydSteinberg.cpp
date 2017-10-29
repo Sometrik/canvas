@@ -88,14 +88,13 @@ FloydSteinberg::apply(const ImageData & input_image, unsigned char * output) con
   } if (input_image.getNumChannels() == 3) {
     auto tmp = input_data.get();
     for (unsigned int offset = 0; offset < 3 * width * height; offset += 3) {
-      *tmp++ = (data[offset] << 24) | (data[offset + 1] << 16) |
-	(data[offset + 2] << 8) | 0xff;      
+      *tmp++ = (0xff << 24) | (data[offset + 2] << 16) | (data[offset + 1] << 8) | (data[offset + 0]);
     }
   } else if (input_image.getNumChannels() == 1) {
     auto tmp = input_data.get();
     for (unsigned int offset = 0; offset < width * height; ) {
       unsigned char v = data[offset++];
-      *tmp++ = (v << 24) | (v << 16) | (v << 8) | 0xff;      
+      *tmp++ = (0xff << 24) | (v << 16) | (v << 8) | (v);
     }
   }
 
