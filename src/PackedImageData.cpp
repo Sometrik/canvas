@@ -27,10 +27,16 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned int _levels, c
     }
   }
 
+  unsigned int num_channels = input.getNumChannels();
+
   size_t s = calculateSize();
   data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
-    
-  if (format == RGBA4 || format == RGB565) {
+  
+  if ((num_channels == 4 && (format == RGB8 || format == RGBA8)) ||
+      (num_channels == 1 && format == R8)) {
+    assert(levels == 1);
+    memcpy(data.get(), input.getData(), s);
+  } else if (format == RGBA4 || format == RGB565) {
     FloydSteinberg fs(format);
     unsigned int offset = fs.apply(input, data.get());
     if (levels >= 2) {
@@ -43,27 +49,24 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned int _levels, c
       }
     }
   } else {
-    const unsigned char * input_data = input.getData();
-    unsigned int num_channels = input.getNumChannels();
+    assert(levels == 1);
     
+    const unsigned char * input_data = input.getData();
+
     if (format == RGB8 || format == RGBA8) {
       unsigned int * output_data = (unsigned int *)data.get();
-      assert(levels == 1);
-      if (num_channels == 4) {
-	memcpy(output_data, input_data, s);
-      } else if (num_channels == 3) {
+      if (num_channels == 3) {
 	for (unsigned int i = 0; i < 3 * width * height; i += 3) {
 	  *output_data++ = (0xff << 24) | (input_data[i] << 16) | (input_data[i + 1] << 8) | (input_data[i + 2]);
 	}
       } else if (num_channels == 1) {
 	for (unsigned int i = 0; i < width * height; i++) {
 	  unsigned char v = input_data[i];
-	  *output_data++ = (v << 24) | (v << 16) | (v << 8) | 0xff;
+	  *output_data++ = (0xff << 24) | (v << 16) | (v << 8) | (v);
 	}
       }
     } else if (format == LA44) {
       unsigned char * output_data = (unsigned char *)data.get();
-      assert(levels == 1);
       unsigned int n = width * height;
       
       for (unsigned int i = 0; i < n; i++) {
