@@ -57,7 +57,7 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
     for (unsigned int y = 0; y < height; y++) {
       for (unsigned int x = 0; x < width; x++, input++) {
         unsigned int v = *input;
-        unsigned int error = v & 0x07030700;
+        unsigned int error = v & 0x00070307;
 #if defined __APPLE__ || defined __ANDROID__
         *output_data++ = PACK_RGB565(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 2, RGBA_TO_RED(v) >> 3);
 #else
@@ -85,7 +85,7 @@ FloydSteinberg::apply(const ImageData & input_image, unsigned char * output) con
 
   if (input_image.getNumChannels() == 4) {
     memcpy(input_data.get(), data, 4 * width * height);
-  } if (input_image.getNumChannels() == 3) {
+  } else if (input_image.getNumChannels() == 3) {
     auto tmp = input_data.get();
     for (unsigned int offset = 0; offset < 3 * width * height; offset += 3) {
       *tmp++ = (0xff << 24) | (data[offset + 2] << 16) | (data[offset + 1] << 8) | (data[offset + 0]);
