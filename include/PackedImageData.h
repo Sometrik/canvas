@@ -4,7 +4,6 @@
 #include <InternalFormat.h>
 
 #include <memory>
-#include <cstring>
 
 namespace canvas {
   class ImageData;
@@ -12,17 +11,17 @@ namespace canvas {
   class PackedImageData {
   public:
   PackedImageData() : format(NO_FORMAT), width(0), height(0), levels(0), quality(0) { }
-    PackedImageData(InternalFormat _format, unsigned int _levels, const ImageData & input);
-    PackedImageData(InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels);
+    PackedImageData(InternalFormat _format, unsigned short _levels, const ImageData & input);
+    PackedImageData(InternalFormat _format, unsigned short _width, unsigned short _height, unsigned short _levels);
   
-    void setQuality(short _quality) { quality = _quality; }
-    short getQuality() const { return quality; }
-
-    unsigned int getWidth() const { return width; }
-    unsigned int getHeight() const { return height; }
+    void setQuality(unsigned short _quality) { quality = _quality; }
+    unsigned short getQuality() const { return quality; }
+    
+    unsigned short getWidth() const { return width; }
+    unsigned short getHeight() const { return height; }
     InternalFormat getInternalFormat() const { return format; }
 
-    static unsigned int getBytesPerPixel(InternalFormat format) {
+    static unsigned short getBytesPerPixel(InternalFormat format) {
       switch (format) {
       case NO_FORMAT: return 0;
       case R8: return 1;
@@ -44,7 +43,7 @@ namespace canvas {
       return 0;
     }
 
-    static size_t calculateOffset(unsigned int width, unsigned int height, unsigned int level, InternalFormat format) {
+    static size_t calculateOffset(unsigned short width, unsigned short height, unsigned short level, InternalFormat format) {
       size_t s = 0;
       if (format == RGB_ETC1 || format == RGB_DXT1 || format == RED_RGTC1) {
 	for (unsigned int l = 0; l < level; l++) {
@@ -67,22 +66,33 @@ namespace canvas {
       }
       return s;
     }
-    size_t calculateOffset(unsigned int level) const {
+    
+    size_t calculateOffset(unsigned short level) const {
       return calculateOffset(width, height, level, format);
     }
-    static size_t calculateSize(unsigned int width, unsigned int height, unsigned int levels, InternalFormat format) { return calculateOffset(width, height, levels, format); }
-    size_t calculateSize() const { return calculateOffset(width, height, levels, format); }
+
+    static size_t calculateSize(unsigned short width, unsigned short height, unsigned short levels, InternalFormat format) {
+      return calculateOffset(width, height, levels, format);
+    }
+    
+    size_t calculateSize() const {
+      return calculateOffset(width, height, levels, format);
+    }
+    size_t calculateSizeForFirstLevel() const {
+      return calculateOffset(width, height, 1, format);
+    }
 
     const unsigned char * getData() const { return data.get(); }
-    const unsigned char * getDataForLevel(unsigned int level) {
+    const unsigned char * getDataForLevel(unsigned short level) {
       return data.get() + calculateOffset(level);
     }
 
   private:
     InternalFormat format;
-    unsigned int width, height, levels;
-    short quality;
+    unsigned short width, height, levels;
+    unsigned short quality;
     std::unique_ptr<unsigned char[]> data;
+    
     static bool etc1_initialized;
   };
 };

@@ -12,7 +12,7 @@ namespace canvas {
     static ImageData nullImage;
 
   ImageData() : width(0), height(0), num_channels(0) { }
-  ImageData(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels)
+  ImageData(const unsigned char * _data, unsigned short _width, unsigned short _height, unsigned short _num_channels)
     : width(_width), height(_height), num_channels(_num_channels)
     {
       size_t s = calculateSize();
@@ -23,7 +23,7 @@ namespace canvas {
 	memcpy(data.get(), _data, s);
       }
     }
-  ImageData(unsigned int _width, unsigned int _height, unsigned int _num_channels)
+  ImageData(unsigned short _width, unsigned short _height, unsigned short _num_channels)
     : width(_width), height(_height), num_channels(_num_channels) {
       size_t s = calculateSize();
       data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
@@ -44,23 +44,23 @@ namespace canvas {
 
     ImageData & operator=(const ImageData & other) = delete;
     
-    std::unique_ptr<ImageData> scale(unsigned int target_width, unsigned int target_height) const;
+    std::unique_ptr<ImageData> scale(unsigned short target_width, unsigned short target_height) const;
     std::unique_ptr<ImageData> colorize(const Color & color) const;
     std::unique_ptr<ImageData> blur(float hradius, float vradius) const;
 
     bool isValid() const { return width != 0 && height != 0 && num_channels != 0; }
-    unsigned int getWidth() const { return width; }
-    unsigned int getHeight() const { return height; }
-    unsigned int getNumChannels() const { return num_channels; }
+    unsigned short getWidth() const { return width; }
+    unsigned short getHeight() const { return height; }
+    unsigned short getNumChannels() const { return num_channels; }
 
     unsigned char * getData() { return data.get(); }
     const unsigned char * getData() const { return data.get(); }
     
-    static size_t calculateSize(unsigned int width, unsigned int height, unsigned int num_channels) { return width * height * num_channels; }
+    static size_t calculateSize(unsigned short width, unsigned short height, unsigned short num_channels) { return width * height * num_channels; }
     size_t calculateSize() const { return calculateSize(width, height, num_channels); }
     
   private:
-    unsigned int width, height, num_channels;
+    unsigned short width, height, num_channels;
     std::unique_ptr<unsigned char[]> data;
   };
 };
