@@ -53,7 +53,6 @@ AndroidCache::AndroidCache(JNIEnv * myEnv, jobject _assetManager) {
   paintSetStrokeJoinMethod = myEnv->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V");
   canvasConstructor = myEnv->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
   factoryDecodeMethod = myEnv->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
-  factoryByteDecodeMethod = myEnv->GetStaticMethodID(factoryClass, "decodeByteArray", "([BII)Landroid/graphics/Bitmap;");
   factoryDecodeMethod2 = myEnv->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory$Options;)Landroid/graphics/Bitmap;");
   bitmapCopyMethod = myEnv->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
   paintConstructor = myEnv->GetMethodID(paintClass, "<init>", "()V");

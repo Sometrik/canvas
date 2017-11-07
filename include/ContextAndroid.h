@@ -75,7 +75,6 @@ class AndroidCache {
   jmethodID stringConstructor2;
   jmethodID stringGetBytesMethod;
   jmethodID stringByteConstructor;
-  jmethodID factoryByteDecodeMethod;
   jmethodID paintSetShaderMethod;
   jmethodID linearGradientConstructor;
 
