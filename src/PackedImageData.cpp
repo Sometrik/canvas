@@ -7,7 +7,6 @@
 #include "dxt.h"
 
 #include <cassert>
-#include <iostream>
 
 using namespace std;
 using namespace canvas;

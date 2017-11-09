@@ -3,7 +3,6 @@
 
 #include "Context.h"
 
-#include <sstream>
 #include <jni.h>
 #include <android/bitmap.h>
 #include <android/log.h>
