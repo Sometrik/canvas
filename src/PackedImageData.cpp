@@ -79,7 +79,7 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
 	*output_data++ = (a << 4) | lum;
       }
     } else {
-      cerr << "unable to pack input data (channels = " << input.getNumChannels() << ", f = " << int(format) << ")\n";
+      // cerr << "unable to pack input data (channels = " << input.getNumChannels() << ", f = " << int(format) << ")\n";
       assert(0);
     }
   }
@@ -163,7 +163,7 @@ ImageData::convert(InternalFormat target_format) const {
     rg_etc1::etc1_pack_params params;
     params.m_quality = rg_etc1::cLowQuality;
     if (target_fd.getCompression() == ImageFormat::ETC1 && !etc1_initialized) {
-      cerr << "initializing etc1" << endl;
+      // cerr << "initializing etc1" << endl;
       etc1_initialized = true;
       rg_etc1::pack_etc1_block_init();
     }
@@ -291,7 +291,7 @@ ImageData::scale(unsigned short target_base_width, unsigned short target_base_he
   stbir_resize_uint8(data.get(), getWidth(), getHeight(), 0, output_data.get(), target_width, target_height, 0, fd.getBytesPerPixel());
 
   if (target_levels > 1) {
-    cerr << "creating mipmaps for format, channels = " << fd.getNumChannels() << ", bpp = " << fd.getBytesPerPixel() << endl;
+    // cerr << "creating mipmaps for format, channels = " << fd.getNumChannels() << ", bpp = " << fd.getBytesPerPixel() << endl;
 
     unsigned short source_width = target_width, source_height = target_height;
     target_width /= 2;
