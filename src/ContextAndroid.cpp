@@ -22,6 +22,7 @@ AndroidCache::AndroidCache(JNIEnv * myEnv, jobject _assetManager) {
   paintStyleClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Paint$Style"));
   alignClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Paint$Align"));
   bitmapConfigClass = (jclass) myEnv->NewGlobalRef(myEnv->FindClass("android/graphics/Bitmap$Config"));
+
   field_argb_8888 = myEnv->GetStaticFieldID(bitmapConfigClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
   // field_rgb_565 = myEnv->GetStaticFieldID(bitmapConfigClass, "RGB_565", "Landroid/graphics/Bitmap$Config;");
   field_alpha_8 = myEnv->GetStaticFieldID(bitmapConfigClass, "ALPHA_8", "Landroid/graphics/Bitmap$Config;");
@@ -41,25 +42,27 @@ AndroidCache::AndroidCache(JNIEnv * myEnv, jobject _assetManager) {
   measureTextMethod = myEnv->GetMethodID(paintClass, "measureText", "(Ljava/lang/String;)F");
   setAlphaMethod = myEnv->GetMethodID(paintClass, "setAlpha", "(I)V");
   setTypefaceMethod = myEnv->GetMethodID(paintClass, "setTypeface", "(Landroid/graphics/Typeface;)Landroid/graphics/Typeface;");
-  typefaceCreator = myEnv->GetStaticMethodID(typefaceClass, "create", "(Ljava/lang/String;I)Landroid/graphics/Typeface;");
-  managerOpenMethod = myEnv->GetMethodID(assetManagerClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
-  bitmapCreateMethod = myEnv->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-  bitmapCreateMethod2 = myEnv->GetStaticMethodID(bitmapClass, "createBitmap", "([IIILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-  bitmapCreateScaledMethod = myEnv->GetStaticMethodID(bitmapClass, "createScaledBitmap", "(Landroid/graphics/Bitmap;IIZ)Landroid/graphics/Bitmap;");
   textAlignMethod = myEnv->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
   paintSetColorMethod = myEnv->GetMethodID(paintClass, "setColor", "(I)V");
   paintSetStyleMethod = myEnv->GetMethodID(paintClass, "setStyle", "(Landroid/graphics/Paint$Style;)V");
   paintSetStrokeWidthMethod = myEnv->GetMethodID(paintClass, "setStrokeWidth", "(F)V");
   paintSetStrokeJoinMethod = myEnv->GetMethodID(paintClass, "setStrokeJoin", "(Landroid/graphics/Paint$Join;)V");
+  paintConstructor = myEnv->GetMethodID(paintClass, "<init>", "()V");
+  paintSetAntiAliasMethod = myEnv->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
+  textAlignMethod = myEnv->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
+  paintSetShaderMethod = myEnv->GetMethodID(paintClass, "setShader", "(Landroid/graphics/Shader;)Landroid/graphics/Shader;");
+
+  typefaceCreator = myEnv->GetStaticMethodID(typefaceClass, "create", "(Ljava/lang/String;I)Landroid/graphics/Typeface;");
+  managerOpenMethod = myEnv->GetMethodID(assetManagerClass, "open", "(Ljava/lang/String;)Ljava/io/InputStream;");
+  bitmapCreateMethod = myEnv->GetStaticMethodID(bitmapClass, "createBitmap", "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+  bitmapCreateMethod2 = myEnv->GetStaticMethodID(bitmapClass, "createBitmap", "([IIILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
+  bitmapCreateScaledMethod = myEnv->GetStaticMethodID(bitmapClass, "createScaledBitmap", "(Landroid/graphics/Bitmap;IIZ)Landroid/graphics/Bitmap;");
   canvasConstructor = myEnv->GetMethodID(canvasClass, "<init>", "(Landroid/graphics/Bitmap;)V");
   factoryDecodeMethod = myEnv->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;)Landroid/graphics/Bitmap;");
   factoryDecodeMethod2 = myEnv->GetStaticMethodID(factoryClass, "decodeStream", "(Ljava/io/InputStream;Landroid/graphics/Rect;Landroid/graphics/BitmapFactory$Options;)Landroid/graphics/Bitmap;");
   bitmapCopyMethod = myEnv->GetMethodID(bitmapClass, "copy", "(Landroid/graphics/Bitmap$Config;Z)Landroid/graphics/Bitmap;");
-  paintConstructor = myEnv->GetMethodID(paintClass, "<init>", "()V");
-  paintSetAntiAliasMethod = myEnv->GetMethodID(paintClass, "setAntiAlias", "(Z)V");
   pathMoveToMethod = myEnv->GetMethodID(pathClass, "moveTo", "(FF)V");
   pathConstructor = myEnv->GetMethodID(pathClass, "<init>", "()V");
-  textAlignMethod = myEnv->GetMethodID(paintClass, "setTextAlign", "(Landroid/graphics/Paint$Align;)V");
   canvasTextDrawMethod = myEnv->GetMethodID(canvasClass, "drawText", "(Ljava/lang/String;FFLandroid/graphics/Paint;)V");
   pathLineToMethod = myEnv->GetMethodID(pathClass, "lineTo", "(FF)V");
   pathCloseMethod = myEnv->GetMethodID(pathClass, "close", "()V");
@@ -81,7 +84,6 @@ AndroidCache::AndroidCache(JNIEnv * myEnv, jobject _assetManager) {
   stringGetBytesMethod = myEnv->GetMethodID(stringClass, "getBytes", "()[B");
   stringConstructor2 = myEnv->GetMethodID(stringClass, "<init>", "()V");
   stringByteConstructor = myEnv->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V");
-  paintSetShaderMethod = myEnv->GetMethodID(paintClass, "setShader", "(Landroid/graphics/Shader;)Landroid/graphics/Shader;");
   linearGradientConstructor = myEnv->GetMethodID(linearGradientClass, "<init>", "(FFFFIILandroid/graphics/Shader$TileMode;)V");
 
   optionsMutableField = myEnv->GetFieldID(bitmapOptionsClass, "inMutable", "Z");
@@ -93,6 +95,10 @@ AndroidCache::AndroidCache(JNIEnv * myEnv, jobject _assetManager) {
 
   paintStyleEnumStroke = myEnv->GetStaticFieldID(myEnv->FindClass("android/graphics/Paint$Style"), "STROKE", "Landroid/graphics/Paint$Style;");
   paintStyleEnumFill = myEnv->GetStaticFieldID(myEnv->FindClass("android/graphics/Paint$Style"), "FILL", "Landroid/graphics/Paint$Style;");
+
+  auto joinClass = (jclass) myEnv->FindClass("android/graphics/Paint$Join");
+  joinField_ROUND = myEnv->NewGlobalRef(myEnv->GetStaticObjectField(joinClass, myEnv->GetStaticFieldID(joinClass, "ROUND", "Landroid/graphics/Paint$Join;")));
+  myEnv->DeleteLocalRef(joinClass);
 }
 
 AndroidCache::~AndroidCache() {
@@ -117,6 +123,9 @@ AndroidCache::~AndroidCache() {
   myEnv->DeleteGlobalRef(stringClass);
   myEnv->DeleteGlobalRef(charsetString);
   myEnv->DeleteGlobalRef(linearGradientClass);
+
+  myEnv->DeleteGlobalRef(joinField_ROUND);
+
 }
 
 AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels)
@@ -127,7 +136,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, unsigned int _logical_widt
     __android_log_print(ANDROID_LOG_INFO, "Sometrik", "AndroidSurface widthheight constructor called with width : height %u : %u", _actual_width, _actual_height);
     JNIEnv * env = cache->getEnv();
 
-    //set bitmap config according to internalformat
+    // set bitmap config according to internalformat
     jobject argbObject = createBitmapConfig(_num_channels);
     
     jobject localBitmap = env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateMethod, _actual_width, _actual_height, argbObject);
@@ -159,12 +168,12 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const std::string & filena
 
   JNIEnv * env = cache->getEnv();
 
-  //Get inputStream from the picture(filename)
+  // Get inputStream from the picture(filename)
   jstring jfilename = env->NewStringUTF(filename.c_str());
   jobject inputStream = env->CallObjectMethod(cache->getAssetManager(), cache->managerOpenMethod, jfilename);
   env->DeleteLocalRef(jfilename);
   
-  //Create a bitmap from the inputStream
+  // Create a bitmap from the inputStream
   jobject localBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeMethod2, inputStream, NULL, cache->getFactoryOptions());
   bitmap = (jobject) env->NewGlobalRef(localBitmap);
   env->DeleteLocalRef(localBitmap);
@@ -186,7 +195,7 @@ AndroidSurface::AndroidSurface(AndroidCache * _cache, const unsigned char * buff
   env->SetByteArrayRegion(array, 0, arraySize, (const jbyte*) buffer);
   jobject firstBitmap = env->CallStaticObjectMethod(cache->factoryClass, cache->factoryDecodeByteMethod, array, 0, arraySize);
   
-  //make this with factory options instead
+  // make this with factory options instead
   jobject argbObject = createBitmapConfig(4);
   jobject localBitmap = env->CallObjectMethod(firstBitmap, cache->bitmapCopyMethod, argbObject, JNI_TRUE);
   bitmap = (jobject) env->NewGlobalRef(localBitmap);

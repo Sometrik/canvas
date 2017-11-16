@@ -30,11 +30,16 @@ class AndroidCache {
     return factoryOptions;
   }
 
+  jmethodID paintConstructor;
+  jmethodID paintSetAntiAliasMethod;
   jmethodID paintSetStyleMethod;
   jmethodID paintSetStrokeWidthMethod;
   jmethodID paintSetStrokeJoinMethod;
-  jmethodID textAlignMethod;
   jmethodID paintSetColorMethod;
+  jmethodID paintSetShadowMethod;
+  jmethodID paintSetTextSizeMethod;
+  jmethodID paintSetShaderMethod;
+  jmethodID textAlignMethod;
   jmethodID bitmapCreateMethod;
   jmethodID bitmapCreateMethod2;
   jmethodID canvasConstructor;
@@ -42,8 +47,6 @@ class AndroidCache {
   jmethodID factoryDecodeMethod;
   jmethodID factoryDecodeMethod2;
   jmethodID bitmapCopyMethod;
-  jmethodID paintConstructor;
-  jmethodID paintSetAntiAliasMethod;
   jmethodID pathMoveToMethod;
   jmethodID pathConstructor;
   jmethodID canvasTextDrawMethod;
@@ -53,8 +56,6 @@ class AndroidCache {
   jmethodID canvasPathDrawMethod;
   jmethodID rectFConstructor;
   jmethodID rectConstructor;
-  jmethodID paintSetShadowMethod;
-  jmethodID paintSetTextSizeMethod;
   jmethodID canvasBitmapDrawMethod;
   jmethodID canvasBitmapDrawMethod2;
   jmethodID factoryDecodeByteMethod;
@@ -74,7 +75,6 @@ class AndroidCache {
   jmethodID stringConstructor2;
   jmethodID stringGetBytesMethod;
   jmethodID stringByteConstructor;
-  jmethodID paintSetShaderMethod;
   jmethodID linearGradientConstructor;
 
   jclass frameClass;
@@ -109,6 +109,8 @@ class AndroidCache {
   jfieldID paintStyleEnumFill;
   jfieldID shaderTileModeMirrorField;
 
+  jobject joinField_ROUND;
+
 private:
   jobject factoryOptions;
   jobject assetManager;
@@ -120,7 +122,6 @@ class AndroidPaint {
  AndroidPaint(AndroidCache * _cache) : cache(_cache) { }
   
   ~AndroidPaint() {
-    __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "Destructor on AndroidPaint");
     if (is_valid) {
       cache->getEnv()->DeleteGlobalRef(obj);
     }
@@ -297,13 +298,12 @@ protected:
     if (!is_valid) {
       is_valid = true;
       JNIEnv * env = cache->getEnv();
-      obj = (jobject) env->NewGlobalRef(env->NewObject(cache->paintClass, cache->paintConstructor));
+      auto localObj = (jobject)env->NewObject(cache->paintClass, cache->paintConstructor);
+      obj = (jobject)env->NewGlobalRef(localObj);
+      env->DeleteLocalRef(localObj);
+
       env->CallVoidMethod(obj, cache->paintSetAntiAliasMethod, JNI_TRUE);
-      jclass joinClass = env->FindClass("android/graphics/Paint$Join");
-      jobject joinFieldObject = env->GetStaticObjectField(joinClass, env->GetStaticFieldID(joinClass, "ROUND", "Landroid/graphics/Paint$Join;"));
-      env->CallVoidMethod(obj, cache->paintSetStrokeJoinMethod, joinFieldObject);
-      env->DeleteLocalRef(joinClass);
-      env->DeleteLocalRef(joinFieldObject);
+      env->CallVoidMethod(obj, cache->paintSetStrokeJoinMethod, cache->joinField_ROUND);
     }
   }
 
@@ -406,12 +406,14 @@ public:
 
         float span = 0;
 
+#if 0
         // FIXME: If ea = 0, and sa = 2 * M_PI => span = 0
         if (!pc.anticlockwise && (pc.ea < pc.sa)) {
           span += 2 * M_PI;
         } else if (pc.anticlockwise && (pc.sa < pc.ea)) {
           span -= 2 * M_PI;
         }
+#endif
 
         span += pc.ea - pc.sa;
         float left = pc.x0 * displayScale - pc.radius * displayScale;
@@ -444,17 +446,15 @@ public:
     JNIEnv * env = cache->getEnv();
 
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "resize called Start");
-    if (canvasCreated) {
+    if (canvas) {
       env->DeleteGlobalRef(canvas);
-      canvasCreated = false;
+      canvas = 0;
     }
     if (bitmap != 0) {
-      jobject localBitmap = bitmap;
-      if (localBitmap == NULL || localBitmap == 0) {
-        __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "localBitmap is null");
-      }
-      bitmap = (jobject) env->NewGlobalRef(env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, localBitmap, _actual_width, _actual_height, JNI_FALSE));
-      env->DeleteLocalRef(localBitmap);
+      jobject newBitmap = (jobject)env->CallStaticObjectMethod(cache->bitmapClass, cache->bitmapCreateScaledMethod, bitmap, _actual_width, _actual_height, JNI_FALSE);
+      env->DeleteGlobalRef(bitmap);
+      bitmap = env->NewGlobalRef(newBitmap);
+      env->DeleteLocalRef(newBitmap);
     } else {
       __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating new bitmap on resize");
       jobject argbObject = createBitmapConfig(_num_channels);
@@ -607,15 +607,12 @@ public:
   jobject imageToBitmapRGBA8(const ImageData & img);
 
   void checkForCanvas() {
-    if (!canvasCreated && bitmap != 0) {
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "creating canvas");
-      //Create new Canvas from the mutable bitmap
+    if (!canvas && bitmap) {
+      // Create new Canvas from the mutable bitmap
       JNIEnv * env = cache->getEnv();
       jobject localCanvas = env->NewObject(cache->canvasClass, cache->canvasConstructor, bitmap);
       canvas = (jobject) env->NewGlobalRef(localCanvas);
       env->DeleteLocalRef(localCanvas);
-      canvasCreated = true;
-      __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "canvas created");
     }
   }
 
@@ -626,21 +623,10 @@ public:
     return globalRefence;
   }
 
-#if 0
-  jobject getBitmap() {
-    return bitmap;
-  }
-  jobject getCanvas() {
-    return canvas;
-  }
-#endif
-
 private:
   jobject bitmap = 0;
-  jobject canvas;
+  jobject canvas = 0;
   JNIEnv * stored_env = 0;
-
-  bool canvasCreated = false;
 
   AndroidCache * cache;
   AndroidPaint paint;
