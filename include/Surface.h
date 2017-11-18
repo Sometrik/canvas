@@ -11,8 +11,10 @@
 #include <Operator.h>
 #include <InternalFormat.h>
 #include <ImageData.h>
+#include <PackedImageData.h>
 
 #include <memory>
+#include <cassert>
 
 namespace canvas {
   class Context;
@@ -59,6 +61,18 @@ namespace canvas {
     virtual void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) = 0;
     virtual void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) = 0;
     virtual std::unique_ptr<Image> createImage(float display_scale) = 0;
+
+    std::unique_ptr<PackedImageData> createPackedImage() {
+      unsigned char * buffer = (unsigned char *)lockMemory(false);
+      assert(buffer);
+      if (buffer) {
+	std::unique_ptr<PackedImageData> image(new PackedImageData(RGBA8, getActualWidth(), getActualHeight(), 1, buffer));
+	releaseMemory();
+	return image;
+      } else {
+	return std::unique_ptr<PackedImageData>(new PackedImageData(RGBA8, getActualWidth(), getActualHeight(), 1));
+      }
+    }
 
     std::unique_ptr<ImageData> blur(float hradius, float vradius) {
       ImageData tmp((unsigned char *)lockMemory(false), getActualWidth(), getActualHeight(), getNumChannels());
