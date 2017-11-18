@@ -12,7 +12,7 @@ namespace canvas {
   public:
   PackedImageData() : format(NO_FORMAT), width(0), height(0), levels(0), quality(0) { }
     PackedImageData(InternalFormat _format, unsigned short _levels, const ImageData & input);
-    PackedImageData(InternalFormat _format, unsigned short _width, unsigned short _height, unsigned short _levels);
+    PackedImageData(InternalFormat _format, unsigned short _width, unsigned short _height, unsigned short _levels, const unsigned char * input = 0);
   
     void setQuality(unsigned short _quality) { quality = _quality; }
     unsigned short getQuality() const { return quality; }

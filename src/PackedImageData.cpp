@@ -85,34 +85,38 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
   }
 }
 
-PackedImageData::PackedImageData(InternalFormat _format, unsigned short _width, unsigned short _height, unsigned short _levels)
+PackedImageData::PackedImageData(InternalFormat _format, unsigned short _width, unsigned short _height, unsigned short _levels, const unsigned char * input)
   : width(_width), height(_height), levels(_levels), format(_format) {
   size_t s = calculateSize();
   data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
-  if (format == RGB_ETC1) {
-    for (unsigned int i = 0; i < s; i += 8) {
-      *(unsigned int *)(data.get() + i + 0) = 0x00000000;
-      *(unsigned int *)(data.get() + i + 4) = 0xffffffff;
-    }
-  } else if (format == RGB_DXT1) {
-    for (unsigned int i = 0; i < s; i += 8) {
-      *(unsigned int *)(data.get() + i + 0) = 0x00000000;
-      *(unsigned int *)(data.get() + i + 4) = 0xaaaaaaaa;
-    }
-  } else if (format == RED_RGTC1) {
-    for (unsigned int i = 0; i < s; i += 8) {
-      *(unsigned int *)(data.get() + i + 0) = 0x00000003; // doesn't work on big endian
-      *(unsigned int *)(data.get() + i + 4) = 0x00000000;
-    }
-  } else if (format == RG_RGTC2) {
-    for (unsigned int i = 0; i < s; i += 16) {
-      *(unsigned int *)(data.get() + i + 0) = 0x00000003;
-      *(unsigned int *)(data.get() + i + 4) = 0x00000000;
-      *(unsigned int *)(data.get() + i + 8) = 0x00000003;
-      *(unsigned int *)(data.get() + i + 12) = 0x00000000;
-    }
+  if (input) {
+    memcpy(data.get(), input, s);
   } else {
-    memset(data.get(), 0, s);
+    if (format == RGB_ETC1) {
+      for (unsigned int i = 0; i < s; i += 8) {
+	*(unsigned int *)(data.get() + i + 0) = 0x00000000;
+	*(unsigned int *)(data.get() + i + 4) = 0xffffffff;
+      }
+    } else if (format == RGB_DXT1) {
+      for (unsigned int i = 0; i < s; i += 8) {
+	*(unsigned int *)(data.get() + i + 0) = 0x00000000;
+	*(unsigned int *)(data.get() + i + 4) = 0xaaaaaaaa;
+      }
+    } else if (format == RED_RGTC1) {
+      for (unsigned int i = 0; i < s; i += 8) {
+	*(unsigned int *)(data.get() + i + 0) = 0x00000003; // doesn't work on big endian
+	*(unsigned int *)(data.get() + i + 4) = 0x00000000;
+      }
+    } else if (format == RG_RGTC2) {
+      for (unsigned int i = 0; i < s; i += 16) {
+	*(unsigned int *)(data.get() + i + 0) = 0x00000003;
+	*(unsigned int *)(data.get() + i + 4) = 0x00000000;
+	*(unsigned int *)(data.get() + i + 8) = 0x00000003;
+	*(unsigned int *)(data.get() + i + 12) = 0x00000000;
+      }
+    } else {
+      memset(data.get(), 0, s);
+    }
   }
 }
 
