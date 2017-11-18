@@ -583,7 +583,9 @@ public:
   }
 
   std::unique_ptr<Image> createImage(float display_scale) override;
-      
+
+  jobject getBitmap() { return bitmap; }
+
  protected:
   void * lockMemory(bool write_access = false) override {
     __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "lockMemory called");
@@ -622,8 +624,6 @@ public:
     env->DeleteLocalRef(localReference);
     return globalRefence;
   }
-
-  jobject getBitmap() { return bitmap; }
 
 private:
   jobject bitmap = 0;
