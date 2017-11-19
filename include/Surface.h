@@ -93,9 +93,6 @@ namespace canvas {
     unsigned int getActualWidth() const { return actual_width; }
     unsigned int getActualHeight() const { return actual_height; }
     unsigned int getNumChannels() const { return num_channels; }
-
-    void setTargetFormat(InternalFormat format) { target_format = format; }
-    InternalFormat getTargetFormat() const { return target_format; }
     
   protected:
     virtual void * lockMemory(bool write_access = false) = 0;
@@ -103,7 +100,6 @@ namespace canvas {
 
   private:
     unsigned int logical_width, logical_height, actual_width, actual_height, num_channels;
-    InternalFormat target_format = NO_FORMAT;
   };
 };
 
