@@ -145,7 +145,7 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
   cairo_pattern_t * pat = 0;
   if (style.getType() == Style::LINEAR_GRADIENT) {
     pat = cairo_pattern_create_linear(style.x0 * displayScale, style.y0 * displayScale, style.x1 * displayScale, style.y1 * displayScale);
-    for (map<float, Color>::const_iterator it = style.getColors().begin(); it != style.getColors().end(); it++) {
+    for (auto it = style.getColors().begin(); it != style.getColors().end(); it++) {
       cairo_pattern_add_color_stop_rgba(pat, it->first, it->second.red, it->second.green, it->second.blue, it->second.alpha * globalAlpha);
     }
     cairo_set_source(cr, pat);    
@@ -314,7 +314,7 @@ public:
   
 protected:
   void loadFile() override {
-    data = loadFromFile(filename);
+    data = loadFromFile("assets/" + filename);
     if (!data.get()) filename.clear();
   }
 };
