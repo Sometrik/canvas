@@ -24,7 +24,9 @@ namespace canvas {
     void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true);
 
     std::unique_ptr<Image> createImage(float display_scale) override;
-      
+
+    cairo_surface_t * getCairoSurface() { return surface; }
+    
   protected:
     void flush();
     void markDirty();
