@@ -154,12 +154,14 @@ namespace canvas {
       }
       return *this;
     }
+#if 0
     const HitRegion & getHitRegion(float x, float y) const {
       for (auto & r : hit_regions) {
 	if (r.isInside(x, y)) return r;
       }
       return null_region;
     }
+#endif
     const std::vector<HitRegion> & getHitRegions() const { return hit_regions; }
     
 #if 0
