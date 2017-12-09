@@ -9,11 +9,11 @@ using namespace canvas;
 using namespace std;
 
 Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, const ImageData & image)
-  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getImageFormat().hasAlpha() ? RGBA8 : RGB8), cache(_cache) {
+  : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getNumChannels()), cache(_cache) {
   assert(getActualWidth() && getActualHeight());
   size_t bitmapByteCount = 4 * getActualWidth() * getActualHeight();
   bitmapData = new unsigned char[bitmapByteCount];
-  if (image.getImageFormat().getBytesPerPixel() == 4) {
+  if (image.getNumChannels() == 4) {
     memcpy(bitmapData, image.getData(), bitmapByteCount);
   } else {
     for (unsigned int i = 0; i < getActualWidth() * getActualHeight(); i++) {
@@ -63,74 +63,6 @@ Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, 
   if (CFGetRetainCount(provider) != 1) cerr << "leaking memory 2!\n";
 #endif
   CGDataProviderRelease(provider);
-}
-
-Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, const unsigned char * buffer, size_t size) : Surface(0, 0, 0, 0, RGBA8), cache(_cache) {
-  CGImageRef img = 0;
-  CGDataProviderRef provider = 0;
-  if (isPNG(buffer, size)) {
-    provider = CGDataProviderCreateWithData(0, buffer, size, 0);
-    img = CGImageCreateWithPNGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-  } else if (isJPEG(buffer, size)) {
-    provider = CGDataProviderCreateWithData(0, buffer, size, 0);
-    img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-  } else if (isGIF(buffer, size) || isBMP(buffer, size)) {
-    CFDataRef data = CFDataCreate(0, buffer, size);
-    CFStringRef keys[3] = { kCGImageSourceShouldCache, kCGImageSourceCreateThumbnailFromImageIfAbsent, kCGImageSourceCreateThumbnailFromImageAlways };
-    CFTypeRef values[3] = { kCFBooleanFalse, kCFBooleanFalse, kCFBooleanFalse };
-    CFDictionaryRef options = CFDictionaryCreate(NULL, (const void **)&keys, (const void **)&values, 3, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    // sizeof(keys) / sizeof(keys[0])
-    auto isrc = CGImageSourceCreateWithData(data, options);
-    img = CGImageSourceCreateImageAtIndex(isrc, 0, options);
-#ifdef MEMDEBUG
-    if (CFGetRetainCount(isrc) != 1) cerr << "leaking memory 3!\n";
-#endif
-    CFRelease(isrc);
-#ifdef MEMDEBUG
-    if (CFGetRetainCount(options) != 1) cerr << "leaking memory 4!\n";
-#endif
-    CFRelease(options);
-#ifdef MEMDEBUG
-    long data_retain = CFGetRetainCount(data);
-    if (data_retain != 1) cerr << "leaking memory 5 (" << data_retain << ")!\n";
-#endif
-    CFRelease(data);
-  } else if (isXML(buffer, size)) {
-    cerr << "trying to render XML/HTML" << endl;
-    assert(0);
-  } else {
-    cerr << "unhandled image type 1 = " << (int)buffer[0] << " 2 = " << (int)buffer[1] << " 3 = " << (int)buffer[2] << " 4 = " << (int)buffer[3] << " 5 = " << (int)buffer[4] << " 6 = " << (int)buffer[5] << endl;
-    assert(0);
-  }
-  if (img) {
-    bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
-    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha ? RGBA8 : RGB8);
-    unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
-    bitmapData = new unsigned char[bitmapByteCount];
-    memset(bitmapData, 0, bitmapByteCount);
-  
-    initializeContext();
-    flipY();    
-    CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
-    flipY();
-  } else {
-    Surface::resize(16, 16, 16, 16, RGBA8);
-    unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
-    bitmapData = new unsigned char[bitmapByteCount];
-    memset(bitmapData, 0, bitmapByteCount);
-  }
-  if (img) {
-#ifdef MEMDEBUG
-    if (CFGetRetainCount(img) != 1) cerr << "leaking CGImage!\n";
-#endif
-    CGImageRelease(img);
-  }
-  if (provider) {
-#ifdef MEMDEBUG
-    if (CFGetRetainCount(provider) != 1) cerr << "leaking CGDataProvider!\n";
-#endif
-    CGDataProviderRelease(provider);
-  }
 }
 
 void
@@ -234,8 +166,8 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path2D & path, const Style & 
 }
 
 void
-Quartz2DSurface::resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat _format) {
-  Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _format);
+Quartz2DSurface::resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels) {
+  Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels);
   
   if (gc) {
 #ifdef MEMDEBUG
@@ -266,10 +198,11 @@ Quartz2DSurface::drawImage(const ImageData & _img, const Point & p, double w, do
   if (has_shadow) {
     setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, displayScale);
   }
-  auto format = _img.getImageFormat();
-  CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), format.getBytesPerPixel() * _img.getWidth() * _img.getHeight(), 0);
-  auto f = (format.hasAlpha() ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
-  CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, format.getBytesPerPixel() * 8, format.getBytesPerPixel() * _img.getWidth(), cache->getColorSpace(), f, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
+  unsigned int num_channels = _img.getNumChannels();
+  auto has_alpha = num_channels == 4;
+  CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), num_channels * _img.getWidth() * _img.getHeight(), 0);
+  auto f = (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
+  CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, num_channels * 8, num_channels * _img.getWidth(), cache->getColorSpace(), f, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
   if (img) {
     flipY();
     if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
@@ -300,7 +233,7 @@ public:
     : Image(_filename, _display_scale),
       converter(_converter) { }
 
-  Quartz2DImage(FilenameConverter * _converter, const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality, float _display_scale) : Image(_data, _format, _width, _height, _levels, _quality, _display_scale), converter(_converter) { }
+  Quartz2DImage(FilenameConverter * _converter, const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels, float _display_scale) : Image(_data, _width, _height, _num_channels, _display_scale), converter(_converter) { }
   
   void loadFile() override {
 #if 0
@@ -347,8 +280,8 @@ Quartz2DContextFactory::createImage() {
 }
 
 std::unique_ptr<Image>
-Quartz2DContextFactory::createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height, unsigned int _levels, short _quality) {
-  return std::unique_ptr<Image>(new Quartz2DImage(converter, _data, _format, _width, _height, _levels, _quality, getDisplayScale()));
+Quartz2DContextFactory::createImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels) {
+  return std::unique_ptr<Image>(new Quartz2DImage(converter, _data, _width, _height, _num_channels, getDisplayScale()));
 }
 
 std::unique_ptr<Image>
@@ -356,7 +289,7 @@ Quartz2DSurface::createImage(float display_scale) {
   unsigned char * buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
 
-  auto image = std::unique_ptr<Image>(new Quartz2DImage(0, buffer, getFormat(), getActualWidth(), getActualHeight(), 1, 0, display_scale));
+  auto image = std::unique_ptr<Image>(new Quartz2DImage(0, buffer, getActualWidth(), getActualHeight(), getNumChannels(), display_scale));
   releaseMemory();
   
   return image;

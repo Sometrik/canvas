@@ -14,7 +14,7 @@ namespace canvas {
     const std::string & getId() const { return id; }
     const std::string & getCursor() const { return cursor; }
     const Path2D & getPath() const { return path; }
-    bool isInside(float x, float y) const { return path.isInside(x, y); }
+//    bool isInside(float x, float y) const { return path.isInside(x, y); }
     
   private:
     std::string id, cursor;

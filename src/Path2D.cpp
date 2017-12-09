@@ -1,7 +1,6 @@
 #include <Path2D.h>
 
 #include <cmath>
-#include <glm/glm.hpp>
 
 using namespace canvas;
 
@@ -89,6 +88,7 @@ static inline float determinant(float x1, float y1, float x2, float y2) {
   return x1 * y2 - x2 * y1;
 }
 
+#if 0
 // returns vector cross product of vectors p1p2 and p1p3 using Cramer's rule
 static inline float crossProduct(const glm::vec2 & p1, const glm::vec2 & p2, const glm::vec2 & p3) {
   float det_p2p3 = determinant(p2.x, p2.y, p3.x, p3.y);
@@ -134,3 +134,4 @@ Path2D::isInside(float x, float y) const {
   // fprintf(stderr, "inside test for polygon %Ld: %s\n", id, is_inside ? "true" : "false" );
   return is_inside;
 }
+#endif
