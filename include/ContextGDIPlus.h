@@ -100,14 +100,6 @@ namespace canvas {
 	return 0;
       }
     }
-
-#if 0
-    void * lockMemoryPartial(unsigned int x0, unsigned int y0, unsigned int required_width, unsigned int required_height) {
-      Gdiplus::Rect rect(x0, y0, required_width, required_height);
-      bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead, PixelFormat32bppPARGB, &data);
-      return data.Scan0;
-    }
-#endif
       
     void releaseMemory() {
       bitmap->UnlockBits(&data);
