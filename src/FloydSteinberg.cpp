@@ -18,29 +18,29 @@ struct rgba_s {
   unsigned int alpha;
 
   inline void setError(unsigned int weight, unsigned int error) {
-    red = weight * (RGBA_TO_RED(error) >> 4);
-    green = weight * (RGBA_TO_GREEN(error) >> 4);
-    blue = weight * (RGBA_TO_BLUE(error) >> 4);
+    red = (weight * RGBA_TO_RED(error)) >> 4;
+    green = (weight * RGBA_TO_GREEN(error)) >> 4;
+    blue = (weight * RGBA_TO_BLUE(error)) >> 4;
   }
 
   inline void addError(unsigned int weight, unsigned int error) {
-    red += weight * (RGBA_TO_RED(error) >> 4);
-    green += weight * (RGBA_TO_GREEN(error) >> 4);
-    blue += weight * (RGBA_TO_BLUE(error) >> 4);
+    red += (weight * RGBA_TO_RED(error)) >> 4;
+    green += (weight * RGBA_TO_GREEN(error)) >> 4;
+    blue += (weight * RGBA_TO_BLUE(error)) >> 4;
   }
 
   inline void setErrorAlpha(unsigned int weight, unsigned int error) {
-    red = weight * (RGBA_TO_RED(error) >> 4);
-    green = weight * (RGBA_TO_GREEN(error) >> 4);
-    blue = weight * (RGBA_TO_BLUE(error) >> 4);
-    alpha = weight * (RGBA_TO_ALPHA(error) >> 4);
+    red = (weight * RGBA_TO_RED(error)) >> 4;
+    green = (weight * RGBA_TO_GREEN(error)) >> 4;
+    blue = (weight * RGBA_TO_BLUE(error)) >> 4;
+    alpha = (weight * RGBA_TO_ALPHA(error)) >> 4;
   }
 
   inline void addErrorAlpha(unsigned int weight, unsigned int error) {
-    red += weight * (RGBA_TO_RED(error) >> 4);
-    green += weight * (RGBA_TO_GREEN(error) >> 4);
-    blue += weight * (RGBA_TO_BLUE(error) >> 4);
-    alpha += weight * (RGBA_TO_ALPHA(error) >> 4);
+    red += (weight * RGBA_TO_RED(error)) >> 4;
+    green += (weight * RGBA_TO_GREEN(error)) >> 4;
+    blue += (weight * RGBA_TO_BLUE(error)) >> 4;
+    alpha += (weight * RGBA_TO_ALPHA(error)) >> 4;
   }
 };
 
