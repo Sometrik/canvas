@@ -32,7 +32,8 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
   data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
   
   if ((num_channels == 4 && (format == RGB8 || format == RGBA8)) ||
-      (num_channels == 1 && format == R8)) {
+      (num_channels == 1 && format == R8) ||
+      (num_channels == 2 && format == RG8)) {
     assert(levels == 1);
     memcpy(data.get(), input.getData(), s);
   } else if (format == RGBA4 || format == RGB565) {
