@@ -25,7 +25,7 @@ Image::loadFromMemory(const unsigned char * buffer, size_t size) {
   // cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
 
-  std::unique_ptr<ImageData> data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)img_buffer, w, h, channels));
+  auto data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)img_buffer, w, h, channels));
   
   stbi_image_free(img_buffer);
   
@@ -42,7 +42,7 @@ Image::loadFromFile(const std::string & filename) {
   }
   assert(w && h && channels);    
 
-  std::unique_ptr<ImageData> data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)img_buffer, w, h, channels));
+  auto data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)img_buffer, w, h, channels));
   
   stbi_image_free(img_buffer);
 
