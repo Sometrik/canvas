@@ -403,7 +403,6 @@ public:
       }
         break;
       case PathComponent::ARC: {
-
         float span = 0;
 
 #if 0
@@ -416,12 +415,17 @@ public:
 #endif
 
         span += pc.ea - pc.sa;
+
         float left = pc.x0 * displayScale - pc.radius * displayScale;
         float right = pc.x0 * displayScale + pc.radius * displayScale;
         float bottom = pc.y0 * displayScale + pc.radius * displayScale;
         float top = pc.y0 * displayScale - pc.radius * displayScale;
 
+        // __android_log_print(ANDROID_LOG_VERBOSE, "Sometrik", "arc: %f %f %f %f %f", pc.x0 * displayScale, pc.y0 * displayScale, pc.radius * displayScale, (float)pc.sa, (float)pc.ea);
+
         jobject jrect = env->NewObject(cache->rectFClass, cache->rectFConstructor, left, top, right, bottom);
+
+        span = 2*M_PI - 0.0001;
 
         env->CallVoidMethod(jpath, cache->pathArcToMethod, jrect, (float) (pc.sa / M_PI * 180), (float) (span / M_PI * 180));
         env->DeleteLocalRef(jrect);
