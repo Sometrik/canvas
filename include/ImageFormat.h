@@ -16,6 +16,7 @@
 #define RGB565_TO_BLUE(v) ((v & 0x1f) * 255 / 31)
 
 #define PACK_RGB565(r, g, b) ((r) | ((g) << 5) | ((b) << 11))
+#define PACK_RGBA5551(r, g, b, a) ((r) | ((g) << 5) | ((b) << 10) | ((a) << 15))
 #define PACK_RGB24(r, g, b) ((r) | ((g) << 8) | ((b) << 16))
 #define PACK_RGBA32(r, g, b, a) ((r) | ((g) << 8) | ((b) << 16) | ((a) << 24))
 

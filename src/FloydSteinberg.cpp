@@ -76,6 +76,31 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
       }
       old_errors.swap(new_errors);
     }
+  } else if (target_format == RGBA5551) {
+    vector<rgba_s> old_errors(width + 2);
+    for (unsigned int y = 0; y < height; y++) {
+      vector<rgba_s> new_errors(width + 2);
+      rgba_s next_error;
+      for (unsigned int x = 0; x < width; x++, input++) {
+        unsigned int v0 = *input;
+        unsigned int red = RGBA_TO_RED(v0) + next_error.red + old_errors[x + 1].red;
+        unsigned int green = RGBA_TO_GREEN(v0) + next_error.green + old_errors[x + 1].green;
+        unsigned int blue = RGBA_TO_BLUE(v0) + next_error.blue + old_errors[x + 1].blue;
+        unsigned int alpha = RGBA_TO_ALPHA(v0) + next_error.alpha + old_errors[x + 1].alpha;
+        if (red > 255) red = 255;
+        if (green > 255) green = 255;
+        if (blue > 255) blue = 255;
+        if (alpha > 255) alpha = 255;
+        unsigned int v = PACK_RGBA32(red, green, blue, alpha);
+        unsigned int error = v & 0x7f070707;
+        *output_data++ = PACK_RGBA5551(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 3, RGBA_TO_RED(v) >> 3, RGBA_TO_ALPHA(v) >> 7);
+        next_error.setErrorAlpha(7, error);
+        new_errors[x].addErrorAlpha(3, error);
+        new_errors[x + 1].addErrorAlpha(5, error);
+        new_errors[x + 2].addErrorAlpha(1, error);
+      }
+      old_errors.swap(new_errors);
+    }
   } else {
     vector<rgba_s> old_errors(width + 2);
     for (unsigned int y = 0; y < height; y++) {
