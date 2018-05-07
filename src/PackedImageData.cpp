@@ -36,7 +36,7 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
       (num_channels == 2 && format == RG8)) {
     assert(levels == 1);
     memcpy(data.get(), input.getData(), s);
-  } else if (format == RGBA4 || format == RGB565 || format == RGBA5551) {
+  } else if (format == RGBA4 || format == RGB565 || format == RGB555 || format == RGBA5551) {
     FloydSteinberg fs(format);
     unsigned int offset = fs.apply(input, data.get());
     if (levels >= 2) {

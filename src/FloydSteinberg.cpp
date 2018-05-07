@@ -133,6 +133,57 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
   return width * height * 2;
 }
 
+static unsigned int apply2_32bit(unsigned int * input_data, unsigned int width, unsigned int height, InternalFormat target_format, unsigned int * output_data) {
+  unsigned int * input = input_data;
+    
+  if (target_format == RGB555) {
+    vector<rgba_s> old_errors(width + 2);
+    for (unsigned int y = 0; y < height; y++) {
+      vector<rgba_s> new_errors(width + 2);
+      rgba_s next_error;
+      for (unsigned int x = 0; x < width; x += 2) {
+	unsigned int v0 = *input++;
+	unsigned int v1 = *input++;
+	
+	unsigned int red = RGBA_TO_RED(v0) + next_error.red + old_errors[x + 1].red;
+	unsigned int green = RGBA_TO_GREEN(v0) + next_error.green + old_errors[x + 1].green;
+	unsigned int blue = RGBA_TO_BLUE(v0) + next_error.blue + old_errors[x + 1].blue;
+	if (red > 255) red = 255;
+	if (green > 255) green = 255;
+	if (blue > 255) blue = 255;
+	unsigned int v = PACK_RGB24(red, green, blue);
+	unsigned int error = v & 0x00070707;
+	unsigned int output1 = PACK_RGB555(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 3, RGBA_TO_RED(v) >> 3);
+        
+	next_error.setError(7, error);
+	new_errors[x].addError(3, error);
+	new_errors[x + 1].addError(5, error);
+	new_errors[x + 2].addError(1, error);
+	
+	red = RGBA_TO_RED(v1) + next_error.red + old_errors[x + 1].red;
+	green = RGBA_TO_GREEN(v1) + next_error.green + old_errors[x + 1].green;
+	blue = RGBA_TO_BLUE(v1) + next_error.blue + old_errors[x + 1].blue;
+	if (red > 255) red = 255;
+	if (green > 255) green = 255;
+	if (blue > 255) blue = 255;
+	v = PACK_RGB24(red, green, blue);
+	error = v & 0x00070707;
+	unsigned int output2 = PACK_RGB555(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 3, RGBA_TO_RED(v) >> 3);
+        
+	next_error.setError(7, error);
+	new_errors[x].addError(3, error);
+	new_errors[x + 1].addError(5, error);
+	new_errors[x + 2].addError(1, error);
+	
+	*output_data++ = output2 + (output1 << 16);
+      }
+      old_errors.swap(new_errors);
+    }
+  }
+  
+  return width * height * 2;
+}
+
 unsigned int
 FloydSteinberg::apply(const ImageData & input_image, unsigned char * output) const {
   unsigned int width = input_image.getWidth();
@@ -157,5 +208,9 @@ FloydSteinberg::apply(const ImageData & input_image, unsigned char * output) con
     }
   }
 
-  return apply2(input_data.get(), width, height, target_format, (unsigned short *)output);
+  if (target_format == RGB555) {
+    return apply2_32bit(input_data.get(), width, height, target_format, (unsigned int *)output);
+  } else {
+    return apply2(input_data.get(), width, height, target_format, (unsigned short *)output);
+  }
 }

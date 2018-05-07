@@ -38,6 +38,7 @@ namespace canvas {
       case LUMINANCE_ALPHA: return 2;
       case LA44: return 1; // not a real OpenGL format
       case R32F: return 4;
+      case RGB555: return 2;
       case RGBA5551: return 2;
       }
       return 0;
