@@ -30,19 +30,23 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
 
   size_t s = calculateSize();
   data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+  memset(data.get(), 0, s);
   
   if ((num_channels == 4 && (format == RGB8 || format == RGBA8)) ||
       (num_channels == 1 && format == R8) ||
       (num_channels == 2 && format == RG8)) {
     assert(levels == 1);
-    memcpy(data.get(), input.getData(), s);
+    unsigned int bytesPerRow = getBytesPerRow(), bytesPerPixel = getBytesPerPixel();
+    for (unsigned int row = 0; row < height; row++) {
+      memcpy(data.get() + row * bytesPerRow, input.getData() + row * width * bytesPerPixel, bytesPerRow);
+    }
   } else if (format == RGBA4 || format == RGB565 || format == RGB555 || format == RGBA5551) {
     FloydSteinberg fs(format);
-    unsigned int offset = fs.apply(input, data.get());
+    unsigned int offset = fs.apply(input, data.get(), getBytesPerRow(input.getWidth(), format));
     if (levels >= 2) {
       auto img = input.scale((input.getWidth() + 1) / 2, (input.getHeight() + 1) / 2);
       for (unsigned int l = 1; l < levels; l++) {
-	offset += fs.apply(*img, data.get() + offset);
+	offset += fs.apply(*img, data.get() + offset, getBytesPerRow(img->getWidth(), format));
 	if (l + 1 < levels) {
 	  img = img->scale((img->getWidth() + 1) / 2, (img->getHeight() + 1) / 2);
 	}
@@ -54,30 +58,36 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
     const unsigned char * input_data = input.getData();
 
     if (format == RGB8 || format == RGBA8) {
-      unsigned int * output_data = (unsigned int *)data.get();
       if (num_channels == 3) {
-	for (unsigned int i = 0; i < 3 * width * height; i += 3) {
-	  *output_data++ = (0xff << 24) | (input_data[i] << 16) | (input_data[i + 1] << 8) | (input_data[i + 2]);
+	for (unsigned int row = 0, i = 0; row < height; row++) {
+	  unsigned int * ptr = (unsigned int *)(data.get() + row * bytesPerRow);
+	  for (unsigned int col = 0; col < width; col++, i += 3) {
+	    *ptr++ = (0xff << 24) | (input_data[i] << 16) | (input_data[i + 1] << 8) | (input_data[i + 2]);
+	  }
 	}
       } else if (num_channels == 1) {
-	for (unsigned int i = 0; i < width * height; i++) {
-	  unsigned char v = input_data[i];
-	  *output_data++ = (0xff << 24) | (v << 16) | (v << 8) | (v);
+	for (unsigned int row = 0, i = 0; row < height; row++) {
+	  unsigned int * ptr = (unsigned int *)(data.get() + row * bytesPerRow);
+	  for (unsigned int col = 0; col < width; col++, i++) {
+	    unsigned char v = input_data[i];
+	    *ptr++ = (0xff << 24) | (v << 16) | (v << 8) | (v);
+	  }
 	}
+      } else {
+	assert(0);
       }
     } else if (format == LA44) {
-      unsigned char * output_data = (unsigned char *)data.get();
-      unsigned int n = width * height;
-      
-      for (unsigned int i = 0; i < n; i++) {
-	unsigned int input_offset = i * num_channels;
-	unsigned char r = input_data[input_offset++];
-	unsigned char g = num_channels >= 2 ? input_data[input_offset++] : r;
-	unsigned char b = num_channels >= 3 ? input_data[input_offset++] : g;
-	unsigned char a = (num_channels >= 4 ? input_data[input_offset++] : 0xff) >> 4;
-	unsigned int lum = ((r + g + b) / 3) >> 4;
-	if (lum >= 16) lum = 15;
-	*output_data++ = (a << 4) | lum;
+      for (unsigned int row = 0, i = 0; row < height; row++) {
+	unsigned char * ptr = (unsigned char *)(data.get() + row * bytesPerRow);
+	for (unsigned int col = 0; col < width; col++, i += num_channels) {
+	  unsigned char r = input_data[i];
+	  unsigned char g = num_channels >= 2 ? input_data[i + 1] : r;
+	  unsigned char b = num_channels >= 3 ? input_data[i + 2] : g;
+	  unsigned char a = (num_channels >= 4 ? input_data[i + 3] : 0xff) >> 4;
+	  unsigned int lum = ((r + g + b) / 3) >> 4;
+	  if (lum >= 16) lum = 15;
+	  *ptr++ = (a << 4) | lum;
+	}
       }
     } else {
       // cerr << "unable to pack input data (channels = " << input.getNumChannels() << ", f = " << int(format) << ")\n";

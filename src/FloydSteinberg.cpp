@@ -44,7 +44,7 @@ struct rgba_s {
   }
 };
 
-static unsigned int apply2(unsigned int * input_data, unsigned int width, unsigned int height, InternalFormat target_format, unsigned short * output_data) {
+static unsigned int apply2(unsigned int * input_data, unsigned int width, unsigned int height, InternalFormat target_format, unsigned char * output_data, unsigned int bytesPerRow) {
   unsigned int * input = input_data;
 
   if (target_format == RGBA4) {
@@ -52,6 +52,7 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
     for (unsigned int y = 0; y < height; y++) {
       vector<rgba_s> new_errors(width + 2);
       rgba_s next_error;
+      unsigned short * output_row = (unsigned short *)(output_data + y * bytesPerRow);
       for (unsigned int x = 0; x < width; x++, input++) {
         unsigned int v0 = *input;
         unsigned int red = RGBA_TO_RED(v0) + next_error.red + old_errors[x + 1].red;
@@ -65,9 +66,9 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
         unsigned int v = PACK_RGBA32(red, green, blue, alpha);
         unsigned int error = v & 0x0f0f0f0f;
 #if defined __APPLE__ || defined __ANDROID__
-        *output_data++ = ((RGBA_TO_RED(v) >> 4) << 12) | ((RGBA_TO_GREEN(v) >> 4) << 8) | ((RGBA_TO_BLUE(v) >> 4) << 4) | (RGBA_TO_ALPHA(v) >> 4);
+        *output_row++ = ((RGBA_TO_RED(v) >> 4) << 12) | ((RGBA_TO_GREEN(v) >> 4) << 8) | ((RGBA_TO_BLUE(v) >> 4) << 4) | (RGBA_TO_ALPHA(v) >> 4);
 #else
-        *output_data++ = ((RGBA_TO_BLUE(v) >> 4) << 12) | ((RGBA_TO_GREEN(v) >> 4) << 8) | ((RGBA_TO_RED(v) >> 4) << 4) | (RGBA_TO_ALPHA(v) >> 4);
+        *output_row++ = ((RGBA_TO_BLUE(v) >> 4) << 12) | ((RGBA_TO_GREEN(v) >> 4) << 8) | ((RGBA_TO_RED(v) >> 4) << 4) | (RGBA_TO_ALPHA(v) >> 4);
 #endif
         next_error.setErrorAlpha(7, error);
         new_errors[x].addErrorAlpha(3, error);
@@ -81,6 +82,7 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
     for (unsigned int y = 0; y < height; y++) {
       vector<rgba_s> new_errors(width + 2);
       rgba_s next_error;
+      unsigned short * output_row = (unsigned short *)(output_data + y * bytesPerRow);
       for (unsigned int x = 0; x < width; x++, input++) {
         unsigned int v0 = *input;
         unsigned int red = RGBA_TO_RED(v0) + next_error.red + old_errors[x + 1].red;
@@ -93,7 +95,7 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
         if (alpha > 255) alpha = 255;
         unsigned int v = PACK_RGBA32(red, green, blue, alpha);
         unsigned int error = v & 0x7f070707;
-        *output_data++ = PACK_RGBA5551(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 3, RGBA_TO_RED(v) >> 3, RGBA_TO_ALPHA(v) >> 7);
+        *output_row++ = PACK_RGBA5551(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 3, RGBA_TO_RED(v) >> 3, RGBA_TO_ALPHA(v) >> 7);
         next_error.setErrorAlpha(7, error);
         new_errors[x].addErrorAlpha(3, error);
         new_errors[x + 1].addErrorAlpha(5, error);
@@ -106,6 +108,7 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
     for (unsigned int y = 0; y < height; y++) {
       vector<rgba_s> new_errors(width + 2);
       rgba_s next_error;
+      unsigned short * output_row = (unsigned short *)(output_data + y * bytesPerRow);
       for (unsigned int x = 0; x < width; x++) {
 	unsigned int v0 = *input++;
 	unsigned int red = RGBA_TO_RED(v0) + next_error.red + old_errors[x + 1].red;
@@ -116,7 +119,7 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
 	if (blue > 255) blue = 255;
 	unsigned int v = PACK_RGB24(red, green, blue);
 	unsigned int error = v & 0x00070707;
-	*output_data++ = PACK_RGB555(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 3, RGBA_TO_RED(v) >> 3);
+	*output_row++ = PACK_RGB555(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 3, RGBA_TO_RED(v) >> 3);
         
 	next_error.setError(7, error);
 	new_errors[x].addError(3, error);
@@ -130,6 +133,7 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
     for (unsigned int y = 0; y < height; y++) {
       vector<rgba_s> new_errors(width + 2);
       rgba_s next_error;
+      unsigned short * output_row = (unsigned short *)(output_data + y * bytesPerRow);
       for (unsigned int x = 0; x < width; x++, input++) {
         unsigned int v0 = *input;
         unsigned int red = RGBA_TO_RED(v0) + next_error.red + old_errors[x + 1].red;
@@ -141,9 +145,9 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
         unsigned int v = PACK_RGB24(red, green, blue);
         unsigned int error = v & 0x00070307;
 #if defined __APPLE__ || defined __ANDROID__
-        *output_data++ = PACK_RGB565(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 2, RGBA_TO_RED(v) >> 3);
+        *output_row++ = PACK_RGB565(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 2, RGBA_TO_RED(v) >> 3);
 #else
-        *output_data++ = PACK_RGB565(RGBA_TO_RED(v) >> 3, RGBA_TO_GREEN(v) >> 2, RGBA_TO_BLUE(v) >> 3);
+        *output_row++ = PACK_RGB565(RGBA_TO_RED(v) >> 3, RGBA_TO_GREEN(v) >> 2, RGBA_TO_BLUE(v) >> 3);
 #endif
         next_error.setError(7, error);
         new_errors[x].addError(3, error);
@@ -157,28 +161,31 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
 }
 
 unsigned int
-FloydSteinberg::apply(const ImageData & input_image, unsigned char * output) const {
+FloydSteinberg::apply(const ImageData & input_image, unsigned char * output, unsigned int bytesPerRow) const {
   unsigned int width = input_image.getWidth();
   unsigned int height = input_image.getHeight();
 
   auto data = input_image.getData();
-
-  auto input_data = std::unique_ptr<unsigned int[]>(new unsigned int[width * height]);
-
+  
   if (input_image.getNumChannels() == 4) {
-    memcpy(input_data.get(), data, 4 * width * height);
-  } else if (input_image.getNumChannels() == 3) {
+    return apply2(data.get(), width, height, target_format, output, bytesPerRow);
+  } else {
+    auto input_data = std::unique_ptr<unsigned int[]>(new unsigned int[width * height]);
     auto tmp = input_data.get();
-    for (unsigned int offset = 0; offset < 3 * width * height; offset += 3) {
-      *tmp++ = (0xff << 24) | (data[offset + 2] << 16) | (data[offset + 1] << 8) | (data[offset + 0]);
-    }
-  } else if (input_image.getNumChannels() == 1) {
-    auto tmp = input_data.get();
-    for (unsigned int offset = 0; offset < width * height; ) {
-      unsigned char v = data[offset++];
-      *tmp++ = (0xff << 24) | (v << 16) | (v << 8) | (v);
-    }
-  }
 
-  return apply2(input_data.get(), width, height, target_format, (unsigned short *)output);
+    if (input_image.getNumChannels() == 3) {
+      unsigned int n = 3 * width * height;
+      for (unsigned int offset = 0; offset < n; offset += 3) {
+	*tmp++ = (0xff << 24) | (data[offset + 2] << 16) | (data[offset + 1] << 8) | (data[offset + 0]);
+      }
+    } else if (input_image.getNumChannels() == 1) {
+      unsigned int n = width * height;
+      for (unsigned int offset = 0; offset < n; offset++) {
+	unsigned char v = data[offset];
+	*tmp++ = (0xff << 24) | (v << 16) | (v << 8) | (v);
+      }
+    }
+
+    return apply2(input_data.get(), width, height, target_format, output, bytesPerRow);
+  }
 }

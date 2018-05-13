@@ -11,7 +11,7 @@ namespace canvas {
   public:
     FloydSteinberg(InternalFormat _target_format) : target_format(_target_format) { }
 
-    unsigned int apply(const ImageData & input_image, unsigned char * output) const;
+    unsigned int apply(const ImageData & input_image, unsigned char * output, unsigned int bytesPerRow) const;
 
   private:
     InternalFormat target_format;

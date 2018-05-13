@@ -19,8 +19,19 @@ namespace canvas {
     
     unsigned short getWidth() const { return width; }
     unsigned short getHeight() const { return height; }
+    unsigned short getBytesPerRow() const { return getBytesPerRow(width, format); }
+    unsigned short getBytesPerPixel() const { return getBytesPerPixel(format); }
     InternalFormat getInternalFormat() const { return format; }
 
+    static unsigned short getBytesPerRow(unsigned short width, InternalFormat format) {
+      unsigned short bpp = getBytesPerPixel(format);
+#ifdef __APPLE__
+      return (bpp * width + 63) & ~63;
+#else
+      return bpp * width;
+#endif
+    }
+    
     static unsigned short getBytesPerPixel(InternalFormat format) {
       switch (format) {
       case NO_FORMAT: return 0;
@@ -60,7 +71,7 @@ namespace canvas {
 	}
       } else {
 	for (unsigned int l = 0; l < level; l++) {
-	  s += width * height * getBytesPerPixel(format);
+	  s += height * getBytesPerRow(width, format);
 	  width = (width + 1) / 2;
 	  height = (height + 1) / 2;
 	}
