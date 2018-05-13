@@ -27,7 +27,8 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
   }
 
   unsigned short num_channels = input.getNumChannels();
-
+  unsigned int bytesPerRow = getBytesPerRow(), bytesPerPixel = getBytesPerPixel();
+    
   size_t s = calculateSize();
   data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
   memset(data.get(), 0, s);
@@ -36,7 +37,6 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
       (num_channels == 1 && format == R8) ||
       (num_channels == 2 && format == RG8)) {
     assert(levels == 1);
-    unsigned int bytesPerRow = getBytesPerRow(), bytesPerPixel = getBytesPerPixel();
     for (unsigned int row = 0; row < height; row++) {
       memcpy(data.get() + row * bytesPerRow, input.getData() + row * width * bytesPerPixel, bytesPerRow);
     }
