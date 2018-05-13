@@ -168,7 +168,7 @@ FloydSteinberg::apply(const ImageData & input_image, unsigned char * output, uns
   auto data = input_image.getData();
   
   if (input_image.getNumChannels() == 4) {
-    return apply2(data.get(), width, height, target_format, output, bytesPerRow);
+    return apply2((unsigned int *)data, width, height, target_format, output, bytesPerRow);
   } else {
     auto input_data = std::unique_ptr<unsigned int[]>(new unsigned int[width * height]);
     auto tmp = input_data.get();
