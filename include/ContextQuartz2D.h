@@ -252,7 +252,9 @@ namespace canvas {
 #endif
     }
     void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled = true) override;
-   
+  
+    CGContextRef getContext() { return gc; }
+ 
   protected:
     void sendPath(const Path2D & path, float display_scale);
     CGColorRef createCGColor(const Color & color, float globalAlpha = 1.0f) {
