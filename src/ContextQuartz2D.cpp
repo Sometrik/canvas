@@ -185,7 +185,7 @@ Quartz2DSurface::resize(unsigned int _logical_width, unsigned int _logical_heigh
 }
 
 void
-Quartz2DSurface::drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
+Quartz2DSurface::drawImage(const ImageData & input, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
   initializeContext();
   bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
   if (has_shadow || !clipPath.empty()) {
@@ -198,11 +198,27 @@ Quartz2DSurface::drawImage(const ImageData & _img, const Point & p, double w, do
   if (has_shadow) {
     setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, displayScale);
   }
-  unsigned int num_channels = _img.getNumChannels();
-  auto has_alpha = num_channels == 4;
-  CGDataProviderRef provider = CGDataProviderCreateWithData(0, _img.getData(), num_channels * _img.getWidth() * _img.getHeight(), 0);
-  auto f = (has_alpha ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast);
-  CGImageRef img = CGImageCreate(_img.getWidth(), _img.getHeight(), 8, num_channels * 8, num_channels * _img.getWidth(), cache->getColorSpace(), f, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
+  int bpp = input->getBytesPerPixel();
+  int bitsPerComponent = 8;
+  CGBitmapInfo bitmapInfo = 0;
+  if (input->getInternalFormat() == canvas::RGBA4) {
+    bitsPerComponent = 4;
+    bitmapInfo |= kCGImageAlphaPremultipliedLast;
+    bitmapInfo |= kCGBitmapByteOrder16Little;
+  } else if (input->getInternalFormat() == canvas::RGB555 || input->getInternalFormat() == canvas::RGBA5551) {
+    bitsPerComponent = 5;
+    bitmapInfo |= kCGImageAlphaNoneSkipFirst;
+    bitmapInfo |= kCGBitmapByteOrder16Little;
+  } else if (input->getInternalFormat() == canvas::RGBA8) {
+    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
+    bitmapInfo |= kCGBitmapByteOrder32Little;
+  } else { // RGB8
+    bitmapInfo |= kCGImageAlphaNoneSkipFirst;
+    bitmapInfo |= kCGBitmapByteOrder32Little;
+  }  
+  auto cfdata = CFDataCreate(0, input->getData(), input->getHeight() * input->getBytesPerRow());
+  auto provider = CGDataProviderCreateWithCFData(cfdata);
+  auto img = CGImageCreate(input.getWidth(), input.getHeight(), bitsPerComponent, bpp * 8, input.getBytesPerRow(), cache->getColorSpace(), bitmapInfo, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
   if (img) {
     flipY();
     if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
@@ -217,8 +233,11 @@ Quartz2DSurface::drawImage(const ImageData & _img, const Point & p, double w, do
 #ifdef MEMDEBUG
     if (CFGetRetainCount(provider) != 1) std::cerr << "leaking memory P!\n";
 #endif
+  } else {
+    cerr << "failed to create CGImage\n";
   }
   CGDataProviderRelease(provider);
+  CFRelease(cfdata);
   if (has_shadow || !clipPath.empty()) {
     CGContextRestoreGState(gc);
   }
