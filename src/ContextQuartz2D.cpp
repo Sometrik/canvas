@@ -198,25 +198,17 @@ Quartz2DSurface::drawImage(const ImageData & input, const Point & p, double w, d
   if (has_shadow) {
     setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, displayScale);
   }
-  int bpp = input->getBytesPerPixel();
+  int bpp = input.getNumChannels();
   int bitsPerComponent = 8;
   CGBitmapInfo bitmapInfo = 0;
-  if (input->getInternalFormat() == canvas::RGBA4) {
-    bitsPerComponent = 4;
-    bitmapInfo |= kCGImageAlphaPremultipliedLast;
-    bitmapInfo |= kCGBitmapByteOrder16Little;
-  } else if (input->getInternalFormat() == canvas::RGB555 || input->getInternalFormat() == canvas::RGBA5551) {
-    bitsPerComponent = 5;
-    bitmapInfo |= kCGImageAlphaNoneSkipFirst;
-    bitmapInfo |= kCGBitmapByteOrder16Little;
-  } else if (input->getInternalFormat() == canvas::RGBA8) {
+  if (input.getNumChannels() == 4) {
     bitmapInfo |= kCGImageAlphaPremultipliedFirst;
     bitmapInfo |= kCGBitmapByteOrder32Little;
   } else { // RGB8
     bitmapInfo |= kCGImageAlphaNoneSkipFirst;
     bitmapInfo |= kCGBitmapByteOrder32Little;
   }  
-  auto cfdata = CFDataCreate(0, input->getData(), input->getHeight() * input->getBytesPerRow());
+  auto cfdata = CFDataCreate(0, input.getData(), input.getHeight() * input.getBytesPerRow());
   auto provider = CGDataProviderCreateWithCFData(cfdata);
   auto img = CGImageCreate(input.getWidth(), input.getHeight(), bitsPerComponent, bpp * 8, input.getBytesPerRow(), cache->getColorSpace(), bitmapInfo, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
   if (img) {

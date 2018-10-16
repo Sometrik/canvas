@@ -55,6 +55,8 @@ namespace canvas {
 
     unsigned char * getData() { return data.get(); }
     const unsigned char * getData() const { return data.get(); }
+
+    unsigned short getBytesPerRow() const { return num_channels * width; }
     
     static size_t calculateSize(unsigned short width, unsigned short height, unsigned short num_channels) { return width * height * num_channels; }
     size_t calculateSize() const { return calculateSize(width, height, num_channels); }
