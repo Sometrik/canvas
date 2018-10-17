@@ -187,6 +187,24 @@ Quartz2DSurface::resize(unsigned int _logical_width, unsigned int _logical_heigh
 void
 Quartz2DSurface::drawImage(const ImageData & input, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
   initializeContext();
+
+  CGBitmapInfo bitmapInfo = 0;
+  CGColorSpaceRef colorspace = 0;
+  if (input.getNumChannels() == 4) {
+    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
+    bitmapInfo |= kCGBitmapByteOrder32Little;
+    colorspace = cache->getColorSpace();
+  } else if (input.getNumChannels() == 3) {
+    bitmapInfo |= kCGImageAlphaNoneSkipFirst;
+    bitmapInfo |= kCGBitmapByteOrder32Little;
+    colorspace = cache->getColorSpace();
+  } else if (input.getNumChannels() == 1) {
+    bitmapInfo |= kCGImageAlphaNone;
+    colorspace = cache->getColorSpaceGray();
+  } else {
+    return 0;
+  }
+  
   bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
   if (has_shadow || !clipPath.empty()) {
     CGContextSaveGState(gc);
@@ -200,17 +218,9 @@ Quartz2DSurface::drawImage(const ImageData & input, const Point & p, double w, d
   }
   int bpp = input.getNumChannels();
   int bitsPerComponent = 8;
-  CGBitmapInfo bitmapInfo = 0;
-  if (input.getNumChannels() == 4) {
-    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
-    bitmapInfo |= kCGBitmapByteOrder32Little;
-  } else { // RGB8
-    bitmapInfo |= kCGImageAlphaNoneSkipFirst;
-    bitmapInfo |= kCGBitmapByteOrder32Little;
-  }  
   auto cfdata = CFDataCreate(0, input.getData(), input.getHeight() * input.getBytesPerRow());
   auto provider = CGDataProviderCreateWithCFData(cfdata);
-  auto img = CGImageCreate(input.getWidth(), input.getHeight(), bitsPerComponent, bpp * 8, input.getBytesPerRow(), cache->getColorSpace(), bitmapInfo, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
+  auto img = CGImageCreate(input.getWidth(), input.getHeight(), bitsPerComponent, bpp * 8, input.getBytesPerRow(), colorspace, bitmapInfo, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
   if (img) {
     flipY();
     if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
