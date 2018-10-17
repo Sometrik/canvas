@@ -21,6 +21,7 @@ namespace canvas {
       if (colorspace && CFGetRetainCount(colorspace) != 1) std::cerr << "leaking memory A!\n";
 #endif
       CGColorSpaceRelease(colorspace);
+      CGColorSpaceRelease(colorspace_gray);
       for (auto & fd : fonts) {
 #ifdef MEMDEBUG
 	if (CFGetRetainCount(fd.second) != 1) std::cerr << "leaking memory B!\n";
@@ -60,9 +61,13 @@ namespace canvas {
       if (!colorspace) colorspace = CGColorSpaceCreateDeviceRGB();
       return colorspace;
     }
+    CGColorSpaceRef & getColorSpaceGray() {
+      if (!colorspace_gray) colorspace_gray = CGColorSpaceCreateDeviceGray();
+      return colorspace_gray;
+    }
     
   private:
-    CGColorSpaceRef colorspace = 0;
+    CGColorSpaceRef colorspace = 0, colorspace_gray = 0;
     std::unordered_map<std::string, CTFontRef> fonts;
   };
   
