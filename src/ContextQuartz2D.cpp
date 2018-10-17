@@ -196,6 +196,8 @@ Quartz2DSurface::drawImage(const ImageData & input, const Point & p, double w, d
     bitmapInfo |= kCGImageAlphaNoneSkipFirst;
     bitmapInfo |= kCGBitmapByteOrder32Little;
     colorspace = cache->getColorSpace();
+  } else if (input.getNumChannels() == 2) {
+    bitmapInfo |= kCGImageAlphaPremultipliedFirst;    
   } else if (input.getNumChannels() == 1) {
     bitmapInfo |= kCGImageAlphaNone;
     colorspace = cache->getColorSpaceGray();
