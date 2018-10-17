@@ -186,8 +186,6 @@ Quartz2DSurface::resize(unsigned int _logical_width, unsigned int _logical_heigh
 
 void
 Quartz2DSurface::drawImage(const ImageData & input, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, bool imageSmoothingEnabled) {
-  initializeContext();
-
   CGBitmapInfo bitmapInfo = 0;
   CGColorSpaceRef colorspace = 0;
   if (input.getNumChannels() == 4) {
@@ -202,8 +200,10 @@ Quartz2DSurface::drawImage(const ImageData & input, const Point & p, double w, d
     bitmapInfo |= kCGImageAlphaNone;
     colorspace = cache->getColorSpaceGray();
   } else {
-    return 0;
+    return;
   }
+    
+  initializeContext();
   
   bool has_shadow = shadowBlur > 0.0f || shadowOffsetX != 0.0f || shadowOffsetY != 0.0f;
   if (has_shadow || !clipPath.empty()) {
@@ -216,11 +216,11 @@ Quartz2DSurface::drawImage(const ImageData & input, const Point & p, double w, d
   if (has_shadow) {
     setShadow(shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, displayScale);
   }
-  int bpp = input.getNumChannels();
   int bitsPerComponent = 8;
+  int bitsPerPixel = input.getNumChannels() * bitsPerComponent;
   auto cfdata = CFDataCreate(0, input.getData(), input.getHeight() * input.getBytesPerRow());
   auto provider = CGDataProviderCreateWithCFData(cfdata);
-  auto img = CGImageCreate(input.getWidth(), input.getHeight(), bitsPerComponent, bpp * 8, input.getBytesPerRow(), colorspace, bitmapInfo, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
+  auto img = CGImageCreate(input.getWidth(), input.getHeight(), bitsPerComponent, bitsPerPixel, input.getBytesPerRow(), colorspace, bitmapInfo, provider, 0, imageSmoothingEnabled, kCGRenderingIntentDefault);
   if (img) {
     flipY();
     if (globalAlpha < 1.0f) CGContextSetAlpha(gc, globalAlpha);
