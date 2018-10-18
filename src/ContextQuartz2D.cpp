@@ -284,7 +284,13 @@ public:
     CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
     
     // Convert the string reference into a C string
-    const char *path = CFStringGetCStringPtr(imagePath, encodingMethod);
+    const char * tmp = CFStringGetCStringPtr(imagePath, encodingMethod);
+    string path = tmp;
+
+    CFRelease(imagePath);
+    CFRelease(imageURL);
+    CFRelease(mainBundle);
+    CFRelease(filename2);
 #else
     string path;
     converter->convert(filename, path);
