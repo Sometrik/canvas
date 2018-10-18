@@ -11,9 +11,14 @@ using namespace std;
 Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, const ImageData & image)
   : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getNumChannels()), cache(_cache) {
   assert(getActualWidth() && getActualHeight());
-  size_t bitmapByteCount = 4 * getActualWidth() * getActualHeight();
+  size_t bitmapByteCount;
+  if (getNunChannels() == 1) {
+    bitmapByteCount = getActualWidth() * getActualHeight();
+  } else {
+    bitmapByteCount = 4 * getActualWidth() * getActualHeight();
+  }
   bitmapData = new unsigned char[bitmapByteCount];
-  if (image.getNumChannels() == 4) {
+  if (image.getNumChannels() == 1 || image.getNumChannels() == 4) {
     memcpy(bitmapData, image.getData(), bitmapByteCount);
   } else {
     for (unsigned int i = 0; i < getActualWidth() * getActualHeight(); i++) {
@@ -26,7 +31,7 @@ Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, 
 }
 
 Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, const std::string & filename)
-  : Surface(0, 0, 0, 0, RGBA8), cache(_cache) {
+  : Surface(0, 0, 0, 0, 4), cache(_cache) {
   CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
   CGImageRef img;
   if (filename.size() >= 4 && filename.compare(filename.size() - 4, 4, ".png") == 0) {
@@ -40,7 +45,7 @@ Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, 
   }
   if (img) {
     bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
-    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha ? RGBA8 : RGB8);
+    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha ? 4 : 3);
     unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);
@@ -54,7 +59,7 @@ Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, 
     CGImageRelease(img);
     flipY();
   } else {
-    Surface::resize(16, 16, 16, 16, RGBA8);
+    Surface::resize(16, 16, 16, 16, 4);
     unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
     bitmapData = new unsigned char[bitmapByteCount];
     memset(bitmapData, 0, bitmapByteCount);

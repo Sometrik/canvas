@@ -78,7 +78,12 @@ namespace canvas {
   Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels)
     : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels), cache(_cache) {
       if (_actual_width && _actual_height) {
-        unsigned int bitmapBytesPerRow = _actual_width * 4;
+	unsigned int bitmapBytesPerRow;
+	if (num_channels == 1) {
+	  bitmapBytesPerRow = _actual_width;
+	} else {
+	  bitmapBytesPerRow = _actual_width * 4;
+	}
         unsigned int bitmapByteCount = bitmapBytesPerRow * _actual_height;
         bitmapData = new unsigned char[bitmapByteCount];
         memset(bitmapData, 0, bitmapByteCount);
@@ -282,9 +287,19 @@ namespace canvas {
     
     void initializeContext() {
       if (!gc && bitmapData) {
-        unsigned int bitmapBytesPerRow = getActualWidth() * 4;
-        gc = CGBitmapContextCreate(bitmapData, getActualWidth(), getActualHeight(), 8, bitmapBytesPerRow, cache->getColorSpace(),
-                                   (getNumChannels() == 4 ? kCGImageAlphaPremultipliedLast : kCGImageAlphaNoneSkipLast)); // | kCGBitmapByteOrder32Big);
+	unsigned int bitmapBytesPerRow;
+	CGBitmapInfo bitmapInfo = 0;
+	if (getNumChannels() == 1) {
+	  bitmapBytesPerRow = getActualWidth();
+	  bitmapInfo |= kCGImageAlphaNone;
+	} else if (getNumChannels() == 3) {
+	  bitmapBytesPerRow = getActualWidth() * 4;
+	  bitmapInfo |= kCGImageAlphaNoneSkipLast;
+	} else if (getNumChannels() == 4) {
+	  bitmapBytesPerRow = getActualWidth() * 4;
+	  bitmapInfo |= kCGImageAlphaPremultipliedLast;
+	}
+        gc = CGBitmapContextCreate(bitmapData, getActualWidth(), getActualHeight(), 8, bitmapBytesPerRow, cache->getColorSpace(), bitmapInfo);
         CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
         CGContextSetShouldAntialias(gc, true);
 	flipY();
