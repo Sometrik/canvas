@@ -79,7 +79,7 @@ namespace canvas {
     : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels), cache(_cache) {
       if (_actual_width && _actual_height) {
 	unsigned int bitmapBytesPerRow;
-	if (num_channels == 1) {
+	if (_num_channels == 1) {
 	  bitmapBytesPerRow = _actual_width;
 	} else {
 	  bitmapBytesPerRow = _actual_width * 4;
