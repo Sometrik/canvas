@@ -91,7 +91,6 @@ namespace canvas {
   }
   
     Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, const ImageData & image);  
-    Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, const std::string & filename);
     
     ~Quartz2DSurface() {
       if (active_shadow_color) {

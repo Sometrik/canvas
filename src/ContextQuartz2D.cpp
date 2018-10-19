@@ -12,7 +12,7 @@ Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, 
   : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getNumChannels()), cache(_cache) {
   assert(getActualWidth() && getActualHeight());
   size_t bitmapByteCount;
-  if (getNunChannels() == 1) {
+  if (getNumChannels() == 1) {
     bitmapByteCount = getActualWidth() * getActualHeight();
   } else {
     bitmapByteCount = 4 * getActualWidth() * getActualHeight();
@@ -28,46 +28,6 @@ Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, 
       bitmapData[4 * i + 3] = 255;
     }
   }
-}
-
-Quartz2DSurface::Quartz2DSurface(const std::shared_ptr<Quartz2DCache> & _cache, const std::string & filename)
-  : Surface(0, 0, 0, 0, 4), cache(_cache) {
-  CGDataProviderRef provider = CGDataProviderCreateWithFilename(filename.c_str());
-  CGImageRef img;
-  if (filename.size() >= 4 && filename.compare(filename.size() - 4, 4, ".png") == 0) {
-    img = CGImageCreateWithPNGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-  } else if (filename.size() >= 4 && filename.compare(filename.size() - 4, 4, ".jpg") == 0) {
-    img = CGImageCreateWithJPEGDataProvider(provider, 0, false, kCGRenderingIntentDefault);
-  } else {
-    cerr << "could not open file " << filename << endl;
-    assert(0);
-    img = 0;
-  }
-  if (img) {
-    bool has_alpha = CGImageGetAlphaInfo(img) != kCGImageAlphaNone;
-    Surface::resize(CGImageGetWidth(img), CGImageGetHeight(img), CGImageGetWidth(img), CGImageGetHeight(img), has_alpha ? 4 : 3);
-    unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
-    bitmapData = new unsigned char[bitmapByteCount];
-    memset(bitmapData, 0, bitmapByteCount);
-  
-    initializeContext();
-    flipY();
-    CGContextDrawImage(gc, CGRectMake(0, 0, getActualWidth(), getActualHeight()), img);
-#ifdef MEMDEBUG
-    if (CFGetRetainCount(img) != 1) cerr << "leaking memory 1!\n";
-#endif
-    CGImageRelease(img);
-    flipY();
-  } else {
-    Surface::resize(16, 16, 16, 16, 4);
-    unsigned int bitmapByteCount = 4 * getActualWidth() * getActualHeight();
-    bitmapData = new unsigned char[bitmapByteCount];
-    memset(bitmapData, 0, bitmapByteCount);
-  }
-#ifdef MEMDEBUG
-  if (CFGetRetainCount(provider) != 1) cerr << "leaking memory 2!\n";
-#endif
-  CGDataProviderRelease(provider);
 }
 
 void
