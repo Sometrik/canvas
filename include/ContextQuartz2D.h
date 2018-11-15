@@ -297,6 +297,8 @@ namespace canvas {
 	} else if (getNumChannels() == 4) {
 	  bitmapBytesPerRow = getActualWidth() * 4;
 	  bitmapInfo |= kCGImageAlphaPremultipliedLast;
+	} else {
+	  return;
 	}
         gc = CGBitmapContextCreate(bitmapData, getActualWidth(), getActualHeight(), 8, bitmapBytesPerRow, cache->getColorSpace(), bitmapInfo);
         CGContextSetInterpolationQuality(gc, kCGInterpolationHigh);
