@@ -88,7 +88,7 @@ namespace canvas {
 
   class CairoContextFactory : public ContextFactory {
   public:
-   CairoContextFactory() : ContextFactory(1.0f) { }
+    CairoContextFactory(float display_scale) : ContextFactory(display_scale) { }
     std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, unsigned int num_channels) override {
       return std::unique_ptr<Context>(new ContextCairo(width, height, num_channels));
     }

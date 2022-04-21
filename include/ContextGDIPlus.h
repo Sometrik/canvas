@@ -164,7 +164,7 @@ namespace canvas {
 
   class GDIPlusContextFactory : public ContextFactory  {
   public:
-   GDIPlusContextFactory() : ContextFactory(1.0f) { }
+    GDIPlusContextFactory(float display_scale) : ContextFactory(display_scale) { }
     std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format) override {
       return std::make_unique<ContextGDIPlus>(width, height, image_format, getDisplayScale()));
     }
