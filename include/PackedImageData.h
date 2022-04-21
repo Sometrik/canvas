@@ -19,6 +19,7 @@ namespace canvas {
     
     unsigned short getWidth() const { return width; }
     unsigned short getHeight() const { return height; }
+    unsigned short getLevels() const { return levels; }
     unsigned short getBytesPerRow() const { return getBytesPerRow(width, format); }
     unsigned short getBytesPerPixel() const { return getBytesPerPixel(format); }
     InternalFormat getInternalFormat() const { return format; }
