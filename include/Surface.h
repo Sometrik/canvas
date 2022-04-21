@@ -1,5 +1,5 @@
-#ifndef _SURFACE_H_
-#define _SURFACE_H_
+#ifndef _CANVAS_SURFACE_H_
+#define _CANVAS_SURFACE_H_
 
 #include <Color.h>
 #include <Path2D.h>
