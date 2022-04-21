@@ -14,7 +14,7 @@ Path2D::arc(const Point & p, double radius, double sa, double ea, bool anticlock
 // Original implementation influenced by WebKit.
 void
 Path2D::arcTo(const Point & p1, const Point & p2, double radius) {
-  Point p0 = current_point; // current point may be modified so make a copy
+  auto p0 = current_point; // current point may be modified so make a copy
   
   if ((p1.x == p0.x && p1.y == p0.y) || (p1.x == p2.x && p1.y == p2.y) || radius == 0.f) {
     lineTo(p1);
