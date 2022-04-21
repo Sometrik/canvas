@@ -1,5 +1,5 @@
-#ifndef _CANVAS_H_
-#define _CANVAS_H_
+#ifndef _CANVAS_CONTEXT_H_
+#define _CANVAS_CONTEXT_H_
 
 #include <GraphicsState.h>
 
