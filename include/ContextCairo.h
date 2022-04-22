@@ -90,7 +90,7 @@ namespace canvas {
   public:
     CairoContextFactory(float display_scale) : ContextFactory(display_scale) { }
     std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, unsigned int num_channels) override {
-      return std::unique_ptr<Context>(new ContextCairo(width, height, num_channels));
+      return std::unique_ptr<Context>(new ContextCairo(width, height, num_channels, getDisplayScale()));
     }
     std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, unsigned int num_channels) override {
       unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
