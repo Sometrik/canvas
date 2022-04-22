@@ -218,7 +218,7 @@ GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, const Point & p, double 
 }
 
 void
-GDIPlusSurface::drawImage(Surface & _img, const Point & p, double w, double h, gfloat displayScale, float globalAlpha, bool imageSmoothingEnabled) {
+GDIPlusSurface::drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, bool imageSmoothingEnabled) {
   GDIPlusSurface * img = dynamic_cast<GDIPlusSurface*>(&_img);
   if (img) {
     drawNativeSurface(*img, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
@@ -230,7 +230,7 @@ GDIPlusSurface::drawImage(Surface & _img, const Point & p, double w, double h, g
 }
 
 void
-GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float globalAlpha) {
+GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath) {
   initializeContext();
 
   double x = round(p.x);

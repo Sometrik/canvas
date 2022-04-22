@@ -30,12 +30,12 @@ namespace canvas {
     }
     GDIPlusSurface(const std::string & filename);
     GDIPlusSurface(const unsigned char * buffer, size_t size);
-    GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha())
+    GDIPlusSurface(const ImageData & image) : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getNumChannels())
     {
       // stride must be a multiple of four
       size_t numPixels = image.getWidth() * image.getHeight();
       storage = new BYTE[4 * numPixels];
-      if (image.getFormat().hasAlpha() || image.getFormat().getBytesPerPixel() == 4) {
+      if (image.getNumChannels() == 4) {
 #if 0
 	for (unsigned int i = 0; i < numPixels; i++) {
 	  storage[4 * i + 0] = image.getData()[4 * i + 0];
@@ -54,7 +54,7 @@ namespace canvas {
 	  storage[4 * i + 3] = 255;
 	}
       }
-      bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 4, image.getFormat().hasAlpha() ? PixelFormat32bppPARGB : PixelFormat32bppRGB, storage));
+      bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 4, image.getNumChannels() == 4 ? PixelFormat32bppPARGB : PixelFormat32bppRGB, storage));
       // can the storage be freed here?
     }
     ~GDIPlusSurface() {
@@ -63,16 +63,16 @@ namespace canvas {
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
       bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, _has_alpha ? PixelFormat32bppPARGB : PixelFormat32bppRGB ));
-      g = std::unique_ptr<Gdiplus::Graphics>(0);
+      g = std::unique_ptr<Gdiplus::Graphics>(nullptr);
     }
 
-    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p,, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
+    void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override;
     TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
 
     void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
     
     void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale = 1.0f, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true);
-    void drawImage(const Image & _img, const Point & p, double w, double h, float displayScale = 1.0f, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true) {
+    void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale = 1.0f, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true) {
       GDIPlusSurface cs(_img);
       drawNativeSurface(cs, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
     }
@@ -94,7 +94,7 @@ namespace canvas {
     void * lockMemory(bool write_access = false) {
       if (bitmap.get()) {
 	Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-	bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), hasAlpha() ? PixelFormat32bppPARGB : PixelFormat32bppRGB, &data);
+	bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), getNumChannels() == 4 ? PixelFormat32bppPARGB : PixelFormat32bppRGB, &data);
 	return data.Scan0;
       } else {
 	return 0;
@@ -146,11 +146,11 @@ namespace canvas {
       }
     }
 
-    std::unique_ptr<Surface> createSurface(const Image & image) {
+    std::unique_ptr<Surface> createSurface(const ImageData & image) {
       return std::unique_ptr<Surface>(new GDIPlusSurface(image));
     }
-    std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, InternalFormat image_format) {
-      return std::unique_ptr<Surface>(new GDIPlusSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), image_format));
+    std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned int num_channels) {
+      return std::unique_ptr<Surface>(new GDIPlusSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), num_channels));
     }
 
     GDIPlusSurface & getDefaultSurface() { return default_surface; }
