@@ -165,12 +165,12 @@ namespace canvas {
   class GDIPlusContextFactory : public ContextFactory  {
   public:
     GDIPlusContextFactory(float display_scale) : ContextFactory(display_scale) { }
-    std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat image_format) override {
-      return std::make_unique<ContextGDIPlus>(width, height, image_format, getDisplayScale()));
+    std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, unsigned int num_channels = 4) override {
+      return std::make_unique<ContextGDIPlus>(width, height, num_channels, getDisplayScale());
     }
-    std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat image_format) override {
-      unsigned int aw = width * getDisplayScale() : width, ah = height * getDisplayScale();
-      return std::make_unique<GDIPlusSurface>(width, height, aw, ah, image_format);
+    std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, unsigned int num_channels = 4) override {
+      unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
+      return std::make_unique<GDIPlusSurface>(width, height, aw, ah, num_channels);
     }
     std::unique_ptr<Image> loadImage(const std::string & filename) override {
       return std::make_unique<Image>(filename, getDisplayScale());
