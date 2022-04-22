@@ -21,16 +21,16 @@ namespace canvas {
   class GDIPlusSurface : public Surface {
   public:
     friend class ContextGDIPlus;
-
-  GDIPlusSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, InternalFormat image_format)
-    : Surface(_actual_width, _actual_height, _logical_width, _logical_height, image_format) {
+    
+    GDIPlusSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels)
+      : Surface(_actual_width, _actual_height, _logical_width, _logical_height, _num_channels) {
       if (_actual_width && _actual_height) {
-	bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, image_format.hasAlpha() ? PixelFormat32bppPARGB : PixelFormat32bppRGB));
+	bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, _num_channels == 4 ? PixelFormat32bppPARGB : PixelFormat32bppRGB));
       }
     }
     GDIPlusSurface(const std::string & filename);
-	GDIPlusSurface(const unsigned char * buffer, size_t size);
-  GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha())
+    GDIPlusSurface(const unsigned char * buffer, size_t size);
+    GDIPlusSurface(const Image & image) : Surface(image.getWidth(), image.getHeight(), image.getWidth(), image.getHeight(), image.getFormat().hasAlpha())
     {
       // stride must be a multiple of four
       size_t numPixels = image.getWidth() * image.getHeight();
@@ -130,9 +130,9 @@ namespace canvas {
   
   class ContextGDIPlus : public Context {
   public:
-    ContextGDIPlus(unsigned int _width, unsigned int _height, InternalFormat _image_format, float _display_scale = 1.0f)
+    ContextGDIPlus(unsigned int _width, unsigned int _height, unsigned int _num_channels = 4, float _display_scale = 1.0f)
       : Context(_display_scale),
-	default_surface(_width, _height, (unsigned int)(_display_scale * _width), (unsigned int)(_display_scale * _height), _image_format)
+	default_surface(_width, _height, (unsigned int)(_display_scale * _width), (unsigned int)(_display_scale * _height), _num_channels)
     {
     
     }
