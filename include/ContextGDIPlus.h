@@ -67,17 +67,15 @@ namespace canvas {
     }
 
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override;
-    TextMetrics measureText(const Font & font, const std::string & text, float display_scale);
-
-    void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) override;
+    TextMetrics measureText(const Font& font, const std::string& text, TextBaseline textBaseline, float display_scale) override;
     
-    void drawImage(Surface & _img, const Point & p, double w, double h, float displayScale = 1.0f, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true);
-    void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale = 1.0f, float globalAlpha = 1.0f, bool imageSmoothingEnabled = true) {
+    void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath) override;
+    
+    void drawImage(Surface& _img, const Point& p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath, bool imageSmoothingEnabled = true) override;
+    void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath, bool imageSmoothingEnabled = true) override {
       GDIPlusSurface cs(_img);
       drawNativeSurface(cs, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
     }
-    void clip(const Path2D & path, float display_scale);
-    void resetClip() override { }
     void save() {
       initializeContext();
       save_stack.push_back(g->Save());

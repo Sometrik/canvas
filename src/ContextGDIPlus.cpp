@@ -1,7 +1,5 @@
 #include <ContextGDIPlus.h>
 
-#include "utf8.h"
-
 #include <cassert>
 
 bool canvas::ContextGDIPlus::is_initialized = false;
@@ -10,15 +8,10 @@ ULONG_PTR canvas::ContextGDIPlus::m_gdiplusToken;
 using namespace std;
 using namespace canvas;
 
-static std::wstring convert_to_wstring(const std::string & input) {
-  const char * str = input.c_str();
-  const char * str_i = str;
-  const char * end = str + input.size();
-  std::wstring output;
-  while (str_i < end) {
-    output += (wchar_t)utf8::next(str_i, end);
-  }
-  return output;
+static inline wstring from_utf8(const std::string& s) {
+  std::unique_ptr<wchar_t[]> tmp(new wchar_t[s.size() + 1]);
+  auto r = MultiByteToWideChar(CP_UTF8, 0, s.data(), -1, tmp.get(), s.size() + 1);
+  return wstring(tmp.get(), static_cast<size_t>(r));
 }
 
 static void toGDIPath(const Path2D & path, Gdiplus::GraphicsPath & output, float display_scale) {  
@@ -113,7 +106,7 @@ static Gdiplus::Color toGDIColor(const Color & input, float globalAlpha = 1.0f) 
 }
 
 GDIPlusSurface::GDIPlusSurface(const std::string & filename) : Surface(0, 0, 0, 0, false) {
-  std::wstring tmp = convert_to_wstring(filename);
+  auto tmp = from_utf8(filename);
   bitmap = std::unique_ptr<Gdiplus::Bitmap>(Gdiplus::Bitmap::FromFile(tmp.data()));
   Surface::resize(bitmap->GetWidth(), bitmap->GetHeight(), bitmap->GetWidth(), bitmap->GetHeight(), true);
 }
@@ -257,7 +250,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     g->SetTextRenderingHint( Gdiplus::TextRenderingHintSingleBitPerPixel );
   }
     
-  std::wstring text2 = convert_to_wstring(text);
+  auto text2 = from_utf8(text);
   int style_bits = 0;
   if (font.weight.isBold()) {
     style_bits |= Gdiplus::FontStyleBold;
@@ -299,9 +292,9 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
 }
 
 TextMetrics
-GDIPlusSurface::measureText(const Font & font, const std::string & text, float display_scale) {
+GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float display_scale) {
   initializeContext();
-  std::wstring text2 = convert_to_wstring(text);
+  auto text2 = from_utf8(text);
   int style = 0;
   if (font.weight.isBold()) {
     style |= Gdiplus::FontStyleBold;
