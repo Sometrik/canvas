@@ -8,7 +8,7 @@ namespace canvas {
   class GraphicsState;
 
   inline void assignValue(float & a, const std::string & b) {
-    a = atof(b.c_str());
+    a = std::stof(b);
   }
   inline void assignValue(bool & a, const std::string & b) {
     a = !b.empty() && b != "0" && b != "false";
