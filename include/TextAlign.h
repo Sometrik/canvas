@@ -5,16 +5,16 @@
 
 namespace canvas {
   enum TextAlign {
-    ALIGN_START = 1,
-    ALIGN_END,
-    ALIGN_LEFT,
-    ALIGN_CENTER,
-    ALIGN_RIGHT
+    START = 1,
+    END,
+    LEFT,
+    CENTER,
+    RIGHT
   };
 
   class TextAlignAttribute : public AttributeBase {
   public:
-  TextAlignAttribute(GraphicsState * _context, TextAlign _value = ALIGN_LEFT) : AttributeBase(_context), value(_value) { }
+  TextAlignAttribute(GraphicsState * _context, TextAlign _value = TextAlign::LEFT) : AttributeBase(_context), value(_value) { }
   TextAlignAttribute(GraphicsState * _context, const std::string & _value) : AttributeBase(_context) { setValue(_value.c_str()); }
   TextAlignAttribute(GraphicsState * _context, const char * _value) : AttributeBase(_context) { setValue(_value); }
 
@@ -30,13 +30,13 @@ namespace canvas {
     
   private:
     void setValue(const char * _value) {
-      if (strcmp(_value, "start") == 0) value = ALIGN_START;
-      else if (strcmp(_value, "end") == 0) value = ALIGN_END;
-      else if (strcmp(_value, "left") == 0) value = ALIGN_LEFT;
-      else if (strcmp(_value, "center") == 0) value = ALIGN_CENTER;
-      else if (strcmp(_value, "right") == 0) value = ALIGN_RIGHT;
+      if (strcmp(_value, "start") == 0) value = TextAlign::START;
+      else if (strcmp(_value, "end") == 0) value = TextAlign::END;
+      else if (strcmp(_value, "left") == 0) value = TextAlign::LEFT;
+      else if (strcmp(_value, "center") == 0) value = TextAlign::CENTER;
+      else if (strcmp(_value, "right") == 0) value = TextAlign::RIGHT;
       else {
-	value = ALIGN_START;
+	value = TextAlign::START;
       }
     };
 
