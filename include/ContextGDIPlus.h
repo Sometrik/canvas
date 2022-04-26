@@ -71,7 +71,17 @@ namespace canvas {
     
     void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath) override;
     
-    void drawImage(Surface& _img, const Point& p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath, bool imageSmoothingEnabled = true) override;
+    void drawImage(Surface& _img, const Point& p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath, bool imageSmoothingEnabled = true) override {
+      GDIPlusSurface* img = dynamic_cast<GDIPlusSurface*>(&_img);
+      if (img) {
+	drawNativeSurface(*img, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
+      } else {
+	auto img2 = _img.createImage(displayScale);
+	GDIPlusSurface cs(img2->getData());
+	drawNativeSurface(cs, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
+      }
+    }
+
     void drawImage(const ImageData & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath, bool imageSmoothingEnabled = true) override {
       GDIPlusSurface cs(_img);
       drawNativeSurface(cs, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
@@ -105,18 +115,22 @@ namespace canvas {
       bitmap->UnlockBits(&data);
     }
 
-    void initializeContext() {
-      if (!g.get()) {
-	if (!bitmap.get()) {
-	  bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(4, 4, PixelFormat32bppPARGB));
+    bool initializeContext() {
+      if (!g) {
+	if (!bitmap) {
+	  bitmap = std::make_unique<Gdiplus::Bitmap>(16, 16, PixelFormat32bppPARGB);
 	}
-	g = std::unique_ptr<Gdiplus::Graphics>(new Gdiplus::Graphics(&(*bitmap)));
+	auto gg = new Gdiplus::Graphics(bitmap.get());
+	if (1) {
+	  g.reset(gg);
 #if 0
-	g->SetPixelOffsetMode( PixelOffsetModeNone );
+	  g->SetPixelOffsetMode(PixelOffsetModeNone);
 #endif
-	g->SetCompositingQuality( Gdiplus::CompositingQualityHighQuality );
-	g->SetSmoothingMode( Gdiplus::SmoothingModeAntiAlias );
+	  g->SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
+	  g->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+	}
       }
+      return g.get() != nullptr;
     }
     void drawNativeSurface(GDIPlusSurface & img, const Point & p, double w, double h, float displayScale, float globalAlpha, bool imageSmoothingEnabled);
 

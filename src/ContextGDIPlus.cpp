@@ -117,9 +117,17 @@ GDIPlusSurface::GDIPlusSurface(const unsigned char * buffer, size_t size) : Surf
 
 
 void
-GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha) {
+GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath) {
   initializeContext();
   
+  if (!clipPath.empty()) {
+    Gdiplus::GraphicsPath path;
+    toGDIPath(clipPath, path, display_scale);
+
+    Gdiplus::Region region(&path);
+    g->SetClip(&region);
+  }
+
   switch (op) {
   case SOURCE_OVER:
     g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
@@ -157,17 +165,10 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Sty
       g->FillPath(&brush, &path);
     }
   }
-}
 
-void
-GDIPlusSurface::clip(const Path2D & input_path, float display_scale) {
-  initializeContext();
-  
-  Gdiplus::GraphicsPath path;
-  toGDIPath(input_path, path, display_scale);
-
-  Gdiplus::Region region(&path);
-  g->SetClip(&region);
+  if (!clipPath.empty()) {
+    g->ResetClip();
+  }
 }
 
 void
@@ -211,23 +212,18 @@ GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, const Point & p, double 
 }
 
 void
-GDIPlusSurface::drawImage(Surface & _img, const Point & p, double w, double h, float displayScale, float globalAlpha, bool imageSmoothingEnabled) {
-  GDIPlusSurface * img = dynamic_cast<GDIPlusSurface*>(&_img);
-  if (img) {
-    drawNativeSurface(*img, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
-  } else {
-    auto img = _img.createImage();
-    GDIPlusSurface cs(*img);
-    drawNativeSurface(cs, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
-  }
-}
-
-void
 GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath) {
-  initializeContext();
+  if (!initializeContext()) return;
 
-  double x = round(p.x);
-  double y = round(p.y);
+  if (!clipPath.empty()) {
+    Gdiplus::GraphicsPath path;
+    toGDIPath(clipPath, path, display_scale);
+
+    Gdiplus::Region region(&path);
+    g->SetClip(&region);
+  }
+
+  double x = round(p.x), y = round(p.y);
   
   switch (op) {
   case SOURCE_OVER:
@@ -255,7 +251,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   if (font.weight.isBold()) {
     style_bits |= Gdiplus::FontStyleBold;
   }
-  if (font.slant == Font::ITALIC) {
+  if (font.style == Font::ITALIC) {
     style_bits |= Gdiplus::FontStyleItalic;
   }
   Gdiplus::Font gdifont(&Gdiplus::FontFamily(L"Arial"), font.size * display_scale, style_bits, Gdiplus::UnitPixel);
@@ -263,14 +259,14 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   Gdiplus::RectF rect(Gdiplus::REAL(x * display_scale), Gdiplus::REAL(y * display_scale), 0.0f, 0.0f);
   Gdiplus::StringFormat f;
 
-  switch (textBaseline.getType()) {
+  switch (textBaseline) {
   case TextBaseline::TOP: break;
   case TextBaseline::HANGING: break;
   case TextBaseline::MIDDLE: f.SetLineAlignment(Gdiplus::StringAlignmentCenter); break;
   case TextBaseline::BOTTOM: f.SetLineAlignment(Gdiplus::StringAlignmentFar);
   }
 
-  switch (textAlign.getType()) {
+  switch (textAlign) {
   case TextAlign::CENTER: f.SetAlignment(Gdiplus::StringAlignmentCenter); break;
   case TextAlign::END: case TextAlign::RIGHT: f.SetAlignment(Gdiplus::StringAlignmentFar); break;
   case TextAlign::START: case TextAlign::LEFT: f.SetAlignment(Gdiplus::StringAlignmentNear); break;
@@ -289,6 +285,10 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     }
     break;
   }
+
+  if (!clipPath.empty()) {
+    g->ResetClip();
+  }
 }
 
 TextMetrics
@@ -299,7 +299,7 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBas
   if (font.weight.isBold()) {
     style |= Gdiplus::FontStyleBold;
   }
-  if (font.slant == Font::ITALIC) {
+  if (font.style == Font::ITALIC) {
     style |= Gdiplus::FontStyleItalic;
   }
 
@@ -311,8 +311,8 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBas
   Gdiplus::SizeF size;
   boundingBox.GetSize(&size);
 
-  float ascent = font.GetSize() * fontFamily.GetCellAscent(style) / fontFamily.GetEmHeight(style);
-  float descent = font.GetSize() * fontFamily.GetCellDescent(style) / fontFamily.GetEmHeight(style);
+  float ascent = gdi_font.GetSize() * fontFamily.GetCellAscent(style) / fontFamily.GetEmHeight(style);
+  float descent = gdi_font.GetSize() * fontFamily.GetCellDescent(style) / fontFamily.GetEmHeight(style);
   float baseline = 0;
   if (textBaseline == TextBaseline::MIDDLE) {
     baseline = (ascent + descent) / 2;
@@ -348,8 +348,8 @@ GDIPlusSurface::createImage(float display_scale) {
 }
 
 std::unique_ptr<Image>
-GDGDIPlusSurface::createImage() {
-  return std::make_unique<GDIPlusImage>();
+GDIPlusContextFactory::createImage() {
+  return std::make_unique<GDIPlusImage>(getDisplayScale());
 }
 
 std::unique_ptr<Image>
