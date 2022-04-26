@@ -270,10 +270,11 @@ CairoSurface::drawNativeSurface(CairoSurface & img, const Point & p, double w, d
     cairo_clip(cr);
   }
 
-  double sx = w / img.getActualWidth(), sy = h / img.getActualHeight();
+  double px = p.x * displayScale, py = p.y * displayScale;
+  double sx = w * displayScale / img.getActualWidth(), sy = h * displayScale / img.getActualHeight();
   cairo_save(cr);
   cairo_scale(cr, sx, sy);
-  cairo_set_source_surface(cr, img.surface, (p.x / sx) + 0.5, (p.y / sy) + 0.5);
+  cairo_set_source_surface(cr, img.surface, (px / sx) + 0.5, (py / sy) + 0.5);
   cairo_pattern_set_filter(cairo_get_source(cr), imageSmoothingEnabled ? CAIRO_FILTER_BEST : CAIRO_FILTER_NEAREST);
   if (globalAlpha < 1.0f) {
     cairo_paint_with_alpha(cr, globalAlpha);
@@ -322,25 +323,25 @@ protected:
 
 std::unique_ptr<Image>
 CairoContextFactory::loadImage(const std::string & filename) {
-  return std::unique_ptr<Image>(new CairoImage(filename, getDisplayScale()));
+  return std::make_unique<CairoImage>(filename, getDisplayScale());
 }
 
 std::unique_ptr<Image>
 CairoContextFactory::createImage() {
-  return std::unique_ptr<Image>(new CairoImage(getDisplayScale()));
+  return std::make_unique<CairoImage>(getDisplayScale());
 }
 
 std::unique_ptr<Image>
 CairoContextFactory::createImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels) {
-  return std::unique_ptr<Image>(new CairoImage(_data, _width, _height, _num_channels, getDisplayScale()));
+  return std::make_unique<CairoImage>(_data, _width, _height, _num_channels, getDisplayScale());
 }
 
 std::unique_ptr<Image>
 CairoSurface::createImage(float display_scale) {
-  unsigned char * buffer = (unsigned char *)lockMemory(false);
+  auto buffer = (unsigned char *)lockMemory(false);
   assert(buffer);
 
-  auto image = std::unique_ptr<Image>(new CairoImage(buffer, getActualWidth(), getActualHeight(), getNumChannels(), display_scale));
+  auto image = std::make_unique<CairoImage>(buffer, getActualWidth(), getActualHeight(), getNumChannels(), display_scale);
   releaseMemory();
   
   return image;
