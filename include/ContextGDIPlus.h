@@ -112,7 +112,7 @@ namespace canvas {
     }
       
     void releaseMemory() override {
-      bitmap->UnlockBits(&data);
+      if (bitmap) bitmap->UnlockBits(&data);
     }
 
     bool initializeContext() {
@@ -120,9 +120,8 @@ namespace canvas {
 	if (!bitmap) {
 	  bitmap = std::make_unique<Gdiplus::Bitmap>(16, 16, PixelFormat32bppPARGB);
 	}
-	auto gg = new Gdiplus::Graphics(bitmap.get());
-	if (1) {
-	  g.reset(gg);
+	g = std::make_shared<Gdiplus::Graphics>(bitmap.get());
+	if (g) {
 #if 0
 	  g->SetPixelOffsetMode(PixelOffsetModeNone);
 #endif
@@ -178,7 +177,9 @@ namespace canvas {
 
   class GDIPlusContextFactory : public ContextFactory  {
   public:
-    GDIPlusContextFactory(float display_scale) : ContextFactory(display_scale) { }
+    GDIPlusContextFactory(float display_scale) : ContextFactory(display_scale) {
+      ContextGDIPlus::initialize();
+    }
     std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, unsigned int num_channels = 4) override {
       return std::make_unique<ContextGDIPlus>(width, height, num_channels, getDisplayScale());
     }

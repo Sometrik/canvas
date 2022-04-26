@@ -173,7 +173,7 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Sty
 
 void
 GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, const Point & p, double w, double h, float displayScale, float globalAlpha, bool imageSmoothingEnabled) {
-  initializeContext();
+  if (!initializeContext()) return;
 
   g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
   
@@ -293,7 +293,8 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
 
 TextMetrics
 GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float display_scale) {
-  initializeContext();
+  if (!initializeContext()) return TextMetrics();
+
   auto text2 = from_utf8(text);
   int style = 0;
   if (font.weight.isBold()) {
