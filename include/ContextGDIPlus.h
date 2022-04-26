@@ -60,9 +60,9 @@ namespace canvas {
     ~GDIPlusSurface() {
       delete[] storage;
     }
-    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, bool _has_alpha) {
-      Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _has_alpha);
-      bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, _has_alpha ? PixelFormat32bppPARGB : PixelFormat32bppRGB ));
+    void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels) override {
+      Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels);
+      bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, _num_channels == 4 ? PixelFormat32bppPARGB : PixelFormat32bppRGB ));
       g = std::unique_ptr<Gdiplus::Graphics>(nullptr);
     }
 
@@ -88,8 +88,10 @@ namespace canvas {
       }
     }
 
+    std::unique_ptr<Image> createImage(float display_scale) override;
+    
   protected:
-    void * lockMemory(bool write_access = false) {
+    void * lockMemory(bool write_access = false) override {
       if (bitmap.get()) {
 	Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
 	bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), getNumChannels() == 4 ? PixelFormat32bppPARGB : PixelFormat32bppRGB, &data);
@@ -99,7 +101,7 @@ namespace canvas {
       }
     }
       
-    void releaseMemory() {
+    void releaseMemory() override {
       bitmap->UnlockBits(&data);
     }
 
@@ -144,15 +146,15 @@ namespace canvas {
       }
     }
 
-    std::unique_ptr<Surface> createSurface(const ImageData & image) {
+    std::unique_ptr<Surface> createSurface(const ImageData & image) override {
       return std::unique_ptr<Surface>(new GDIPlusSurface(image));
     }
-    std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned int num_channels) {
+    std::unique_ptr<Surface> createSurface(unsigned int _width, unsigned int _height, unsigned int num_channels) override {
       return std::unique_ptr<Surface>(new GDIPlusSurface(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), num_channels));
     }
 
-    GDIPlusSurface & getDefaultSurface() { return default_surface; }
-    const GDIPlusSurface & getDefaultSurface() const { return default_surface; }
+    GDIPlusSurface & getDefaultSurface() override { return default_surface; }
+    const GDIPlusSurface & getDefaultSurface() const override { return default_surface; }
 
   private:   
     GDIPlusSurface default_surface;
@@ -170,8 +172,8 @@ namespace canvas {
       unsigned int aw = width * getDisplayScale(), ah = height * getDisplayScale();
       return std::make_unique<GDIPlusSurface>(width, height, aw, ah, num_channels);
     }
-    std::unique_ptr<Image> loadImage(const std::string & filename) override {
-      return std::make_unique<Image>(filename, getDisplayScale());
-    }
+    std::unique_ptr<Image> loadImage(const std::string & filename) override;
+    std::unique_ptr<Image> createImage() override;
+    std::unique_ptr<Image> createImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels) override;
   };
 };

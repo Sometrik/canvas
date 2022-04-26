@@ -322,3 +322,44 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBas
   
   return TextMetrics(size.Width / display_scale, (descent - baseline) / display_scale, (ascent - baseline) / display_scale);
 }
+
+class GDIPlusImage : public Image {
+public:
+  GDIPlusImage(float _display_scale) : Image(_display_scale) { }
+  GDIPlusImage(const std::string & filename, float _display_scale) : Image(filename, _display_scale) { }
+  GDIPlusImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels, float _display_scale) : Image(_data, _width, _height, _num_channels, _display_scale) { }
+  
+protected:
+  void loadFile() override {
+    data = loadFromFile("assets/" + filename);
+    if (!data.get()) filename.clear();
+  }
+};
+
+std::unique_ptr<Image>
+GDIPlusSurface::createImage(float display_scale) {
+  auto buffer = (unsigned char *)lockMemory(false);
+  assert(buffer);
+
+  auto image = std::make_unique<GDIPlusImage>(buffer, getActualWidth(), getActualHeight(), getNumChannels(), display_scale);
+  releaseMemory();
+  
+  return image;
+}
+
+std::unique_ptr<Image>
+GDGDIPlusSurface::createImage() {
+  return std::make_unique<GDIPlusImage>();
+}
+
+std::unique_ptr<Image>
+GDIPlusContextFactory::loadImage(const std::string & filename) {
+  return std::make_unique<GDIPlusImage>(filename, getDisplayScale());
+}
+
+std::unique_ptr<Image>
+GDIPlusContextFactory::createImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels) {
+  return std::make_unique<GDIPlusImage>(_data, _width, _height, _num_channels, getDisplayScale());
+}
+
+
