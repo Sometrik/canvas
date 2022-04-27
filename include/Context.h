@@ -39,10 +39,10 @@ namespace canvas {
       hit_regions.clear();
     }
         
-    Context & stroke() { return renderPath(STROKE, currentPath, strokeStyle); }
-    Context & stroke(const Path2D & path) { return renderPath(STROKE, path, strokeStyle); }
-    Context & fill() { return renderPath(FILL, currentPath, fillStyle); }
-    Context & fill(const Path2D & path) { return renderPath(FILL, path, fillStyle); }
+    Context & stroke() { return renderPath(RenderMode::STROKE, currentPath, strokeStyle); }
+    Context & stroke(const Path2D & path) { return renderPath(RenderMode::STROKE, path, strokeStyle); }
+    Context & fill() { return renderPath(RenderMode::FILL, currentPath, fillStyle); }
+    Context & fill(const Path2D & path) { return renderPath(RenderMode::FILL, path, fillStyle); }
     Context & save() {
       restore_stack.push_back(*this);
       return *this;
@@ -80,11 +80,11 @@ namespace canvas {
       path.closePath();
       Style style(this);
       style = Color(0.0f, 0.0f, 0.0f, 0.0f);
-      return renderPath(FILL, path, style, COPY);
+      return renderPath(RenderMode::FILL, path, style, Operator::COPY);
     }
     
-    Context & fillText(const std::string & text, double x, double y) { return renderText(FILL, fillStyle, text, currentTransform.multiply(x, y)); }
-    Context & strokeText(const std::string & text, double x, double y) { return renderText(STROKE, strokeStyle, text, currentTransform.multiply(x, y)); }
+    Context & fillText(const std::string & text, double x, double y) { return renderText(RenderMode::FILL, fillStyle, text, currentTransform.multiply(x, y)); }
+    Context & strokeText(const std::string & text, double x, double y) { return renderText(RenderMode::STROKE, strokeStyle, text, currentTransform.multiply(x, y)); }
     
     unsigned int getWidth() const { return getDefaultSurface().getLogicalWidth(); }
     unsigned int getHeight() const { return getDefaultSurface().getLogicalHeight(); }
@@ -107,7 +107,7 @@ namespace canvas {
 	if (hasShadow()) {
 	  float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
 	  float bi = int(ceil(b));
-	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
+	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 1);
 	  shadow->drawImage(img, Point(x + b + shadowOffsetX.get(), y + b + shadowOffsetY.get()), w, h, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath, imageSmoothingEnabled.get());
 	  // shadow->colorFill(shadowColor.get());
 	  auto shadow1 = shadow->blur(bs, bs);
@@ -127,7 +127,7 @@ namespace canvas {
 	if (hasShadow()) {
 	  float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
 	  float bi = int(ceil(b));
-	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
+	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 1);
 	  
 	  shadow->drawImage(img, Point(p.x + b + shadowOffsetX.get(), p.y + b + shadowOffsetY.get()), w, h, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath, imageSmoothingEnabled.get());
 	  // shadow->colorFill(shadowColor.get());
@@ -173,14 +173,14 @@ namespace canvas {
 #endif
     
   protected:
-    Context & renderPath(RenderMode mode, const Path2D & path, const Style & style, Operator op = SOURCE_OVER) {
+    Context & renderPath(RenderMode mode, const Path2D & path, const Style & style, Operator op = Operator::SOURCE_OVER) {
       if (hasNativeShadows()) {
 	getDefaultSurface().renderPath(mode, path, style, lineWidth.get(), op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath);
       } else {
 	if (hasShadow()) {
 	  float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
 	  float bi = int(ceil(b));
-	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
+	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 1);
 	  Style shadow_style(this);
 	  shadow_style = shadowColor.get();
 	  Path2D tmp_path = path, tmp_clipPath = clipPath;
@@ -197,14 +197,14 @@ namespace canvas {
       return *this;
     }
     
-    Context & renderText(RenderMode mode, const Style & style, const std::string & text, const Point & p, Operator op = SOURCE_OVER) {
+    Context & renderText(RenderMode mode, const Style & style, const std::string & text, const Point & p, Operator op = Operator::SOURCE_OVER) {
       if (hasNativeShadows()) {
 	getDefaultSurface().renderText(mode, font, style, textBaseline.get(), textAlign.get(), text, p, lineWidth.get(), op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath);
       } else {
 	if (hasShadow()) {
 	  float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
 	  int bi = int(ceil(b));
-	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, R8);
+	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 1);
 	  
 	  Style shadow_style(this);
 	  shadow_style = shadowColor.get();
@@ -249,22 +249,6 @@ namespace canvas {
   public:
     NullContext() { }
   };
-
-#if 0
-  class NullContextFactory : public ContextFactory {
-  public:
-    NullContextFactory() : ContextFactory(1.0f) { }
-    std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, InternalFormat format = RGBA8) {
-      return std::unique_ptr<Context>(new NullContext);
-    }
-    std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, InternalFormat format = RGBA8) {
-      
-    }
-    virtual std::unique_ptr<Image> loadImage(const std::string & filename) = 0;
-    virtual std::unique_ptr<Image> createImage() = 0;
-    virtual std::unique_ptr<Image> createImage(const unsigned char * _data, InternalFormat _format, unsigned int _width, unsigned int _height) = 0;
-  };
-#endif  
 };
 
 #endif

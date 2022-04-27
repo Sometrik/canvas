@@ -4,7 +4,7 @@
 #include "Attribute.h"
 
 namespace canvas {
-  enum TextAlign {
+  enum class TextAlign {
     START = 1,
     END,
     LEFT,

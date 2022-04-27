@@ -47,7 +47,7 @@ struct rgba_s {
 static unsigned int apply2(unsigned int * input_data, unsigned int width, unsigned int height, InternalFormat target_format, unsigned char * output_data, unsigned int bytesPerRow) {
   unsigned int * input = input_data;
 
-  if (target_format == RGBA4) {
+  if (target_format == InternalFormat::RGBA4) {
     vector<rgba_s> old_errors(width + 2);
     for (unsigned int y = 0; y < height; y++) {
       vector<rgba_s> new_errors(width + 2);
@@ -77,7 +77,7 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
       }
       old_errors.swap(new_errors);
     }
-  } else if (target_format == RGBA5551) {
+  } else if (target_format == InternalFormat::RGBA5551) {
     vector<rgba_s> old_errors(width + 2);
     for (unsigned int y = 0; y < height; y++) {
       vector<rgba_s> new_errors(width + 2);
@@ -103,7 +103,7 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
       }
       old_errors.swap(new_errors);
     }
-  } else if (target_format == RGB555) {
+  } else if (target_format == InternalFormat::RGB555) {
     vector<rgba_s> old_errors(width + 2);
     for (unsigned int y = 0; y < height; y++) {
       vector<rgba_s> new_errors(width + 2);

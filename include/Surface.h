@@ -21,7 +21,7 @@ namespace canvas {
   class ImageData;
   class Image;
 
-  enum RenderMode {
+  enum class RenderMode {
     FILL = 1,
     STROKE
   };
@@ -62,11 +62,11 @@ namespace canvas {
       unsigned char * buffer = (unsigned char *)lockMemory(false);
       assert(buffer);
       if (buffer) {
-	std::unique_ptr<PackedImageData> image(new PackedImageData(RGBA8, getActualWidth(), getActualHeight(), 1, buffer));
+	auto image = std::make_unique<PackedImageData>(InternalFormat::RGBA8, getActualWidth(), getActualHeight(), 1, buffer);
 	releaseMemory();
 	return image;
       } else {
-	return std::unique_ptr<PackedImageData>(new PackedImageData(RGBA8, getActualWidth(), getActualHeight(), 1));
+	return std::make_unique<PackedImageData>(InternalFormat::RGBA8, getActualWidth(), getActualHeight(), 1);
       }
     }
 

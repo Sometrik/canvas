@@ -10,7 +10,7 @@ namespace canvas {
   
   class PackedImageData {
   public:
-  PackedImageData() : format(NO_FORMAT), width(0), height(0), levels(0), quality(0) { }
+    PackedImageData() : format(InternalFormat::NO_FORMAT), width(0), height(0), levels(0), quality(0) { }
     PackedImageData(InternalFormat _format, unsigned short _levels, const ImageData & input);
     PackedImageData(InternalFormat _format, unsigned short _width, unsigned short _height, unsigned short _levels, const unsigned char * input = 0);
   
@@ -35,36 +35,36 @@ namespace canvas {
     
     static unsigned short getBytesPerPixel(InternalFormat format) {
       switch (format) {
-      case NO_FORMAT: return 0;
-      case R8: return 1;
-      case RG8: return 2;
-      case RGB565: return 2;
-      case RGBA4: return 2;
-      case RGBA8: return 4;
-      case RGB8: return 4;
-      case RED_RGTC1: return 0; // n/a
-      case RG_RGTC2: return 0; // n/a
-      case RGB_DXT1: return 0; // n/a
-      case RGBA_DXT5: return 0; // n/a
-      case RGB_ETC1: return 0; // n/a
-      case LUMINANCE_ALPHA: return 2;
-      case LA44: return 1; // not a real OpenGL format
-      case R32F: return 4;
-      case RGB555: return 2;
-      case RGBA5551: return 2;
+      case InternalFormat::NO_FORMAT: return 0;
+      case InternalFormat::R8: return 1;
+      case InternalFormat::RG8: return 2;
+      case InternalFormat::RGB565: return 2;
+      case InternalFormat::RGBA4: return 2;
+      case InternalFormat::RGBA8: return 4;
+      case InternalFormat::RGB8: return 4;
+      case InternalFormat::RED_RGTC1: return 0; // n/a
+      case InternalFormat::RG_RGTC2: return 0; // n/a
+      case InternalFormat::RGB_DXT1: return 0; // n/a
+      case InternalFormat::RGBA_DXT5: return 0; // n/a
+      case InternalFormat::RGB_ETC1: return 0; // n/a
+      case InternalFormat::LUMINANCE_ALPHA: return 2;
+      case InternalFormat::LA44: return 1; // not a real OpenGL format
+      case InternalFormat::R32F: return 4;
+      case InternalFormat::RGB555: return 2;
+      case InternalFormat::RGBA5551: return 2;
       }
       return 0;
     }
 
     static size_t calculateOffset(unsigned short width, unsigned short height, unsigned short level, InternalFormat format) {
       size_t s = 0;
-      if (format == RGB_ETC1 || format == RGB_DXT1 || format == RED_RGTC1) {
+      if (format == InternalFormat::RGB_ETC1 || format == InternalFormat::RGB_DXT1 || format == InternalFormat::RED_RGTC1) {
 	for (unsigned int l = 0; l < level; l++) {
 	  s += 8 * ((width + 3) / 4) * ((height + 3) / 4);
 	  width = (width + 1) / 2;
 	  height = (height + 1) / 2;
 	}
-      } else if (format == RG_RGTC2) {
+      } else if (format == InternalFormat::RG_RGTC2) {
 	for (unsigned int l = 0; l < level; l++) {
 	  s += 16 * ((width + 3) / 4) * ((height + 3) / 4);
 	  width = (width + 1) / 2;

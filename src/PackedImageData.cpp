@@ -16,11 +16,11 @@ bool PackedImageData::etc1_initialized = false;
 PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels, const ImageData & input)
   : format(_format), width(input.getWidth()), height(input.getHeight()), levels(_levels)
 {
-  if (format == NO_FORMAT) {
-    if (input.getNumChannels() == 4) format = RGBA8;
-    else if (input.getNumChannels() == 3) format = RGB8;
-    else if (input.getNumChannels() == 2) format = RG8;
-    else if (input.getNumChannels() == 1) format = R8;
+  if (format == InternalFormat::NO_FORMAT) {
+    if (input.getNumChannels() == 4) format = InternalFormat::RGBA8;
+    else if (input.getNumChannels() == 3) format = InternalFormat::RGB8;
+    else if (input.getNumChannels() == 2) format = InternalFormat::RG8;
+    else if (input.getNumChannels() == 1) format = InternalFormat::R8;
     else {
       assert(0);
     }
@@ -33,14 +33,14 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
   data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
   memset(data.get(), 0, s);
   
-  if ((num_channels == 4 && (format == RGB8 || format == RGBA8)) ||
-      (num_channels == 1 && format == R8) ||
-      (num_channels == 2 && format == RG8)) {
+  if ((num_channels == 4 && (format == InternalFormat::RGB8 || format == InternalFormat::RGBA8)) ||
+      (num_channels == 1 && format == InternalFormat::R8) ||
+      (num_channels == 2 && format == InternalFormat::RG8)) {
     assert(levels == 1);
     for (unsigned int row = 0; row < height; row++) {
       memcpy(data.get() + row * bytesPerRow, input.getData() + row * width * bytesPerPixel, bytesPerRow);
     }
-  } else if (format == RGBA4 || format == RGB565 || format == RGB555 || format == RGBA5551) {
+  } else if (format == InternalFormat::RGBA4 || format == InternalFormat::RGB565 || format == InternalFormat::RGB555 || format == InternalFormat::RGBA5551) {
     FloydSteinberg fs(format);
     unsigned int offset = fs.apply(input, data.get(), getBytesPerRow(input.getWidth(), format));
     if (levels >= 2) {
@@ -57,7 +57,7 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
     
     const unsigned char * input_data = input.getData();
 
-    if (format == RGB8 || format == RGBA8) {
+    if (format == InternalFormat::RGB8 || format == InternalFormat::RGBA8) {
       if (num_channels == 3) {
 	for (unsigned int row = 0, i = 0; row < height; row++) {
 	  unsigned int * ptr = (unsigned int *)(data.get() + row * bytesPerRow);
@@ -76,7 +76,7 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
       } else {
 	assert(0);
       }
-    } else if (format == LA44) {
+    } else if (format == InternalFormat::LA44) {
       for (unsigned int row = 0, i = 0; row < height; row++) {
 	unsigned char * ptr = (unsigned char *)(data.get() + row * bytesPerRow);
 	for (unsigned int col = 0; col < width; col++, i += num_channels) {
@@ -103,22 +103,22 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _width, 
   if (input) {
     memcpy(data.get(), input, s);
   } else {
-    if (format == RGB_ETC1) {
+    if (format == InternalFormat::RGB_ETC1) {
       for (unsigned int i = 0; i < s; i += 8) {
 	*(unsigned int *)(data.get() + i + 0) = 0x00000000;
 	*(unsigned int *)(data.get() + i + 4) = 0xffffffff;
       }
-    } else if (format == RGB_DXT1) {
+    } else if (format == InternalFormat::RGB_DXT1) {
       for (unsigned int i = 0; i < s; i += 8) {
 	*(unsigned int *)(data.get() + i + 0) = 0x00000000;
 	*(unsigned int *)(data.get() + i + 4) = 0xaaaaaaaa;
       }
-    } else if (format == RED_RGTC1) {
+    } else if (format == InternalFormat::RED_RGTC1) {
       for (unsigned int i = 0; i < s; i += 8) {
 	*(unsigned int *)(data.get() + i + 0) = 0x00000003; // doesn't work on big endian
 	*(unsigned int *)(data.get() + i + 4) = 0x00000000;
       }
-    } else if (format == RG_RGTC2) {
+    } else if (format == InternalFormat::RG_RGTC2) {
       for (unsigned int i = 0; i < s; i += 16) {
 	*(unsigned int *)(data.get() + i + 0) = 0x00000003;
 	*(unsigned int *)(data.get() + i + 4) = 0x00000000;

@@ -138,8 +138,8 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
   }
 
   switch (op) {
-  case SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
-  case COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
+  case Operator::SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
+  case Operator::COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
   }
   
   cairo_pattern_t * pat = 0;
@@ -157,12 +157,12 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
   }
   sendPath(path);
   switch (mode) {
-  case STROKE:
+  case RenderMode::STROKE:
     cairo_set_line_width(cr, lineWidth * displayScale);
     // cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
     cairo_stroke(cr);  
     break;
-  case FILL:
+  case RenderMode::FILL:
     cairo_fill(cr);
     break;
   }
@@ -186,8 +186,8 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   }
 
   switch (op) {
-  case SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
-  case COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
+  case Operator::SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
+  case Operator::COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
   }
   
   cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha * alpha);
@@ -199,26 +199,26 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   double x = p.x * displayScale;
   double y = p.y * displayScale;
 
-  if (textBaseline == MIDDLE || textBaseline == TOP) {
+  if (textBaseline == TextBaseline::MIDDLE || textBaseline == TextBaseline::TOP) {
     cairo_font_extents_t font_extents;
     cairo_font_extents(cr, &font_extents);
     
     switch (textBaseline) {
       // case TextBaseline::MIDDLE: y -= (extents.height/2 + extents.y_bearing); break;
-    case MIDDLE: y += -font_extents.descent + (font_extents.ascent + font_extents.descent) / 2.0; break;
-    case TOP: y += font_extents.ascent; break;
+    case TextBaseline::MIDDLE: y += -font_extents.descent + (font_extents.ascent + font_extents.descent) / 2.0; break;
+    case TextBaseline::TOP: y += font_extents.ascent; break;
     default: break;
     }
   }
 
-  if (textAlign != ALIGN_LEFT) {
+  if (textAlign != TextAlign::LEFT) {
     cairo_text_extents_t text_extents;
     cairo_text_extents(cr, text.c_str(), &text_extents);
     
     switch (textAlign) {
-    case ALIGN_LEFT: break;
-    case ALIGN_CENTER: x -= text_extents.width / 2; break;
-    case ALIGN_RIGHT: x -= text_extents.width; break;
+    case TextAlign::LEFT: break;
+    case TextAlign::CENTER: x -= text_extents.width / 2; break;
+    case TextAlign::RIGHT: x -= text_extents.width; break;
     default: break;
     }
   }
@@ -226,12 +226,12 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   cairo_move_to(cr, x + 0.5, y + 0.5);
   
   switch (mode) {
-  case STROKE:
+  case RenderMode::STROKE:
     cairo_set_line_width(cr, lineWidth);
     cairo_text_path(cr, text.c_str());
     cairo_stroke(cr);
     break;
-  case FILL:
+  case RenderMode::FILL:
     cairo_show_text(cr, text.c_str());
     break;
   }

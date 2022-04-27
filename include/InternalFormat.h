@@ -2,7 +2,7 @@
 #define _INTERNALFORMAT_H_
 
 namespace canvas {
-  enum InternalFormat {
+  enum class InternalFormat {
     NO_FORMAT = 0,
     R8,
     RG8,
