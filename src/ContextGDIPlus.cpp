@@ -10,7 +10,7 @@ using namespace canvas;
 
 static inline wstring from_utf8(const std::string& s) {
   std::unique_ptr<wchar_t[]> tmp(new wchar_t[s.size() + 1]);
-  auto r = MultiByteToWideChar(CP_UTF8, 0, s.data(), -1, tmp.get(), s.size() + 1);
+  auto r = MultiByteToWideChar(CP_UTF8, 0, s.data(), s.size(), tmp.get(), s.size() + 1);
   return wstring(tmp.get(), static_cast<size_t>(r));
 }
 
@@ -129,10 +129,10 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Sty
   }
 
   switch (op) {
-  case SOURCE_OVER:
+  case Operator::SOURCE_OVER:
     g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
     break;
-  case COPY:
+  case Operator::COPY:
     g->SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
     break;    
   }
@@ -141,13 +141,13 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Sty
   toGDIPath(input_path, path, display_scale);
 
   switch (mode) {
-  case STROKE:
+  case RenderMode::STROKE:
     {
       Gdiplus::Pen pen(toGDIColor(style.color, globalAlpha), lineWidth);
       g->DrawPath(&pen, &path);
     }
     break;
-  case FILL:
+  case RenderMode::FILL:
     if (style.getType() == Style::LINEAR_GRADIENT) {
       const std::map<float, Color> & colors = style.getColors();
       if (!colors.empty()) {
@@ -226,10 +226,10 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   double x = round(p.x), y = round(p.y);
   
   switch (op) {
-  case SOURCE_OVER:
+  case Operator::SOURCE_OVER:
     g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
     break;
-  case COPY:
+  case Operator::COPY:
     g->SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
     break;    
   }
@@ -245,6 +245,8 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   } else {
     g->SetTextRenderingHint( Gdiplus::TextRenderingHintSingleBitPerPixel );
   }
+
+  g->SetPixelOffsetMode(Gdiplus::PixelOffsetModeHalf);
     
   auto text2 = from_utf8(text);
   int style_bits = 0;
@@ -254,9 +256,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   if (font.style == Font::ITALIC) {
     style_bits |= Gdiplus::FontStyleItalic;
   }
-  Gdiplus::Font gdifont(&Gdiplus::FontFamily(L"Arial"), font.size * display_scale, style_bits, Gdiplus::UnitPixel);
 
-  Gdiplus::RectF rect(Gdiplus::REAL(x * display_scale), Gdiplus::REAL(y * display_scale), 0.0f, 0.0f);
   Gdiplus::StringFormat f;
 
   switch (textBaseline) {
@@ -274,14 +274,26 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
 
   f.SetFormatFlags(Gdiplus::StringFormatFlagsBypassGDI);
 
+  f.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap | Gdiplus::StringFormatFlagsNoFitBlackBox | Gdiplus::StringFormatFlagsNoFontFallback | Gdiplus::StringFormatFlagsNoClip);
+  f.SetHotkeyPrefix(Gdiplus::HotkeyPrefixNone);
+  f.SetTrimming(Gdiplus::StringTrimmingNone);
+
+  Gdiplus::GraphicsPath path;
+  Gdiplus::FontFamily family(L"Arial");
+  Gdiplus::PointF pntF(Gdiplus::REAL(x * display_scale), Gdiplus::REAL(y * display_scale));
+  path.AddString(text2.data(), text2.size(), &family, style_bits, font.size * display_scale, pntF, &f);
+
   switch (mode) {
-  case STROKE:
-    // implement
+  case RenderMode::STROKE:
+    {      
+      Gdiplus::Pen pen(toGDIColor(style.color, globalAlpha), lineWidth * display_scale);
+      g->DrawPath(&pen, &path);
+    }
     break;
-  case FILL:
+  case RenderMode::FILL:
     {
       Gdiplus::SolidBrush brush(toGDIColor(style.color, globalAlpha));
-      g->DrawString(text2.data(), text2.size(), &gdifont, rect, &f, &brush);
+      g->FillPath(&brush, &path);
     }
     break;
   }
@@ -289,6 +301,8 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   if (!clipPath.empty()) {
     g->ResetClip();
   }
+
+  g->SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
 }
 
 TextMetrics
@@ -306,7 +320,7 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBas
 
   Gdiplus::FontFamily fontFamily(L"Arial");
 
-  Gdiplus::Font gdi_font(&fontFamily, font.size * display_scale, style, Gdiplus::UnitPixel);
+  Gdiplus::Font gdi_font(&fontFamily, font.size * display_scale, style); // Gdiplus::UnitPixel);
   Gdiplus::RectF layoutRect(0, 0, 512, 512), boundingBox;
   g->MeasureString(text2.data(), text2.size(), &gdi_font, layoutRect, &boundingBox);
   Gdiplus::SizeF size;
