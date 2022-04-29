@@ -120,7 +120,7 @@ namespace canvas {
 	if (!bitmap) {
 	  bitmap = std::make_unique<Gdiplus::Bitmap>(16, 16, PixelFormat32bppPARGB);
 	}
-	g = std::make_shared<Gdiplus::Graphics>(bitmap.get());
+	g = std::make_unique<Gdiplus::Graphics>(bitmap.get());
 	if (g) {
 #if 0
 	  g->SetPixelOffsetMode(PixelOffsetModeNone);
