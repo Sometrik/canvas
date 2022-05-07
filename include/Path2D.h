@@ -22,13 +22,21 @@ namespace canvas {
   public:
     Path2D() : current_point(0, 0) { }
     
-    void moveTo(const Point & p) {
-      data.push_back(PathComponent(PathComponent::MOVE_TO, p.x, p.y));
-      current_point = p;
+    void moveTo(float x, float y) {
+      data.push_back(PathComponent(PathComponent::MOVE_TO, x, y));
+      current_point = Point(x, y);
     }
-    void lineTo(const Point & p) {
+    void moveTo(Point p) {
+      data.push_back(PathComponent(PathComponent::MOVE_TO, p.x, p.y));
+      current_point = std::move(p);
+    }
+    void lineTo(float x, float y) {
+      data.push_back(PathComponent(PathComponent::LINE_TO, x, y));
+      current_point = Point(x, y);
+    }
+    void lineTo(Point p) {
       data.push_back(PathComponent(PathComponent::LINE_TO, p.x, p.y));
-      current_point = p;
+      current_point = std::move(p);
     }
     void closePath() {
       if (!data.empty()) {
