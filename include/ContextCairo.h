@@ -55,7 +55,7 @@ namespace canvas {
 
     void drawNativeSurface(CairoSurface & img, const Point & p, double w, double h, float displayScale, float globalAlpha, const Path2D & clipPath, bool imageSmoothingEnabled);
 
-    void sendPath(const Path2D & path);
+    void sendPath(const Path2D & path, float displayScale);
 
   private:
     cairo_t * cr = 0;

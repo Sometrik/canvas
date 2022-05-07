@@ -108,20 +108,24 @@ CairoSurface::resize(unsigned int _logical_width, unsigned int _logical_height, 
 } 
 
 void
-CairoSurface::sendPath(const Path2D & path) {
+CairoSurface::sendPath(const Path2D & path, float displayScale) {
   initializeContext();
 
   cairo_new_path(cr);
   for (auto pc : path.getData()) {
     switch (pc.type) {
-    case PathComponent::MOVE_TO: cairo_move_to(cr, pc.x0 + 0.5, pc.y0 + 0.5); break;
-    case PathComponent::LINE_TO: cairo_line_to(cr, pc.x0 + 0.5, pc.y0 + 0.5); break;
+    case PathComponent::MOVE_TO:
+      cairo_move_to(cr, displayScale * pc.x0 + 0.5, displayScale * pc.y0 + 0.5);
+      break;
+    case PathComponent::LINE_TO:
+      cairo_line_to(cr, displayScale * pc.x0 + 0.5, displayScale * pc.y0 + 0.5);
+      break;
     case PathComponent::CLOSE: cairo_close_path(cr); break;
     case PathComponent::ARC:
       if (!pc.anticlockwise) {
-	cairo_arc(cr, pc.x0 + 0.5, pc.y0 + 0.5, pc.radius, pc.sa, pc.ea);
+	cairo_arc(cr, displayScale * pc.x0 + 0.5, displayScale * pc.y0 + 0.5, displayScale * pc.radius, pc.sa, pc.ea);
       } else {
-	cairo_arc_negative(cr, pc.x0 + 0.5, pc.y0 + 0.5, pc.radius, pc.sa, pc.ea);
+	cairo_arc_negative(cr, displayScale * pc.x0 + 0.5, displayScale * pc.y0 + 0.5, displayScale * pc.radius, pc.sa, pc.ea);
       }
       break;
     }
@@ -129,11 +133,11 @@ CairoSurface::sendPath(const Path2D & path) {
 }
 
 void
-CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float sadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
+CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
   initializeContext();
 
   if (!clipPath.empty()) {
-    sendPath(clipPath);
+    sendPath(clipPath, displayScale);
     cairo_clip(cr);
   }
 
@@ -155,7 +159,7 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
   } else {
     cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha * globalAlpha);
   }
-  sendPath(path);
+  sendPath(path, displayScale);
   switch (mode) {
   case RenderMode::STROKE:
     cairo_set_line_width(cr, lineWidth * displayScale);
@@ -181,7 +185,7 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   initializeContext();
 
   if (!clipPath.empty()) {
-    sendPath(clipPath);
+    sendPath(clipPath, displayScale);
     cairo_clip(cr);
   }
 
@@ -266,7 +270,7 @@ CairoSurface::drawNativeSurface(CairoSurface & img, const Point & p, double w, d
   initializeContext();
 
   if (!clipPath.empty()) {
-    sendPath(clipPath);
+    sendPath(clipPath, displayScale);
     cairo_clip(cr);
   }
 
