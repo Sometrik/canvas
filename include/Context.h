@@ -180,6 +180,18 @@ namespace canvas {
 	if (hasShadow()) {
 	  float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
 	  float bi = int(ceil(b));
+#ifdef WIN32
+	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 4);
+	  Style shadow_style(this);
+	  shadow_style = shadowColor.get();
+	  Path2D tmp_path = path, tmp_clipPath = clipPath;
+	  tmp_path.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
+	  tmp_clipPath.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
+
+	  shadow->renderPath(mode, tmp_path, shadow_style, lineWidth.get(), op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath);
+	  auto shadow1 = shadow->blur(bs, bs);
+	  getDefaultSurface().drawImage(*shadow1, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
+#else
 	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 1);
 	  Style shadow_style(this);
 	  shadow_style = shadowColor.get();
@@ -191,6 +203,7 @@ namespace canvas {
 	  auto shadow1 = shadow->blur(bs, bs);
 	  auto shadow2 = shadow1->colorize(shadowColor.get());
 	  getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
+#endif
 	}
 	getDefaultSurface().renderPath(mode, path, style, lineWidth.get(), op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), clipPath);
       }
