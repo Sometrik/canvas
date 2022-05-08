@@ -21,11 +21,20 @@ namespace canvas {
   class GDIPlusSurface : public Surface {
   public:
     friend class ContextGDIPlus;
+
+    static inline Gdiplus::PixelFormat getPixelFormat(int num_channels) {
+      switch (num_channels) {
+      case 1: return PixelFormat8bppIndexed;
+      case 3: return PixelFormat32bppRGB;
+      case 4: return PixelFormat32bppPARGB;
+      }
+      return PixelFormat32bppPARGB;
+    }
     
     GDIPlusSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels)
-      : Surface(_actual_width, _actual_height, _logical_width, _logical_height, _num_channels) {
+      : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels) {
       if (_actual_width && _actual_height) {
-	bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, _num_channels == 4 ? PixelFormat32bppPARGB : PixelFormat32bppRGB));
+	bitmap = std::make_unique<Gdiplus::Bitmap>(_actual_width, _actual_height, getPixelFormat(_num_channels));
       }
     }
     GDIPlusSurface(const std::string & filename);
@@ -54,7 +63,7 @@ namespace canvas {
 	  storage[4 * i + 3] = 255;
 	}
       }
-      bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 4, image.getNumChannels() == 4 ? PixelFormat32bppPARGB : PixelFormat32bppRGB, storage));
+      bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 4, getPixelFormat(image.getNumChannels()), storage));
       // can the storage be freed here?
     }
     ~GDIPlusSurface() {
@@ -62,7 +71,7 @@ namespace canvas {
     }
     void resize(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels) override {
       Surface::resize(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels);
-      bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, _num_channels == 4 ? PixelFormat32bppPARGB : PixelFormat32bppRGB ));
+      bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(_actual_width, _actual_height, getPixelFormat(_num_channels)));
       g = std::unique_ptr<Gdiplus::Graphics>(nullptr);
     }
 
@@ -104,7 +113,7 @@ namespace canvas {
     void * lockMemory(bool write_access = false) override {
       if (bitmap.get()) {
 	Gdiplus::Rect rect(0, 0, bitmap->GetWidth(), bitmap->GetHeight());
-	bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), getNumChannels() == 4 ? PixelFormat32bppPARGB : PixelFormat32bppRGB, &data);
+	bitmap->LockBits(&rect, Gdiplus::ImageLockModeRead | (write_access ? Gdiplus::ImageLockModeWrite : 0), getPixelFormat(getNumChannels()), &data);
 	return data.Scan0;
       } else {
 	return 0;
@@ -118,7 +127,7 @@ namespace canvas {
     bool initializeContext() {
       if (!g) {
 	if (!bitmap) {
-	  bitmap = std::make_unique<Gdiplus::Bitmap>(16, 16, PixelFormat32bppPARGB);
+	  bitmap = std::make_unique<Gdiplus::Bitmap>(16, 16, getPixelFormat(4));
 	}
 	g = std::make_unique<Gdiplus::Graphics>(bitmap.get());
 	if (g) {
