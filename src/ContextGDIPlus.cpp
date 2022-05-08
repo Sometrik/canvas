@@ -205,9 +205,9 @@ GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, const Point & p, double 
 			&imageAttributes);
 #endif
   } else if (img.getActualWidth() == (unsigned int)w && img.getActualHeight() == (unsigned int)h && 0) { // this scales image weirdly
-    g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(p.x), Gdiplus::REAL(p.y));
+    g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(p.x * displayScale), Gdiplus::REAL(p.y * displayScale));
   } else {
-    g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(p.x), Gdiplus::REAL(p.y), Gdiplus::REAL(w), Gdiplus::REAL(h));
+    g->DrawImage(&(*(img.bitmap)), Gdiplus::REAL(p.x * displayScale), Gdiplus::REAL(p.y * displayScale), Gdiplus::REAL(w * displayScale), Gdiplus::REAL(h * displayScale));
   }
 }
 
