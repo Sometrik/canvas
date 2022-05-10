@@ -143,7 +143,7 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Sty
   switch (mode) {
   case RenderMode::STROKE:
     {
-      Gdiplus::Pen pen(toGDIColor(style.color, globalAlpha), lineWidth);
+      Gdiplus::Pen pen(toGDIColor(style.color, globalAlpha), lineWidth * display_scale);
       g->DrawPath(&pen, &path);
     }
     break;
