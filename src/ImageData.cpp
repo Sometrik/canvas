@@ -13,13 +13,13 @@ ImageData ImageData::nullImage;
 
 std::unique_ptr<ImageData>
 ImageData::scale(unsigned short target_width, unsigned short target_height) const {
-  size_t target_size = calculateSize(target_width, target_height, num_channels);
+  auto target_size = calculateSize(target_width, target_height, num_channels);
 
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
 
   stbir_resize_uint8(data.get(), getWidth(), getHeight(), 0, output_data.get(), target_width, target_height, 0, num_channels);
 
-  return unique_ptr<ImageData>(new ImageData(output_data.get(), target_width, target_height, num_channels));
+  return make_unique<ImageData>(output_data.get(), target_width, target_height, num_channels);
 }
 
 std::unique_ptr<ImageData>
@@ -31,7 +31,7 @@ ImageData::colorize(const Color & color) const {
   int blue = int(255 * color.blue * color.alpha);
   int alpha = int(255 * color.alpha);
 
-  unique_ptr<ImageData> r(new ImageData(width, height, 4));
+  auto r = make_unique<ImageData>(width, height, 4);
 
   unsigned char * target_buffer = r->getData();
   for (unsigned int i = 0; i < width * height; i++) {
@@ -69,7 +69,7 @@ static vector<int> make_kernel(float radius) {
 
 std::unique_ptr<ImageData>
 ImageData::blur(float hradius, float vradius) const {
-  unique_ptr<ImageData> r(new ImageData(width, height, num_channels));
+  auto r = make_unique<ImageData>(width, height, num_channels);
 
   if (num_channels == 4) {
     unsigned char * tmp = new unsigned char[width * height * 4];
