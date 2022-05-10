@@ -279,7 +279,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   f.SetTrimming(Gdiplus::StringTrimmingNone);
 
   Gdiplus::GraphicsPath path;
-  Gdiplus::FontFamily family(L"Arial");
+  Gdiplus::FontFamily family(L"Segoe UI Emoji");
   Gdiplus::PointF pntF(Gdiplus::REAL(x * display_scale), Gdiplus::REAL(y * display_scale));
   path.AddString(text2.data(), text2.size(), &family, style_bits, font.size * display_scale, pntF, &f);
 
