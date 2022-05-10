@@ -35,14 +35,16 @@ namespace canvas {
       : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels) {
       if (_actual_width && _actual_height) {
 	bitmap = std::make_unique<Gdiplus::Bitmap>(_actual_width, _actual_height, getPixelFormat(_num_channels));
-	if (num_channels == 1) {
+	if (_num_channels == 1) {
 	  auto size = bitmap->GetPaletteSize();
-	  auto pal = std::unique_ptr<Gdiplus::ColorPalette[]>(new Gdiplus::ColorPalette[size]);
-	  bitmap->GetPalette(pal, size);
-	  for (size_t i = 0; i < pal->Count; i++) {
-	    pal->Entries[i] = Color::MakeARGB(0xFF, (BYTE)i, (BYTE)i, (BYTE)i);
+	  auto pal = (Gdiplus::ColorPalette*)malloc(sizeof(Gdiplus::ColorPalette) + size * sizeof(Gdiplus::ARGB));
+	  pal->Flags = Gdiplus::PaletteFlagsGrayScale;
+	  for (size_t i = 0; i < size; i++) {
+	    pal->Entries[i] = Gdiplus::Color::MakeARGB(0xFF, (BYTE)i, (BYTE)i, (BYTE)i);
+	    // pal->Entries[i] = Gdiplus::Color::MakeARGB((BYTE)i, 0, 0, 0);
 	  }
-	  bm->SetPalette(pal.get());
+	  bitmap->SetPalette(pal);
+	  free(pal);
  	}
       }
     }
