@@ -62,13 +62,15 @@ namespace canvas {
     }
     
     Context & fillRect(double x, double y, double w, double h) {
-      beginPath().rect(x, y, w, h);
-      return fill();
+      Path2D path;
+      path.rect(x, y, w, h);
+      return fill(path);
     }
     
     Context & strokeRect(double x, double y, double w, double h) {
-      beginPath().rect(x, y, w, h);
-      return stroke();
+      Path2D path;
+      path.rect(x, y, w, h);
+      return stroke(path);
     }
     
     Context & clearRect(double x, double y, double w, double h) {
