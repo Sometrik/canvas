@@ -182,7 +182,7 @@ namespace canvas {
 	if (hasShadow()) {
 	  float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
 	  float bi = int(ceil(b));
-#ifdef WIN32
+#if 0
 	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 4);
 	  Style shadow_style(this);
 	  shadow_style = shadowColor.get();
