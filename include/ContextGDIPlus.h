@@ -35,6 +35,15 @@ namespace canvas {
       : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels) {
       if (_actual_width && _actual_height) {
 	bitmap = std::make_unique<Gdiplus::Bitmap>(_actual_width, _actual_height, getPixelFormat(_num_channels));
+	if (num_channels == 1) {
+	  auto size = bitmap->GetPaletteSize();
+	  auto pal = std::unique_ptr<Gdiplus::ColorPalette[]>(new Gdiplus::ColorPalette[size]);
+	  bitmap->GetPalette(pal, size);
+	  for (size_t i = 0; i < pal->Count; i++) {
+	    pal->Entries[i] = Color::MakeARGB(0xFF, (BYTE)i, (BYTE)i, (BYTE)i);
+	  }
+	  bm->SetPalette(pal.get());
+ 	}
       }
     }
     GDIPlusSurface(const std::string & filename);
