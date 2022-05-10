@@ -41,11 +41,7 @@ namespace canvas {
     GraphicsState & beginPath() { currentPath.clear(); return *this; }
     GraphicsState & closePath() { currentPath.closePath(); return *this; }
     GraphicsState & rect(double x, double y, double w, double h) {
-      moveTo(x, y);
-      lineTo(x + w, y);
-      lineTo(x + w, y + h);
-      lineTo(x, y + h); 
-      closePath();
+      currentPath.rect(x, y, w, h);
       return *this;
     }
 
