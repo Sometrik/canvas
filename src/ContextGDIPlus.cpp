@@ -318,7 +318,7 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBas
     style |= Gdiplus::FontStyleItalic;
   }
 
-  Gdiplus::FontFamily fontFamily(L"Arial");
+  Gdiplus::FontFamily fontFamily(L"Segoe UI Emoji");
 
   Gdiplus::Font gdi_font(&fontFamily, font.size * display_scale, style); // Gdiplus::UnitPixel);
   Gdiplus::RectF layoutRect(0, 0, 512, 512), boundingBox;
