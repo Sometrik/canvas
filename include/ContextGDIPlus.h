@@ -38,6 +38,7 @@ namespace canvas {
 	if (_num_channels == 1) {
 	  auto size = bitmap->GetPaletteSize();
 	  auto pal = (Gdiplus::ColorPalette*)malloc(sizeof(Gdiplus::ColorPalette) + size * sizeof(Gdiplus::ARGB));
+	  pal->Count = size;
 	  pal->Flags = Gdiplus::PaletteFlagsGrayScale;
 	  for (size_t i = 0; i < size; i++) {
 	    pal->Entries[i] = Gdiplus::Color::MakeARGB(0xFF, (BYTE)i, (BYTE)i, (BYTE)i);
