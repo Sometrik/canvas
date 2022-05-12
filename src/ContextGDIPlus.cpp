@@ -246,7 +246,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     g->SetTextRenderingHint( Gdiplus::TextRenderingHintSingleBitPerPixel );
   }
 
-  g->SetPixelOffsetMode(Gdiplus::PixelOffsetModeHalf);
+  // g->SetPixelOffsetMode(Gdiplus::PixelOffsetModeHalf);
     
   auto text2 = from_utf8(text);
   int style_bits = 0;
@@ -278,22 +278,25 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   f.SetHotkeyPrefix(Gdiplus::HotkeyPrefixNone);
   f.SetTrimming(Gdiplus::StringTrimmingNone);
 
-  Gdiplus::GraphicsPath path;
   Gdiplus::FontFamily family(L"Segoe UI Emoji");
   Gdiplus::PointF pntF(Gdiplus::REAL(x * display_scale), Gdiplus::REAL(y * display_scale));
-  path.AddString(text2.data(), text2.size(), &family, style_bits, font.size * display_scale, pntF, &f);
 
   switch (mode) {
   case RenderMode::STROKE:
-    {      
+    {
+      Gdiplus::GraphicsPath path;
+      path.AddString(text2.data(), text2.size(), &family, style_bits, font.size * display_scale, pntF, &f);
+
       Gdiplus::Pen pen(toGDIColor(style.color, globalAlpha), lineWidth * display_scale);
       g->DrawPath(&pen, &path);
     }
     break;
   case RenderMode::FILL:
     {
+      Font font(&family, font.size, style_bits, UnitWorld);
       Gdiplus::SolidBrush brush(toGDIColor(style.color, globalAlpha));
-      g->FillPath(&brush, &path);
+      // g->FillPath(&brush, &path);
+      g->DrawString(text2.data(), text2.size(), &font, pntF, &solidBrush);
     }
     break;
   }
@@ -302,7 +305,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     g->ResetClip();
   }
 
-  g->SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
+  // g->SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
 }
 
 TextMetrics

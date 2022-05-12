@@ -143,9 +143,7 @@ namespace canvas {
 	}
 	g = std::make_unique<Gdiplus::Graphics>(bitmap.get());
 	if (g) {
-#if 0
-	  g->SetPixelOffsetMode(PixelOffsetModeNone);
-#endif
+	  g->SetPixelOffsetMode(PixelOffsetModeHalf);
 	  g->SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
 	  g->SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
 	}
