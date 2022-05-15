@@ -223,7 +223,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     g->SetClip(&region);
   }
 
-  double x = round(p.x), y = round(p.y);
+  double x = round(p.x * display_scale), y = round(p.y * display_scale);
 
   if (font.cleartype) {
     g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
@@ -275,15 +275,18 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   case TextAlign::START: case TextAlign::LEFT: f.SetAlignment(Gdiplus::StringAlignmentNear); break;
   }
 
-  f.SetFormatFlags(Gdiplus::StringFormatFlagsBypassGDI);
-
-  f.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap | Gdiplus::StringFormatFlagsNoFitBlackBox | Gdiplus::StringFormatFlagsNoClip);
+  f.SetFormatFlags(Gdiplus::StringFormatFlagsMeasureTrailingSpaces |
+		   Gdiplus::StringFormatFlagsNoWrap |
+		   Gdiplus::StringFormatFlagsNoFitBlackBox |
+		   Gdiplus::StringFormatFlagsNoClip
   // | Gdiplus::StringFormatFlagsNoFontFallback
+  // | Gdiplus::StringFormatFlagsBypassGDI
+		   );
   f.SetHotkeyPrefix(Gdiplus::HotkeyPrefixNone);
   f.SetTrimming(Gdiplus::StringTrimmingNone);
 
-  Gdiplus::FontFamily family(L"Segoe UI Emoji");
-  Gdiplus::PointF pntF(Gdiplus::REAL(x * display_scale), Gdiplus::REAL(y * display_scale));
+  Gdiplus::FontFamily family(L"Segoe UI");
+  Gdiplus::PointF pntF(Gdiplus::REAL(x), Gdiplus::REAL(y));
 
   switch (mode) {
   case RenderMode::STROKE:
@@ -325,7 +328,7 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBas
     style |= Gdiplus::FontStyleItalic;
   }
 
-  Gdiplus::FontFamily fontFamily(L"Segoe UI Emoji");
+  Gdiplus::FontFamily fontFamily(L"Segoe UI");
 
   Gdiplus::Font gdi_font(&fontFamily, font.size * display_scale, style, Gdiplus::UnitWorld);
   Gdiplus::RectF layoutRect(0, 0, 512, 512), boundingBox;
