@@ -14,6 +14,7 @@ namespace Gdiplus
 
 #include <iostream>
 #include <vector>
+#include <cstring>
 
 #pragma comment (lib, "gdiplus.lib")
 
@@ -34,18 +35,23 @@ namespace canvas {
     GDIPlusSurface(unsigned int _logical_width, unsigned int _logical_height, unsigned int _actual_width, unsigned int _actual_height, unsigned int _num_channels)
       : Surface(_logical_width, _logical_height, _actual_width, _actual_height, _num_channels) {
       if (_actual_width && _actual_height) {
-	bitmap = std::make_unique<Gdiplus::Bitmap>(_actual_width, _actual_height, getPixelFormat(_num_channels));
+	size_t numPixels = _actual_width * _actual_height;
+	storage = new BYTE[4 * numPixels];
+	memset(storage, 0, 4 * numPixels);
+	bitmap = std::make_unique<Gdiplus::Bitmap>(_actual_width, _actual_height, 4 * _actual_width, getPixelFormat(_num_channels), storage);
 	if (_num_channels == 1) {
 	  auto size = bitmap->GetPaletteSize();
 	  auto pal = (Gdiplus::ColorPalette*)malloc(sizeof(Gdiplus::ColorPalette) + size * sizeof(Gdiplus::ARGB));
-	  pal->Count = size;
-	  pal->Flags = Gdiplus::PaletteFlagsGrayScale;
-	  for (size_t i = 0; i < size; i++) {
-	    pal->Entries[i] = Gdiplus::Color::MakeARGB(0xFF, (BYTE)i, (BYTE)i, (BYTE)i);
-	    // pal->Entries[i] = Gdiplus::Color::MakeARGB((BYTE)i, 0, 0, 0);
+	  if (pal) {
+	    pal->Count = size;
+	    pal->Flags = Gdiplus::PaletteFlagsGrayScale;
+	    for (size_t i = 0; i < size; i++) {
+	      pal->Entries[i] = Gdiplus::Color::MakeARGB(0xFF, (BYTE)i, (BYTE)i, (BYTE)i);
+	      // pal->Entries[i] = Gdiplus::Color::MakeARGB((BYTE)i, 0, 0, 0);
+	    }
+	    bitmap->SetPalette(pal);
+	    free(pal);
 	  }
-	  bitmap->SetPalette(pal);
-	  free(pal);
  	}
       }
     }
@@ -76,7 +82,6 @@ namespace canvas {
 	}
       }
       bitmap = std::unique_ptr<Gdiplus::Bitmap>(new Gdiplus::Bitmap(image.getWidth(), image.getHeight(), image.getWidth() * 4, getPixelFormat(image.getNumChannels()), storage));
-      // can the storage be freed here?
     }
     ~GDIPlusSurface() {
       delete[] storage;
