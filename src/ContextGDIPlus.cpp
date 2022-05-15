@@ -154,8 +154,8 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Sty
 	std::map<float, Color>::const_iterator it0 = colors.begin(), it1 = colors.end();
 	it1--;
 	const Color & c0 = it0->second, c1 = it1->second;
-	Gdiplus::LinearGradientBrush brush(Gdiplus::PointF(Gdiplus::REAL(style.x0), Gdiplus::REAL(style.y0)),
-					   Gdiplus::PointF(Gdiplus::REAL(style.x1), Gdiplus::REAL(style.y1)),
+	Gdiplus::LinearGradientBrush brush(Gdiplus::PointF(Gdiplus::REAL(style.x0 * display_scale), Gdiplus::REAL(style.y0 * display_scale)),
+					   Gdiplus::PointF(Gdiplus::REAL(style.x1 * display_scale), Gdiplus::REAL(style.y1 * display_scale)),
 					   toGDIColor(c0, globalAlpha),
 					   toGDIColor(c1, globalAlpha));
 	g->FillPath(&brush, &path);
@@ -224,29 +224,32 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   }
 
   double x = round(p.x), y = round(p.y);
-  
-  switch (op) {
-  case Operator::SOURCE_OVER:
-    g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
-    break;
-  case Operator::COPY:
-    g->SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
-    break;    
-  }
 
   if (font.cleartype) {
+    g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
     g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
-  } else if (font.antialiasing && font.hinting && 0) {
-    g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAliasGridFit );
-  } else if (font.antialiasing) {
-    g->SetTextRenderingHint( Gdiplus::TextRenderingHintAntiAlias );
-  } else if (font.hinting) {
-    g->SetTextRenderingHint( Gdiplus::TextRenderingHintSingleBitPerPixelGridFit );
   } else {
-    g->SetTextRenderingHint( Gdiplus::TextRenderingHintSingleBitPerPixel );
+    switch (op) {
+    case Operator::SOURCE_OVER:
+      g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
+      break;
+    case Operator::COPY:
+      g->SetCompositingMode(Gdiplus::CompositingModeSourceCopy);
+      break;
+    }
+
+    if (font.antialiasing && font.hinting && 0) {
+      g->SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAliasGridFit);
+    } else if (font.antialiasing) {
+      g->SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
+    } else if (font.hinting) {
+      g->SetTextRenderingHint(Gdiplus::TextRenderingHintSingleBitPerPixelGridFit);
+    } else {
+      g->SetTextRenderingHint(Gdiplus::TextRenderingHintSingleBitPerPixel);
+    }
   }
 
-  // g->SetPixelOffsetMode(Gdiplus::PixelOffsetModeHalf);
+  // g->SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
     
   auto text2 = from_utf8(text);
   int style_bits = 0;
@@ -274,7 +277,8 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
 
   f.SetFormatFlags(Gdiplus::StringFormatFlagsBypassGDI);
 
-  f.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap | Gdiplus::StringFormatFlagsNoFitBlackBox | Gdiplus::StringFormatFlagsNoFontFallback | Gdiplus::StringFormatFlagsNoClip);
+  f.SetFormatFlags(Gdiplus::StringFormatFlagsNoWrap | Gdiplus::StringFormatFlagsNoFitBlackBox | Gdiplus::StringFormatFlagsNoClip);
+  // | Gdiplus::StringFormatFlagsNoFontFallback
   f.SetHotkeyPrefix(Gdiplus::HotkeyPrefixNone);
   f.SetTrimming(Gdiplus::StringTrimmingNone);
 
@@ -293,10 +297,10 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     break;
   case RenderMode::FILL:
     {
-      Font font(&family, font.size, style_bits, UnitWorld);
+      Gdiplus::Font font(&family, font.size * display_scale, style_bits, Gdiplus::UnitWorld);
       Gdiplus::SolidBrush brush(toGDIColor(style.color, globalAlpha));
       // g->FillPath(&brush, &path);
-      g->DrawString(text2.data(), text2.size(), &font, pntF, &solidBrush);
+      g->DrawString(text2.data(), text2.size(), &font, pntF, &f, &brush);
     }
     break;
   }
@@ -305,7 +309,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     g->ResetClip();
   }
 
-  // g->SetPixelOffsetMode(Gdiplus::PixelOffsetModeNone);
+  // g->SetPixelOffsetMode(Gdiplus::PixelOffsetModeHalf);
 }
 
 TextMetrics
@@ -323,7 +327,7 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBas
 
   Gdiplus::FontFamily fontFamily(L"Segoe UI Emoji");
 
-  Gdiplus::Font gdi_font(&fontFamily, font.size * display_scale, style); // Gdiplus::UnitPixel);
+  Gdiplus::Font gdi_font(&fontFamily, font.size * display_scale, style, Gdiplus::UnitWorld);
   Gdiplus::RectF layoutRect(0, 0, 512, 512), boundingBox;
   g->MeasureString(text2.data(), text2.size(), &gdi_font, layoutRect, &boundingBox);
   Gdiplus::SizeF size;
