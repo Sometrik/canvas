@@ -223,7 +223,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     g->SetClip(&region);
   }
 
-  double x = round(p.x * display_scale), y = round(p.y * display_scale);
+  float x = roundf(p.x * display_scale), y = roundf(p.y * display_scale);
 
   if (font.cleartype) {
     g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
@@ -286,7 +286,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   f.SetTrimming(Gdiplus::StringTrimmingNone);
 
   Gdiplus::FontFamily family(L"Segoe UI");
-  Gdiplus::PointF pntF(Gdiplus::REAL(x), Gdiplus::REAL(y));
+  Gdiplus::PointF pntF(x, y);
 
   switch (mode) {
   case RenderMode::STROKE:
