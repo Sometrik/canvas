@@ -98,7 +98,7 @@ namespace canvas {
     }
     
     virtual Context & drawImage(const ImageData & img, double x, double y, double w, double h) {
-      Point p = currentTransform.multiply(x, y);
+      auto p = currentTransform.multiply(x, y);
       if (hasNativeShadows()) {
 	getDefaultSurface().drawImage(img, p, w, h, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath, imageSmoothingEnabled.get());
       } else {
@@ -118,7 +118,7 @@ namespace canvas {
     }
     
     virtual Context & drawImage(Surface & img, double x, double y, double w, double h) {
-      Point p = currentTransform.multiply(x, y);
+      auto p = currentTransform.multiply(x, y);
       if (hasNativeShadows()) {
 	getDefaultSurface().drawImage(img, p, w, h, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath, imageSmoothingEnabled.get());
       } else {
