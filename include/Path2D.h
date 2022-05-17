@@ -2,6 +2,8 @@
 #define _CANVAS_PATH2D_H_
 
 #include <Point.h>
+#include <Matrix.h>
+
 #include <vector>
 
 namespace canvas {
@@ -90,7 +92,24 @@ namespace canvas {
     bool empty() const { return data.empty(); }
     // bool isInside(float x, float y) const;
     std::size_t size() const { return data.size(); }
-    
+
+    Path2D transform(const Matrix & matrix) const {
+      Path2D new_path;
+      for (auto pc : data) {
+	auto p = matrix.multiply(pc.x0, pc.y0);
+	pc.x0 = p.x;
+	pc.y0 = p.y;
+#if 0
+	pc.sa = matrix.transformAngle(pc.sa);
+	pc.ea = matrix.transformAngle(pc.ea);
+#endif
+	pc.radius = matrix.transformSize(pc.radius);
+	new_path.data.push_back(pc);
+      }
+      new_path.current_point = matrix.multiply(current_point);
+      return new_path;
+    }
+
   private:
     std::vector<PathComponent> data;
     Point current_point;

@@ -30,9 +30,13 @@ namespace canvas {
       return multiply(p.x, p.y);
     }
     
-    double transformAngle(double alpha) {
+    double transformAngle(double alpha) const {
       double x = cos(alpha), y = sin(alpha);
       return atan2(x * b + y * d, x * a + y * c);
+    }
+
+    double transformSize(double s) const {
+      return s * a;
     }
     
   private:
