@@ -238,7 +238,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
       break;
     }
 
-    if (font.antialiasing && font.hinting && 0) {
+    if (font.antialiasing && font.hinting) {
       g->SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAliasGridFit);
     } else if (font.antialiasing) {
       g->SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
