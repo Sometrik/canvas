@@ -171,9 +171,10 @@ namespace canvas {
 #endif
     
   protected:
-    Context & renderPath(RenderMode mode, const Path2D & path0, const Style & style, Operator op = Operator::SOURCE_OVER) {
+    Context & renderPath(RenderMode mode, const Path2D & path0, const Style & style0, Operator op = Operator::SOURCE_OVER) {
       auto path = path0.transform(currentTransform);
       auto tmp_lineWidth = currentTransform.transformSize(lineWidth.get());
+      auto style = style0.transform(currentTransform);
 
       if (hasNativeShadows()) {
 	getDefaultSurface().renderPath(mode, path, style, tmp_lineWidth, op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath);
@@ -211,13 +212,14 @@ namespace canvas {
       return *this;
     }
     
-    Context & renderText(RenderMode mode, const Style & style, const std::string & text, const Point & p0, Operator op = Operator::SOURCE_OVER) {
+    Context & renderText(RenderMode mode, const Style & style0, const std::string & text, const Point & p0, Operator op = Operator::SOURCE_OVER) {
       auto p = currentTransform.multiply(p0);
       auto tmp_font = font;
       tmp_font.size = currentTransform.transformSize(font.size);
 
       auto tmp_lineWidth = currentTransform.transformSize(lineWidth.get());
-      
+      auto style = style0.transform(currentTransform);
+
       if (hasNativeShadows()) {
 	getDefaultSurface().renderText(mode, tmp_font, style, textBaseline.get(), textAlign.get(), text, p, tmp_lineWidth, op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath);
       } else {

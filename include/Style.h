@@ -5,6 +5,8 @@
 
 #include <Color.h>
 #include <Filter.h>
+#include <Point.h>
+#include <Matrix.h>
 
 #include <string>
 #include <map>
@@ -61,16 +63,25 @@ namespace canvas {
       colors[f] = s;
     }
     void setVector(double _x0, double _y0, double _x1, double _y1) {
-      x0 = _x0;
-      y0 = _y0;
-      x1 = _x1;
-      y1 = _y1;
+      p0 = Point(_x0, _y0);
+      p1 = Point(_x1, _y1);
     }
 
     const std::map<float, Color> & getColors() const { return colors; }
+
+    Style transform(const Matrix & matrix) const {
+      if (type == LINEAR_GRADIENT || type == RADIAL_GRADIENT) {
+	auto s = *this;
+	s.p0 = matrix.multiply(s.p0);
+	s.p1 = matrix.multiply(s.p1);
+	return s;
+      } else {
+	return *this;
+      }
+    }
     
     Color color;
-    double x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+    Point p0, p1;
 
   private:
     StyleType type = SOLID;

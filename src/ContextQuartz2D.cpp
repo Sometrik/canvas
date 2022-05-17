@@ -100,10 +100,10 @@ Quartz2DSurface::renderPath(RenderMode mode, const Path2D & path, const Style & 
         CGContextClip(gc);
 	
 	CGPoint myStartPoint, myEndPoint;
-	myStartPoint.x = style.x0 * display_scale;
-	myStartPoint.y = style.y0 * display_scale;
-	myEndPoint.x = style.x1 * display_scale;
-	myEndPoint.y = style.y1 * display_scale;
+	myStartPoint.x = style.p0.x * display_scale;
+	myStartPoint.y = style.p0.y * display_scale;
+	myEndPoint.x = style.p1.x * display_scale;
+	myEndPoint.y = style.p1.y * display_scale;
 	CGContextDrawLinearGradient(gc, myGradient, myStartPoint, myEndPoint, 0);
 	
         CGContextRestoreGState(gc);
