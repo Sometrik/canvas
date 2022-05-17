@@ -48,6 +48,8 @@ namespace canvas {
     std::unique_ptr<ImageData> colorize(const Color & color) const;
     std::unique_ptr<ImageData> blur(float hradius, float vradius) const;
 
+    void multiplyAlpha();
+    
     bool isValid() const { return width != 0 && height != 0 && num_channels != 0; }
     unsigned short getWidth() const { return width; }
     unsigned short getHeight() const { return height; }

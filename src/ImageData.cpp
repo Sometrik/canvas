@@ -181,3 +181,17 @@ ImageData::blur(float hradius, float vradius) const {
   return r;
 }
 
+void
+ImageData::multiplyAlpha() {
+  for (size_t i = 0; i < width * height; i++) {
+    unsigned int red = data[4 * i + 0];
+    unsigned int green = data[4 * i + 1];
+    unsigned int blue = data[4 * i + 2];
+    unsigned int alpha = data[4 * i + 3];
+
+    data[4 * i + 0] = alpha * red / 255;
+    data[4 * i + 1] = alpha * green / 255;
+    data[4 * i + 2] = alpha * blue / 255;    
+  }
+}
+    
