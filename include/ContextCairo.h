@@ -1,3 +1,6 @@
+#ifndef _CANVAS_CONTEXTCAIRO_H_
+#define _CANVAS_CONTEXTCAIRO_H_
+
 #include "Context.h"
 
 #include <cairo/cairo.h>
@@ -101,3 +104,5 @@ namespace canvas {
     std::unique_ptr<Image> createImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels) override;
   };
 };
+
+#endif
