@@ -172,71 +172,76 @@ namespace canvas {
     
   protected:
     Context & renderPath(RenderMode mode, const Path2D & path0, const Style & style0, Operator op = Operator::SOURCE_OVER) {
-      auto path = path0.transform(currentTransform);
-      auto tmp_lineWidth = currentTransform.transformSize(lineWidth.get());
-      auto style = style0.transform(currentTransform);
-
-      if (hasNativeShadows()) {
-	getDefaultSurface().renderPath(mode, path, style, tmp_lineWidth, op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath);
-      } else {
-	if (hasShadow()) {
-	  float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
-	  float bi = int(ceil(b));
+      auto scaled_lineWidth = currentTransform.transformSize(lineWidth.get());
+      if (mode != RenderMode::STROKE || scaled_lineWidth > 0.1f) {
+	auto path = path0.transform(currentTransform);
+	auto style = style0.transform(currentTransform);
+	
+	if (hasNativeShadows()) {
+	  getDefaultSurface().renderPath(mode, path, style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath);
+	} else {
+	  if (hasShadow()) {
+	    float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
+	    float bi = int(ceil(b));
 #ifdef WIN32
-	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 4);
-	  Style shadow_style(this);
-	  shadow_style = shadowColor.get();
-	  Path2D tmp_path = path, tmp_clipPath = clipPath;
-	  tmp_path.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
-	  tmp_clipPath.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
-
-	  shadow->renderPath(mode, tmp_path, shadow_style, tmp_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath);
-	  auto shadow1 = shadow->blur(bs, bs);
-	  getDefaultSurface().drawImage(*shadow1, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
+	    auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 4);
+	    Style shadow_style(this);
+	    shadow_style = shadowColor.get();
+	    Path2D tmp_path = path, tmp_clipPath = clipPath;
+	    tmp_path.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
+	    tmp_clipPath.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
+	    
+	    shadow->renderPath(mode, tmp_path, shadow_style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath);
+	    auto shadow1 = shadow->blur(bs, bs);
+	    getDefaultSurface().drawImage(*shadow1, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
 #else
-	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 1);
-	  Style shadow_style(this);
-	  shadow_style = shadowColor.get();
-	  Path2D tmp_path = path, tmp_clipPath = clipPath;
-	  tmp_path.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
-	  tmp_clipPath.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
-	  
-	  shadow->renderPath(mode, tmp_path, shadow_style, tmp_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath);
-	  auto shadow1 = shadow->blur(bs, bs);
-	  auto shadow2 = shadow1->colorize(shadowColor.get());
-	  getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
+	    auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 1);
+	    Style shadow_style(this);
+	    shadow_style = shadowColor.get();
+	    Path2D tmp_path = path, tmp_clipPath = clipPath;
+	    tmp_path.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
+	    tmp_clipPath.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
+	    
+	    shadow->renderPath(mode, tmp_path, shadow_style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath);
+	    auto shadow1 = shadow->blur(bs, bs);
+	    auto shadow2 = shadow1->colorize(shadowColor.get());
+	    getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
 #endif
+	  }
+	  getDefaultSurface().renderPath(mode, path, style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), clipPath);
 	}
-	getDefaultSurface().renderPath(mode, path, style, tmp_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), clipPath);
       }
       return *this;
     }
     
     Context & renderText(RenderMode mode, const Style & style0, const std::string & text, const Point & p0, Operator op = Operator::SOURCE_OVER) {
-      auto p = currentTransform.multiply(p0);
-      auto tmp_font = font;
-      tmp_font.size = currentTransform.transformSize(font.size);
+      auto scaled_font_size = currentTransform.transformSize(font.size);
+      auto scaled_lineWidth = currentTransform.transformSize(lineWidth.get());
+      if (scaled_font_size > 0.5f && (mode != RenderMode::STROKE || scaled_lineWidth > 0.1f)) {
+	auto p = currentTransform.multiply(p0);
+	auto tmp_font = font;
+	tmp_font.size = scaled_font_size;
 
-      auto tmp_lineWidth = currentTransform.transformSize(lineWidth.get());
-      auto style = style0.transform(currentTransform);
+	auto style = style0.transform(currentTransform);
 
-      if (hasNativeShadows()) {
-	getDefaultSurface().renderText(mode, tmp_font, style, textBaseline.get(), textAlign.get(), text, p, tmp_lineWidth, op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath);
-      } else {
-	if (hasShadow()) {
-	  float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
-	  int bi = int(ceil(b));
-	  auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 1);
+	if (hasNativeShadows()) {
+	  getDefaultSurface().renderText(mode, tmp_font, style, textBaseline.get(), textAlign.get(), text, p, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath);
+	} else {
+	  if (hasShadow()) {
+	    float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
+	    int bi = int(ceil(b));
+	    auto shadow = createSurface(getDefaultSurface().getLogicalWidth() + 2 * bi, getDefaultSurface().getLogicalHeight() + 2 * bi, 1);
 	  
-	  Style shadow_style(this);
-	  shadow_style = shadowColor.get();
-	  shadow_style.color.alpha = 1.0f;
-	  shadow->renderText(mode, tmp_font, shadow_style, textBaseline.get(), textAlign.get(), text, Point(p.x + shadowOffsetX.get() + b, p.y + shadowOffsetY.get() + b), tmp_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath);
-	  auto shadow1 = shadow->blur(bs, bs);
-	  auto shadow2 = shadow1->colorize(shadowColor.get());
-	  getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
+	    Style shadow_style(this);
+	    shadow_style = shadowColor.get();
+	    shadow_style.color.alpha = 1.0f;
+	    shadow->renderText(mode, tmp_font, shadow_style, textBaseline.get(), textAlign.get(), text, Point(p.x + shadowOffsetX.get() + b, p.y + shadowOffsetY.get() + b), scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath);
+	    auto shadow1 = shadow->blur(bs, bs);
+	    auto shadow2 = shadow1->colorize(shadowColor.get());
+	    getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
+	  }
+	  getDefaultSurface().renderText(mode, tmp_font, style, textBaseline.get(), textAlign.get(), text, p, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath);
 	}
-	getDefaultSurface().renderText(mode, tmp_font, style, textBaseline.get(), textAlign.get(), text, p, tmp_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0.0f, 0.0f, 0.0f, shadowColor.get(), clipPath);
       }
       return *this;
     }
