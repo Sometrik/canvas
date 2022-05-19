@@ -25,9 +25,12 @@ namespace canvas {
     Style(GraphicsState * _context) : AttributeBase(_context) { }
     Style(const Style & other)
       : AttributeBase(other),
-      type(other.type),
-      colors(other.colors),
-      filter(other.filter) { }
+	color(other.color),
+	p0(other.p0),
+	p1(other.p1),
+	type(other.type),
+	colors(other.colors),
+	filter(other.filter) { }
 
     Style & operator=(const std::string & s) {
       color = s;
