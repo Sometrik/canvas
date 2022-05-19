@@ -211,9 +211,9 @@ GDIPlusSurface::drawNativeSurface(GDIPlusSurface & img, const Point & p, double 
   }
 }
 
-Gdiplus::StringFormat
-GDIPlusSurface::configureFonts() {
-  auto scaled_font_size = font.size * display_scale;
+void
+GDIPlusSurface::configureFonts(const Font & font, float displayScale, Gdiplus::StringFormat * format) {
+  auto scaled_font_size = font.size * displayScale;
 
   if (font.cleartype && scaled_font_size < 48.0f && scaled_font_size >= 2.0f) {
     g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
@@ -227,22 +227,19 @@ GDIPlusSurface::configureFonts() {
     g->SetTextRenderingHint(Gdiplus::TextRenderingHintSingleBitPerPixel);
   }
 
-  Gdiplus::StringFormat f;
-  f.SetFormatFlags(Gdiplus::StringFormatFlagsMeasureTrailingSpaces |
-		   Gdiplus::StringFormatFlagsNoWrap |
-		   Gdiplus::StringFormatFlagsNoClip |
-		   Gdiplus::StringFormatFlagsLineLimit |
-		   Gdiplus::StringFormatFlagsFitBlackBox
+  format->SetFormatFlags(Gdiplus::StringFormatFlagsMeasureTrailingSpaces |
+	  		 Gdiplus::StringFormatFlagsNoWrap |
+			 Gdiplus::StringFormatFlagsNoClip |
+			 Gdiplus::StringFormatFlagsLineLimit
+		   // Gdiplus::StringFormatFlagsFitBlackBox
 		   // | Gdiplus::StringFormatFlagsNoFitBlackBox |
 		   // | Gdiplus::StringFormatFlagsNoFontFallback
 		   // | Gdiplus::StringFormatFlagsBypassGDI
 		   );
-  f.SetHotkeyPrefix(Gdiplus::HotkeyPrefixNone);
-  f.SetTrimming(Gdiplus::StringTrimmingNone);
-  f.SetAlignment(Gdiplus::StringAlignmentNear);
-  f.SetLineAlignment(Gdiplus::StringAlignmentNear);
-    
-  return f;
+  format->SetHotkeyPrefix(Gdiplus::HotkeyPrefixNone);
+  format->SetTrimming(Gdiplus::StringTrimmingNone);
+  format->SetAlignment(Gdiplus::StringAlignmentNear);
+  format->SetLineAlignment(Gdiplus::StringAlignmentNear);
 }
 
 void
@@ -260,10 +257,9 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   float x = roundf(p.x * display_scale), y = roundf(p.y * display_scale);
   auto scaled_font_size = font.size * display_scale;
 
-  auto f = configureFonts();
-  
-  auto scaled_font_size = font.size * display_scale;
-
+  Gdiplus::StringFormat f;
+  configureFonts(font, display_scale, &f);
+ 
   if (g->GetTextRenderingHint() == Gdiplus::TextRenderingHintClearTypeGridFit) {
     g->SetCompositingMode(Gdiplus::CompositingModeSourceOver);
   } else {
@@ -331,7 +327,8 @@ TextMetrics
 GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBaseline textBaseline, float display_scale) {
   if (!initializeContext()) return TextMetrics();
 
-  auto f = configureFonts();
+  Gdiplus::StringFormat f;
+  configureFonts(font, display_scale, &f);
     
   auto text2 = from_utf8(text);
   int style = 0;

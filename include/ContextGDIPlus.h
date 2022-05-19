@@ -130,7 +130,7 @@ namespace canvas {
     std::unique_ptr<Image> createImage(float display_scale) override;
     
   protected:
-    Gdiplus::StringFormat configureFonts();
+    void configureFonts(const Font& font, float displayScale, Gdiplus::StringFormat * format);
 
     void * lockMemory(bool write_access = false) override {
       if (bitmap.get()) {
