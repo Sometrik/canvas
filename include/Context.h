@@ -147,8 +147,13 @@ namespace canvas {
     float getDisplayScale() const { return display_scale; }
     Context & addHitRegion(const std::string & id, const std::string & cursor) {
       if (!currentPath.empty()) {
-	HitRegion hr(id, currentPath, cursor);
-	hit_regions.push_back(hr);
+	hit_regions.push_back(HitRegion(id, currentPath, cursor));
+      }
+      return *this;
+    }
+    Context & addHitRegion(std::function<std::string()> callback) {
+      if (!currentPath.empty()) {
+	hit_regions.push_back(HitRegion(std::move(callback)));
       }
       return *this;
     }
