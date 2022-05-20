@@ -215,7 +215,7 @@ void
 GDIPlusSurface::configureFonts(const Font & font, float displayScale, Gdiplus::StringFormat * format) {
   auto scaled_font_size = font.size * displayScale;
 
-  if (font.cleartype && scaled_font_size < 48.0f && scaled_font_size >= 2.0f) {
+  if (font.cleartype && scaled_font_size >= 2.0f && scaled_font_size <= 16.0f) {
     g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
   } else if (font.antialiasing && font.hinting && scaled_font_size >= 2.0f) {
     g->SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAliasGridFit);
@@ -230,8 +230,10 @@ GDIPlusSurface::configureFonts(const Font & font, float displayScale, Gdiplus::S
   format->SetFormatFlags(Gdiplus::StringFormatFlagsMeasureTrailingSpaces |
 	  		 Gdiplus::StringFormatFlagsNoWrap |
 			 Gdiplus::StringFormatFlagsNoClip |
-			 Gdiplus::StringFormatFlagsLineLimit
-		   // Gdiplus::StringFormatFlagsFitBlackBox
+			 Gdiplus::StringFormatFlagsLineLimit |
+			 Gdiplus::StringFormatFlagsDisplayFormatControl |
+			 4 // FitBlackBox
+    
 		   // | Gdiplus::StringFormatFlagsNoFitBlackBox |
 		   // | Gdiplus::StringFormatFlagsNoFontFallback
 		   // | Gdiplus::StringFormatFlagsBypassGDI
@@ -295,7 +297,7 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
   case TextAlign::START: case TextAlign::LEFT: f.SetAlignment(Gdiplus::StringAlignmentNear); break;
   }
 
-  Gdiplus::FontFamily family(L"Segoe UI");
+  Gdiplus::FontFamily family(L"Segoe UI Emoji");
   Gdiplus::PointF pntF(x, y);
 
   switch (mode) {
@@ -339,14 +341,14 @@ GDIPlusSurface::measureText(const Font & font, const std::string & text, TextBas
     style |= Gdiplus::FontStyleItalic;
   }
 
-  Gdiplus::FontFamily fontFamily(L"Segoe UI");
+  Gdiplus::FontFamily fontFamily(L"Segoe UI Emoji");
 
-  Gdiplus::Font gdi_font(&fontFamily, font.size * display_scale, style, Gdiplus::UnitWorld);
+  Gdiplus::Font gdi_font(&fontFamily, font.size * display_scale, style, Gdiplus::UnitPixel);
   Gdiplus::RectF boundingBox;
   Gdiplus::PointF origin(0, 0);
   
   auto orig_unit = g->GetPageUnit();
-  g->SetPageUnit(Gdiplus::UnitWorld);
+  g->SetPageUnit(Gdiplus::UnitPixel);
 
   g->MeasureString(text2.data(), text2.size(), &gdi_font, origin, &f, &boundingBox);
 
