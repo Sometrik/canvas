@@ -60,7 +60,13 @@ namespace canvas {
     TextMetrics measureText(const std::string & text) {
       return getDefaultSurface().measureText(font, text, textBaseline.get(), getDisplayScale());
     }
-    
+
+    Context & moveTo(double x, double y) { currentPath.moveTo(x, y); return *this; }
+    Context & lineTo(double x, double y) { currentPath.lineTo(x, y); return *this; }
+    Context & arcTo(double x1, double y1, double x2, double y2, double radius) { currentPath.arcTo(Point(x1, y1), Point(x2, y2), radius); return *this; }
+
+    Context & arc(double x, double y, double r, double a0, double a1, bool t = false) { currentPath.arc(Point(x, y), r, a0, a1, t); return *this; }
+
     Context & fillRect(double x, double y, double w, double h) {
       Path2D path;
       path.rect(x, y, w, h);
@@ -80,9 +86,22 @@ namespace canvas {
       style = Color(0.0f, 0.0f, 0.0f, 0.0f);
       return renderPath(RenderMode::FILL, path, style, Operator::COPY);
     }
-    
+
+    Context & rect(double x, double y, double w, double h) {
+      currentPath.rect(x, y, w, h);
+      return *this;
+    }
+
+    Context & beginPath() { currentPath.clear(); return *this; }
+    Context & closePath() { currentPath.closePath(); return *this; }
+
     Context & fillText(const std::string & text, double x, double y) { return renderText(RenderMode::FILL, fillStyle, text, Point(x, y)); }
     Context & strokeText(const std::string & text, double x, double y) { return renderText(RenderMode::STROKE, strokeStyle, text, Point(x, y)); }
+
+    Context & setLineDash(std::vector<float> dash) {
+      lineDash = dash;
+      return *this;
+    }
     
     unsigned int getWidth() const { return getDefaultSurface().getLogicalWidth(); }
     unsigned int getHeight() const { return getDefaultSurface().getLogicalHeight(); }
@@ -97,8 +116,10 @@ namespace canvas {
       return drawImage(img.getData(), x, y, w, h);
     }
     
-    virtual Context & drawImage(const ImageData & img, double x, double y, double w, double h) {
+    virtual Context & drawImage(const ImageData & img, double x, double y, double w0, double h0) {
       auto p = currentTransform.multiply(x, y);
+      auto w = currentTransform.transformSize(w0);
+      auto h = currentTransform.transformSize(h0);
       if (hasNativeShadows()) {
 	getDefaultSurface().drawImage(img, p, w, h, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath, imageSmoothingEnabled.get());
       } else {
@@ -117,8 +138,10 @@ namespace canvas {
       return *this;
     }
     
-    virtual Context & drawImage(Surface & img, double x, double y, double w, double h) {
+    virtual Context & drawImage(Surface & img, double x, double y, double w0, double h0) {
       auto p = currentTransform.multiply(x, y);
+      auto w = currentTransform.transformSize(w0);
+      auto h = currentTransform.transformSize(h0);
       if (hasNativeShadows()) {
 	getDefaultSurface().drawImage(img, p, w, h, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath, imageSmoothingEnabled.get());
       } else {
@@ -145,15 +168,17 @@ namespace canvas {
     }
 
     float getDisplayScale() const { return display_scale; }
-    Context & addHitRegion(const std::string & id, const std::string & cursor) {
+    Context & addHitRegion(std::string id, std::string cursor = "") {
       if (!currentPath.empty()) {
-	hit_regions.push_back(HitRegion(id, currentPath, cursor));
+	auto path = currentPath.transform(currentTransform);
+	hit_regions.push_back(HitRegion(std::move(id), std::move(path), std::move(cursor)));
       }
       return *this;
     }
-    Context & addHitRegion(std::function<std::string()> callback) {
+    Context & addHitRegion(std::function<std::string()> callback, std::string cursor = "") {
       if (!currentPath.empty()) {
-	hit_regions.push_back(HitRegion(std::move(callback)));
+	auto path = currentPath.transform(currentTransform);
+	hit_regions.push_back(HitRegion(std::move(path), std::move(callback), std::move(cursor)));
       }
       return *this;
     }
@@ -178,12 +203,16 @@ namespace canvas {
   protected:
     Context & renderPath(RenderMode mode, const Path2D & path0, const Style & style0, Operator op = Operator::SOURCE_OVER) {
       auto scaled_lineWidth = currentTransform.transformSize(lineWidth.get());
+      std::vector<float> scaled_lineDash;
+      if (mode == RenderMode::STROKE) {
+	for (auto & v : lineDash) scaled_lineDash.push_back(currentTransform.transformSize(v));
+      }
       if (mode != RenderMode::STROKE || scaled_lineWidth > 0.1f) {
 	auto path = path0.transform(currentTransform);
 	auto style = style0.transform(currentTransform);
 	
 	if (hasNativeShadows()) {
-	  getDefaultSurface().renderPath(mode, path, style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath);
+	  getDefaultSurface().renderPath(mode, path, style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath, scaled_lineDash);
 	} else {
 	  if (hasShadow()) {
 	    float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
@@ -196,7 +225,7 @@ namespace canvas {
 	    tmp_path.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
 	    tmp_clipPath.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
 	    
-	    shadow->renderPath(mode, tmp_path, shadow_style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath);
+	    shadow->renderPath(mode, tmp_path, shadow_style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath, scaled_lineDash);
 	    auto shadow1 = shadow->blur(bs, bs);
 	    getDefaultSurface().drawImage(*shadow1, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
 #else
@@ -207,13 +236,13 @@ namespace canvas {
 	    tmp_path.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
 	    tmp_clipPath.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
 	    
-	    shadow->renderPath(mode, tmp_path, shadow_style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath);
+	    shadow->renderPath(mode, tmp_path, shadow_style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath, scaled_lineDash);
 	    auto shadow1 = shadow->blur(bs, bs);
 	    auto shadow2 = shadow1->colorize(shadowColor.get());
 	    getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
 #endif
 	  }
-	  getDefaultSurface().renderPath(mode, path, style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), clipPath);
+	  getDefaultSurface().renderPath(mode, path, style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), clipPath, scaled_lineDash);
 	}
       }
       return *this;
