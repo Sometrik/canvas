@@ -117,7 +117,7 @@ GDIPlusSurface::GDIPlusSurface(const unsigned char * buffer, size_t size) : Surf
 
 
 void
-GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath) {
+GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath, const std::vector<float> & lineDash) {
   initializeContext();
   
   if (!clipPath.empty()) {
@@ -144,6 +144,8 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Sty
   case RenderMode::STROKE:
     {
       Gdiplus::Pen pen(toGDIColor(style.color, globalAlpha), lineWidth * display_scale);
+      pen.SetDashStyle(Gdiplus::DashStyleCustom);
+      pen.SetDashPattern(lineDash.data(), lineDash.size());
       g->DrawPath(&pen, &path);
     }
     break;

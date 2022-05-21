@@ -133,7 +133,7 @@ CairoSurface::sendPath(const Path2D & path, float displayScale) {
 }
 
 void
-CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) {
+CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, const std::vector<float> & lineDash) {
   initializeContext();
 
   if (!clipPath.empty()) {
@@ -141,6 +141,16 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
     cairo_clip(cr);
   }
 
+  if (mode == RenderMode::STROKE) {
+    if (!lineDash.empty()) {
+      std::vector<double> dash;
+      for (auto & v : lineDash) dash.push_back(v);
+      cairo_set_dash(cr, dash.data(), dash.size(), 0);
+    } else {
+      cairo_set_dash(cr, 0, 0, 0);
+    }
+  }
+  
   switch (op) {
   case Operator::SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
   case Operator::COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
