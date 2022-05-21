@@ -11,7 +11,7 @@ namespace canvas {
   public:
     HitRegion() { }
     HitRegion(std::string id, Path2D path, std::string cursor)
-      : id_(std::move(id)), path_(std::move(path)), cursor_(std::move(cursor)) { }
+      : id_(std::move(id)), path_(std::move(path)), callback_([]() -> std::string { return ""; }), cursor_(std::move(cursor)) { }
     HitRegion(Path2D path, std::function<std::string()> callback, std::string cursor)
       : path_(std::move(path)), callback_(std::move(callback)), cursor_(std::move(cursor)) { }
 
