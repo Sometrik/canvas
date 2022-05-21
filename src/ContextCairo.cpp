@@ -144,7 +144,7 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
   if (mode == RenderMode::STROKE) {
     if (!lineDash.empty()) {
       std::vector<double> dash;
-      for (auto & v : lineDash) dash.push_back(v);
+      for (auto & v : lineDash) dash.push_back(v * displayScale);
       cairo_set_dash(cr, dash.data(), dash.size(), 0);
     } else {
       cairo_set_dash(cr, 0, 0, 0);

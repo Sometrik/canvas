@@ -144,8 +144,12 @@ GDIPlusSurface::renderPath(RenderMode mode, const Path2D & input_path, const Sty
   case RenderMode::STROKE:
     {
       Gdiplus::Pen pen(toGDIColor(style.color, globalAlpha), lineWidth * display_scale);
-      pen.SetDashStyle(Gdiplus::DashStyleCustom);
-      pen.SetDashPattern(lineDash.data(), lineDash.size());
+      if (!lineDash.empty()) {
+	std::vector<REAL> dash;
+	for (auto & v : lineDash) dash.push_back(v * displayScale);
+	pen.SetDashStyle(Gdiplus::DashStyleCustom);
+	pen.SetDashPattern(dash.data(), dash.size());
+      }
       g->DrawPath(&pen, &path);
     }
     break;
