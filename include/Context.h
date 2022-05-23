@@ -175,17 +175,11 @@ namespace canvas {
       }
       return *this;
     }
-    Context & addHitRegion(std::function<std::string()> callback, std::string cursor = "") {
+    Context & addHitRegion(HitRegion hit_region) {
       if (!currentPath.empty()) {
 	auto path = currentPath.flatten().transform(currentTransform);
-	hit_regions.push_back(HitRegion("", std::move(path), std::move(cursor), std::move(callback)));
-      }
-      return *this;
-    }
-    Context & addHitRegion(std::string id, std::function<std::string()> callback, std::string cursor = "") {
-      if (!currentPath.empty()) {
-	auto path = currentPath.flatten().transform(currentTransform);
-	hit_regions.push_back(HitRegion(std::move(id), std::move(path), std::move(cursor), std::move(callback)));
+	hit_region.setPath(std::move(path));
+	hit_regions.push_back(std::move(hit_region));
       }
       return *this;
     }
