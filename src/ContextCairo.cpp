@@ -133,7 +133,7 @@ CairoSurface::sendPath(const Path2D & path, float displayScale) {
 }
 
 void
-CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, const std::vector<float> & lineDash) {
+CairoSurface::renderPath(RenderMode mode, const Matrix & transformation, const Path2D & path, const Style & style, float lineWidth, Operator op, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath, const std::vector<float> & lineDash) {
   initializeContext();
 
   if (!clipPath.empty()) {
@@ -143,9 +143,9 @@ CairoSurface::renderPath(RenderMode mode, const Path2D & path, const Style & sty
 
   if (mode == RenderMode::STROKE) {
     if (!lineDash.empty()) {
-      std::vector<double> dash;
-      for (auto & v : lineDash) dash.push_back(v * displayScale);
-      cairo_set_dash(cr, dash.data(), dash.size(), 0);
+      std::vector<double> scaled_dash;
+      for (auto & v : lineDash) scaled_dash.push_back(transformation.transformSize(v) * displayScale);
+      cairo_set_dash(cr, scaled_dash.data(), scaled_dash.size(), 0);
     } else {
       cairo_set_dash(cr, 0, 0, 0);
     }

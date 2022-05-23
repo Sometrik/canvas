@@ -98,7 +98,7 @@ namespace canvas {
     void renderText(RenderMode mode, const Font & font, const Style & style, TextBaseline textBaseline, TextAlign textAlign, const std::string & text, const Point & p, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color & shadowColor, const Path2D & clipPath) override;
     TextMetrics measureText(const Font& font, const std::string& text, TextBaseline textBaseline, float display_scale) override;
     
-    void renderPath(RenderMode mode, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath, const std::vector<float> & lineDash) override;
+    void renderPath(RenderMode mode, const Matrix & transformation, const Path2D & path, const Style & style, float lineWidth, Operator op, float display_scale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath, const std::vector<float> & lineDash) override;
     
     void drawImage(Surface& _img, const Point& p, double w, double h, float displayScale, float globalAlpha, float shadowBlur, float shadowOffsetX, float shadowOffsetY, const Color& shadowColor, const Path2D& clipPath, bool imageSmoothingEnabled = true) override {
       GDIPlusSurface* img = dynamic_cast<GDIPlusSurface*>(&_img);
@@ -115,18 +115,7 @@ namespace canvas {
       GDIPlusSurface cs(_img);
       drawNativeSurface(cs, p, w, h, displayScale, globalAlpha, imageSmoothingEnabled);
     }
-    void save() {
-      initializeContext();
-      save_stack.push_back(g->Save());
-    }
-    void restore() {
-      initializeContext();
-      if (!save_stack.empty()) {
-	g->Restore(save_stack.back());
-	save_stack.pop_back();
-      }
-    }
-
+    
     std::unique_ptr<Image> createImage(float display_scale) override;
     
   protected:
@@ -166,7 +155,6 @@ namespace canvas {
     std::unique_ptr<Gdiplus::Bitmap> bitmap;
     std::unique_ptr<Gdiplus::Graphics> g;
     Gdiplus::BitmapData data;     
-    std::vector<Gdiplus::GraphicsState> save_stack;
     BYTE * storage = 0;
   };
   

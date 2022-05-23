@@ -170,21 +170,21 @@ namespace canvas {
     float getDisplayScale() const { return display_scale; }
     Context & addHitRegion(std::string id, std::string cursor = "") {
       if (!currentPath.empty()) {
-	auto path = currentPath.transform(currentTransform);
+	auto path = currentPath.flatten().transform(currentTransform);
 	hit_regions.push_back(HitRegion(std::move(id), std::move(path), std::move(cursor)));
       }
       return *this;
     }
     Context & addHitRegion(std::function<std::string()> callback, std::string cursor = "") {
       if (!currentPath.empty()) {
-	auto path = currentPath.transform(currentTransform);
+	auto path = currentPath.flatten().transform(currentTransform);
 	hit_regions.push_back(HitRegion("", std::move(path), std::move(cursor), std::move(callback)));
       }
       return *this;
     }
     Context & addHitRegion(std::string id, std::function<std::string()> callback, std::string cursor = "") {
       if (!currentPath.empty()) {
-	auto path = currentPath.transform(currentTransform);
+	auto path = currentPath.flatten().transform(currentTransform);
 	hit_regions.push_back(HitRegion(std::move(id), std::move(path), std::move(cursor), std::move(callback)));
       }
       return *this;
@@ -210,16 +210,12 @@ namespace canvas {
   protected:
     Context & renderPath(RenderMode mode, const Path2D & path0, const Style & style0, Operator op = Operator::SOURCE_OVER) {
       auto scaled_lineWidth = currentTransform.transformSize(lineWidth.get());
-      std::vector<float> scaled_lineDash;
-      if (mode == RenderMode::STROKE) {
-	for (auto & v : lineDash) scaled_lineDash.push_back(currentTransform.transformSize(v));
-      }
       if (mode != RenderMode::STROKE || scaled_lineWidth > 0.1f) {
 	auto path = path0.transform(currentTransform);
 	auto style = style0.transform(currentTransform);
 	
 	if (hasNativeShadows()) {
-	  getDefaultSurface().renderPath(mode, path, style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath, scaled_lineDash);
+	  getDefaultSurface().renderPath(mode, currentTransform, path, style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), shadowBlur.get(), shadowOffsetX.get(), shadowOffsetY.get(), shadowColor.get(), clipPath, lineDash);
 	} else {
 	  if (hasShadow()) {
 	    float b = shadowBlur.get(), bs = shadowBlur.get() * getDisplayScale();
@@ -232,7 +228,7 @@ namespace canvas {
 	    tmp_path.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
 	    tmp_clipPath.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
 	    
-	    shadow->renderPath(mode, tmp_path, shadow_style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath, scaled_lineDash);
+	    shadow->renderPath(mode, currentTransform, tmp_path, shadow_style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath, lineDash);
 	    auto shadow1 = shadow->blur(bs, bs);
 	    getDefaultSurface().drawImage(*shadow1, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
 #else
@@ -243,13 +239,13 @@ namespace canvas {
 	    tmp_path.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
 	    tmp_clipPath.offset(shadowOffsetX.get() + bi, shadowOffsetY.get() + bi);
 	    
-	    shadow->renderPath(mode, tmp_path, shadow_style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath, scaled_lineDash);
+	    shadow->renderPath(mode, currentTransform, tmp_path, shadow_style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), tmp_clipPath, lineDash);
 	    auto shadow1 = shadow->blur(bs, bs);
 	    auto shadow2 = shadow1->colorize(shadowColor.get());
 	    getDefaultSurface().drawImage(*shadow2, Point(-b, -b), shadow->getLogicalWidth(), shadow->getLogicalHeight(), getDisplayScale(), 1.0f, 0.0f, 0.0f, 0.0f, shadowColor.get(), Path2D(), false);
 #endif
 	  }
-	  getDefaultSurface().renderPath(mode, path, style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), clipPath, scaled_lineDash);
+	  getDefaultSurface().renderPath(mode, currentTransform, path, style, scaled_lineWidth, op, getDisplayScale(), globalAlpha.get(), 0, 0, 0, shadowColor.get(), clipPath, lineDash);
 	}
       }
       return *this;
