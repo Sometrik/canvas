@@ -6,15 +6,15 @@ using namespace canvas;
 
 void
 Path2D::arc(const Point & p, double radius, double sa, double ea, bool anticlockwise) {
-  data.push_back(PathComponent(PathComponent::ARC, p.x, p.y, radius, sa, ea, anticlockwise));
-  current_point = Point(p.x + radius * cos(ea), p.y + radius * sin(ea));
+  data_.push_back(PathComponent(PathComponent::ARC, p.x, p.y, radius, sa, ea, anticlockwise));
+  current_point_ = Point(p.x + radius * cos(ea), p.y + radius * sin(ea));
 }
 
 // Implementation by node-canvas (Node canvas is a Cairo backed Canvas implementation for NodeJS)
 // Original implementation influenced by WebKit.
 void
 Path2D::arcTo(const Point & p1, const Point & p2, double radius) {
-  auto p0 = current_point; // current point may be modified so make a copy
+  auto p0 = current_point_; // current point may be modified so make a copy
   
   if ((p1.x == p0.x && p1.y == p0.y) || (p1.x == p2.x && p1.y == p2.y) || radius == 0.f) {
     lineTo(p1);
@@ -81,7 +81,7 @@ Path2D::arcTo(const Point & p1, const Point & p2, double radius) {
 
   lineTo(t_p1p0);
   arc(p, radius, sa, ea, anticlockwise); // && M_PI * 2 != radius);
-  // current_point = p2;
+  // current_point_ = p2;
 }
 
 static inline double isLeft(const Point & p0, const Point & p1, const Point & p2) {
@@ -96,10 +96,10 @@ Path2D::isInside(double x, double y) const {
   Point point(x, y);
   int wn = 0;
   
-  for (size_t i = 1; i < data.size(); i++) {
-    size_t i2 = data[i].type == PathComponent::CLOSE ? 0 : i;
-    Point v1( data[i - 1].x0, data[i - 1].y0 );
-    Point v2( data[i2].x0, data[i2].y0 );
+  for (size_t i = 1; i < data_.size(); i++) {
+    size_t i2 = data_[i].type == PathComponent::CLOSE ? 0 : i;
+    Point v1( data_[i - 1].x0, data_[i - 1].y0 );
+    Point v2( data_[i2].x0, data_[i2].y0 );
     if (v1.y <= point.y) { // start y <= P.y
       if (v2.y > point.y) { // an upward crossing
 	if (isLeft(v1, v2, point) > 0) {

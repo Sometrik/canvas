@@ -22,28 +22,28 @@ namespace canvas {
   
   class Path2D {
   public:
-    Path2D() : current_point(0, 0) { }
+    Path2D() : current_point_(0.0, 0.0) { }
     
-    void moveTo(float x, float y) {
-      data.push_back(PathComponent(PathComponent::MOVE_TO, x, y));
-      current_point = Point(x, y);
+    void moveTo(double x, double y) {
+      data_.push_back(PathComponent(PathComponent::MOVE_TO, x, y));
+      current_point_ = Point(x, y);
     }
     void moveTo(Point p) {
-      data.push_back(PathComponent(PathComponent::MOVE_TO, p.x, p.y));
-      current_point = std::move(p);
+      data_.push_back(PathComponent(PathComponent::MOVE_TO, p.x, p.y));
+      current_point_ = std::move(p);
     }
-    void lineTo(float x, float y) {
-      data.push_back(PathComponent(PathComponent::LINE_TO, x, y));
-      current_point = Point(x, y);
+    void lineTo(double x, double y) {
+      data_.push_back(PathComponent(PathComponent::LINE_TO, x, y));
+      current_point_ = Point(x, y);
     }
     void lineTo(Point p) {
-      data.push_back(PathComponent(PathComponent::LINE_TO, p.x, p.y));
-      current_point = std::move(p);
+      data_.push_back(PathComponent(PathComponent::LINE_TO, p.x, p.y));
+      current_point_ = std::move(p);
     }
     void closePath() {
-      if (!data.empty()) {
-	data.push_back(PathComponent(PathComponent::CLOSE));
-	current_point = Point(data.front().x0, data.front().y0);
+      if (!data_.empty()) {
+	data_.push_back(PathComponent(PathComponent::CLOSE));
+	current_point_ = Point(data_.front().x0, data_.front().y0);
       }
     }
     void arc(const Point & p, double radius, double sa, double ea, bool anticlockwise);
@@ -57,30 +57,30 @@ namespace canvas {
       closePath();
     }
 
-    const std::vector<PathComponent> & getData() const { return data; }
+    const std::vector<PathComponent> & getData() const { return data_; }
 
     void clear() {
-      data.clear();
-      current_point = Point(0, 0);
+      data_.clear();
+      current_point_ = Point(0, 0);
     }
 
-    const Point & getCurrentPoint() const { return current_point; }
+    const Point & getCurrentPoint() const { return current_point_; }
 
     void offset(double dx, double dy) {
-      for (auto & pc : data) {
+      for (auto & pc : data_) {
 	pc.x0 += dx;
 	pc.y0 += dy;
       }
     }
 
     void getExtents(double & min_x, double & min_y, double & max_x, double & max_y) const {
-      if (data.empty()) {
+      if (data_.empty()) {
 	min_x = min_y = max_x = max_y = 0;
       } else {
-	auto it = data.begin();
+	auto it = data_.begin();
 	min_x = max_x = it->x0;
 	min_y = max_y = it->y0;
-	for (auto & pc : data) {
+	for (auto & pc : data_) {
 	  if (pc.x0 < min_x) min_x = pc.x0;
 	  if (pc.y0 < min_y) min_y = pc.x0;
 	  if (pc.x0 < max_x) max_x = pc.y0;
@@ -89,13 +89,13 @@ namespace canvas {
       }
     }
 
-    bool empty() const { return data.empty(); }
+    bool empty() const { return data_.empty(); }
     bool isInside(double x, double y) const;
-    std::size_t size() const { return data.size(); }
+    std::size_t size() const { return data_.size(); }
 
     Path2D transform(const Matrix & matrix) const {
       Path2D new_path;
-      for (auto pc : data) {
+      for (auto pc : data_) {
 	auto p = matrix.multiply(pc.x0, pc.y0);
 	pc.x0 = p.x;
 	pc.y0 = p.y;
@@ -104,15 +104,41 @@ namespace canvas {
 	pc.ea = matrix.transformAngle(pc.ea);
 #endif
 	pc.radius = matrix.transformSize(pc.radius);
-	new_path.data.push_back(pc);
+	new_path.data_.push_back(std::move(pc));
       }
-      new_path.current_point = matrix.multiply(current_point);
+      new_path.current_point_ = matrix.multiply(current_point_);
       return new_path;
     }
 
+    Path2D flatten() const {
+      Path2D new_path;
+      for (auto pc : data_) {
+	if (pc.type == PathComponent::ARC) {
+	  double ea = pc.ea, step;
+	  if (pc.anticlockwise) {
+	    while (ea > pc.sa) ea -= 2*M_PI;
+	    step = (ea - pc.sa) / 64.0;
+	  } else {
+	    while (ea < pc.sa) ea += 2*M_PI;
+	    step = (ea - pc.sa) / 64.0;
+	  }
+	  double a = pc.sa;
+	  for (int i = 0; i <= 64; i++, a += step) {
+	    auto x = pc.x0 + cos(a) * pc.radius;
+	    auto y = pc.y0 + sin(a) * pc.radius;
+	    if (i == 0) new_path.moveTo(x, y);
+	    else new_path.lineTo(x, y);
+	  }
+	} else {
+	  new_path.data_.push_back(std::move(pc));
+	}
+      }
+      return new_path;
+    }
+    
   private:
-    std::vector<PathComponent> data;
-    Point current_point;
+    std::vector<PathComponent> data_;
+    Point current_point_;
   };
 };
 
