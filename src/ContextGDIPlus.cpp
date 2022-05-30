@@ -224,14 +224,10 @@ GDIPlusSurface::configureFonts(const Font & font, float displayScale, Gdiplus::S
 
   if (font.cleartype && scaled_font_size >= 2.0f && scaled_font_size <= 16.0f) {
     g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
-  } else if (font.antialiasing && font.hinting && scaled_font_size >= 2.0f) {
+  } else if (font.antialiasing && font.hinting && scaled_font_size >= 2.0f && scaled_font_size <= 20.0f) {
     g->SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAliasGridFit);
-  } else if (font.antialiasing) {
-    g->SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);
-  } else if (font.hinting) {
-    g->SetTextRenderingHint(Gdiplus::TextRenderingHintSingleBitPerPixelGridFit);
   } else {
-    g->SetTextRenderingHint(Gdiplus::TextRenderingHintSingleBitPerPixel);
+    g->SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);  
   }
 
   format->SetFormatFlags(Gdiplus::StringFormatFlagsMeasureTrailingSpaces |
@@ -319,10 +315,16 @@ GDIPlusSurface::renderText(RenderMode mode, const Font & font, const Style & sty
     break;
   case RenderMode::FILL:
     {
-      Gdiplus::Font font(&family, scaled_font_size, style_bits, Gdiplus::UnitWorld);
       Gdiplus::SolidBrush brush(toGDIColor(style.color, globalAlpha));
-      // g->FillPath(&brush, &path);
-      g->DrawString(text2.data(), text2.size(), &font, pntF, &f, &brush);
+      if (g->GetTextRenderingHint() == Gdiplus::TextRenderingHintClearTypeGridFit ||
+	  g->GetTextRenderingHint() == Gdiplus::TextRenderingHintAntiAliasGridFit) {
+	Gdiplus::Font font(&family, scaled_font_size, style_bits, Gdiplus::UnitWorld);
+	g->DrawString(text2.data(), text2.size(), &font, pntF, &f, &brush);
+      } else {
+	Gdiplus::GraphicsPath path;
+	path.AddString(text2.data(), text2.size(), &family, style_bits, scaled_font_size, pntF, &f);
+	g->FillPath(&brush, &path);       
+      }
     }
     break;
   }

@@ -209,7 +209,8 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   cairo_select_font_face(cr, font.family.c_str(),
 			 font.style == Font::NORMAL_STYLE ? CAIRO_FONT_SLANT_NORMAL : (font.style == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
 			 font.weight.isBold() ? CAIRO_FONT_WEIGHT_BOLD : CAIRO_FONT_WEIGHT_NORMAL);
-  cairo_set_font_size(cr, font.size * displayScale);
+  auto actual_font_size = font.size * displayScale;
+  cairo_set_font_size(cr, actual_font_size);
   
   double x = p.x * displayScale;
   double y = p.y * displayScale;
@@ -242,12 +243,17 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   
   switch (mode) {
   case RenderMode::STROKE:
-    cairo_set_line_width(cr, lineWidth);
+    cairo_set_line_width(cr, lineWidth * displayScale);
     cairo_text_path(cr, text.c_str());
     cairo_stroke(cr);
     break;
   case RenderMode::FILL:
-    cairo_show_text(cr, text.c_str());
+    if ((!font.hinting && !font.cleartype) || actual_font_size > 20) {
+      cairo_text_path(cr, text.c_str());
+      cairo_fill(cr);
+    } else {
+      cairo_show_text(cr, text.c_str());
+    }
     break;
   }
 

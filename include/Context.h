@@ -203,7 +203,7 @@ namespace canvas {
     
   protected:
     Context & renderPath(RenderMode mode, const Path2D & path0, const Style & style0, Operator op = Operator::SOURCE_OVER) {
-      auto scaled_lineWidth = currentTransform.transformSize(lineWidth.get());
+      auto scaled_lineWidth = currentTransform.transformSize(lineWidth.get(), true);
       if (mode != RenderMode::STROKE || scaled_lineWidth > 0.1f) {
 	auto path = path0.transform(currentTransform);
 	auto style = style0.transform(currentTransform);
@@ -247,7 +247,7 @@ namespace canvas {
     
     Context & renderText(RenderMode mode, const Style & style0, const std::string & text, const Point & p0, Operator op = Operator::SOURCE_OVER) {
       auto scaled_font_size = currentTransform.transformSize(font.size);
-      auto scaled_lineWidth = currentTransform.transformSize(lineWidth.get());
+      auto scaled_lineWidth = currentTransform.transformSize(lineWidth.get(), true);
       if (scaled_font_size > 0.5f && (mode != RenderMode::STROKE || scaled_lineWidth > 0.1f)) {
 	auto p = currentTransform.multiply(p0);
 	auto tmp_font = font;

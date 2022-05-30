@@ -28,7 +28,6 @@ namespace canvas {
       style(other.style),
       weight(other.weight),
       decoration(other.decoration),
-      antialiasing(other.antialiasing),
       hinting(other.hinting),
       cleartype(other.cleartype) { }
       
@@ -42,7 +41,6 @@ namespace canvas {
     FontWeight weight;
     TextDecoration decoration = NO_DECORATION;
     Variant variant = NORMAL_VARIANT;
-    bool antialiasing = true;
     bool hinting = true;
     bool cleartype = false;
   };

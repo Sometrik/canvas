@@ -35,8 +35,9 @@ namespace canvas {
       return atan2(x * b + y * d, x * a + y * c);
     }
 
-    double transformSize(double s) const {
-      return s * a;
+    double transformSize(double s, bool use_sqrt = false) const {
+      if (use_sqrt) return s * sqrt(a);
+      else return s * a;
     }
     
   private:
