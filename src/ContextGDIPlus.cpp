@@ -224,7 +224,7 @@ GDIPlusSurface::configureFonts(const Font & font, float displayScale, Gdiplus::S
 
   if (font.cleartype && scaled_font_size >= 2.0f && scaled_font_size <= 16.0f) {
     g->SetTextRenderingHint(Gdiplus::TextRenderingHintClearTypeGridFit);
-  } else if (font.antialiasing && font.hinting && scaled_font_size >= 2.0f && scaled_font_size <= 20.0f) {
+  } else if (font.hinting && scaled_font_size >= 2.0f && scaled_font_size <= 20.0f) {
     g->SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAliasGridFit);
   } else {
     g->SetTextRenderingHint(Gdiplus::TextRenderingHintAntiAlias);  
