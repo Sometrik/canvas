@@ -46,11 +46,11 @@ static pair<cairo_surface_t *, unsigned int *> initializeSurfaceFromData(unsigne
       assert(0);
     }
   }
-  cairo_surface_t * surface = cairo_image_surface_create_for_data((unsigned char*)storage,
-								  format,
-								  width,
-								  height,
-								  stride);
+  auto surface = cairo_image_surface_create_for_data((unsigned char*)storage,
+						     format,
+						     width,
+						     height,
+						     stride);
   assert(surface);
   return std::pair<cairo_surface_t *, unsigned int *>(surface, storage);
 }
@@ -204,16 +204,27 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
   case Operator::SOURCE_OVER: cairo_set_operator(cr, CAIRO_OPERATOR_OVER); break;
   case Operator::COPY: cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE); break;
   }
+
+  auto actual_font_size = font.size * displayScale;
+  bool has_hinting = (font.hinting || font.cleartype) && actual_font_size <= 24;
+  if (has_hinting) {
+    auto options = cairo_font_options_create();
+    if (font.cleartype) {
+      cairo_font_options_set_antialias(options, CAIRO_ANTIALIAS_SUBPIXEL);
+    } else {
+      cairo_font_options_set_antialias(options, CAIRO_ANTIALIAS_GRAY);
+    }
+    cairo_set_font_options(cr, options);
+    cairo_font_options_destroy(options);
+  }
   
   cairo_set_source_rgba(cr, style.color.red, style.color.green, style.color.blue, style.color.alpha * alpha);
   cairo_select_font_face(cr, font.family.c_str(),
 			 font.style == Font::NORMAL_STYLE ? CAIRO_FONT_SLANT_NORMAL : (font.style == Font::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_OBLIQUE),
 			 font.weight.isBold() ? CAIRO_FONT_WEIGHT_BOLD : CAIRO_FONT_WEIGHT_NORMAL);
-  auto actual_font_size = font.size * displayScale;
   cairo_set_font_size(cr, actual_font_size);
   
-  double x = p.x * displayScale;
-  double y = p.y * displayScale;
+  auto x = p.x * displayScale, y = p.y * displayScale;
 
   if (textBaseline == TextBaseline::MIDDLE || textBaseline == TextBaseline::TOP) {
     cairo_font_extents_t font_extents;
@@ -248,11 +259,11 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
     cairo_stroke(cr);
     break;
   case RenderMode::FILL:
-    if ((!font.hinting && !font.cleartype) || actual_font_size > 20) {
+    if (has_hinting) {
+      cairo_show_text(cr, text.c_str());
+    } else {
       cairo_text_path(cr, text.c_str());
       cairo_fill(cr);
-    } else {
-      cairo_show_text(cr, text.c_str());
     }
     break;
   }
