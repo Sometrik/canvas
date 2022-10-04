@@ -214,6 +214,13 @@ CairoSurface::renderText(RenderMode mode, const Font & font, const Style & style
     } else {
       cairo_font_options_set_antialias(options, CAIRO_ANTIALIAS_GRAY);
     }
+    if (font.cleartype || font.hinting) {
+      cairo_font_options_set_hint_style(options, CAIRO_HINT_STYLE_FULL);
+      cairo_font_options_set_hint_metrics(options, CAIRO_HINT_METRICS_ON);
+    } else {
+      cairo_font_options_set_hint_style(options, CAIRO_HINT_STYLE_NONE);
+      cairo_font_options_set_hint_metrics(options, CAIRO_HINT_METRICS_OFF);
+    }
     cairo_set_font_options(cr, options);
     cairo_font_options_destroy(options);
   }
