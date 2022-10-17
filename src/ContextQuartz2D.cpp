@@ -1,6 +1,5 @@
 #include <ContextQuartz2D.h>
 
-#include <iostream>
 #include <cassert>
 
 #include <ImageIO/ImageIO.h>
@@ -109,7 +108,7 @@ Quartz2DSurface::renderPath(RenderMode mode, const Matrix & transformation, cons
         CGContextRestoreGState(gc);
 
 #ifdef MEMDEBUG
-	if (CFGetRetainCount(myGradient) != 1) cerr << "leaking memory 7!\n";
+	// if (CFGetRetainCount(myGradient) != 1) cerr << "leaking memory 7!\n";
 #endif
 	CGGradientRelease(myGradient);
       }
@@ -136,7 +135,7 @@ Quartz2DSurface::resize(unsigned int _logical_width, unsigned int _logical_heigh
   
   if (gc) {
 #ifdef MEMDEBUG
-    if (CFGetRetainCount(gc) != 1) std::cerr << "leaking memory E!\n";
+    // if (CFGetRetainCount(gc) != 1) std::cerr << "leaking memory E!\n";
 #endif
     CGContextRelease(gc);
     gc = 0;
@@ -196,14 +195,14 @@ Quartz2DSurface::drawImage(const ImageData & input, const Point & p, double w, d
     flipY();
   
 #ifdef MEMDEBUG
-    if (CFGetRetainCount(img) != 1) std::cerr << "leaking memory O!\n";
+    // if (CFGetRetainCount(img) != 1) std::cerr << "leaking memory O!\n";
 #endif
     CGImageRelease(img);
 #ifdef MEMDEBUG
-    if (CFGetRetainCount(provider) != 1) std::cerr << "leaking memory P!\n";
+    // if (CFGetRetainCount(provider) != 1) std::cerr << "leaking memory P!\n";
 #endif
   } else {
-    cerr << "failed to create CGImage\n";
+    // cerr << "failed to create CGImage\n";
   }
   CGDataProviderRelease(provider);
   CFRelease(cfdata);
@@ -231,7 +230,7 @@ public:
     // Get a reference to the main bundle
     CFBundleRef mainBundle = CFBundleGetMainBundle();
     if (!mainBundle) {
-      cerr << "failed to get main bundle, err = " << fnfErr << endl;
+      // cerr << "failed to get main bundle, err = " << fnfErr << endl;
     }
     
     // Get a reference to the file's URL

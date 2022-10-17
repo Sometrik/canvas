@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
 
 using namespace canvas;
 using namespace std;
@@ -13,7 +12,7 @@ static cairo_format_t getCairoFormat(unsigned int num_channels) {
   case 3: return CAIRO_FORMAT_RGB24;
   case 4: return CAIRO_FORMAT_ARGB32;
   default:
-    cerr << "unable to create Cairo format for " << num_channels << " channel(s)\n";
+    // cerr << "unable to create Cairo format for " << num_channels << " channel(s)\n";
     assert(0);
     return CAIRO_FORMAT_ARGB32;
   }

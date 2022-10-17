@@ -15,7 +15,6 @@ namespace Gdiplus
 #include <Windows.h>
 #include <gdiplus.h>
 
-#include <iostream>
 #include <vector>
 #include <cstring>
 

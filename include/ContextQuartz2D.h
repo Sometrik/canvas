@@ -8,8 +8,6 @@
 #include <FilenameConverter.h>
 
 #include <unordered_map>
-#include <sstream>
-#include <iostream>
 
 namespace canvas {
   class Quartz2DCache {
@@ -18,13 +16,13 @@ namespace canvas {
     Quartz2DCache(const Quartz2DCache & other) = delete;
     ~Quartz2DCache() {
 #ifdef MEMDEBUG
-      if (colorspace && CFGetRetainCount(colorspace) != 1) std::cerr << "leaking memory A!\n";
+      // if (colorspace && CFGetRetainCount(colorspace) != 1) std::cerr << "leaking memory A!\n";
 #endif
       CGColorSpaceRelease(colorspace);
       CGColorSpaceRelease(colorspace_gray);
       for (auto & fd : fonts) {
 #ifdef MEMDEBUG
-	if (CFGetRetainCount(fd.second) != 1) std::cerr << "leaking memory B!\n";
+	// if (CFGetRetainCount(fd.second) != 1) std::cerr << "leaking memory B!\n";
 #endif
         CFRelease(fd.second);
       }
@@ -36,8 +34,7 @@ namespace canvas {
       float size = font.size * display_scale;
       bool is_bold = font.weight.isBold();
       bool is_italic = font.style == Font::ITALIC;
-      std::ostringstream key;
-      key << font.family << "/" << size << "/" << (is_bold ? "bold" : "") << "/" << (is_italic ? "italic" : "");
+      std::string key = font.family + "/" + std::to_string(size) + "/" + (is_bold ? "bold" : "") + "/" + (is_italic ? "italic" : "");
       auto it = fonts.find(key.str());
       if (it != fonts.end()) {
         return it->second;
@@ -95,13 +92,13 @@ namespace canvas {
     ~Quartz2DSurface() {
       if (active_shadow_color) {
 #ifdef MEMDEBUG
-	if (CFGetRetainCount(active_shadow_color) != 1) std::cerr << "leaking memory C!\n";
+	// if (CFGetRetainCount(active_shadow_color) != 1) std::cerr << "leaking memory C!\n";
 #endif
 	CGColorRelease(active_shadow_color);
       }
       if (gc) {
 #ifdef MEMDEBUG
-	if (CFGetRetainCount(gc) != 1) std::cerr << "leaking memory D!\n";
+	// if (CFGetRetainCount(gc) != 1) std::cerr << "leaking memory D!\n";
 #endif
 	CGContextRelease(gc);
       }
@@ -133,7 +130,7 @@ namespace canvas {
       CFStringRef text2 = CFStringCreateWithCString(NULL, text.c_str(), kCFStringEncodingUTF8);
       if (!text2) {
 #ifdef MEMDEBUG
-        std::cerr << "failed to create CString from '" << text << "'" << std::endl;
+        // std::cerr << "failed to create CString from '" << text << "'" << std::endl;
 #endif
         return;
       }
@@ -141,7 +138,7 @@ namespace canvas {
       CTFontRef font2 = cache->getFont(font, display_scale);
 #ifdef MEMDEBUG
       int font_retain = CFGetRetainCount(font2);
-      if (font_retain != 1) std::cerr << "too many retains for font (" << font_retain << ")" << std::endl;
+      // if (font_retain != 1) std::cerr << "too many retains for font (" << font_retain << ")" << std::endl;
 #endif
       CGColorRef color = createCGColor(style.color, globalAlpha);
       
@@ -187,25 +184,25 @@ namespace canvas {
       CTLineDraw(line, gc);
 
 #ifdef MEMDEBUG
-      if (CFGetRetainCount(line) != 1) std::cerr << "leaking memory F!\n";
+      // if (CFGetRetainCount(line) != 1) std::cerr << "leaking memory F!\n";
 #endif
       CFRelease(line);
 #ifdef MEMDEBUG
-      if (CFGetRetainCount(attrString) != 1) std::cerr << "leaking memory G!\n";
+      // if (CFGetRetainCount(attrString) != 1) std::cerr << "leaking memory G!\n";
 #endif
       CFRelease(attrString);
 #ifdef MEMDEBUG
-      if (CFGetRetainCount(attr) != 1) std::cerr << "leaking memory H!\n";
+      // if (CFGetRetainCount(attr) != 1) std::cerr << "leaking memory H!\n";
 #endif
       CFRelease(attr);
 #ifdef MEMDEBUG
-      if (CFGetRetainCount(text2) != 1) std::cerr << "leaking memory I!\n";
+      // if (CFGetRetainCount(text2) != 1) std::cerr << "leaking memory I!\n";
 #endif
       CFRelease(text2);
       // CFRelease(traits2);
 #ifdef MEMDEBUG
       int color_retain = CFGetRetainCount(color);
-      if (color_retain != 1) std::cerr << "leaking CGColor (" << color_retain << ")!\n";
+      // if (color_retain != 1) std::cerr << "leaking CGColor (" << color_retain << ")!\n";
 #endif
       CGColorRelease(color);
 
@@ -228,19 +225,19 @@ namespace canvas {
       double width = CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
       
 #ifdef MEMDEBUG
-      if (CFGetRetainCount(line) != 1) std::cerr << "leaking memory K!\n";
+      // if (CFGetRetainCount(line) != 1) std::cerr << "leaking memory K!\n";
 #endif
       CFRelease(line);
 #ifdef MEMDEBUG
-      if (CFGetRetainCount(attrString) != 1) std::cerr << "leaking memory L!\n";
+      // if (CFGetRetainCount(attrString) != 1) std::cerr << "leaking memory L!\n";
 #endif
       CFRelease(attrString);
 #ifdef MEMDEBUG
-      if (CFGetRetainCount(attr) != 1) std::cerr << "leaking memory M!\n";
+      // if (CFGetRetainCount(attr) != 1) std::cerr << "leaking memory M!\n";
 #endif
       CFRelease(attr);
 #ifdef MEMDEBUG
-      if (CFGetRetainCount(text2) != 1) std::cerr << "leaking memory N!\n";
+      // if (CFGetRetainCount(text2) != 1) std::cerr << "leaking memory N!\n";
 #endif
       CFRelease(text2);
       
@@ -276,7 +273,7 @@ namespace canvas {
       CGSize offset = CGSizeMake(displayScale * shadowOffsetX, displayScale * shadowOffsetY);
       if (active_shadow_color) {
 #ifdef MEMDEBUG
-	if (CFGetRetainCount(active_shadow_color) != 1) std::cerr << "leaking memory Q!\n";
+	// if (CFGetRetainCount(active_shadow_color) != 1) std::cerr << "leaking memory Q!\n";
 #endif
 	CGColorRelease(active_shadow_color);
       }
