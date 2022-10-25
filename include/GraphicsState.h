@@ -59,7 +59,7 @@ namespace canvas {
       currentTransform = Matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
       return *this;
     }
-    const Matrix & getTransform() { return currentTransform; }
+    const Matrix & getTransform() const { return currentTransform; }
     
     Attribute<float> lineWidth;
     Style fillStyle;
