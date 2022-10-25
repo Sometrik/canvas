@@ -6,7 +6,7 @@
 #include <Color.h>
 #include <Filter.h>
 #include <Point.h>
-#include <Matrix.h>
+#include <TransformationMatrix.h>
 
 #include <string>
 #include <map>
@@ -72,7 +72,7 @@ namespace canvas {
 
     const std::map<float, Color> & getColors() const { return colors; }
 
-    Style transform(const Matrix & matrix) const {
+    Style transform(const TransformationMatrix & matrix) const {
       if (type == LINEAR_GRADIENT || type == RADIAL_GRADIENT) {
 	auto s = *this;
 	s.p0 = matrix.multiply(s.p0);

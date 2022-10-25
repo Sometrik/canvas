@@ -6,7 +6,7 @@
 #include <TextBaseline.h>
 #include <TextAlign.h>
 #include <Path2D.h>
-#include <Matrix.h>
+#include <TransformationMatrix.h>
 
 #include <cmath>
 
@@ -34,32 +34,34 @@ namespace canvas {
     }
     GraphicsState & resetClip() { clipPath.clear(); return *this; }
 
-    GraphicsState & scale(double x, double y) { return transform(Matrix(x, 0.0, 0.0, y, 0.0, 0.0)); }
+    GraphicsState & scale(double x, double y) { return transform(TransformationMatrix(x, 0.0, 0.0, y, 0.0, 0.0)); }
     GraphicsState & rotate(double angle) {
       double cos_angle = cos(angle), sin_angle = sin(angle);
-      return transform(Matrix(cos_angle, sin_angle, -sin_angle, cos_angle, 0.0, 0.0));
+      return transform(TransformationMatrix(cos_angle, sin_angle, -sin_angle, cos_angle, 0.0, 0.0));
     }
     GraphicsState & translate(double x, double y) {
-      return transform(Matrix(1.0, 0.0, 0.0, 1.0, x, y));
+      return transform(TransformationMatrix(1.0, 0.0, 0.0, 1.0, x, y));
     }
-    GraphicsState & transform(double a, double b, double c, double d, double e, double f) { return transform(Matrix(a, b, c, d, e, f)); }
-    GraphicsState & transform(const Matrix & m) {
+    GraphicsState & transform(double a, double b, double c, double d, double e, double f) {
+      return transform(TransformationMatrix(a, b, c, d, e, f));
+    }
+    GraphicsState & transform(const TransformationMatrix & m) {
       currentTransform *= m;
       return *this;
     }
     GraphicsState & setTransform(double a, double b, double c, double d, double e, double f) {
-      currentTransform = Matrix(a, b, c, d, e, f);
+      currentTransform = TransformationMatrix(a, b, c, d, e, f);
       return *this;
     }
-    GraphicsState & setTransform(const Matrix & m) {
+    GraphicsState & setTransform(const TransformationMatrix & m) {
       currentTransform = m;
       return *this;
     }
     GraphicsState & resetTransform() {
-      currentTransform = Matrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
+      currentTransform = TransformationMatrix(1.0, 0.0, 0.0, 1.0, 0.0, 0.0);
       return *this;
     }
-    const Matrix & getTransform() const { return currentTransform; }
+    const TransformationMatrix & getTransform() const { return currentTransform; }
     
     Attribute<float> lineWidth;
     Style fillStyle;
@@ -73,7 +75,7 @@ namespace canvas {
     TextAlignAttribute textAlign;
     Attribute<bool> imageSmoothingEnabled;
     Path2D currentPath, clipPath;
-    Matrix currentTransform;
+    TransformationMatrix currentTransform;
 
   protected:
     std::vector<float> lineDash;

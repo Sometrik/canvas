@@ -2,7 +2,7 @@
 #define _CANVAS_PATH2D_H_
 
 #include <Point.h>
-#include <Matrix.h>
+#include <TransformationMatrix.h>
 
 #include <vector>
 
@@ -93,7 +93,7 @@ namespace canvas {
     bool isInside(double x, double y) const;
     std::size_t size() const { return data_.size(); }
 
-    Path2D transform(const Matrix & matrix) const {
+    Path2D transform(const TransformationMatrix & matrix) const {
       Path2D new_path;
       for (auto pc : data_) {
 	auto p = matrix.multiply(pc.x0, pc.y0);
