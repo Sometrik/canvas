@@ -25,7 +25,7 @@ Image::loadFromMemory(const unsigned char * buffer, size_t size) {
   // cerr << "Image.cpp: loaded image, size = " << size << ", b = " << (void*)img_buffer << ", w = " << w << ", h = " << h << ", ch = " << channels << endl;
   assert(w && h && channels);    
 
-  auto data = std::unique_ptr<ImageData>(new ImageData((unsigned char *)img_buffer, w, h, channels));
+  auto data = std::make_unique<ImageData>((unsigned char *)img_buffer, w, h, channels);
   
   stbi_image_free(img_buffer);
   
@@ -56,7 +56,29 @@ Image::isPNG(const unsigned char * buffer, size_t size) {
 
 bool
 Image::isJPEG(const unsigned char * buffer, size_t size) {
-  return size >= 3 && buffer[0] == 0xff && buffer[1] == 0xd8 && buffer[2] == 0xff;
+  if (size >= 4 && buffer[0] == 0xFF && buffer[1] == 0xD8 &&
+      buffer[2] == 0xFF && buffer[3] == 0xDB) {
+    return true;
+  } else if (size >= 12 && buffer[0] == 0xFF && buffer[1] == 0xD8 &&
+	     buffer[2] == 0xFF && buffer[3] == 0xE0 && buffer[4] == 0x00 &&
+	     buffer[5] == 0x10 && buffer[6] == 0x4A && buffer[7] == 0x46 &&
+	     buffer[8] == 0x49 && buffer[9] == 0x46 && buffer[10] == 0x00 &&
+	     buffer[11] == 0x01) {
+    return true;
+  } else if (size >= 4 && buffer[0] == 0xFF && buffer[1] == 0xD8 &&
+	     buffer[2] == 0xFF && buffer[3] == 0xEE) {
+    return true;
+  } else if (size >= 12 && buffer[0] == 0xFF && buffer[1] == 0xD8 &&
+	     buffer[2] == 0xFF && buffer[3] == 0xE1 && buffer[6] == 0x45 &&
+	     buffer[7] == 0x78 && buffer[8] == 0x69 && buffer[9] == 0x66 &&
+	     buffer[10] == 0x00 && buffer[11] == 0x00) {
+    return true;
+  } else if (size >= 4 && buffer[0] == 0xFF && buffer[1] == 0xD8 &&
+	     buffer[2] == 0xFF && buffer[3] == 0xE0) {
+    return true;
+  } else {
+    return false;
+  }      
 }
 
 bool
