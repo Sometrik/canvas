@@ -11,48 +11,48 @@ namespace canvas {
   public:
     static ImageData nullImage;
 
-  ImageData() : width(0), height(0), num_channels(0) { }
-  ImageData(const unsigned char * _data, unsigned short _width, unsigned short _height, unsigned short _num_channels)
-    : width(_width), height(_height), num_channels(_num_channels)
-    {
-      size_t s = calculateSize();
-      data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
-      if (!_data) {
-	memset(data.get(), 0, s);
-      } else {
-	memcpy(data.get(), _data, s);
-      }
-    }
-  ImageData(unsigned short _width, unsigned short _height, unsigned short _num_channels)
-    : width(_width), height(_height), num_channels(_num_channels) {
-      size_t s = calculateSize();
-      data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
-      memset(data.get(), 0, s);  
-    }
-
-    ImageData(const ImageData & other)
-      : width(other.getWidth()), height(other.getHeight()), num_channels(other.num_channels)
+    ImageData() : width_(0), height_(0), num_channels_(0) { }
+    ImageData(const unsigned char * data, unsigned short width, unsigned short height, unsigned short num_channels)
+      : width_(width), height_(height), num_channels_(num_channels)
     {
       auto s = calculateSize();
-      data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
-      if (other.getData()) {
-	memcpy(data.get(), other.getData(), s);
+      data_ = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+      if (data) {
+	memcpy(data_.get(), data, s);
       } else {
-	memset(data.get(), 0, s);
+	memset(data_.get(), 0, s);
+      }
+    }
+    ImageData(unsigned short width, unsigned short height, unsigned short num_channels)
+      : width_(width), height_(height), num_channels_(num_channels) {
+      auto s = calculateSize();
+      data_ = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+      memset(data_.get(), 0, s);  
+    }
+    
+    ImageData(const ImageData & other)
+      : width_(other.getWidth()), height_(other.getHeight()), num_channels_(other.num_channels_)
+    {
+      auto s = calculateSize();
+      data_ = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+      if (other.getData()) {
+	memcpy(data_.get(), other.getData(), s);
+      } else {
+	memset(data_.get(), 0, s);
       }
     }
 
     ImageData & operator=(const ImageData & other) {
       if (this != &other) {
-	width = other.width;
-	height = other.height;
-	num_channels = other.num_channels;
+	width_ = other.width_;
+	height_ = other.height_;
+	num_channels_ = other.num_channels_;
 	auto s = calculateSize();
-	data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+	data_ = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
 	if (other.getData()) {
-	  memcpy(data.get(), other.getData(), s);
+	  memcpy(data_.get(), other.getData(), s);
 	} else {
-	  memset(data.get(), 0, s);
+	  memset(data_.get(), 0, s);
 	}	
       }
       return *this;
@@ -67,22 +67,22 @@ namespace canvas {
 
     void multiplyAlpha();
     
-    bool isValid() const { return width != 0 && height != 0 && num_channels != 0; }
-    unsigned short getWidth() const { return width; }
-    unsigned short getHeight() const { return height; }
-    unsigned short getNumChannels() const { return num_channels; }
+    bool isValid() const { return width_ != 0 && height_ != 0 && num_channels_ != 0; }
+    unsigned short getWidth() const { return width_; }
+    unsigned short getHeight() const { return height_; }
+    unsigned short getNumChannels() const { return num_channels_; }
 
-    unsigned char * getData() { return data.get(); }
-    const unsigned char * getData() const { return data.get(); }
+    unsigned char * getData() { return data_.get(); }
+    const unsigned char * getData() const { return data_.get(); }
 
-    unsigned short getBytesPerRow() const { return num_channels * width; }
+    unsigned short getBytesPerRow() const { return num_channels_ * width_; }
     
     static size_t calculateSize(unsigned short width, unsigned short height, unsigned short num_channels) { return width * height * num_channels; }
-    size_t calculateSize() const { return calculateSize(width, height, num_channels); }
+    size_t calculateSize() const { return calculateSize(width_, height_, num_channels_); }
     
   private:
-    unsigned short width, height, num_channels;
-    std::unique_ptr<unsigned char[]> data;
+    unsigned short width_, height_, num_channels_;
+    std::unique_ptr<unsigned char[]> data_;
   };
 };
 #endif
