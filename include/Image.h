@@ -20,7 +20,7 @@ namespace canvas {
 
     virtual ~Image() = default;
 
-    void decode(const unsigned char * buffer, size_t size);
+    void decode(const void * buffer, size_t size);
     void scale(unsigned int target_width, unsigned int target_height) {
       if (!filename.empty() && !data.get()) {
 	loadFile();
@@ -43,6 +43,9 @@ namespace canvas {
       }
     }
 
+    std::unique_ptr<ImageData> & getDataPtr() { return data; }
+    std::unique_ptr<ImageData> && moveDataPtr() { return std::move(data); }
+    
     const std::string & getFilename() const { return filename; }
 
     void setDisplayScale(float f) { display_scale = f; }
@@ -59,7 +62,7 @@ namespace canvas {
     static bool isXML(const unsigned char * buffer, size_t size);
 
   protected:
-    static std::unique_ptr<ImageData> loadFromMemory(const unsigned char * buffer, size_t size);
+    static std::unique_ptr<ImageData> loadFromMemory(const void * buffer, size_t size);
     static std::unique_ptr<ImageData> loadFromFile(const std::string & filename);
     virtual void loadFile() { }
     
