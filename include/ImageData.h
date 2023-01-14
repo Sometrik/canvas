@@ -33,7 +33,7 @@ namespace canvas {
     ImageData(const ImageData & other)
       : width(other.getWidth()), height(other.getHeight()), num_channels(other.num_channels)
     {
-      size_t s = calculateSize();
+      auto s = calculateSize();
       data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
       if (other.getData()) {
 	memcpy(data.get(), other.getData(), s);
@@ -42,7 +42,24 @@ namespace canvas {
       }
     }
 
-    ImageData & operator=(const ImageData & other) = delete;
+    ImageData & operator=(const ImageData & other) {
+      if (this != &other) {
+	width = other.width;
+	height = other.height;
+	num_channels = other.num_channels;
+	auto s = calculateSize();
+	data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+	if (other.getData()) {
+	  memcpy(data.get(), other.getData(), s);
+	} else {
+	  memset(data.get(), 0, s);
+	}	
+      }
+      return *this;
+    }
+
+    ImageData(ImageData && other) = default;
+    ImageData & operator=(ImageData && other) = default;
     
     std::unique_ptr<ImageData> scale(unsigned short target_width, unsigned short target_height) const;
     std::unique_ptr<ImageData> colorize(const Color & color) const;
