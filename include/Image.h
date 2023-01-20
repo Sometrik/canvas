@@ -39,7 +39,7 @@ namespace canvas {
       if (data.get()) {
 	return *data;
       } else {
-	return ImageData::nullImage;
+	return null_image;
       }
     }
 
@@ -71,6 +71,8 @@ namespace canvas {
 
   private:
     float display_scale;
+
+    static inline ImageData null_image;
   };
 };
 #endif

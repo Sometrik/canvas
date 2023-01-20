@@ -9,8 +9,6 @@
 namespace canvas {
   class ImageData {
   public:
-    static ImageData nullImage;
-
     ImageData() : width_(0), height_(0), num_channels_(0) { }
     ImageData(const unsigned char * data, unsigned short width, unsigned short height, unsigned short num_channels)
       : width_(width), height_(height), num_channels_(num_channels)
