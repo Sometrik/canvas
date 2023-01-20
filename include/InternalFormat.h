@@ -1,7 +1,7 @@
 #ifndef _INTERNALFORMAT_H_
 #define _INTERNALFORMAT_H_
 
-namespace canvas {
+namespace canvas {  
   enum class InternalFormat {
     NO_FORMAT = 0,
     R8,
@@ -21,6 +21,23 @@ namespace canvas {
     RGB555,
     RGBA5551
   };
+
+  static inline bool has_alpha(InternalFormat internal_format) {
+    switch (internal_format) {
+    case InternalFormat::R8:
+    case InternalFormat::RGB_ETC1:
+    case InternalFormat::RGB_DXT1:
+    case InternalFormat::RGB565:
+      return false;
+      
+    case InternalFormat::RG8:
+    case InternalFormat::RGBA4:
+    case InternalFormat::RGBA8:
+    case InternalFormat::LUMINANCE_ALPHA:
+    default:
+      return true;
+    }
+  }
 };
 
 #endif
