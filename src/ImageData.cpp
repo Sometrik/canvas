@@ -10,7 +10,7 @@ using namespace std;
 using namespace canvas;
 
 std::unique_ptr<ImageData>
-ImageData::scale(unsigned short target_width, unsigned short target_height) const {
+ImageData::scale(unsigned int target_width, unsigned int target_height) const {
   auto target_size = calculateSize(target_width, target_height, num_channels_);
 
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
