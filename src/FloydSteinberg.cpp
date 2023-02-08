@@ -144,7 +144,7 @@ static unsigned int apply2(unsigned int * input_data, unsigned int width, unsign
         if (blue > 255) blue = 255;
         unsigned int v = PACK_RGB24(red, green, blue);
         unsigned int error = v & 0x00070307;
-#if defined __APPLE__ || defined __ANDROID__
+#if 1
         *output_row++ = PACK_RGB565(RGBA_TO_BLUE(v) >> 3, RGBA_TO_GREEN(v) >> 2, RGBA_TO_RED(v) >> 3);
 #else
         *output_row++ = PACK_RGB565(RGBA_TO_RED(v) >> 3, RGBA_TO_GREEN(v) >> 2, RGBA_TO_BLUE(v) >> 3);
