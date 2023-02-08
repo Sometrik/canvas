@@ -14,9 +14,9 @@
 namespace canvas {
   class Context : public GraphicsState {
   public:
-    Context(float _display_scale = 1.0f)
-      : display_scale(_display_scale),
-      current_linear_gradient(this)
+    Context(float display_scale = 1.0f)
+      : display_scale_(display_scale),
+      current_linear_gradient_(this)
       { }
     Context(const Context & other) = delete;
     Context & operator=(const Context & other) = delete;
@@ -36,7 +36,7 @@ namespace canvas {
 
     virtual void resize(unsigned int _width, unsigned int _height) {
       getDefaultSurface().resize(_width, _height, (unsigned int)(_width * getDisplayScale()), (unsigned int)(_height * getDisplayScale()), getDefaultSurface().getNumChannels());
-      hit_regions.clear();
+      hit_regions_.clear();
     }
         
     Context & stroke() { return renderPath(RenderMode::STROKE, currentPath, strokeStyle); }
@@ -44,13 +44,13 @@ namespace canvas {
     Context & fill() { return renderPath(RenderMode::FILL, currentPath, fillStyle); }
     Context & fill(const Path2D & path) { return renderPath(RenderMode::FILL, path, fillStyle); }
     Context & save() {
-      restore_stack.push_back(*this);
+      restore_stack_.push_back(*this);
       return *this;
     }
     Context & restore() {
-      if (!restore_stack.empty()) {
-	*this = restore_stack.back();
-	restore_stack.pop_back();    
+      if (!restore_stack_.empty()) {
+	*this = restore_stack_.back();
+	restore_stack_.pop_back();    
       }
       return *this;
     }
@@ -162,16 +162,16 @@ namespace canvas {
     }
         
     Style & createLinearGradient(double x0, double y0, double x1, double y1) {
-      current_linear_gradient.setType(Style::LINEAR_GRADIENT);
-      current_linear_gradient.setVector(x0, y0, x1, y1);
-      return current_linear_gradient;
+      current_linear_gradient_.setType(Style::LINEAR_GRADIENT);
+      current_linear_gradient_.setVector(x0, y0, x1, y1);
+      return current_linear_gradient_;
     }
 
-    float getDisplayScale() const { return display_scale; }
+    float getDisplayScale() const { return display_scale_; }
     Context & addHitRegion(std::string id, std::string cursor = "") {
       if (!currentPath.empty()) {
 	auto path = currentPath.flatten().transform(currentTransform);
-	hit_regions.push_back(HitRegion(std::move(id), std::move(path), std::move(cursor)));
+	hit_regions_.push_back(HitRegion(std::move(id), std::move(path), std::move(cursor)));
       }
       return *this;
     }
@@ -179,19 +179,19 @@ namespace canvas {
       if (!currentPath.empty()) {
 	auto path = currentPath.flatten().transform(currentTransform);
 	hit_region.setPath(std::move(path));
-	hit_regions.push_back(std::move(hit_region));
+	hit_regions_.push_back(std::move(hit_region));
       }
       return *this;
     }
 #if 0
     const HitRegion & getHitRegion(float x, float y) const {
-      for (auto & r : hit_regions) {
+      for (auto & r : hit_regions_) {
 	if (r.isInside(x, y)) return r;
       }
       return null_region;
     }
 #endif
-    const std::vector<HitRegion> & getHitRegions() const { return hit_regions; }
+    const std::vector<HitRegion> & getHitRegions() const { return hit_regions_; }
     
 #if 0
     Style & createPattern(const ImageData & image, const char * repeat) {
@@ -280,16 +280,17 @@ namespace canvas {
     bool hasShadow() const { return shadowBlur.get() > 0.0f || shadowOffsetX.get() != 0 || shadowOffsetY.get() != 0; }
     
   private:
-    float display_scale;
-    Style current_linear_gradient;
-    std::vector<GraphicsState> restore_stack;
-    std::vector<HitRegion> hit_regions;
-    HitRegion null_region;
+    float display_scale_;
+    Style current_linear_gradient_;
+    std::vector<GraphicsState> restore_stack_;
+    std::vector<HitRegion> hit_regions_;
+
+    static inline HitRegion null_region;
   };
     
   class ContextFactory {
   public:
-    ContextFactory(float _display_scale) : display_scale(_display_scale) { }
+    ContextFactory(float display_scale) : display_scale_(display_scale) { }
     virtual ~ContextFactory() { }
     virtual std::unique_ptr<Context> createContext(unsigned int width, unsigned int height, unsigned int num_channels = 4) = 0;
     virtual std::unique_ptr<Surface> createSurface(unsigned int width, unsigned int height, unsigned int num_channels = 4) = 0;
@@ -297,10 +298,10 @@ namespace canvas {
     virtual std::unique_ptr<Image> createImage() = 0;
     virtual std::unique_ptr<Image> createImage(const unsigned char * _data, unsigned int _width, unsigned int _height, unsigned int _num_channels) = 0;
     
-    float getDisplayScale() const { return display_scale; }
+    float getDisplayScale() const { return display_scale_; }
     
   private:
-    float display_scale;
+    float display_scale_;
   };
 
   class NullContext : public Context {
