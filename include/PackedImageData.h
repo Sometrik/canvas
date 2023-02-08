@@ -4,25 +4,60 @@
 #include <InternalFormat.h>
 
 #include <memory>
+#include <cstring>
 
 namespace canvas {
   class ImageData;
   
   class PackedImageData {
   public:
-    PackedImageData() : format(InternalFormat::NO_FORMAT), width(0), height(0), levels(0), quality(0) { }
+    PackedImageData() : format_(InternalFormat::NO_FORMAT), width_(0), height_(0), levels_(0) { }
     PackedImageData(InternalFormat _format, unsigned short _levels, const ImageData & input);
     PackedImageData(InternalFormat _format, unsigned short _width, unsigned short _height, unsigned short _levels, const unsigned char * input = 0);
-  
-    void setQuality(unsigned short _quality) { quality = _quality; }
-    unsigned short getQuality() const { return quality; }
-    
-    unsigned short getWidth() const { return width; }
-    unsigned short getHeight() const { return height; }
-    unsigned short getLevels() const { return levels; }
-    unsigned short getBytesPerRow() const { return getBytesPerRow(width, format); }
-    unsigned short getBytesPerPixel() const { return getBytesPerPixel(format); }
-    InternalFormat getInternalFormat() const { return format; }
+
+    PackedImageData(const PackedImageData & other)
+      : format_(other.format_), width_(other.width_), height_(other.height_), levels_(other.levels_) {
+      auto s = calculateSize();
+      data_ = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+      memcpy(data_.get(), other.data_.get(), s);
+    }
+
+    PackedImageData(PackedImageData && other)
+      : format_(other.format_), width_(other.width_), height_(other.height_), levels_(other.levels_), data_(std::move(other.data_)) {
+      
+    }
+
+    PackedImageData & operator=(const PackedImageData & other) {
+      if (this != &other) {
+	format_ = other.format_;
+	width_ = other.width_;
+	height_ = other.height_;
+	levels_ = other.levels_;
+	
+	auto s = calculateSize();
+	data_ = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+	memcpy(data_.get(), other.data_.get(), s);
+      }
+      return *this;
+    }
+
+    PackedImageData & operator=(PackedImageData && other) {
+      if (this != &other) {
+	format_ = other.format_;
+	width_ = other.width_;
+	height_ = other.height_;
+	levels_ = other.levels_;
+	data_ = std::move(other.data_);
+      }
+      return *this;
+    }
+
+    unsigned short getWidth() const { return width_; }
+    unsigned short getHeight() const { return height_; }
+    unsigned short getLevels() const { return levels_; }
+    unsigned short getBytesPerRow() const { return getBytesPerRow(width_, format_); }
+    unsigned short getBytesPerPixel() const { return getBytesPerPixel(format_); }
+    InternalFormat getInternalFormat() const { return format_; }
 
     static unsigned short getBytesPerRow(unsigned short width, InternalFormat format) {
       unsigned short bpp = getBytesPerPixel(format);
@@ -81,7 +116,7 @@ namespace canvas {
     }
     
     size_t calculateOffset(unsigned short level) const {
-      return calculateOffset(width, height, level, format);
+      return calculateOffset(width_, height_, level, format_);
     }
 
     static size_t calculateSize(unsigned short width, unsigned short height, unsigned short levels, InternalFormat format) {
@@ -89,22 +124,21 @@ namespace canvas {
     }
     
     size_t calculateSize() const {
-      return calculateOffset(width, height, levels, format);
+      return calculateOffset(width_, height_, levels_, format_);
     }
     size_t calculateSizeForFirstLevel() const {
-      return calculateOffset(width, height, 1, format);
+      return calculateOffset(width_, height_, 1, format_);
     }
 
-    const unsigned char * getData() const { return data.get(); }
+    const unsigned char * getData() const { return data_.get(); }
     const unsigned char * getDataForLevel(unsigned short level) {
-      return data.get() + calculateOffset(level);
+      return data_.get() + calculateOffset(level);
     }
 
   private:
-    InternalFormat format;
-    unsigned short width, height, levels;
-    unsigned short quality;
-    std::unique_ptr<unsigned char[]> data;
+    InternalFormat format_;
+    unsigned short width_, height_, levels_;
+    std::unique_ptr<unsigned char[]> data_;
     
     static bool etc1_initialized;
   };

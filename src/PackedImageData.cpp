@@ -13,14 +13,14 @@ using namespace canvas;
 
 bool PackedImageData::etc1_initialized = false;
 
-PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels, const ImageData & input)
-  : format(_format), width(input.getWidth()), height(input.getHeight()), levels(_levels)
+PackedImageData::PackedImageData(InternalFormat format, unsigned short levels, const ImageData & input)
+  : format_(format), width_(input.getWidth()), height_(input.getHeight()), levels_(levels)
 {
-  if (format == InternalFormat::NO_FORMAT) {
-    if (input.getNumChannels() == 4) format = InternalFormat::RGBA8;
-    else if (input.getNumChannels() == 3) format = InternalFormat::RGB8;
-    else if (input.getNumChannels() == 2) format = InternalFormat::RG8;
-    else if (input.getNumChannels() == 1) format = InternalFormat::R8;
+  if (format_ == InternalFormat::NO_FORMAT) {
+    if (input.getNumChannels() == 4) format_ = InternalFormat::RGBA8;
+    else if (input.getNumChannels() == 3) format_ = InternalFormat::RGB8;
+    else if (input.getNumChannels() == 2) format_ = InternalFormat::RG8;
+    else if (input.getNumChannels() == 1) format_ = InternalFormat::R8;
     else {
       assert(0);
     }
@@ -29,24 +29,24 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
   unsigned short num_channels = input.getNumChannels();
   unsigned int bytesPerRow = getBytesPerRow(), bytesPerPixel = getBytesPerPixel();
     
-  size_t s = calculateSize();
-  data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
-  memset(data.get(), 0, s);
+  auto s = calculateSize();
+  data_ = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+  memset(data_.get(), 0, s);
   
   if ((num_channels == 4 && (format == InternalFormat::RGB8 || format == InternalFormat::RGBA8)) ||
       (num_channels == 1 && format == InternalFormat::R8) ||
       (num_channels == 2 && format == InternalFormat::RG8)) {
     assert(levels == 1);
-    for (unsigned int row = 0; row < height; row++) {
-      memcpy(data.get() + row * bytesPerRow, input.getData() + row * width * bytesPerPixel, bytesPerRow);
+    for (unsigned int row = 0; row < height_; row++) {
+      memcpy(data_.get() + row * bytesPerRow, input.getData() + row * width_ * bytesPerPixel, bytesPerRow);
     }
   } else if (format == InternalFormat::RGBA4 || format == InternalFormat::RGB565 || format == InternalFormat::RGB555 || format == InternalFormat::RGBA5551) {
     FloydSteinberg fs(format);
-    unsigned int offset = fs.apply(input, data.get(), getBytesPerRow(input.getWidth(), format));
+    auto offset = fs.apply(input, data_.get(), getBytesPerRow(input.getWidth(), format));
     if (levels >= 2) {
       auto img = input.scale((input.getWidth() + 1) / 2, (input.getHeight() + 1) / 2);
       for (unsigned int l = 1; l < levels; l++) {
-	offset += fs.apply(*img, data.get() + offset, getBytesPerRow(img->getWidth(), format));
+	offset += fs.apply(*img, data_.get() + offset, getBytesPerRow(img->getWidth(), format));
 	if (l + 1 < levels) {
 	  img = img->scale((img->getWidth() + 1) / 2, (img->getHeight() + 1) / 2);
 	}
@@ -55,20 +55,20 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
   } else {
     assert(levels == 1);
     
-    const unsigned char * input_data = input.getData();
+    auto input_data = input.getData();
 
     if (format == InternalFormat::RGB8 || format == InternalFormat::RGBA8) {
       if (num_channels == 3) {
-	for (unsigned int row = 0, i = 0; row < height; row++) {
-	  unsigned int * ptr = (unsigned int *)(data.get() + row * bytesPerRow);
-	  for (unsigned int col = 0; col < width; col++, i += 3) {
+	for (unsigned int row = 0, i = 0; row < height_; row++) {
+	  auto ptr = (unsigned int *)(data_.get() + row * bytesPerRow);
+	  for (unsigned int col = 0; col < width_; col++, i += 3) {
 	    *ptr++ = (0xff << 24) | (input_data[i] << 16) | (input_data[i + 1] << 8) | (input_data[i + 2]);
 	  }
 	}
       } else if (num_channels == 1) {
-	for (unsigned int row = 0, i = 0; row < height; row++) {
-	  unsigned int * ptr = (unsigned int *)(data.get() + row * bytesPerRow);
-	  for (unsigned int col = 0; col < width; col++, i++) {
+	for (unsigned int row = 0, i = 0; row < height_; row++) {
+	  auto ptr = (unsigned int *)(data_.get() + row * bytesPerRow);
+	  for (unsigned int col = 0; col < width_; col++, i++) {
 	    unsigned char v = input_data[i];
 	    *ptr++ = (0xff << 24) | (v << 16) | (v << 8) | (v);
 	  }
@@ -77,18 +77,32 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
 	assert(0);
       }
     } else if (format == InternalFormat::LA44) {
-      for (unsigned int row = 0, i = 0; row < height; row++) {
-	unsigned char * ptr = (unsigned char *)(data.get() + row * bytesPerRow);
-	for (unsigned int col = 0; col < width; col++, i += num_channels) {
-	  unsigned char r = input_data[i];
-	  unsigned char g = num_channels >= 2 ? input_data[i + 1] : r;
-	  unsigned char b = num_channels >= 3 ? input_data[i + 2] : g;
-	  unsigned char a = (num_channels >= 4 ? input_data[i + 3] : 0xff) >> 4;
-	  unsigned int lum = ((r + g + b) / 3) >> 4;
+      for (unsigned int row = 0, i = 0; row < height_; row++) {
+	auto ptr = (unsigned char *)(data_.get() + row * bytesPerRow);
+	for (unsigned int col = 0; col < width_; col++, i += num_channels) {
+	  auto r = input_data[i];
+	  auto g = num_channels >= 2 ? input_data[i + 1] : r;
+	  auto b = num_channels >= 3 ? input_data[i + 2] : g;
+	  auto a = (num_channels >= 4 ? input_data[i + 3] : 0xff) >> 4;
+	  auto lum = ((r + g + b) / 3) >> 4;
 	  if (lum >= 16) lum = 15;
 	  *ptr++ = (a << 4) | lum;
 	}
       }
+    } else if (format == InternalFormat::RG8) {
+      for (unsigned int row = 0, i = 0; row < height_; row++) {
+	auto ptr = (unsigned char *)(data_.get() + row * bytesPerRow);
+	for (unsigned int col = 0; col < width_; col++, i += num_channels) {
+	  auto r = input_data[i];
+	  auto g = num_channels >= 2 ? input_data[i + 1] : r;
+	  auto b = num_channels >= 3 ? input_data[i + 2] : g;
+	  auto a = num_channels >= 4 ? input_data[i + 3] : 0xff;
+	  auto lum = (r + g + b) / 3;
+	  if (lum > 255) lum = 255;
+	  *ptr++ = lum;
+	  *ptr++ = a;
+	}
+      }      
     } else {
       // cerr << "unable to pack input data (channels = " << input.getNumChannels() << ", f = " << int(format) << ")\n";
       assert(0);
@@ -96,37 +110,37 @@ PackedImageData::PackedImageData(InternalFormat _format, unsigned short _levels,
   }
 }
 
-PackedImageData::PackedImageData(InternalFormat _format, unsigned short _width, unsigned short _height, unsigned short _levels, const unsigned char * input)
-  : width(_width), height(_height), levels(_levels), format(_format) {
+PackedImageData::PackedImageData(InternalFormat format, unsigned short width, unsigned short height, unsigned short levels, const unsigned char * input)
+  : width_(width), height_(height), levels_(levels), format_(format) {
   size_t s = calculateSize();
-  data = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
+  data_ = std::unique_ptr<unsigned char[]>(new unsigned char[s]);
   if (input) {
-    memcpy(data.get(), input, s);
+    memcpy(data_.get(), input, s);
   } else {
     if (format == InternalFormat::RGB_ETC1) {
       for (unsigned int i = 0; i < s; i += 8) {
-	*(unsigned int *)(data.get() + i + 0) = 0x00000000;
-	*(unsigned int *)(data.get() + i + 4) = 0xffffffff;
+	*(unsigned int *)(data_.get() + i + 0) = 0x00000000;
+	*(unsigned int *)(data_.get() + i + 4) = 0xffffffff;
       }
     } else if (format == InternalFormat::RGB_DXT1) {
       for (unsigned int i = 0; i < s; i += 8) {
-	*(unsigned int *)(data.get() + i + 0) = 0x00000000;
-	*(unsigned int *)(data.get() + i + 4) = 0xaaaaaaaa;
+	*(unsigned int *)(data_.get() + i + 0) = 0x00000000;
+	*(unsigned int *)(data_.get() + i + 4) = 0xaaaaaaaa;
       }
     } else if (format == InternalFormat::RED_RGTC1) {
       for (unsigned int i = 0; i < s; i += 8) {
-	*(unsigned int *)(data.get() + i + 0) = 0x00000003; // doesn't work on big endian
-	*(unsigned int *)(data.get() + i + 4) = 0x00000000;
+	*(unsigned int *)(data_.get() + i + 0) = 0x00000003; // doesn't work on big endian
+	*(unsigned int *)(data_.get() + i + 4) = 0x00000000;
       }
     } else if (format == InternalFormat::RG_RGTC2) {
       for (unsigned int i = 0; i < s; i += 16) {
-	*(unsigned int *)(data.get() + i + 0) = 0x00000003;
-	*(unsigned int *)(data.get() + i + 4) = 0x00000000;
-	*(unsigned int *)(data.get() + i + 8) = 0x00000003;
-	*(unsigned int *)(data.get() + i + 12) = 0x00000000;
+	*(unsigned int *)(data_.get() + i + 0) = 0x00000003;
+	*(unsigned int *)(data_.get() + i + 4) = 0x00000000;
+	*(unsigned int *)(data_.get() + i + 8) = 0x00000003;
+	*(unsigned int *)(data_.get() + i + 12) = 0x00000000;
       }
     } else {
-      memset(data.get(), 0, s);
+      memset(data_.get(), 0, s);
     }
   }
 }
@@ -140,12 +154,12 @@ PackedImageData::createMipmaps(const ImageData & input_data, unsigned short targ
   assert(levels == 1);
   size_t target_size = calculateOffset(target_levels);
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
-  memcpy(output_data.get(), data.get(), calculateOffset(1));
+  memcpy(output_data_.get(), data_.get(), calculateOffset(1));
   unsigned short source_width = width, source_height = height;
   unsigned short target_width = width / 2, target_height = height / 2;
   for (unsigned int level = 1; level < target_levels; level++) {
-    unsigned char * source_data = output_data.get() + calculateOffset(level - 1);
-    unsigned char * target_data = output_data.get() + calculateOffset(level);
+    unsigned char * source_data = output_data_.get() + calculateOffset(level - 1);
+    unsigned char * target_data = output_data_.get() + calculateOffset(level);
     for (unsigned int y = 0; y < target_height; y++) {               
       for (unsigned int x = 0; x < target_width; x++) {
 	unsigned int source_offset = (2 * y * source_width + 2 * x) * 4;
@@ -165,7 +179,7 @@ PackedImageData::createMipmaps(const ImageData & input_data, unsigned short targ
     target_width /= 2;
     target_height /= 2;
   }
-  return unique_ptr<ImageData>(new ImageData(output_data.get(), getInternalFormat(), width, height, target_levels));
+  return unique_ptr<ImageData>(new ImageData(output_data_.get(), getInternalFormat(), width, height, target_levels));
 }
 
 std::unique_ptr<ImageData>
@@ -225,16 +239,16 @@ ImageData::convert(InternalFormat target_format) const {
 	    }
 	  }
 	  if (target_fd.getCompression() == ImageFormat::ETC1) {
-	    rg_etc1::pack_etc1_block(output_data.get() + target_offset, (const unsigned int *)&(input_block[0]), params);	  
+	    rg_etc1::pack_etc1_block(output_data_.get() + target_offset, (const unsigned int *)&(input_block[0]), params);	  
 	    target_offset += 8;
 	  } else if (target_fd.getCompression() == ImageFormat::DXT1) {
-	    stb_compress_dxt1_block(output_data.get() + target_offset, &(input_block[0]), false, 2);
+	    stb_compress_dxt1_block(output_data_.get() + target_offset, &(input_block[0]), false, 2);
 	    target_offset += 8;
 	  } else if (target_fd.getCompression() == ImageFormat::RGTC1) {
-	    stb_compress_rgtc1_block(output_data.get() + target_offset, &(input_block[0]));
+	    stb_compress_rgtc1_block(output_data_.get() + target_offset, &(input_block[0]));
 	    target_offset += 8;
 	  } else {
-	    stb_compress_rgtc2_block(output_data.get() + target_offset, &(input_block[0]));
+	    stb_compress_rgtc2_block(output_data_.get() + target_offset, &(input_block[0]));
 	    target_offset += 16;
 	  }
 	}
@@ -242,7 +256,7 @@ ImageData::convert(InternalFormat target_format) const {
       target_width = (target_width + 1) / 2;
       target_height = (target_height + 1) / 2;
     }
-    return unique_ptr<ImageData>(new ImageData(output_data.get(), target_format, width, height, levels));
+    return unique_ptr<ImageData>(new ImageData(output_data_.get(), target_format, width, height, levels));
   } else if (target_fd.getNumChannels() == 1) {
     assert(levels == 1);
     
@@ -303,7 +317,7 @@ ImageData::scale(unsigned short target_base_width, unsigned short target_base_he
   // cerr << "scaling to " << target_base_width << " " << target_base_height << " " << target_levels << " => " << target_size << " bytes\n";
   std::unique_ptr<unsigned char[]> output_data(new unsigned char[target_size]);
   unsigned short target_width = target_base_width, target_height = target_base_height;
-  stbir_resize_uint8(data.get(), getWidth(), getHeight(), 0, output_data.get(), target_width, target_height, 0, fd.getBytesPerPixel());
+  stbir_resize_uint8(data_.get(), getWidth(), getHeight(), 0, output_data_.get(), target_width, target_height, 0, fd.getBytesPerPixel());
 
   if (target_levels > 1) {
     // cerr << "creating mipmaps for format, channels = " << fd.getNumChannels() << ", bpp = " << fd.getBytesPerPixel() << endl;
@@ -315,8 +329,8 @@ ImageData::scale(unsigned short target_base_width, unsigned short target_base_he
     unsigned short nch = fd.getBytesPerPixel();
     
     for (unsigned int level = 1; level < target_levels; level++) {
-      unsigned char * source_data = output_data.get() + calculateOffset(target_base_width, target_base_height, level - 1, format);
-      unsigned char * target_data = output_data.get() + calculateOffset(target_base_width, target_base_height, level, format);
+      unsigned char * source_data = output_data_.get() + calculateOffset(target_base_width, target_base_height, level - 1, format);
+      unsigned char * target_data = output_data_.get() + calculateOffset(target_base_width, target_base_height, level, format);
       for (unsigned int y = 0; y < target_height; y++) {               
 	for (unsigned int x = 0; x < target_width; x++) {
 	  unsigned int source_offset = (2 * y * source_width + 2 * x) * nch;
@@ -337,6 +351,6 @@ ImageData::scale(unsigned short target_base_width, unsigned short target_base_he
       target_height /= 2;
     }
   }
-  return unique_ptr<ImageData>(new ImageData(output_data.get(), getInternalFormat(), target_base_width, target_base_height, target_levels));
+  return unique_ptr<ImageData>(new ImageData(output_data_.get(), getInternalFormat(), target_base_width, target_base_height, target_levels));
 }
 #endif
