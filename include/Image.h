@@ -26,8 +26,8 @@ namespace canvas {
 	loadFile();
       }
       if (data.get()) {
-	unsigned int width = (unsigned int)(target_width * display_scale);
-	unsigned int height = (unsigned int)(target_height * display_scale);
+	auto width = (unsigned int)(target_width * display_scale);
+	auto height = (unsigned int)(target_height * display_scale);
 	data = data->scale(width, height);
       }
     }
